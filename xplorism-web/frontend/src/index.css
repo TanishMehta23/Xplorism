@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
+  }
+  
+  html {
+    background-color: #040d12;
+  }
+  
+  body {
+    background-color: #040d12;
+    color: #f1f5f9;
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+}
+
+/* Custom clean scrollbar for laptop screen */
+.laptop-scroller::-webkit-scrollbar {
+  width: 4px;
+}
+
+.laptop-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.laptop-scroller::-webkit-scrollbar-thumb {
+  background: rgba(248, 113, 113, 0.35);
+  border-radius: 9999px;
+}
+
+.laptop-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 113, 113, 0.65);
+}
+
+.laptop-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(248, 113, 113, 0.35) transparent;
+}
+
+/* Hide scrollbar utility class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphic elements adjusted for the new palette */
+.glass {
+  background: rgba(18, 30, 27, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-hover:hover {
+  background: rgba(18, 30, 27, 0.55);
+  border-color: rgba(20, 184, 166, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-card {
+  background: rgba(15, 23, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.glass-input {
+  background: rgba(15, 23, 20, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+  background: rgba(15, 23, 20, 0.7);
+  border-color: #14b8a6;
+  outline: none;
+  box-shadow: 0 0 15px rgba(20, 184, 166, 0.25);
+}
+
+/* Animated gradient background mesh */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+}
+
+.animate-blob {
+  animation: blob-bounce 12s infinite alternate;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2.5s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 5s;
+}
+
+@keyframes blob-bounce {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -40px) scale(1.08);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.96);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}

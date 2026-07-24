@@ -1,0 +1,81 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardStub from './pages/DashboardStub';
+import NotFoundPage from './pages/NotFoundPage';
+
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#040d12] flex items-center justify-center text-slate-100">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-10 w-10 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" />
+          <p className="text-slate-400 text-sm animate-pulse">Loading adventure...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
+
+// Route that redirects logged-in users away from auth pages
+const AuthRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) return null;
+
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+};
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      
+      <Route 
+        path="/login" 
+        element={
+          <AuthRoute>
+            <LoginPage />
+          </AuthRoute>
+        } 
+      />
+      <Route 
+        path="/register" 
+        element={
+          <AuthRoute>
+            <RegisterPage />
+          </AuthRoute>
+        } 
+      />
+      
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <DashboardStub />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
+  );
+}

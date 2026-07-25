@@ -43,7 +43,7 @@ function AppRoutes() {
         path="/login" 
         element={
           <AuthRoute>
-            <LoginPage />
+            <Navigate to="/" state={{ openAuth: true, mode: 'login' }} replace />
           </AuthRoute>
         } 
       />
@@ -51,7 +51,7 @@ function AppRoutes() {
         path="/register" 
         element={
           <AuthRoute>
-            <RegisterPage />
+            <Navigate to="/" state={{ openAuth: true, mode: 'register' }} replace />
           </AuthRoute>
         } 
       />

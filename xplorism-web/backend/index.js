@@ -20,6 +20,28 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/trips', tripRoutes);
 
+// Geocoding Proxy Route to avoid CORS issues
+app.get('/geocode', async (req, res) => {
+  const { q } = req.query;
+  if (!q) {
+    return res.status(400).json({ message: 'Query parameter q is required' });
+  }
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&addressdetails=1`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'XplorismTravelApp/1.0',
+        'Accept-Language': 'en'
+      }
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error('Geocoding proxy error:', err);
+    res.status(500).json({ message: 'Failed to fetch geocoding data' });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Xplorism API is running' });

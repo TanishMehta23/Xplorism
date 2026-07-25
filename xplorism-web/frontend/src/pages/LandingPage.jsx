@@ -578,7 +578,7 @@ export default function LandingPage() {
         >
           <span className="text-[#f87171]">Discover Your Next Adventure:</span>
           <br />
-          <span className="text-slate-955 font-black">Personalized Itineraries at Your Fingertips</span>
+          <span className="text-slate-900 font-black">Personalized Itineraries at Your Fingertips</span>
         </motion.h1>
 
         <motion.p
@@ -599,9 +599,9 @@ export default function LandingPage() {
           {isAuthenticated ? (
             <Link
               to="/dashboard"
-              className="px-7 py-3.5 rounded-lg bg-slate-955 hover:bg-slate-855 text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-slate-950/10"
+              className="px-7 py-3.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-slate-950/10"
             >
-              <span>Get Started, It's Free</span>
+              <span>Go to Dashboard</span>
             </Link>
           ) : (
             <button

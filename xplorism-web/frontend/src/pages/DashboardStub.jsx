@@ -1,79 +1,1189 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Calendar, Compass as TripIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  LogOut, Plus, Calendar, Compass as TripIcon, 
+  Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
+  Sun, Cloud, CloudRain, Snowflake, Wind
+} from 'lucide-react';
+import { api } from '../services/api';
+import TripWizard from '../components/TripWizard';
+
+export const CURRENCIES = {
+  INR: { symbol: '₹', name: 'INR (₹)', locale: 'en-IN' },
+  USD: { symbol: '$', name: 'USD ($)', locale: 'en-US' },
+  EUR: { symbol: '€', name: 'EUR (€)', locale: 'de-DE' },
+  GBP: { symbol: '£', name: 'GBP (£)', locale: 'en-GB' },
+  JPY: { symbol: '¥', name: 'JPY (¥)', locale: 'ja-JP' },
+  AUD: { symbol: 'A$', name: 'AUD (A$)', locale: 'en-AU' },
+  CAD: { symbol: 'C$', name: 'CAD (C$)', locale: 'en-CA' },
+  CHF: { symbol: 'CHF', name: 'CHF (CHF)', locale: 'de-CH' },
+  CNY: { symbol: '¥', name: 'CNY (¥)', locale: 'zh-CN' },
+  SGD: { symbol: 'S$', name: 'SGD (S$)', locale: 'en-SG' }
+};
+
+const PRE_PLANNED_TRIPS = [
+  {
+    id: 'pre-tokyo',
+    destination: 'Tokyo, Japan',
+    image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 120000,
+    travelers: 2,
+    travelStyle: 'Urban Adventure|JPY',
+    interests: ['Food', 'Architecture', 'History'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Morning walk around Shibuya Crossing & Hachiko Statue', time: '09:30 AM', location: 'Shibuya Crossing', estimatedCost: 0 },
+      { day: 1, activity: 'Sushi making experience and lunch at Tsukiji Outer Market', time: '02:00 PM', location: 'Tsukiji Market', estimatedCost: 3500 },
+      { day: 1, activity: 'Observe skylines from Tokyo Metropolitan Government Building', time: '07:00 PM', location: 'Shinjuku', estimatedCost: 0 },
+      { day: 2, activity: 'Explore Senso-ji temple and Nakamise-dori shopping street', time: '09:30 AM', location: 'Asakusa', estimatedCost: 500 },
+      { day: 2, activity: 'Anime culture shopping in Akihabara Electric Town', time: '02:00 PM', location: 'Akihabara', estimatedCost: 2000 },
+      { day: 2, activity: 'Enjoy a warm bowl of Ramen in an authentic Ramen Alley', time: '07:00 PM', location: 'Omoide Yokocho', estimatedCost: 1200 },
+      { day: 3, activity: 'Walk around Meiji Jingu Shrine and scenic Yoyogi Park', time: '10:00 AM', location: 'Yoyogi Park', estimatedCost: 0 },
+      { day: 3, activity: 'Crepe tasting and fashion shopping on Takeshita Street', time: '02:00 PM', location: 'Takeshita Street', estimatedCost: 1200 },
+      { day: 3, activity: 'Local Izakaya dining experience with drinks and skewers', time: '07:30 PM', location: 'Roppongi', estimatedCost: 4000 }
+    ]
+  },
+  {
+    id: 'pre-paris',
+    destination: 'Paris, France',
+    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 1800,
+    travelers: 2,
+    travelStyle: 'Romantic & Art Tour|EUR',
+    interests: ['Art', 'History', 'Food'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Guided tour of Louvre Museum Masterpieces (Mona Lisa access)', time: '09:30 AM', location: 'Louvre Museum', estimatedCost: 45 },
+      { day: 1, activity: 'Scenic Seine River Cruise with sunset champagne toast', time: '07:00 PM', location: 'Bateaux Parisiens', estimatedCost: 30 },
+      { day: 2, activity: 'Eiffel Tower Summit Access & architectural commentary', time: '09:30 AM', location: 'Eiffel Tower', estimatedCost: 60 },
+      { day: 2, activity: 'Wander the historic art streets and view Basilique du Sacré-Cœur', time: '02:00 PM', location: 'Montmartre', estimatedCost: 0 },
+      { day: 3, activity: 'Explore Notre-Dame Cathedral plaza and Saint-Germain district', time: '10:00 AM', location: 'Saint-Germain', estimatedCost: 0 },
+      { day: 3, activity: 'Browse books at Shakespeare and Company and visit Pantheon', time: '02:30 PM', location: 'Shakespeare & Co', estimatedCost: 15 },
+      { day: 3, activity: 'Traditional Parisian Bistro dinner tasting local delicacies', time: '07:30 PM', location: 'Le Relais de l\'Entrecôte', estimatedCost: 80 },
+      { day: 4, activity: 'Day trip to Palace of Versailles gardens and palace rooms', time: '09:00 AM', location: 'Versailles', estimatedCost: 50 },
+      { day: 4, activity: 'Farewell walk along Champs-Élysées and macarons tasting', time: '04:00 PM', location: 'Champs-Élysées', estimatedCost: 25 }
+    ]
+  },
+  {
+    id: 'pre-newyork',
+    destination: 'New York, USA',
+    image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days
+    budget: 2500,
+    travelers: 1,
+    travelStyle: 'Urban Adventure|USD',
+    interests: ['Shopping', 'Food', 'Art'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Walk across the historic Brooklyn Bridge for sunrise views', time: '08:30 AM', location: 'Brooklyn Bridge', estimatedCost: 0 },
+      { day: 1, activity: 'Lunch walk along High Line park and Chelsea Market', time: '01:00 PM', location: 'High Line', estimatedCost: 25 },
+      { day: 1, activity: 'Witness the neon energy of Times Square and watch a Broadway show', time: '07:30 PM', location: 'Broadway Theatre', estimatedCost: 120 },
+      { day: 2, activity: 'Explore Central Park by bicycle and visit Metropolitan Museum of Art', time: '09:30 AM', location: 'Central Park', estimatedCost: 40 },
+      { day: 2, activity: 'Top of the Rock observation deck skyline views', time: '04:00 PM', location: 'Rockefeller Center', estimatedCost: 45 },
+      { day: 3, activity: 'Ferry ride to Statue of Liberty and Ellis Island Museum', time: '09:00 AM', location: 'Liberty Island', estimatedCost: 30 },
+      { day: 3, activity: 'Walk through Wall Street and see One World Observatory', time: '02:00 PM', location: 'Financial District', estimatedCost: 45 },
+      { day: 4, activity: 'Shop and explore local boutiques in SoHo and Greenwich Village', time: '10:00 AM', location: 'SoHo', estimatedCost: 0 },
+      { day: 4, activity: 'Jazz performance and dinner in a cozy Greenwich Village basement club', time: '08:00 PM', location: 'Greenwich Village', estimatedCost: 60 },
+      { day: 5, activity: 'Visit Grand Central Terminal and enjoy lunch at Oyster Bar', time: '11:00 AM', location: 'Grand Central', estimatedCost: 35 },
+      { day: 5, activity: 'Farewell walk along Fifth Avenue and view Empire State Building', time: '03:00 PM', location: 'Fifth Avenue', estimatedCost: 0 }
+    ]
+  },
+  {
+    id: 'pre-london',
+    destination: 'London, UK',
+    image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 1800,
+    travelers: 2,
+    travelStyle: 'Cultural|GBP',
+    interests: ['History', 'Architecture'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'See the Tower of London & walk across Tower Bridge', time: '09:30 AM', location: 'Tower Bridge', estimatedCost: 35 },
+      { day: 1, activity: 'Classic British Pub dinner with fish and chips in Soho', time: '07:00 PM', location: 'Soho Pub', estimatedCost: 40 },
+      { day: 2, activity: 'Watch the Changing of the Guard at Buckingham Palace', time: '10:00 AM', location: 'Buckingham Palace', estimatedCost: 0 },
+      { day: 2, activity: 'Wander Westminster Abbey and see Big Ben clock tower', time: '01:30 PM', location: 'Westminster', estimatedCost: 25 },
+      { day: 2, activity: 'Scenic flight on the London Eye observation wheel', time: '05:00 PM', location: 'London Eye', estimatedCost: 40 },
+      { day: 3, activity: 'Explore global history at the British Museum (Free admission)', time: '09:30 AM', location: 'British Museum', estimatedCost: 0 },
+      { day: 3, activity: 'Enjoy traditional Afternoon Tea in Covent Garden marketplace', time: '03:00 PM', location: 'Covent Garden', estimatedCost: 45 }
+    ]
+  },
+  {
+    id: 'pre-sydney',
+    destination: 'Sydney, Australia',
+    image: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 6 days
+    budget: 3500,
+    travelers: 2,
+    travelStyle: 'Coastal Leisure|AUD',
+    interests: ['Nature', 'Beaches'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Sydney Opera House Architectural Tour', time: '10:00 AM', location: 'Opera House', estimatedCost: 45 },
+      { day: 1, activity: 'Bondi to Coogee coastal walk and beachside lunch', time: '02:00 PM', location: 'Bondi Beach', estimatedCost: 30 },
+      { day: 2, activity: 'Take the ferry from Circular Quay to scenic Manly Beach', time: '09:30 AM', location: 'Circular Quay', estimatedCost: 15 },
+      { day: 2, activity: 'Snorkel in Shelly Beach marine reserve and explore Manly town', time: '01:00 PM', location: 'Shelly Beach', estimatedCost: 20 },
+      { day: 3, activity: 'Day trip to Blue Mountains National Park (Echo Point & Three Sisters)', time: '08:30 AM', location: 'Blue Mountains', estimatedCost: 65 },
+      { day: 4, activity: 'Walk across the Sydney Harbour Bridge and explore historic Rocks district', time: '10:00 AM', location: 'The Rocks', estimatedCost: 0 },
+      { day: 4, activity: 'Dinner at Darling Harbour restaurant overlooking the water', time: '07:30 PM', location: 'Darling Harbour', estimatedCost: 80 },
+      { day: 5, activity: 'Explore Royal Botanic Gardens and visit Art Gallery of NSW', time: '10:30 AM', location: 'Botanic Gardens', estimatedCost: 0 },
+      { day: 5, activity: 'Evening sunset drink at Opera Bar overlooking harbour bridge', time: '06:00 PM', location: 'Circular Quay', estimatedCost: 35 },
+      { day: 6, activity: 'Shop at historic Queen Victoria Building and visit Sydney Tower Eye', time: '11:00 AM', location: 'City Center', estimatedCost: 35 },
+      { day: 6, activity: 'Farewell seafood platter dinner at Sydney Fish Market', time: '02:00 PM', location: 'Fish Market', estimatedCost: 60 }
+    ]
+  },
+  {
+    id: 'pre-rome',
+    destination: 'Rome, Italy',
+    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 1600,
+    travelers: 2,
+    travelStyle: 'Cultural|EUR',
+    interests: ['History', 'Art', 'Food'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Wander Colosseum and Roman Forum', time: '09:00 AM', location: 'Colosseum', estimatedCost: 35 },
+      { day: 1, activity: 'Make a wish at Trevi Fountain & enjoy Gelato', time: '03:00 PM', location: 'Trevi Fountain', estimatedCost: 8 },
+      { day: 2, activity: 'Vatican Museums tour, Sistine Chapel, and St. Peter\'s Basilica', time: '09:00 AM', location: 'Vatican City', estimatedCost: 45 },
+      { day: 2, activity: 'Walk around Piazza Navona and Pantheon temple dome', time: '03:30 PM', location: 'Pantheon', estimatedCost: 0 },
+      { day: 3, activity: 'Explore historic Trastevere district narrow cobbled streets', time: '10:30 AM', location: 'Trastevere', estimatedCost: 0 },
+      { day: 3, activity: 'Authentic Roman pasta dinner (Carbonara / Cacio e Pepe)', time: '07:30 PM', location: 'Trastevere Bistro', estimatedCost: 40 },
+      { day: 4, activity: 'Visit Villa Borghese museum gardens and rent a rowing boat', time: '10:00 AM', location: 'Villa Borghese', estimatedCost: 20 },
+      { day: 4, activity: 'Panoramic sunset view of Rome from Pincio terrace', time: '06:00 PM', location: 'Pincio Hill', estimatedCost: 0 }
+    ]
+  },
+  {
+    id: 'pre-singapore',
+    destination: 'Singapore',
+    image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 3000,
+    travelers: 2,
+    travelStyle: 'Modern Luxury|SGD',
+    interests: ['Nature', 'Shopping'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Explore Supertree Grove & Cloud Forest at Gardens by the Bay', time: '10:00 AM', location: 'Gardens by the Bay', estimatedCost: 30 },
+      { day: 1, activity: 'Dinner at Marina Bay Sands SkyPark overlooking the bay', time: '07:30 PM', location: 'Marina Bay Sands', estimatedCost: 150 },
+      { day: 2, activity: 'Take the cable car to Sentosa Island and visit S.E.A. Aquarium', time: '09:30 AM', location: 'Sentosa', estimatedCost: 65 },
+      { day: 2, activity: 'Hawker centre street food feast at Lau Pa Sat market', time: '07:00 PM', location: 'Lau Pa Sat', estimatedCost: 20 },
+      { day: 3, activity: 'Walk around historic Chinatown and visit Buddha Tooth Relic Temple', time: '10:00 AM', location: 'Chinatown', estimatedCost: 0 },
+      { day: 3, activity: 'Shopping at premium Jewel Changi Airport and view HSBC Rain Vortex', time: '03:00 PM', location: 'Changi Airport', estimatedCost: 0 }
+    ]
+  },
+  {
+    id: 'pre-zurich',
+    destination: 'Zurich, Switzerland',
+    image: 'https://images.unsplash.com/photo-1527668752968-14dc70a27c95?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 2500,
+    travelers: 1,
+    travelStyle: 'Relaxing|CHF',
+    interests: ['Nature', 'History'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Stroll Zurich Altstadt (Old Town) & Fraumünster Church', time: '10:00 AM', location: 'Old Town', estimatedCost: 0 },
+      { day: 1, activity: 'Scenic boat cruise across pristine Lake Zurich', time: '03:00 PM', location: 'Lake Zurich', estimatedCost: 25 },
+      { day: 2, activity: 'Train trip up to Uetliberg mountain for panoramic alpine views', time: '09:30 AM', location: 'Uetliberg', estimatedCost: 30 },
+      { day: 2, activity: 'Fondue dinner experience at a traditional chalet restaurant', time: '07:00 PM', location: 'City Center', estimatedCost: 55 },
+      { day: 3, activity: 'Day trip to Rhine Falls (Europe\'s largest waterfall)', time: '09:00 AM', location: 'Schaffhausen', estimatedCost: 60 },
+      { day: 4, activity: 'Lindt Home of Chocolate museum interactive tour & tastings', time: '10:30 AM', location: 'Kilchberg', estimatedCost: 25 },
+      { day: 4, activity: 'Stroll along Bahnhofstrasse high-end shopping avenue', time: '03:00 PM', location: 'Bahnhofstrasse', estimatedCost: 0 }
+    ]
+  },
+  {
+    id: 'pre-toronto',
+    destination: 'Toronto, Canada',
+    image: 'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 2000,
+    travelers: 2,
+    travelStyle: 'Urban Adventure|CAD',
+    interests: ['Shopping', 'Food'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Visit the CN Tower observation deck & Glass Floor', time: '10:00 AM', location: 'CN Tower', estimatedCost: 45 },
+      { day: 1, activity: 'Taste local pastries at St. Lawrence Historic Market', time: '01:30 PM', location: 'St. Lawrence Market', estimatedCost: 20 },
+      { day: 2, activity: 'Take the ferry to Toronto Islands for skyline views and bike riding', time: '09:30 AM', location: 'Toronto Islands', estimatedCost: 15 },
+      { day: 2, activity: 'Dinner and microbrewery beer tasting in Distillery Historic District', time: '06:30 PM', location: 'Distillery District', estimatedCost: 50 },
+      { day: 3, activity: 'Explore Ripley\'s Aquarium of Canada and walk around Rogers Centre', time: '10:00 AM', location: 'Downtown', estimatedCost: 40 },
+      { day: 3, activity: 'Visit Royal Ontario Museum world culture galleries', time: '02:00 PM', location: 'Museum Station', estimatedCost: 25 },
+      { day: 4, activity: 'Day trip to spectacular Niagara Falls including boat tour', time: '08:30 AM', location: 'Niagara', estimatedCost: 90 }
+    ]
+  },
+  {
+    id: 'pre-beijing',
+    destination: 'Beijing, China',
+    image: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days
+    budget: 8000,
+    travelers: 2,
+    travelStyle: 'Cultural|CNY',
+    interests: ['History', 'Architecture'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Walk along the Mutianyu Great Wall of China section', time: '08:00 AM', location: 'Great Wall', estimatedCost: 120 },
+      { day: 1, activity: 'Explore Forbidden City ancient imperial palaces', time: '02:00 PM', location: 'Forbidden City', estimatedCost: 60 },
+      { day: 2, activity: 'Visit the Temple of Heaven and watch locals practice Tai Chi', time: '09:00 AM', location: 'Temple of Heaven', estimatedCost: 35 },
+      { day: 2, activity: 'Rickshaw tour of traditional Hutong alleys and local family courtyard', time: '02:00 PM', location: 'Hutongs', estimatedCost: 45 },
+      { day: 3, activity: 'Walk around Tiananmen Square and National Museum of China', time: '09:30 AM', location: 'Tiananmen Square', estimatedCost: 0 },
+      { day: 3, activity: 'Authentic Peking Duck feast dinner at a historic restaurant', time: '07:00 PM', location: 'Quanjude', estimatedCost: 100 },
+      { day: 4, activity: 'Explore the royal gardens at Summer Palace and Kunming Lake boat ride', time: '09:00 AM', location: 'Summer Palace', estimatedCost: 50 },
+      { day: 4, activity: 'Visit the Olympic green area, Bird\'s Nest & Water Cube structures', time: '03:30 PM', location: 'Olympic Park', estimatedCost: 0 },
+      { day: 5, activity: 'Browse contemporary Chinese art galleries in 798 Art Zone', time: '10:00 AM', location: '798 Art District', estimatedCost: 0 },
+      { day: 5, activity: 'Farewell dinner tasting local hot pot at Sanlitun entertainment area', time: '07:00 PM', location: 'Sanlitun', estimatedCost: 70 }
+    ]
+  },
+  {
+    id: 'pre-delhi',
+    destination: 'New Delhi, India',
+    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 15000,
+    travelers: 2,
+    travelStyle: 'Cultural|INR',
+    interests: ['History', 'Food', 'Architecture'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Explore historic Red Fort and architectural monuments', time: '09:30 AM', location: 'Red Fort', estimatedCost: 500 },
+      { day: 1, activity: 'Rickshaw ride in busy Chandni Chowk bazaar and local street food tasting', time: '02:00 PM', location: 'Chandni Chowk', estimatedCost: 800 },
+      { day: 2, activity: 'Visit Qutub Minar complex and Mehrauli Archaeological Park', time: '10:00 AM', location: 'Qutub Minar', estimatedCost: 600 },
+      { day: 2, activity: 'Wander around Humayun\'s Tomb and Lodhi Gardens stroll', time: '03:00 PM', location: 'Humayun\'s Tomb', estimatedCost: 500 },
+      { day: 3, activity: 'Drive past India Gate and Parliament buildings', time: '10:00 AM', location: 'Rajpath', estimatedCost: 0 },
+      { day: 3, activity: 'Visit beautiful Lotus Temple and shop at Connaught Place markets', time: '02:00 PM', location: 'Lotus Temple', estimatedCost: 1000 }
+    ]
+  },
+  {
+    id: 'pre-barcelona',
+    destination: 'Barcelona, Spain',
+    image: 'https://images.unsplash.com/photo-1511527661048-7fe73d85e9a4?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 1200,
+    travelers: 2,
+    travelStyle: 'Urban Adventure|EUR',
+    interests: ['Architecture', 'Food', 'Beaches'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Guided tour of Antoni Gaudi\'s masterpieces: La Sagrada Familia', time: '10:00 AM', location: 'Sagrada Familia', estimatedCost: 35 },
+      { day: 1, activity: 'Stroll along La Rambla and browse local produce at La Boqueria Market', time: '02:35 PM', location: 'La Boqueria', estimatedCost: 15 },
+      { day: 2, activity: 'Explore Park Guell mosaic terraces and views over Barcelona', time: '09:30 AM', location: 'Park Guell', estimatedCost: 25 },
+      { day: 2, activity: 'Walk around Gothic Quarter (Barri Gotic) narrow streets and cathedral', time: '03:00 PM', location: 'Gothic Quarter', estimatedCost: 0 },
+      { day: 3, activity: 'Relax at Barceloneta Beach and enjoy a seafood paella lunch', time: '11:00 AM', location: 'Barceloneta Beach', estimatedCost: 40 },
+      { day: 3, activity: 'Explore Picasso Museum and shop in trendy El Born district', time: '04:00 PM', location: 'El Born', estimatedCost: 15 },
+      { day: 4, activity: 'Take the cable car up to Montjuic Castle for panoramic harbor views', time: '10:00 AM', location: 'Montjuic', estimatedCost: 20 },
+      { day: 4, activity: 'Farewell Spanish tapas and Sangria tasting dinner', time: '07:30 PM', location: 'Tapas Bar', estimatedCost: 50 }
+    ]
+  },
+  {
+    id: 'pre-amsterdam',
+    destination: 'Amsterdam, Netherlands',
+    image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 950,
+    travelers: 2,
+    travelStyle: 'Cultural|EUR',
+    interests: ['Art', 'Architecture', 'History'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Rent a bicycle and ride along historic Canal Ring bridges', time: '09:30 AM', location: 'Canals', estimatedCost: 15 },
+      { day: 1, activity: 'Explore Rijksmuseum collections of Dutch Golden Age masterpieces', time: '02:00 PM', location: 'Museumplein', estimatedCost: 25 },
+      { day: 2, activity: 'Visit the historic Anne Frank House museum', time: '10:00 AM', location: 'Jordaan', estimatedCost: 18 },
+      { day: 2, activity: 'Take a relaxed evening canal cruise boat with audio commentary', time: '06:30 PM', location: 'Damrak', estimatedCost: 20 },
+      { day: 3, activity: 'Explore Van Gogh Museum galleries dedicated to his life and paintings', time: '10:00 AM', location: 'Museumplein', estimatedCost: 25 },
+      { day: 3, activity: 'Walk around Vondelpark and visit local cheese boutiques', time: '02:30 PM', location: 'Vondelpark', estimatedCost: 15 }
+    ]
+  },
+  {
+    id: 'pre-venice',
+    destination: 'Venice, Italy',
+    image: 'https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 1100,
+    travelers: 2,
+    travelStyle: 'Romantic|EUR',
+    interests: ['Art', 'History', 'Architecture'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Stroll across Rialto Bridge and explore bustling local markets', time: '10:00 AM', location: 'Rialto Bridge', estimatedCost: 0 },
+      { day: 1, activity: 'Take a romantic private Gondola ride along the Grand Canal', time: '04:30 PM', location: 'Grand Canal', estimatedCost: 80 },
+      { day: 2, activity: 'Visit St. Mark\'s Basilica and climb the Campanile bell tower', time: '09:30 AM', location: 'Piazza San Marco', estimatedCost: 25 },
+      { day: 2, activity: 'Tour the Doge\'s Palace (Palazzo Ducale) and cross Bridge of Sighs', time: '01:30 PM', location: 'San Marco', estimatedCost: 30 },
+      { day: 3, activity: 'Take a water taxi trip to colorful Burano island (Lace making heritage)', time: '09:30 AM', location: 'Burano Island', estimatedCost: 15 },
+      { day: 3, activity: 'Local seafood and Cicchetti (Venetian tapas) dinner with Prosecco', time: '07:05 PM', location: 'Cannaregio Bistro', estimatedCost: 45 }
+    ]
+  },
+  {
+    id: 'pre-vancouver',
+    destination: 'Vancouver, Canada',
+    image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 1600,
+    travelers: 2,
+    travelStyle: 'Coastal Leisure|CAD',
+    interests: ['Nature', 'Beaches', 'Food'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Rent a bike and cycle around the Stanley Park Seawall path', time: '09:30 AM', location: 'Stanley Park', estimatedCost: 20 },
+      { day: 1, activity: 'Aquabus ferry ride to Granville Island Public Market and lunch', time: '01:30 PM', location: 'Granville Island', estimatedCost: 25 },
+      { day: 2, activity: 'Cross the Capilano Suspension Bridge and treetop adventure walk', time: '10:00 AM', location: 'North Vancouver', estimatedCost: 65 },
+      { day: 2, activity: 'Stroll around Gastown and watch the historic Steam Clock chime', time: '04:30 PM', location: 'Gastown', estimatedCost: 0 },
+      { day: 3, activity: 'Ride the Grouse Mountain Skyride for scenic vistas over the city', time: '09:30 AM', location: 'Grouse Mountain', estimatedCost: 75 },
+      { day: 3, activity: 'Relaxing afternoon at English Bay beach and sunset stroll', time: '04:00 PM', location: 'English Bay', estimatedCost: 0 },
+      { day: 4, activity: 'Day trip along Sea-to-Sky Highway to Whistler alpine village', time: '08:30 AM', location: 'Whistler', estimatedCost: 80 },
+      { day: 4, activity: 'Farewell craft beer and local dining at Yaletown bistros', time: '07:30 PM', location: 'Yaletown', estimatedCost: 55 }
+    ]
+  },
+  {
+    id: 'pre-sanfran',
+    destination: 'San Francisco, USA',
+    image: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 1800,
+    travelers: 1,
+    travelStyle: 'Urban Adventure|USD',
+    interests: ['Nature', 'Architecture', 'Food'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Cycle across the Golden Gate Bridge to Sausalito', time: '09:30 AM', location: 'Golden Gate', estimatedCost: 35 },
+      { day: 1, activity: 'Visit Fisherman\'s Wharf and lunch at Pier 39 clam chowder', time: '02:00 PM', location: 'Pier 39', estimatedCost: 20 },
+      { day: 2, activity: 'Take the ferry to Alcatraz Island historic prison tour', time: '09:00 AM', location: 'Alcatraz Island', estimatedCost: 45 },
+      { day: 2, activity: 'Wander Lombard Street (crookedest street) and ride Cable Car', time: '02:30 PM', location: 'Lombard Street', estimatedCost: 10 },
+      { day: 3, activity: 'Explore Golden Gate Park and visit California Academy of Sciences', time: '10:00 AM', location: 'Golden Gate Park', estimatedCost: 40 },
+      { day: 3, activity: 'Sunset panoramic views from Twin Peaks & dinner in Mission District', time: '06:30 PM', location: 'Twin Peaks', estimatedCost: 30 }
+    ]
+  },
+  {
+    id: 'pre-la',
+    destination: 'Los Angeles, USA',
+    image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 2400,
+    travelers: 2,
+    travelStyle: 'Urban Adventure|USD',
+    interests: ['Shopping', 'Beaches'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Walk along the Hollywood Walk of Fame and see TCL Chinese Theatre', time: '10:00 AM', location: 'Hollywood', estimatedCost: 0 },
+      { day: 1, activity: 'Hike to the Hollywood Sign viewpoint from Griffith Observatory', time: '03:00 PM', location: 'Griffith Park', estimatedCost: 0 },
+      { day: 2, activity: 'Spend the day at Santa Monica Pier and ride the solar Ferris wheel', time: '10:00 AM', location: 'Santa Monica', estimatedCost: 30 },
+      { day: 2, activity: 'Rent a beach cruiser and ride to funky Venice Beach boardwalk', time: '03:00 PM', location: 'Venice Beach', estimatedCost: 15 },
+      { day: 3, activity: 'Day trip to Universal Studios Hollywood theme park and studio tour', time: '09:00 AM', location: 'Universal City', estimatedCost: 130 },
+      { day: 4, activity: 'Window shopping along high-end Rodeo Drive and Beverly Hills walk', time: '11:00 AM', location: 'Rodeo Drive', estimatedCost: 0 },
+      { day: 4, activity: 'Farewell dinner at Sunset Boulevard trendy restaurants', time: '07:30 PM', location: 'West Hollywood', estimatedCost: 75 }
+    ]
+  },
+  {
+    id: 'pre-melbourne',
+    destination: 'Melbourne, Australia',
+    image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days
+    budget: 2800,
+    travelers: 2,
+    travelStyle: 'Cultural|AUD',
+    interests: ['Food', 'Art', 'Nature'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Laneway walking tour discovering street art in Hosier Lane', time: '10:00 AM', location: 'Hosier Lane', estimatedCost: 0 },
+      { day: 1, activity: 'Coffee tasting masterclass in Melbourne\'s famous cafe district', time: '02:00 PM', location: 'Fitzroy Cafe', estimatedCost: 25 },
+      { day: 2, activity: 'Take the scenic Puffing Billy steam train through Dandenong Ranges', time: '09:00 AM', location: 'Belgrave', estimatedCost: 65 },
+      { day: 2, activity: 'Dinner at Queen Victoria Night Market food stalls', time: '06:30 PM', location: 'Queen Victoria Market', estimatedCost: 30 },
+      { day: 3, activity: 'Day trip along Great Ocean Road to view Twelve Apostles stone stacks', time: '08:00 AM', location: 'Great Ocean Road', estimatedCost: 120 },
+      { day: 4, activity: 'Explore Melbourne Museum & historic Royal Exhibition Building gardens', time: '10:00 AM', location: 'Carlton Gardens', estimatedCost: 15 },
+      { day: 4, activity: 'Visit the penguins at St Kilda Pier and beachside walk', time: '04:30 PM', location: 'St Kilda Beach', estimatedCost: 0 },
+      { day: 5, activity: 'Shop at Melbourne Central and enjoy skydeck views from Eureka Tower', time: '11:00 AM', location: 'Southbank', estimatedCost: 35 },
+      { day: 5, activity: 'Farewell dinner cruise along the Yarra River', time: '07:00 PM', location: 'Yarra River', estimatedCost: 90 }
+    ]
+  },
+  {
+    id: 'pre-kyoto',
+    destination: 'Kyoto, Japan',
+    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 90000,
+    travelers: 2,
+    travelStyle: 'Cultural|JPY',
+    interests: ['History', 'Nature', 'Food'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Early morning walk through thousands of red Torii gates at Fushimi Inari', time: '07:30 AM', location: 'Fushimi Inari Shrine', estimatedCost: 0 },
+      { day: 1, activity: 'Explore Kiyomizu-dera temple and traditional Higashiyama streets', time: '01:30 PM', location: 'Higashiyama', estimatedCost: 400 },
+      { day: 2, activity: 'Visit the golden Kinkaku-ji Zen temple (Golden Pavilion)', time: '09:30 AM', location: 'Kinkaku-ji', estimatedCost: 500 },
+      { day: 2, activity: 'Wander through the towering green stalks of Arashiyama Bamboo Grove', time: '02:00 PM', location: 'Arashiyama', estimatedCost: 0 },
+      { day: 3, activity: 'Participate in a traditional Japanese Tea Ceremony in Gion district', time: '10:00 AM', location: 'Gion', estimatedCost: 3000 },
+      { day: 3, activity: 'Stroll along the Philosopher\'s Path alongside the canal stream', time: '03:00 PM', location: 'Philosopher\'s Path', estimatedCost: 0 },
+      { day: 3, activity: 'Multi-course Kaiseki dinner highlighting Kyoto seasonal food art', time: '07:30 PM', location: 'Gion Restaurant', estimatedCost: 8000 },
+      { day: 4, activity: 'Nijo Castle tour (famous nightingale squeaker floorboards)', time: '10:00 AM', location: 'Nijo Castle', estimatedCost: 800 },
+      { day: 4, activity: 'Browse Nishiki Market street food stalls and try local skewers', time: '01:30 PM', location: 'Nishiki Market', estimatedCost: 1500 }
+    ]
+  },
+  {
+    id: 'pre-geneva',
+    destination: 'Geneva, Switzerland',
+    image: 'https://images.unsplash.com/photo-1508849789987-4e5333c12b78?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 2000,
+    travelers: 1,
+    travelStyle: 'Relaxing|CHF',
+    interests: ['History', 'Nature'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'See the massive Jet d\'Eau fountain shooting water over lake Geneva', time: '10:00 AM', location: 'Lake Geneva', estimatedCost: 0 },
+      { day: 1, activity: 'Stroll around Geneva Old Town (Vieille Ville) and St. Pierre Cathedral', time: '02:30 PM', location: 'Old Town', estimatedCost: 0 },
+      { day: 2, activity: 'Guided tour of the United Nations Palace of Nations headquarters', time: '10:00 AM', location: 'UN Headquarters', estimatedCost: 20 },
+      { day: 2, activity: 'Visit the Globe of Science and Innovation at CERN particle physics lab', time: '02:30 PM', location: 'CERN', estimatedCost: 0 },
+      { day: 3, activity: 'Relax in Parc des Bastions and play on the giant floor chessboards', time: '10:30 AM', location: 'Parc des Bastions', estimatedCost: 0 },
+      { day: 3, activity: 'Farewell Swiss cheese fondue dinner at a local lakeside tavern', time: '07:00 PM', location: 'Lakeside Bistro', estimatedCost: 45 }
+    ]
+  }
+];
+
+const getWeatherForDestination = (destination, dateStr) => {
+  const month = new Date(dateStr).getMonth();
+  const name = (destination || '').toLowerCase();
+  
+  let temp = 22;
+  let condition = 'Sunny';
+  let desc = 'Clear skies and pleasant breeze';
+  
+  if (name.includes('tokyo') || name.includes('japan')) {
+    if (month >= 11 || month <= 1) { temp = 8; condition = 'Snowy'; desc = 'Chilly with light winter snow'; }
+    else if (month >= 5 && month <= 8) { temp = 28; condition = 'Rainy'; desc = 'Warm with summer showers'; }
+    else { temp = 18; condition = 'Sunny'; desc = 'Mild and clear autumn skies'; }
+  } else if (name.includes('paris') || name.includes('france') || name.includes('london') || name.includes('uk') || name.includes('zurich') || name.includes('swiss') || name.includes('amsterdam') || name.includes('geneva') || name.includes('barcelona') || name.includes('venice')) {
+    if (month >= 10 || month <= 2) { temp = 6; condition = 'Cloudy'; desc = 'Overcast and fresh winter air'; }
+    else if (month >= 6 && month <= 8) { temp = 24; condition = 'Sunny'; desc = 'Warm and bright summer days'; }
+    else { temp = 14; condition = 'Rainy'; desc = 'Cool with gentle passing showers'; }
+  } else if (name.includes('delhi') || name.includes('india')) {
+    if (month >= 4 && month <= 8) { temp = 38; condition = 'Sunny'; desc = 'Hot and sunny summer climate'; }
+    else if (month >= 11 || month <= 1) { temp = 15; condition = 'Cloudy'; desc = 'Cool and misty morning fog'; }
+    else { temp = 26; condition = 'Sunny'; desc = 'Clear, dry and warm days'; }
+  } else if (name.includes('sydney') || name.includes('australia') || name.includes('melbourne')) {
+    if (month >= 5 && month <= 8) { temp = 14; condition = 'Cloudy'; desc = 'Cool coastal winter breeze'; }
+    else if (month >= 11 || month <= 1) { temp = 26; condition = 'Sunny'; desc = 'Perfect beach weather'; }
+    else { temp = 20; condition = 'Sunny'; desc = 'Mild and sunny spring/autumn'; }
+  } else {
+    if (month >= 11 || month <= 1) { temp = 12; condition = 'Cloudy'; desc = 'Cool overcast seasonal day'; }
+    else if (month >= 5 && month <= 8) { temp = 30; condition = 'Sunny'; desc = 'Warm and sunny day'; }
+    else { temp = 21; condition = 'Windy'; desc = 'Mild temp with refreshing wind'; }
+  }
+  
+  return { temp, condition, desc };
+};
 
 export default function DashboardStub() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [activeDayTab, setActiveDayTab] = useState(1);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [currencyCode, setCurrencyCode] = useState(() => localStorage.getItem('xplorism_currency') || 'INR');
+  const [wizardInitialData, setWizardInitialData] = useState(null);
+  const [isLeafletLoaded, setIsLeafletLoaded] = useState(false);
+  const [mapCoords, setMapCoords] = useState(null);
+  const [tripToDelete, setTripToDelete] = useState(null);
+
+  const activeCurrency = CURRENCIES[currencyCode] || CURRENCIES.INR;
+
+  const handleCurrencyChange = (e) => {
+    const val = e.target.value;
+    setCurrencyCode(val);
+    localStorage.setItem('xplorism_currency', val);
+  };
+
+  const fetchTrips = async () => {
+    setLoading(true);
+    try {
+      const data = await api.get('/trips');
+      setTrips(data);
+    } catch (err) {
+      console.error('Error fetching trips:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Inject Leaflet dynamically
+  useEffect(() => {
+    if (!window.L) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = () => {
+        setIsLeafletLoaded(true);
+      };
+      document.head.appendChild(script);
+    } else {
+      setIsLeafletLoaded(true);
+    }
+  }, []);
+
+  // Fetch coordinates when a trip is selected
+  useEffect(() => {
+    if (!selectedTrip) {
+      setMapCoords(null);
+      return;
+    }
+    const geocode = async () => {
+      try {
+        const query = selectedTrip.destination;
+        const data = await api.get(`/geocode?q=${encodeURIComponent(query)}`);
+        if (data && data.length > 0) {
+          setMapCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+        } else {
+          setMapCoords([20.5937, 78.9629]); // Fallback
+        }
+      } catch (err) {
+        console.error(err);
+        setMapCoords([20.5937, 78.9629]);
+      }
+    };
+    geocode();
+  }, [selectedTrip]);
+
+  // Handle map rendering and marker plotting
+  useEffect(() => {
+    if (!mapCoords || !window.L || !selectedTrip || !isLeafletLoaded) return;
+    
+    // Clear previous map instance if it exists
+    if (window.mapInstance) {
+      window.mapInstance.remove();
+    }
+    
+    const container = document.getElementById('map-container');
+    if (!container) return;
+
+    const map = window.L.map('map-container', { zoomControl: false }).setView(mapCoords, 12);
+    window.mapInstance = map;
+    
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    window.L.control.zoom({ position: 'bottomright' }).addTo(map);
+    
+    // Custom icon configuration to fix Leaflet default marker path issues
+    const defaultIcon = window.L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34]
+    });
+    
+    // Main destination marker
+    window.L.marker(mapCoords, { icon: defaultIcon })
+      .addTo(map)
+      .bindPopup(`<b>${selectedTrip.destination}</b><br/>Trip Hub`)
+      .openPopup();
+      
+    // Geocode day activities
+    const activeDayActivities = getDayItineraries(selectedTrip);
+    activeDayActivities.forEach(async (activity, index) => {
+      if (!activity.location) return;
+      try {
+        const query = `${activity.location}, ${selectedTrip.destination}`;
+        const data = await api.get(`/geocode?q=${encodeURIComponent(query)}`);
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lon = parseFloat(data[0].lon);
+          
+          window.L.circleMarker([lat, lon], {
+            radius: 8,
+            fillColor: '#f43f5e',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.85
+          })
+            .addTo(map)
+            .bindPopup(`<b>${activity.time}</b><br/>${activity.activity}<br/><i>${activity.location}</i>`);
+        }
+      } catch (err) {
+        console.error('Marker geocode error:', err);
+      }
+    });
+
+    return () => {
+      if (window.mapInstance) {
+        window.mapInstance.remove();
+        window.mapInstance = null;
+      }
+    };
+  }, [mapCoords, selectedTrip, activeDayTab, isLeafletLoaded]);
+
+  useEffect(() => {
+    fetchTrips();
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  const handleDeleteTrip = (trip, e) => {
+    e.stopPropagation();
+    setTripToDelete(trip);
+  };
+
+  const formatDate = (dateStr) => {
+    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+    return new Date(dateStr).toLocaleDateString(undefined, options);
+  };
+
+  const getTripDaysCount = (start, end) => {
+    const diff = Math.abs(new Date(end) - new Date(start));
+    return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  const getDayItineraries = (trip) => {
+    if (!trip || !trip.itineraries) return [];
+    return trip.itineraries.filter(item => item.day === activeDayTab);
+  };
+
+  const getDaysArray = (trip) => {
+    if (!trip || !trip.itineraries) return [];
+    const days = [...new Set(trip.itineraries.map(item => item.day))];
+    return days.sort((a, b) => a - b);
+  };
+
   return (
-    <div className="relative min-h-screen bg-[#040d12] bg-grid-pattern text-slate-100 overflow-hidden">
-      {/* Decorative Blob */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-teal-600/5 blur-[120px]" />
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+      <style>{`
+        .marquee-wrapper {
+          overflow: hidden;
+          width: 100%;
+          display: flex;
+          position: relative;
+          padding-bottom: 8px;
+        }
+        .marquee-track {
+          display: flex;
+          width: max-content;
+          animation: scroll 150s linear infinite;
+          gap: 24px;
+        }
+        .marquee-track:hover {
+          animation-play-state: paused;
+        }
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
 
       {/* Navigation */}
-      <nav className="relative z-10 max-w-7xl mx-auto px-6 py-4 flex items-center justify-between border-b border-slate-800/40 glass">
-        <div className="flex items-center space-x-3 text-2xl font-bold tracking-tight">
-          <img 
-            src="/logo.png" 
-            alt="Xplorism Logo" 
-            className="h-13 w-13 object-contain rounded-full shadow-sm" 
-          />
-          <span className="text-white font-extrabold tracking-tight">
-            Xplorism
-          </span>
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-slate-300 text-sm font-medium">Hello, {user?.name || 'Traveler'}!</span>
-          <button
-            onClick={handleLogout}
-            className="p-2.5 rounded-full hover:bg-slate-900 border border-slate-800/60 text-slate-400 hover:text-white transition cursor-pointer"
-            title="Log Out"
-          >
-            <LogOut className="h-4.5 w-4.5" />
-          </button>
+      <nav className="relative z-30 w-full bg-white border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3 text-2xl font-bold tracking-tight cursor-pointer" onClick={() => navigate('/')}>
+            <img 
+              src="/logo.png" 
+              alt="Xplorism Logo" 
+              className="h-12 w-12 object-contain rounded-full shadow-sm" 
+            />
+            <span className="text-slate-900 font-extrabold tracking-tight">
+              Xplorism
+            </span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-slate-650 text-sm font-semibold hidden sm:inline">Hello, {user?.name || 'Traveler'}!</span>
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-full hover:bg-slate-100 border border-slate-250/60 text-slate-500 hover:text-slate-800 transition cursor-pointer"
+              title="Log Out"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2">My Trips Dashboard</h1>
-            <p className="text-slate-400 text-sm">Create and manage your customized itineraries.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">My Trips Dashboard</h1>
+            <p className="text-slate-500 text-sm">Create and manage your customized itineraries.</p>
           </div>
           <button
-            onClick={() => alert("Trip creation form will be available in Phase 2!")}
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 font-semibold text-sm transition-all duration-300 shadow-lg shadow-teal-500/20 flex items-center space-x-2 cursor-pointer"
+            onClick={() => setIsWizardOpen(true)}
+            className="px-6 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-205 shadow-sm flex items-center space-x-2 cursor-pointer"
           >
             <Plus className="h-5 w-5" />
             <span>Create New Trip</span>
           </button>
         </div>
 
-        {/* Empty State Grid */}
-        <div className="glass p-12 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed border-slate-850">
-          <div className="h-16 w-16 rounded-2xl bg-teal-50/10 flex items-center justify-center text-teal-600 mb-6">
-            <TripIcon className="h-8 w-8" />
+        {/* Pre-planned Trips Section */}
+        <div className="mb-12">
+          <div className="flex items-center space-x-2 text-rose-500 mb-6">
+            <Sparkles className="h-5 w-5 animate-pulse" />
+            <h2 className="text-xl font-bold text-slate-900">Recommended Pre-planned Trips</h2>
           </div>
-          <h2 className="text-xl font-bold mb-2">No trips created yet</h2>
-          <p className="text-slate-400 max-w-md text-sm mb-6">
-            Get started by planning your first custom itinerary.
-          </p>
-          <button
-            onClick={() => alert("Trip creation form will be available in Phase 2!")}
-            className="px-5 py-2.5 rounded-full bg-slate-900 hover:bg-slate-850 border border-slate-805/60 text-sm font-semibold transition"
-          >
-            Start Planning
-          </button>
+          
+          {/* Loop Scrolling Marquee Wrapper */}
+          <div className="marquee-wrapper relative">
+            {/* Fading Edge Overlays */}
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
+            <div className="marquee-track">
+              {/* Render twice for seamless infinite loop */}
+              {[...PRE_PLANNED_TRIPS, ...PRE_PLANNED_TRIPS].map((trip, index) => {
+                const days = getTripDaysCount(trip.startDate, trip.endDate);
+                const parts = trip.travelStyle.split('|');
+                const style = parts[0];
+                const tripCurrencyCode = parts[1];
+                const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
+                return (
+                  <div
+                    key={`${trip.id}-${index}`}
+                    onClick={() => {
+                      setSelectedTrip(trip);
+                      setActiveDayTab(1);
+                    }}
+                    className="group w-[280px] md:w-[320px] bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
+                  >
+                    <div className="relative h-40 w-full overflow-hidden">
+                      <img 
+                        src={trip.image} 
+                        alt={trip.destination} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 flex items-center space-x-1.5 z-10">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-rose-550 border border-slate-100/50 backdrop-blur-sm shadow-sm">
+                          {style}
+                        </span>
+                        {/* Mini Weather Pill on cover */}
+                        {(() => {
+                          const w = getWeatherForDestination(trip.destination, trip.startDate);
+                          const Icon = w.condition === 'Sunny' ? Sun : w.condition === 'Cloudy' ? Cloud : w.condition === 'Rainy' ? CloudRain : w.condition === 'Snowy' ? Snowflake : Wind;
+                          return (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-slate-700 border border-slate-100/50 backdrop-blur-sm shadow-sm flex items-center space-x-1">
+                              <Icon className="h-3 w-3 text-amber-500" />
+                              <span>{w.temp}°C</span>
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1 group-hover:text-rose-500 transition truncate">
+                          {trip.destination}
+                        </h3>
+                        <p className="text-slate-500 text-[11px] mb-4">{days} Days Custom Schedule</p>
+                      </div>
+                      <div className="flex items-center justify-between text-slate-500 text-xs pt-3 border-t border-slate-50">
+                        <div className="flex items-center space-x-1.5">
+                          <Users className="h-4 w-4 text-rose-455" />
+                          <span>{trip.travelers} Travelers</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5 font-bold text-slate-900">
+                          <span>{tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
+
+        {/* Separator / Title for personal trips */}
+        <div className="mb-6 pt-2 border-t border-slate-200/50">
+          <h2 className="text-xl font-bold text-slate-900">My Saved Itineraries</h2>
+        </div>
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <div className="h-10 w-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+            <p className="text-slate-500 text-sm">Loading saved itineraries...</p>
+          </div>
+        ) : trips.length === 0 ? (
+          /* Empty State */
+          <div className="bg-white p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed border-slate-200 shadow-sm">
+            <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 mb-6 border border-slate-100">
+              <TripIcon className="h-8 w-8 text-rose-400" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">No trips created yet</h2>
+            <p className="text-slate-555 max-w-sm text-sm mb-6 leading-relaxed">
+              Get started by planning your first custom travel itinerary. Let our system design a tailored schedule for you.
+            </p>
+            <button
+              onClick={() => setIsWizardOpen(true)}
+              className="px-6 py-3 rounded-full bg-slate-950 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
+            >
+              Start Planning
+            </button>
+          </div>
+        ) : (
+          /* Trips Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trips.map((trip) => {
+              const days = getTripDaysCount(trip.startDate, trip.endDate);
+              const parts = (trip.travelStyle || '').split('|');
+              const style = parts[0] || 'Adventure';
+              const tripCurrencyCode = parts[1] || 'USD';
+              const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
+              const weather = getWeatherForDestination(trip.destination, trip.startDate);
+              const WeatherIcon = weather.condition === 'Sunny' ? Sun : weather.condition === 'Cloudy' ? Cloud : weather.condition === 'Rainy' ? CloudRain : weather.condition === 'Snowy' ? Snowflake : Wind;
+              
+              return (
+                <div
+                  key={trip.id}
+                  onClick={() => {
+                    setSelectedTrip(trip);
+                    setActiveDayTab(1);
+                  }}
+                  className="group relative bg-white p-6 rounded-3xl border border-slate-100 hover:border-rose-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
+                >
+                  <div>
+                    {/* Style Badge & Weather */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-555 border border-rose-100">
+                          {style}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-semibold text-slate-505 flex items-center space-x-1">
+                          <WeatherIcon className={`h-3 w-3 ${weather.condition === 'Sunny' ? 'text-amber-500' : weather.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
+                          <span>{weather.temp}°C</span>
+                        </span>
+                      </div>
+                      <button
+                        onClick={(e) => handleDeleteTrip(trip, e)}
+                        className="p-1.5 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition cursor-pointer"
+                        title="Delete Trip"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-slate-950 mb-2 group-hover:text-rose-500 transition">
+                      {trip.destination}
+                    </h3>
+                    
+                    <div className="flex items-center space-x-2 text-slate-500 text-xs mb-4">
+                      <Calendar className="h-3.5 w-3.5 text-rose-400" />
+                      <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? 'day' : 'days'})</span>
+                    </div>
+
+                    <div className="flex items-center space-x-6 text-slate-600 text-xs mb-5">
+                      <div className="flex items-center space-x-1.5">
+                        <Users className="h-4 w-4 text-rose-455" />
+                        <span>{trip.travelers} {trip.travelers === 1 ? 'Traveler' : 'Travelers'}</span>
+                      </div>
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-rose-500 font-bold text-sm">{tripCurrency.symbol}</span>
+                        <span>Budget: {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {trip.interests && trip.interests.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-50">
+                      {trip.interests.slice(0, 3).map((interest, idx) => (
+                        <span key={idx} className="px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-semibold text-slate-500">
+                          {interest}
+                        </span>
+                      ))}
+                      {trip.interests.length > 3 && (
+                        <span className="text-[9px] text-slate-400 font-semibold flex items-center">+{trip.interests.length - 3} more</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
+
+      {/* Trip Details Modal */}
+      <AnimatePresence>
+        {selectedTrip && (() => {
+          const parts = (selectedTrip.travelStyle || '').split('|');
+          const style = parts[0] || 'Adventure';
+          const tripCurrencyCode = parts[1] || 'USD';
+          const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
+          const weather = getWeatherForDestination(selectedTrip.destination, selectedTrip.startDate);
+          const WeatherIcon = weather.condition === 'Sunny' ? Sun : weather.condition === 'Cloudy' ? Cloud : weather.condition === 'Rainy' ? CloudRain : weather.condition === 'Snowy' ? Snowflake : Wind;
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl shadow-xl flex flex-col max-h-[85vh] overflow-hidden text-slate-800"
+              >
+                {/* Header */}
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center space-x-2 text-rose-500 mb-1">
+                      <Sparkles className="h-4.5 w-4.5" />
+                      <span className="text-xs font-bold uppercase tracking-wider">{style} Mode</span>
+                    </div>
+                    <h2 className="text-2xl font-extrabold text-slate-955">{selectedTrip.destination}</h2>
+                    <p className="text-slate-500 text-xs mt-1">
+                      {formatDate(selectedTrip.startDate)} to {formatDate(selectedTrip.endDate)} • {selectedTrip.travelers} {selectedTrip.travelers === 1 ? 'Traveler' : 'Travelers'} • Budget: {tripCurrency.symbol}{Number(selectedTrip.budget).toLocaleString(tripCurrency.locale)}
+                    </p>
+                    
+                    {/* Weather Forecast Details Panel */}
+                    <div className="flex items-center space-x-3 mt-3 text-xs text-slate-500 bg-slate-50 border border-slate-100 p-2.5 rounded-2xl w-fit shadow-sm">
+                      <div className="flex items-center space-x-1.5 font-bold text-slate-700">
+                        <WeatherIcon className={`h-4 w-4 ${weather.condition === 'Sunny' ? 'text-amber-500' : weather.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
+                        <span>{weather.temp}°C • {weather.condition}</span>
+                      </div>
+                      <span className="h-3 w-[1px] bg-slate-200" />
+                      <span className="italic">{weather.desc}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    {selectedTrip.isPrePlanned && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setWizardInitialData({
+                              destination: selectedTrip.destination,
+                              startDate: selectedTrip.startDate,
+                              endDate: selectedTrip.endDate,
+                              budget: selectedTrip.budget,
+                              travelers: selectedTrip.travelers,
+                              travelStyle: selectedTrip.travelStyle,
+                              interests: selectedTrip.interests
+                            });
+                            setIsWizardOpen(true);
+                            setSelectedTrip(null);
+                          }}
+                          className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                        >
+                          <Edit className="h-3.5 w-3.5 text-rose-500" />
+                          <span>Customize</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await api.post('/trips', {
+                                destination: selectedTrip.destination,
+                                startDate: selectedTrip.startDate,
+                                endDate: selectedTrip.endDate,
+                                budget: selectedTrip.budget,
+                                travelers: selectedTrip.travelers,
+                                travelStyle: selectedTrip.travelStyle,
+                                interests: selectedTrip.interests,
+                                itinerary: selectedTrip.itineraries
+                              });
+                              alert('Pre-planned itinerary saved to your trips!');
+                              fetchTrips();
+                              setSelectedTrip(null);
+                            } catch (err) {
+                              console.error(err);
+                              alert('Failed to copy itinerary.');
+                            }
+                          }}
+                          className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm cursor-pointer"
+                        >
+                          Add to My Trips
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => setSelectedTrip(null)}
+                      className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Day Tabs */}
+                <div className="px-6 py-3 border-b border-slate-100 bg-slate-50 flex items-center space-x-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
+                  {getDaysArray(selectedTrip).map((day) => (
+                    <button
+                      key={day}
+                      onClick={() => setActiveDayTab(day)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${activeDayTab === day ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 bg-white'}`}
+                    >
+                      Day {day}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Split Content Body: Itinerary List (Left) & Leaflet Map (Right) */}
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                  
+                  {/* Left Panel: Day Activities Checklist */}
+                  <div className="w-full md:w-7/12 overflow-y-auto p-6 border-r border-slate-100 space-y-6">
+                    {getDayItineraries(selectedTrip).length === 0 ? (
+                      <p className="text-slate-400 text-sm text-center py-8">No activities scheduled for this day.</p>
+                    ) : (
+                      <div className="relative border-l border-slate-200 pl-6 ml-3 space-y-6">
+                        {getDayItineraries(selectedTrip).map((item, idx) => (
+                          <div key={item.id || idx} className="relative group">
+                            {/* Bullet indicator */}
+                            <div className="absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 border-rose-400 bg-white group-hover:bg-rose-400 transition-all duration-200" />
+                            
+                            <div className="flex items-center space-x-2 text-rose-500 text-xs font-bold mb-1">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>{item.time}</span>
+                            </div>
+
+                            <h4 className="text-base font-bold text-slate-900 mb-2 leading-snug">
+                              {item.activity}
+                            </h4>
+
+                            <div className="flex flex-wrap items-center gap-4 text-slate-550 text-xs">
+                              {item.location && (
+                                <div className="flex items-center space-x-1">
+                                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                                  <span>{item.location}</span>
+                                </div>
+                              )}
+                              {item.estimatedCost !== undefined && (
+                                <div className="flex items-center space-x-1 font-bold text-slate-800">
+                                  <span>Est. Cost: {tripCurrency.symbol}{Number(item.estimatedCost).toLocaleString(tripCurrency.locale)}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Panel: Interactive Route Map */}
+                  <div className="w-full md:w-5/12 bg-slate-50/50 p-4 flex flex-col h-[280px] md:h-auto border-t md:border-t-0 border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center">
+                      <MapPin className="h-3.5 w-3.5 mr-1 text-rose-500" />
+                      <span>Day {activeDayTab} Landmark Route</span>
+                    </span>
+                    <div className="flex-1 bg-slate-200 rounded-2xl overflow-hidden relative border border-slate-200 shadow-sm">
+                      {isLeafletLoaded ? (
+                        <div id="map-container" className="absolute inset-0 z-10 w-full h-full" />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center space-y-2">
+                          <div className="h-6 w-6 border-2 border-slate-300 border-t-rose-500 rounded-full animate-spin" />
+                          <span className="text-[10px] font-bold text-slate-400">Loading Map Engine...</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                {selectedTrip.interests && selectedTrip.interests.length > 0 && (
+                  <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 z-10">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center mr-2">
+                      <Tag className="h-3.5 w-3.5 mr-1 text-rose-400" />
+                      <span>Applied Interests:</span>
+                    </div>
+                    {selectedTrip.interests.map((interest, idx) => (
+                      <span key={idx} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] text-slate-650 font-semibold shadow-sm">
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          );
+        })()}
+      </AnimatePresence>
+
+      {/* Trip Wizard Modal */}
+      <TripWizard 
+        isOpen={isWizardOpen} 
+        onClose={() => {
+          setIsWizardOpen(false);
+          setWizardInitialData(null);
+        }} 
+        onTripCreated={fetchTrips} 
+        currencyCode={currencyCode}
+        initialData={wizardInitialData}
+      />
+
+      {/* Custom Delete Confirmation Modal */}
+      <AnimatePresence>
+        {tripToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl border border-slate-100 p-6 max-w-sm w-full shadow-xl text-slate-800 relative"
+            >
+              <div className="flex items-center space-x-3 text-red-500 mb-4">
+                <Trash2 className="h-5 w-5" />
+                <h3 className="text-lg font-bold text-slate-900">Delete Trip</h3>
+              </div>
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                Are you sure you want to delete your trip to <strong className="text-slate-800">{tripToDelete.destination}</strong>? This action cannot be undone.
+              </p>
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setTripToDelete(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-sm active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await api.delete(`/trips/${tripToDelete.id}`);
+                      setTrips(trips.filter(t => t.id !== tripToDelete.id));
+                      if (selectedTrip?.id === tripToDelete.id) {
+                        setSelectedTrip(null);
+                      }
+                      setTripToDelete(null);
+                    } catch (err) {
+                      console.error('Failed to delete trip:', err);
+                      alert('Failed to delete trip.');
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

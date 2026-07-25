@@ -6,14 +6,30 @@
   }
   
   html {
-    background-color: #040d12;
+    background-color: #f8fafc;
   }
   
   body {
-    background-color: #040d12;
-    color: #f1f5f9;
+    background-color: #f8fafc;
+    color: #1e293b;
     font-family: var(--font-sans);
     overflow-x: hidden;
+  }
+
+  /* Custom clean global scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f8fafc;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.7);
   }
 }
 

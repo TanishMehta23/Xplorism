@@ -33,5 +33,3 @@ out/
 .DS_Store
 Thumbs.db
 
-# Prisma
-/xplorism-web/backend/prisma/migrations/

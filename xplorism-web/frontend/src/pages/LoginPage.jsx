@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
@@ -9,8 +9,34 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleCallback = async (response) => {
+    setError('');
+    setLoading(true);
+    try {
+      await loginWithGoogle(response.credential);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Google sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback,
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById('google-signin-btn'),
+        { theme: 'filled_black', size: 'large', width: '382', text: 'signin_with' }
+      );
+    }
+  }, [loginWithGoogle]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -128,6 +154,15 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <div className="relative my-6 flex items-center justify-center">
+            <div className="border-t border-slate-800/65 w-full"></div>
+            <span className="absolute bg-[#0b1513] px-3 text-xs text-slate-500 uppercase tracking-wider">Or continue with</span>
+          </div>
+
+          <div className="flex justify-center">
+            <div id="google-signin-btn" className="w-full flex justify-center min-h-[44px]"></div>
+          </div>
 
           <div className="mt-8 text-center border-t border-slate-800/60 pt-6">
             <span className="text-slate-400 text-xs">Don't have an account? </span>

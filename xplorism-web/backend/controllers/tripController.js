@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { askGeminiForItinerary } from '../services/geminiService.js';
 
 // Get all trips for the authenticated user
 export const getTrips = async (req, res) => {
@@ -261,3 +262,38 @@ export const deleteTrip = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Generate custom itinerary using Gemini AI
+export const generateItinerary = async (req, res) => {
+  try {
+    const {
+      destination,
+      startDate,
+      endDate,
+      budget,
+      travelers,
+      travelStyle,
+      interests
+    } = req.body;
+
+    if (!destination || !startDate || !endDate) {
+      return res.status(400).json({ message: 'Destination, start date, and end date are required.' });
+    }
+
+    const result = await askGeminiForItinerary({
+      destination,
+      startDate,
+      endDate,
+      budget: budget || 50000,
+      travelers: travelers || 1,
+      travelStyle: travelStyle || 'Adventure',
+      interests: interests || []
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Generate itinerary error:', error);
+    res.status(550).json({ message: error.message || 'Failed to generate itinerary using Gemini.' });
+  }
+};
+

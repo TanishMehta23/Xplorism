@@ -360,8 +360,8 @@ export default function LandingPage() {
       scrollWheelZoom: true
     }).setView([lat, lon], zoom);
 
-    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+     window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps'
     }).addTo(mapRef.current);
   };
 

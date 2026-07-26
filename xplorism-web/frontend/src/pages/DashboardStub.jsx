@@ -334,7 +334,7 @@ const PRE_PLANNED_TRIPS = [
   {
     id: 'pre-vancouver',
     destination: 'Vancouver, Canada',
-    image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80',
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
     budget: 1600,
@@ -459,6 +459,102 @@ const PRE_PLANNED_TRIPS = [
       { day: 3, activity: 'Relax in Parc des Bastions and play on the giant floor chessboards', time: '10:30 AM', location: 'Parc des Bastions', estimatedCost: 0 },
       { day: 3, activity: 'Farewell Swiss cheese fondue dinner at a local lakeside tavern', time: '07:00 PM', location: 'Lakeside Bistro', estimatedCost: 45 }
     ]
+  },
+  {
+    id: 'pre-ladakh-kashmir',
+    destination: 'Leh-Ladakh & Kashmir, India',
+    image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 6 days
+    budget: 45000,
+    travelers: 2,
+    travelStyle: 'Adventure & Scenic|INR',
+    interests: ['Nature', 'Adventure', 'History'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Arrive in Leh, acclimatize to high altitude, and visit Leh Palace', time: '04:00 PM', location: 'Leh Palace', estimatedCost: 500 },
+      { day: 2, activity: 'Drive to Nubra Valley via spectacular Khardung La Pass', time: '09:00 AM', location: 'Khardung La', estimatedCost: 1500 },
+      { day: 3, activity: 'Double-humped Bactrian camel safari at Hunder Sand Dunes', time: '08:30 AM', location: 'Hunder Dunes', estimatedCost: 800 },
+      { day: 4, activity: 'Visit the breathtaking deep blue Pangong Tso Lake', time: '08:00 AM', location: 'Pangong Lake', estimatedCost: 2000 },
+      { day: 5, activity: 'Travel to Srinagar and explore Dal Lake on a sunset Shikara ride', time: '04:30 PM', location: 'Dal Lake Srinagar', estimatedCost: 1200 },
+      { day: 6, activity: 'Walk through Shalimar and Nishat Mughal Gardens in Srinagar', time: '10:00 AM', location: 'Mughal Gardens', estimatedCost: 400 }
+    ]
+  },
+  {
+    id: 'pre-manali',
+    destination: 'Manali, Himachal Pradesh, India',
+    image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 20000,
+    travelers: 2,
+    travelStyle: 'Hill Station Escapade|INR',
+    interests: ['Nature', 'Adventure'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Walk around Mall Road and visit the historical Hadimba Temple', time: '10:00 AM', location: 'Hadimba Temple', estimatedCost: 200 },
+      { day: 2, activity: 'Day trip to Solang Valley for paragliding and snow activities', time: '09:00 AM', location: 'Solang Valley', estimatedCost: 2500 },
+      { day: 3, activity: 'Drive through Atal Tunnel to explore Sissu village waterfall in Lahaul', time: '08:30 AM', location: 'Sissu Waterfall', estimatedCost: 1500 },
+      { day: 4, activity: 'Trek to Jogini Waterfalls and relax at Vashisht hot springs', time: '09:30 AM', location: 'Vashisht', estimatedCost: 100 }
+    ]
+  },
+  {
+    id: 'pre-lahaulspiti',
+    destination: 'Lahaul & Spiti, Himachal Pradesh, India',
+    image: 'https://images.unsplash.com/photo-1618083707368-b3823daa2726?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days
+    budget: 35000,
+    travelers: 2,
+    travelStyle: 'Rugged Mountain Safari|INR',
+    interests: ['Nature', 'Adventure', 'Culture'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Scenic drive from Manali to Kaza via the high Kunzum Pass', time: '07:00 AM', location: 'Kunzum Pass', estimatedCost: 2000 },
+      { day: 2, activity: 'Explore Key Monastery, the iconic cliffside Buddhist temple, and Kibber village', time: '09:30 AM', location: 'Key Monastery', estimatedCost: 500 },
+      { day: 3, activity: 'Send a postcard from Hikkim, the world\'s highest post office, and see Langza fossils', time: '10:00 AM', location: 'Hikkim Post Office', estimatedCost: 300 },
+      { day: 4, activity: 'Visit the scenic Pin Valley National Park and hike near Mud village', time: '09:00 AM', location: 'Mud Village', estimatedCost: 1000 },
+      { day: 5, activity: 'Camp next to the mesmerizing crescent-shaped Chandra Taal Lake', time: '03:00 PM', location: 'Chandra Taal', estimatedCost: 2500 }
+    ]
+  },
+  {
+    id: 'pre-ayodhya',
+    destination: 'Ayodhya, Uttar Pradesh, India',
+    image: 'https://images.unsplash.com/photo-1590050752117-238cb0612b1b?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
+    budget: 12000,
+    travelers: 2,
+    travelStyle: 'Spiritual & Cultural Heritage|INR',
+    interests: ['History', 'Culture'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Offer prayers at the magnificent Shri Ram Janmabhoomi Mandir', time: '09:00 AM', location: 'Ram Mandir', estimatedCost: 0 },
+      { day: 1, activity: 'Experience the divine evening Saryu River Aarti at Naya Ghat', time: '06:00 PM', location: 'Saryu Ghat', estimatedCost: 100 },
+      { day: 2, activity: 'Visit the hilltop Hanuman Garhi temple and beautiful Kanak Bhawan', time: '08:30 AM', location: 'Hanuman Garhi', estimatedCost: 50 },
+      { day: 2, activity: 'Sunset boat ride on the holy Saryu River with local legends storytelling', time: '04:00 PM', location: 'Saryu River', estimatedCost: 300 },
+      { day: 3, activity: 'Explore the historic tombs of Gulab Bari and Bahu Begum in Faizabad', time: '10:00 AM', location: 'Gulab Bari', estimatedCost: 150 }
+    ]
+  },
+  {
+    id: 'pre-jodhpur-jaisalmer',
+    destination: 'Jodhpur & Jaisalmer, Rajasthan, India',
+    image: 'https://images.unsplash.com/photo-1602643163983-ed0babc39797?auto=format&fit=crop&w=600&q=80',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days
+    budget: 28000,
+    travelers: 2,
+    travelStyle: 'Royal Desert Odyssey|INR',
+    interests: ['History', 'Culture', 'Food'],
+    isPrePlanned: true,
+    itineraries: [
+      { day: 1, activity: 'Explore the massive Mehrangarh Fort and royal cenotaph Jaswant Thada', time: '09:30 AM', location: 'Mehrangarh Fort', estimatedCost: 800 },
+      { day: 1, activity: 'Wander the blue-painted streets of Jodhpur Old City and shop at Sardar Market', time: '04:00 PM', location: 'Clock Tower', estimatedCost: 200 },
+      { day: 2, activity: 'Drive to Jaisalmer and check into a luxury desert camp in Thar Desert', time: '08:00 AM', location: 'Thar Desert', estimatedCost: 3500 },
+      { day: 2, activity: 'Camel safari, dunes sunset photography, and Rajasthani cultural folk dance show', time: '04:30 PM', location: 'Sam Sand Dunes', estimatedCost: 1500 },
+      { day: 3, activity: 'Tour the living Jaisalmer Fort (Sonar Qila) and admire Patwon Ki Haveli intricate carvings', time: '09:30 AM', location: 'Jaisalmer Fort', estimatedCost: 500 },
+      { day: 4, activity: 'Rowboat ride at scenic Gadisar Lake and exploring the mysterious abandoned Kuldhara village', time: '10:00 AM', location: 'Gadisar Lake', estimatedCost: 400 }
+    ]
   }
 ];
 
@@ -478,7 +574,11 @@ const getWeatherForDestination = (destination, dateStr) => {
     if (month >= 10 || month <= 2) { temp = 6; condition = 'Cloudy'; desc = 'Overcast and fresh winter air'; }
     else if (month >= 6 && month <= 8) { temp = 24; condition = 'Sunny'; desc = 'Warm and bright summer days'; }
     else { temp = 14; condition = 'Rainy'; desc = 'Cool with gentle passing showers'; }
-  } else if (name.includes('delhi') || name.includes('india')) {
+  } else if (name.includes('leh') || name.includes('ladakh') || name.includes('kashmir') || name.includes('manali') || name.includes('spiti') || name.includes('lahaul')) {
+    if (month >= 11 || month <= 2) { temp = -5; condition = 'Snowy'; desc = 'Freezing winter weather with heavy snow'; }
+    else if (month >= 5 && month <= 8) { temp = 20; condition = 'Sunny'; desc = 'Pleasant summer days with cool breeze'; }
+    else { temp = 10; condition = 'Cloudy'; desc = 'Cold climate with crisp mountain air'; }
+  } else if (name.includes('delhi') || name.includes('india') || name.includes('ayodhya') || name.includes('jodhpur') || name.includes('jaisalmer')) {
     if (month >= 4 && month <= 8) { temp = 38; condition = 'Sunny'; desc = 'Hot and sunny summer climate'; }
     else if (month >= 11 || month <= 1) { temp = 15; condition = 'Cloudy'; desc = 'Cool and misty morning fog'; }
     else { temp = 26; condition = 'Sunny'; desc = 'Clear, dry and warm days'; }
@@ -495,6 +595,125 @@ const getWeatherForDestination = (destination, dateStr) => {
   return { temp, condition, desc };
 };
 
+const getActivityImageFallback = (location, time) => {
+  const loc = (location || '').toLowerCase();
+  if (loc.includes('lake') || loc.includes('sukhna') || loc.includes('beach') || loc.includes('water')) {
+    return 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=500&auto=format&fit=crop&q=60';
+  }
+  if (loc.includes('garden') || loc.includes('park') || loc.includes('rose') || loc.includes('lawn') || loc.includes('forest')) {
+    return 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=500&auto=format&fit=crop&q=60';
+  }
+  if (loc.includes('mall') || loc.includes('market') || loc.includes('shop') || loc.includes('bazaar') || loc.includes('elante')) {
+    return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&auto=format&fit=crop&q=60';
+  }
+  if (loc.includes('museum') || loc.includes('palace') || loc.includes('fort') || loc.includes('temple') || loc.includes('capitol') || loc.includes('monument') || loc.includes('rock')) {
+    return 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=500&auto=format&fit=crop&q=60';
+  }
+  if (time === 'Morning') {
+    return 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=500&auto=format&fit=crop&q=60';
+  }
+  if (time === 'Afternoon') {
+    return 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=500&auto=format&fit=crop&q=60';
+  }
+  return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&auto=format&fit=crop&q=60';
+};
+
+const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
+  const [imageSrc, setImageSrc] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    const fetchWikiImage = async () => {
+      try {
+        const searchQuery = encodeURIComponent(item.location);
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${searchQuery}&format=json&origin=*`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+        
+        if (searchData.query && searchData.query.search && searchData.query.search.length > 0) {
+          const pageTitle = searchData.query.search[0].title;
+          const imageQueryUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=pageimages&format=json&pithumbsize=500&origin=*`;
+          const imageRes = await fetch(imageQueryUrl);
+          const imageData = await imageRes.json();
+          const pages = imageData.query.pages;
+          const pageId = Object.keys(pages)[0];
+          if (pages[pageId].thumbnail && pages[pageId].thumbnail.source) {
+            if (active) {
+              setImageSrc(pages[pageId].thumbnail.source);
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch Wikipedia image", err);
+      }
+      
+      if (active) {
+        setImageSrc(getActivityImageFallback(item.location, item.time));
+      }
+    };
+    
+    fetchWikiImage();
+    return () => {
+      active = false;
+    };
+  }, [item.location, item.time]);
+
+  return (
+    <div className="mb-6 border-b border-slate-100 pb-6 last:border-0 last:pb-0">
+      {/* Time Header with Clock Icon */}
+      <div className="flex items-center space-x-2 text-rose-500 text-xs font-bold mb-3 uppercase tracking-wider">
+        <Clock className="h-4 w-4" />
+        <span>{item.time}</span>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-5 items-start">
+        {/* Left Card: Image with + button */}
+        <div className="relative w-36 h-28 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100 group/img">
+          {imageSrc ? (
+            <img 
+              src={imageSrc} 
+              alt={item.location} 
+              className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center">
+              <span className="text-xs text-slate-400">Loading...</span>
+            </div>
+          )}
+          {/* Plus action button over image */}
+          <button className="absolute top-2 right-2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer border border-slate-100">
+            <Plus className="h-4 w-4 text-slate-500" />
+          </button>
+        </div>
+
+        {/* Right Info: Name and Description */}
+        <div className="flex-1 space-y-2">
+          <h4 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug">
+            {item.location}
+          </h4>
+          <p className="text-slate-600 text-sm leading-relaxed font-normal">
+            {item.activity}
+          </p>
+          <div className="flex flex-wrap items-center gap-4 text-slate-550 text-xs font-semibold pt-1">
+            {item.location && (
+              <div className="flex items-center space-x-1">
+                <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                <span>{item.location}</span>
+              </div>
+            )}
+            {item.estimatedCost !== undefined && (
+              <div className="flex items-center space-x-1 font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg">
+                <span>Est. Cost: {tripCurrency.symbol}{Number(item.estimatedCost).toLocaleString(tripCurrency.locale)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function DashboardStub() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -509,6 +728,9 @@ export default function DashboardStub() {
   const [isLeafletLoaded, setIsLeafletLoaded] = useState(false);
   const [mapCoords, setMapCoords] = useState(null);
   const [tripToDelete, setTripToDelete] = useState(null);
+  const [nearbyPlaces, setNearbyPlaces] = useState([]);
+  const [nearbyPlacesLoading, setNearbyPlacesLoading] = useState(false);
+
 
   const activeCurrency = CURRENCIES[currencyCode] || CURRENCIES.INR;
 
@@ -549,13 +771,15 @@ export default function DashboardStub() {
     }
   }, []);
 
-  // Fetch coordinates when a trip is selected
+  // Fetch coordinates and nearby places when a trip is selected
   useEffect(() => {
     if (!selectedTrip) {
       setMapCoords(null);
+      setNearbyPlaces([]);
       return;
     }
-    const geocode = async () => {
+    const geocodeAndFetchNearby = async () => {
+      // 1. Geocode
       try {
         const query = selectedTrip.destination;
         const data = await api.get(`/geocode?q=${encodeURIComponent(query)}`);
@@ -568,9 +792,22 @@ export default function DashboardStub() {
         console.error(err);
         setMapCoords([20.5937, 78.9629]);
       }
+
+      // 2. Fetch nearby places (100km radius)
+      setNearbyPlacesLoading(true);
+      try {
+        const data = await api.get(`/nearby?destination=${encodeURIComponent(selectedTrip.destination)}`);
+        setNearbyPlaces(data || []);
+      } catch (err) {
+        console.error('Failed to fetch nearby places:', err);
+        setNearbyPlaces([]);
+      } finally {
+        setNearbyPlacesLoading(false);
+      }
     };
-    geocode();
+    geocodeAndFetchNearby();
   }, [selectedTrip]);
+
 
   // Handle map rendering and marker plotting
   useEffect(() => {
@@ -584,11 +821,12 @@ export default function DashboardStub() {
     const container = document.getElementById('map-container');
     if (!container) return;
 
-    const map = window.L.map('map-container', { zoomControl: false }).setView(mapCoords, 12);
+    const zoom = activeDayTab === 'nearby' ? 9 : 12;
+    const map = window.L.map('map-container', { zoomControl: false }).setView(mapCoords, zoom);
     window.mapInstance = map;
     
-    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+     window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '© Google Maps'
     }).addTo(map);
 
     window.L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -602,40 +840,101 @@ export default function DashboardStub() {
       popupAnchor: [1, -34]
     });
     
-    // Main destination marker
-    window.L.marker(mapCoords, { icon: defaultIcon })
-      .addTo(map)
-      .bindPopup(`<b>${selectedTrip.destination}</b><br/>Trip Hub`)
-      .openPopup();
       
-    // Geocode day activities
-    const activeDayActivities = getDayItineraries(selectedTrip);
-    activeDayActivities.forEach(async (activity, index) => {
-      if (!activity.location) return;
-      try {
-        const query = `${activity.location}, ${selectedTrip.destination}`;
-        const data = await api.get(`/geocode?q=${encodeURIComponent(query)}`);
-        if (data && data.length > 0) {
-          const lat = parseFloat(data[0].lat);
-          const lon = parseFloat(data[0].lon);
-          
-          window.L.circleMarker([lat, lon], {
-            radius: 8,
-            fillColor: '#f43f5e',
-            color: '#fff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.85
-          })
-            .addTo(map)
-            .bindPopup(`<b>${activity.time}</b><br/>${activity.activity}<br/><i>${activity.location}</i>`);
+
+    let isCancelled = false;
+
+    const plotMarkers = async () => {
+      if (activeDayTab === 'nearby') {
+        // Plot all nearby places
+        for (const place of nearbyPlaces) {
+          if (isCancelled) break;
+          try {
+            const query = `${place.name}, ${selectedTrip.destination}`;
+            const data = await api.get(`/geocode?q=${encodeURIComponent(query)}`);
+            if (isCancelled) break;
+
+            if (data && data.length > 0) {
+              const lat = parseFloat(data[0].lat);
+              const lon = parseFloat(data[0].lon);
+              
+              const marker = window.L.marker([lat, lon], { icon: defaultIcon })
+                .addTo(map)
+                .bindPopup(`<b>${place.name}</b><br/><i>${place.distance} - ${place.type}</i><br/>${place.description}`);
+
+              marker.on('mouseover', function () {
+                this.openPopup();
+              });
+              marker.on('mouseout', function () {
+                this.closePopup();
+              });
+            }
+          } catch (err) {
+            console.error('Nearby marker geocode error:', err);
+          }
+
+          // Delay to prevent rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
-      } catch (err) {
-        console.error('Marker geocode error:', err);
+      } else {
+        // Plot active day activities
+        const activeDayActivities = getDayItineraries(selectedTrip);
+        for (const activity of activeDayActivities) {
+          if (isCancelled) break;
+          if (!activity.location) continue;
+
+          try {
+            const query = `${activity.location}, ${selectedTrip.destination}`;
+            const data = await api.get(`/geocode?q=${encodeURIComponent(query)}`);
+            if (isCancelled) break;
+
+            let lat, lon;
+            let isValidCoords = false;
+
+            if (data && data.length > 0) {
+              lat = parseFloat(data[0].lat);
+              lon = parseFloat(data[0].lon);
+              // Validate distance (within ~50km of destination) to prevent plotting in wrong states/countries
+              const latDiff = Math.abs(lat - mapCoords[0]);
+              const lonDiff = Math.abs(lon - mapCoords[1]);
+              if (latDiff < 0.5 && lonDiff < 0.5) {
+                isValidCoords = true;
+              }
+            }
+
+            if (!isValidCoords) {
+              // Fallback: Use mapCoords with a small random jitter to place it near the trip hub
+              const jitterLat = (Math.random() - 0.5) * 0.015;
+              const jitterLon = (Math.random() - 0.5) * 0.015;
+              lat = mapCoords[0] + jitterLat;
+              lon = mapCoords[1] + jitterLon;
+            }
+
+            const marker = window.L.marker([lat, lon], { icon: defaultIcon })
+              .addTo(map)
+              .bindPopup(`<b>${activity.time}</b><br/>${activity.activity}<br/><i>${activity.location}</i>`);
+
+            marker.on('mouseover', function () {
+              this.openPopup();
+            });
+            marker.on('mouseout', function () {
+              this.closePopup();
+            });
+          } catch (err) {
+            console.error('Marker geocode error:', err);
+          }
+
+          // Delay to prevent rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
       }
-    });
+    };
+
+    plotMarkers();
+
 
     return () => {
+      isCancelled = true;
       if (window.mapInstance) {
         window.mapInstance.remove();
         window.mapInstance = null;
@@ -669,8 +968,33 @@ export default function DashboardStub() {
 
   const getDayItineraries = (trip) => {
     if (!trip || !trip.itineraries) return [];
-    return trip.itineraries.filter(item => item.day === activeDayTab);
+    const filtered = trip.itineraries.filter(item => item.day === activeDayTab);
+    
+    // Sort chronologically (Morning -> Afternoon -> Evening / AM -> PM)
+    return filtered.sort((a, b) => {
+      const getScore = (timeStr) => {
+        if (!timeStr) return 999;
+        const val = timeStr.toLowerCase().trim();
+        if (val.startsWith('morning')) return 1;
+        if (val.startsWith('afternoon')) return 2;
+        if (val.startsWith('evening') || val.startsWith('night')) return 3;
+        
+        // Parse time format: e.g. "09:30 AM"
+        const match = val.match(/(\d+):(\d+)\s*(am|pm)/);
+        if (match) {
+          let hrs = parseInt(match[1]);
+          const mins = parseInt(match[2]);
+          const isPm = match[3] === 'pm';
+          if (isPm && hrs < 12) hrs += 12;
+          if (!isPm && hrs === 12) hrs = 0;
+          return hrs * 60 + mins + 10; // offset to not clash with 1, 2, 3
+        }
+        return 999;
+      };
+      return getScore(a.time) - getScore(b.time);
+    });
   };
+
 
   const getDaysArray = (trip) => {
     if (!trip || !trip.itineraries) return [];
@@ -947,7 +1271,7 @@ export default function DashboardStub() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl shadow-xl flex flex-col max-h-[85vh] overflow-hidden text-slate-800"
+                className="relative w-full max-w-6xl bg-white border border-slate-200 rounded-3xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden text-slate-800"
               >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -1040,47 +1364,84 @@ export default function DashboardStub() {
                       Day {day}
                     </button>
                   ))}
+                  <button
+                    onClick={() => setActiveDayTab('nearby')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'nearby' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-600 hover:text-sky-850 hover:bg-sky-50 border border-sky-200 bg-white'}`}
+                  >
+                    <TripIcon className="h-3.5 w-3.5" />
+                    <span>Nearby Places</span>
+                  </button>
+
                 </div>
 
                 {/* Split Content Body: Itinerary List (Left) & Leaflet Map (Right) */}
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                   
-                  {/* Left Panel: Day Activities Checklist */}
+                  {/* Left Panel: Day Activities Checklist or Nearby Places */}
                   <div className="w-full md:w-7/12 overflow-y-auto p-6 border-r border-slate-100 space-y-6">
-                    {getDayItineraries(selectedTrip).length === 0 ? (
-                      <p className="text-slate-400 text-sm text-center py-8">No activities scheduled for this day.</p>
-                    ) : (
-                      <div className="relative border-l border-slate-200 pl-6 ml-3 space-y-6">
-                        {getDayItineraries(selectedTrip).map((item, idx) => (
-                          <div key={item.id || idx} className="relative group">
-                            {/* Bullet indicator */}
-                            <div className="absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 border-rose-400 bg-white group-hover:bg-rose-400 transition-all duration-200" />
-                            
-                            <div className="flex items-center space-x-2 text-rose-500 text-xs font-bold mb-1">
-                              <Clock className="h-3.5 w-3.5" />
-                              <span>{item.time}</span>
-                            </div>
+                    {activeDayTab === 'nearby' ? (
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                            <TripIcon className="h-4 w-4 mr-1 text-sky-500" />
+                            <span>Recommended Nearby Attractions (100 km)</span>
+                          </span>
+                          {nearbyPlaces.length > 0 && (
+                            <span className="bg-sky-50 text-sky-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              {nearbyPlaces.length}
+                            </span>
+                          )}
+                        </div>
 
-                            <h4 className="text-base font-bold text-slate-900 mb-2 leading-snug">
-                              {item.activity}
-                            </h4>
-
-                            <div className="flex flex-wrap items-center gap-4 text-slate-550 text-xs">
-                              {item.location && (
-                                <div className="flex items-center space-x-1">
-                                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                                  <span>{item.location}</span>
-                                </div>
-                              )}
-                              {item.estimatedCost !== undefined && (
-                                <div className="flex items-center space-x-1 font-bold text-slate-800">
-                                  <span>Est. Cost: {tripCurrency.symbol}{Number(item.estimatedCost).toLocaleString(tripCurrency.locale)}</span>
-                                </div>
-                              )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {nearbyPlacesLoading ? (
+                            <div className="col-span-2 flex flex-col items-center justify-center py-12 space-y-2">
+                              <div className="h-6 w-6 border-2 border-sky-300 border-t-sky-600 rounded-full animate-spin" />
+                              <span className="text-[10px] font-bold text-slate-400">Finding nearby gems...</span>
                             </div>
-                          </div>
-                        ))}
+                          ) : nearbyPlaces.length === 0 ? (
+                            <p className="col-span-2 text-slate-400 text-xs text-center py-8">No nearby places found.</p>
+                          ) : (
+                            nearbyPlaces.map((place, idx) => (
+                              <div 
+                                key={idx}
+                                className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between"
+                              >
+                                <div>
+                                  <h4 className="text-xs font-bold text-slate-800 mb-1">{place.name}</h4>
+                                  <div className="flex flex-wrap gap-1.5 mb-2">
+                                    <span className="inline-flex items-center text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                      <TripIcon className="h-2.5 w-2.5 mr-0.5 text-slate-400" />
+                                      {place.distance}
+                                    </span>
+                                    <span className="inline-flex items-center text-[9px] font-medium text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">
+                                      {place.type}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 leading-relaxed">{place.description}</p>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
+                    ) : (
+                      getDayItineraries(selectedTrip).length === 0 ? (
+                        <p className="text-slate-400 text-sm text-center py-8">No activities scheduled for this day.</p>
+                      ) : (
+                        <div className="space-y-6">
+                          {getDayItineraries(selectedTrip).map((item, idx) => (
+                            <ActivityCard
+                              key={item.id || idx}
+                              item={item}
+                              tripCurrency={tripCurrency}
+                              Plus={Plus}
+                              Clock={Clock}
+                              MapPin={MapPin}
+                            />
+                          ))}
+                        </div>
+                      )
                     )}
                   </div>
 
@@ -1088,8 +1449,9 @@ export default function DashboardStub() {
                   <div className="w-full md:w-5/12 bg-slate-50/50 p-4 flex flex-col h-[280px] md:h-auto border-t md:border-t-0 border-slate-100">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center">
                       <MapPin className="h-3.5 w-3.5 mr-1 text-rose-500" />
-                      <span>Day {activeDayTab} Landmark Route</span>
+                      <span>{activeDayTab === 'nearby' ? 'Nearby Attractions (100 km)' : `Day ${activeDayTab} Landmark Route`}</span>
                     </span>
+
                     <div className="flex-1 bg-slate-200 rounded-2xl overflow-hidden relative border border-slate-200 shadow-sm">
                       {isLeafletLoaded ? (
                         <div id="map-container" className="absolute inset-0 z-10 w-full h-full" />

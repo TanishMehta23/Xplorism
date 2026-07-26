@@ -226,8 +226,8 @@ export default function TripWizard({ isOpen, onClose, onTripCreated, currencyCod
       setGenStatus('Resolving location details...');
       await new Promise(r => setTimeout(r, 600));
 
-      setGenStatus(`Searching local attractions in ${destination}...`);
-      const genResult = await generateItinerary({
+      setGenStatus(`Generating customized travel plan with Gemini AI for ${destination}...`);
+      const genResult = await api.post('/trips/generate', {
         destination,
         startDate,
         endDate,

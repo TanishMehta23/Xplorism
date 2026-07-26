@@ -114,6 +114,44 @@ export const generateItinerary = async ({
     ];
   }
 
+  // Helper: Estimate duration of an attraction based on type and name
+  const getAttractionDuration = (type, name) => {
+    const t = (type || '').toLowerCase();
+    const n = (name || '').toLowerCase();
+    
+    if (t.includes('museum') || t.includes('gallery') || n.includes('museum') || n.includes('gallery') || n.includes('art')) {
+      return 3.0; // 3 hours for museums
+    }
+    if (t.includes('castle') || t.includes('ruins') || t.includes('monument') || n.includes('castle') || n.includes('fort') || n.includes('palace')) {
+      return 2.5; // 2.5 hours for castles, forts, palaces
+    }
+    if (t.includes('viewpoint') || t.includes('nature') || t.includes('park') || t.includes('beach') || n.includes('park') || n.includes('beach') || n.includes('lake') || n.includes('viewpoint')) {
+      return 1.5; // 1.5 hours for outdoor sights
+    }
+    if (t.includes('restaurant') || t.includes('cafe') || t.includes('culinary') || t.includes('food') || n.includes('food') || n.includes('market') || n.includes('dinner') || n.includes('dining')) {
+      return 2.0; // 2 hours for dining
+    }
+    if (t.includes('nightlife') || n.includes('nightlife') || n.includes('bar') || n.includes('club') || n.includes('pub')) {
+      return 2.5; // 2.5 hours for nightlife
+    }
+    return 2.0; // default 2 hours
+  };
+
+  // Helper: Format decimal hours to AM/PM string
+  const formatDecimalHour = (decimalHour) => {
+    const totalMinutes = Math.round(decimalHour * 60);
+    let hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+    const hoursStr = hours < 10 ? '0' + hours : hours;
+    
+    return `${hoursStr}:${minutesStr} ${ampm}`;
+  };
+
   // Step 3: Distribute attractions and curate activities
   const itinerary = [];
   const dailyBudget = budget / (totalDays * travelers || 1);
@@ -132,37 +170,44 @@ export const generateItinerary = async ({
   let attractionIndex = 0;
 
   for (let day = 1; day <= totalDays; day++) {
-    // 3 slots per day: Morning, Afternoon, Evening
-    const slots = [
-      { time: '09:30 AM', segment: 'Morning' },
-      { time: '02:00 PM', segment: 'Afternoon' },
-      { time: '07:00 PM', segment: 'Evening' }
-    ];
+    let currentTime = 9.0; // Start day at 09:00 AM
+    const endTimeLimit = 21.0; // End day at 09:00 PM
+    const transitTime = 0.5; // 30 minutes transit between places
 
-    for (const slot of slots) {
+    while (currentTime < endTimeLimit) {
+      // Get next attraction
       const attraction = attractions[attractionIndex % attractions.length];
       attractionIndex++;
 
+      // Determine duration
+      let duration = getAttractionDuration(attraction.type, attraction.name);
+      
+      // Check if we are late in the evening or if this pushes us past the end time limit
+      const isEvening = (currentTime >= 18.0) || (currentTime + duration > endTimeLimit);
+      
       let activityText = '';
       let estimatedCost = 0;
 
-      if (slot.segment === 'Evening') {
-        // Evening is usually food or leisure
+      if (isEvening) {
+        // Evening activity (usually dinner, nightlife or sunset view)
         const hasFoodInterest = interests.includes('Food');
         const hasNightlife = interests.includes('Nightlife');
         
         if (hasNightlife) {
           activityText = `Enjoy live music and local nightlife near ${attraction.name}`;
           estimatedCost = dailyBudget * 0.25 * selectedStyle.timeScale;
+          duration = 2.5; // night out duration
         } else if (hasFoodInterest) {
           activityText = `Indulge in a local culinary tasting menu and traditional dinner near ${attraction.name}`;
           estimatedCost = dailyBudget * 0.35 * selectedStyle.timeScale;
+          duration = 2.0; // dinner duration
         } else {
           activityText = `Leisurely evening walk and local dinner surrounding ${attraction.name}`;
           estimatedCost = dailyBudget * 0.2 * selectedStyle.timeScale;
+          duration = 2.0;
         }
       } else {
-        // Morning/Afternoon are sightseeing/interests
+        // Day/sightseeing activity
         activityText = `${selectedStyle.verb} ${attraction.name}`;
         
         // Add interest modifiers
@@ -174,13 +219,22 @@ export const generateItinerary = async ({
         estimatedCost = dailyBudget * 0.15 * selectedStyle.timeScale;
       }
 
+      // Add to itinerary
       itinerary.push({
         day,
         activity: activityText,
-        time: slot.time,
+        time: formatDecimalHour(currentTime),
         location: attraction.name,
         estimatedCost: parseFloat(estimatedCost.toFixed(2))
       });
+
+      // Advance time by (duration + transit)
+      currentTime += duration + transitTime;
+
+      // If we just added an evening activity, end the day
+      if (isEvening) {
+        break;
+      }
     }
   }
 

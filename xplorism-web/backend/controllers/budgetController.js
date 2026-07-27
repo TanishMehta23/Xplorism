@@ -56,20 +56,26 @@ export const getBudgetOverview = async (req, res) => {
       ? Math.min(100, Math.round((totalActual / totalBudget) * 100))
       : 0;
 
-    // 4. Category breakdown (from expenses + itinerary)
-    const categoryMap = {};
-
-    // Helper to add to category map
-    const addToCategory = (cat, planned, actual) => {
-      if (!categoryMap[cat]) {
-        categoryMap[cat] = { category: cat, planned: 0, actual: 0, count: 0, items: [] };
-      }
-      categoryMap[cat].planned += planned;
-      categoryMap[cat].actual += actual;
-      categoryMap[cat].count += 1;
+    // 4. Category breakdown (standardized percentages of totalBudget)
+    const standardCategories = {
+      'Accommodation': 0.35,
+      'Food & Dining': 0.25,
+      'Activities & Tours': 0.15,
+      'Transportation': 0.15,
+      'Shopping': 0.10
     };
 
-    // Auto-categorize itinerary items
+    const categoryMap = {};
+    Object.entries(standardCategories).forEach(([cat, pct]) => {
+      categoryMap[cat] = {
+        category: cat,
+        planned: parseFloat((totalBudget * pct).toFixed(2)),
+        actual: 0,
+        count: 0,
+        items: []
+      };
+    });
+
     const autoCategorize = (item) => {
       const name = (item.activity || '').toLowerCase() + ' ' + (item.location || '').toLowerCase();
       if (name.includes('food') || name.includes('restaurant') || name.includes('dinner') || name.includes('lunch') || name.includes('breakfast') || name.includes('cafe') || name.includes('market') || name.includes('tasting') || name.includes('meal')) {
@@ -87,22 +93,35 @@ export const getBudgetOverview = async (req, res) => {
       if (name.includes('shop') || name.includes('souvenir') || name.includes('gift') || name.includes('boutique') || name.includes('mall') || name.includes('bazaar')) {
         return 'Shopping';
       }
-      if (name.includes('beach') || name.includes('park') || name.includes('hike') || name.includes('trek') || name.includes('nature') || name.includes('scenic') || name.includes('viewpoint')) {
-        return 'Outdoor & Nature';
-      }
       return 'Miscellaneous';
     };
 
-    // Process itinerary items
+    const findStandardCategory = (cat) => {
+      const match = Object.keys(standardCategories).find(sc => 
+        sc.toLowerCase().includes(cat.toLowerCase()) || cat.toLowerCase().includes(sc.toLowerCase())
+      );
+      return match || 'Miscellaneous';
+    };
+
+    // Count itinerary items
     itineraryItems.forEach(item => {
       const cat = autoCategorize(item);
-      addToCategory(cat, parseFloat(item.estimated_cost || 0), 0);
+      const standardCat = findStandardCategory(cat);
+      if (!categoryMap[standardCat]) {
+        categoryMap[standardCat] = { category: standardCat, planned: 0, actual: 0, count: 0, items: [] };
+      }
+      categoryMap[standardCat].count += 1;
     });
 
-    // Process expenses
+    // Process expenses actual spent
     expenses.forEach(e => {
       const cat = e.category || 'Miscellaneous';
-      addToCategory(cat, parseFloat(e.planned_amount || 0), parseFloat(e.actual_amount || 0));
+      const standardCat = findStandardCategory(cat);
+      if (!categoryMap[standardCat]) {
+        categoryMap[standardCat] = { category: standardCat, planned: 0, actual: 0, count: 0, items: [] };
+      }
+      categoryMap[standardCat].actual += parseFloat(e.actual_amount || 0);
+      categoryMap[standardCat].count += 1;
     });
 
     const categoryBreakdown = Object.values(categoryMap).map(c => ({

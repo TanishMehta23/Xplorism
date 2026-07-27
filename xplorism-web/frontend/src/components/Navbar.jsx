@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -88,6 +88,13 @@ export default function Navbar({ activeTab }) {
               <Sun className="h-4 w-4" />
               <span className="nav-link">Weather</span>
             </button>
+            <button 
+              onClick={() => navigate('/budgets')}
+              className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'budgets' ? 'text-rose-500 font-bold' : ''}`}
+            >
+              <DollarSign className="h-4 w-4" />
+              <span className="nav-link">Budgets</span>
+            </button>
           </div>
 
           {/* Mobile Nav Links */}
@@ -103,6 +110,12 @@ export default function Navbar({ activeTab }) {
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'weather' ? 'text-rose-500' : ''}`}
             >
               Weather
+            </button>
+            <button 
+              onClick={() => navigate('/budgets')} 
+              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'budgets' ? 'text-rose-500' : ''}`}
+            >
+              Budgets
             </button>
           </div>
 

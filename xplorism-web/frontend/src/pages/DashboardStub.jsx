@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut, Plus, Calendar, Compass as TripIcon,
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
-  Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search
+  Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
+  Maximize2, Minimize2
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
@@ -24,7 +25,7 @@ export const CURRENCIES = {
   SGD: { symbol: 'S$', name: 'SGD (S$)', locale: 'en-SG' }
 };
 
-const PRE_PLANNED_TRIPS = [
+export const PRE_PLANNED_TRIPS = [
   { id: 'pre-tokyo', destination: 'Tokyo, Japan', image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 120000, travelers: 2, travelStyle: 'Urban Adventure|JPY', interests: ['Food', 'Architecture', 'History'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Morning walk around Shibuya Crossing & Hachiko Statue', time: '09:30 AM', location: 'Shibuya Crossing', estimatedCost: 0 }, { day: 1, activity: 'Sushi making experience and lunch at Tsukiji Outer Market', time: '02:00 PM', location: 'Tsukiji Market', estimatedCost: 3500 }, { day: 1, activity: 'Observe skylines from Tokyo Metropolitan Government Building', time: '07:00 PM', location: 'Shinjuku', estimatedCost: 0 }, { day: 2, activity: 'Explore Senso-ji temple and Nakamise-dori shopping street', time: '09:30 AM', location: 'Asakusa', estimatedCost: 500 }, { day: 2, activity: 'Anime culture shopping in Akihabara Electric Town', time: '02:00 PM', location: 'Akihabara', estimatedCost: 2000 }, { day: 2, activity: 'Enjoy a warm bowl of Ramen in an authentic Ramen Alley', time: '07:00 PM', location: 'Omoide Yokocho', estimatedCost: 1200 }, { day: 3, activity: 'Walk around Meiji Jingu Shrine and scenic Yoyogi Park', time: '10:00 AM', location: 'Yoyogi Park', estimatedCost: 0 }, { day: 3, activity: 'Crepe tasting and fashion shopping on Takeshita Street', time: '02:00 PM', location: 'Takeshita Street', estimatedCost: 1200 }, { day: 3, activity: 'Local Izakaya dining experience with drinks and skewers', time: '07:30 PM', location: 'Roppongi', estimatedCost: 4000 }] },
   { id: 'pre-paris', destination: 'Paris, France', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 1800, travelers: 2, travelStyle: 'Romantic & Art Tour|EUR', interests: ['Art', 'History', 'Food'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Guided tour of Louvre Museum Masterpieces (Mona Lisa access)', time: '09:30 AM', location: 'Louvre Museum', estimatedCost: 45 }, { day: 1, activity: 'Scenic Seine River Cruise with sunset champagne toast', time: '07:00 PM', location: 'Bateaux Parisiens', estimatedCost: 30 }, { day: 2, activity: 'Eiffel Tower Summit Access & architectural commentary', time: '09:30 AM', location: 'Eiffel Tower', estimatedCost: 60 }, { day: 2, activity: 'Wander the historic art streets and view Basilique du Sacré-Cœur', time: '02:00 PM', location: 'Montmartre', estimatedCost: 0 }, { day: 3, activity: 'Explore Notre-Dame Cathedral plaza and Saint-Germain district', time: '10:00 AM', location: 'Saint-Germain', estimatedCost: 0 }, { day: 3, activity: 'Browse books at Shakespeare and Company and visit Pantheon', time: '02:30 PM', location: 'Shakespeare & Co', estimatedCost: 15 }, { day: 3, activity: 'Traditional Parisian Bistro dinner tasting local delicacies', time: '07:30 PM', location: 'Le Relais de l\'Entrecôte', estimatedCost: 80 }, { day: 4, activity: 'Day trip to Palace of Versailles gardens and palace rooms', time: '09:00 AM', location: 'Versailles', estimatedCost: 50 }, { day: 4, activity: 'Farewell walk along Champs-Élysées and macarons tasting', time: '04:00 PM', location: 'Champs-Élysées', estimatedCost: 25 }] },
   { id: 'pre-newyork', destination: 'New York, USA', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 2500, travelers: 1, travelStyle: 'Urban Adventure|USD', interests: ['Shopping', 'Food', 'Art'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Walk across the historic Brooklyn Bridge for sunrise views', time: '08:30 AM', location: 'Brooklyn Bridge', estimatedCost: 0 }, { day: 1, activity: 'Lunch walk along High Line park and Chelsea Market', time: '01:00 PM', location: 'High Line', estimatedCost: 25 }, { day: 1, activity: 'Witness the neon energy of Times Square and watch a Broadway show', time: '07:30 PM', location: 'Broadway Theatre', estimatedCost: 120 }, { day: 2, activity: 'Explore Central Park by bicycle and visit Metropolitan Museum of Art', time: '09:30 AM', location: 'Central Park', estimatedCost: 40 }, { day: 2, activity: 'Top of the Rock observation deck skyline views', time: '04:00 PM', location: 'Rockefeller Center', estimatedCost: 45 }, { day: 3, activity: 'Ferry ride to Statue of Liberty and Ellis Island Museum', time: '09:00 AM', location: 'Liberty Island', estimatedCost: 30 }, { day: 3, activity: 'Walk through Wall Street and see One World Observatory', time: '02:00 PM', location: 'Financial District', estimatedCost: 45 }, { day: 4, activity: 'Shop and explore local boutiques in SoHo and Greenwich Village', time: '10:00 AM', location: 'SoHo', estimatedCost: 0 }, { day: 4, activity: 'Jazz performance and dinner in a cozy Greenwich Village basement club', time: '08:00 PM', location: 'Greenwich Village', estimatedCost: 60 }, { day: 5, activity: 'Visit Grand Central Terminal and enjoy lunch at Oyster Bar', time: '11:00 AM', location: 'Grand Central', estimatedCost: 35 }, { day: 5, activity: 'Farewell walk along Fifth Avenue and view Empire State Building', time: '03:00 PM', location: 'Fifth Avenue', estimatedCost: 0 }] },
@@ -51,6 +52,23 @@ const PRE_PLANNED_TRIPS = [
   { id: 'pre-ayodhya', destination: 'Ayodhya, Uttar Pradesh, India', image: 'https://akhilbharat.in/wp-content/uploads/2025/10/Gemini_Generated_Image_wzfldmwzfldmwzfl-Edited-1.png', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 12000, travelers: 2, travelStyle: 'Spiritual & Cultural Heritage|INR', interests: ['History', 'Culture'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Offer prayers at the magnificent Shri Ram Janmabhoomi Mandir', time: '09:00 AM', location: 'Ram Mandir', estimatedCost: 0 }, { day: 1, activity: 'Experience the divine evening Saryu River Aarti at Naya Ghat', time: '06:00 PM', location: 'Saryu Ghat', estimatedCost: 100 }, { day: 2, activity: 'Visit the hilltop Hanuman Garhi temple and beautiful Kanak Bhawan', time: '08:30 AM', location: 'Hanuman Garhi', estimatedCost: 50 }, { day: 2, activity: 'Sunset boat ride on the holy Saryu River with local legends storytelling', time: '04:00 PM', location: 'Saryu River', estimatedCost: 300 }, { day: 3, activity: 'Explore the historic tombs of Gulab Bari and Bahu Begum in Faizabad', time: '10:00 AM', location: 'Gulab Bari', estimatedCost: 150 }] },
   { id: 'pre-jodhpur-jaisalmer', destination: 'Jodhpur & Jaisalmer, Rajasthan, India', image: 'https://images.unsplash.com/photo-1602643163983-ed0babc39797?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 28000, travelers: 2, travelStyle: 'Royal Desert Odyssey|INR', interests: ['History', 'Culture', 'Food'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Explore the massive Mehrangarh Fort and royal cenotaph Jaswant Thada', time: '09:30 AM', location: 'Mehrangarh Fort', estimatedCost: 800 }, { day: 1, activity: 'Wander the blue-painted streets of Jodhpur Old City and shop at Sardar Market', time: '04:00 PM', location: 'Clock Tower', estimatedCost: 200 }, { day: 2, activity: 'Drive to Jaisalmer and check into a luxury desert camp in Thar Desert', time: '08:00 AM', location: 'Thar Desert', estimatedCost: 3500 }, { day: 2, activity: 'Camel safari, dunes sunset photography, and Rajasthani cultural folk dance show', time: '04:30 PM', location: 'Sam Sand Dunes', estimatedCost: 1500 }, { day: 3, activity: 'Tour the living Jaisalmer Fort (Sonar Qila) and admire Patwon Ki Haveli intricate carvings', time: '09:30 AM', location: 'Jaisalmer Fort', estimatedCost: 500 }, { day: 4, activity: 'Rowboat ride at scenic Gadisar Lake and exploring the mysterious abandoned Kuldhara village', time: '10:00 AM', location: 'Gadisar Lake', estimatedCost: 400 }] },
 ];
+
+const getTripImage = (destination) => {
+  const dest = (destination || '').toLowerCase();
+  if (dest.includes('vancouver')) {
+    return 'https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('tokyo') || dest.includes('japan')) {
+    return 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('paris') || dest.includes('france')) {
+    return 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('new york') || dest.includes('york') || dest.includes('usa')) {
+    return 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';
+};
 
 const getWeatherForDestination = (destination, dateStr) => {
   const month = new Date(dateStr).getMonth();
@@ -205,11 +223,6 @@ const ActivityCard = ({ item, tripCurrency }) => {
                 <span>{item.location}</span>
               </div>
             )}
-            {item.estimatedCost !== undefined && (
-              <div className="flex items-center space-x-1 font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg">
-                <span>Est. Cost: {tripCurrency.symbol}{Number(item.estimatedCost).toLocaleString(tripCurrency.locale)}</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -247,6 +260,7 @@ export default function DashboardStub() {
   const [expenseForm, setExpenseForm] = useState({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '' });
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [isModalMaximized, setIsModalMaximized] = useState(false);
 
   // Favorites State
   const [favorites, setFavorites] = useState([]);
@@ -367,6 +381,98 @@ export default function DashboardStub() {
     if (!tripId) return;
     setBudgetLoading(true);
     setShowExpenseForm(false);
+
+    if (typeof tripId === 'string' && tripId.startsWith('pre-')) {
+      const totalBudget = parseFloat(selectedTrip.budget) || 0;
+      const itineraryItems = selectedTrip.itineraries || [];
+      const expenses = [];
+
+      const totalPlanned = itineraryItems.reduce(
+        (sum, item) => sum + parseFloat(item.estimatedCost || 0),
+        0
+      );
+      const totalActual = 0;
+      const remaining = totalBudget - totalActual;
+      const utilizationPercent = 0;
+
+      const categoryMap = {};
+      const addToCategory = (cat, planned, actual) => {
+        if (!categoryMap[cat]) {
+          categoryMap[cat] = { category: cat, planned: 0, actual: 0, count: 0, items: [] };
+        }
+        categoryMap[cat].planned += planned;
+        categoryMap[cat].actual += actual;
+        categoryMap[cat].count += 1;
+      };
+
+      const autoCategorize = (item) => {
+        const name = ((item.activity || '') + ' ' + (item.location || '')).toLowerCase();
+        if (name.includes('food') || name.includes('restaurant') || name.includes('dinner') || name.includes('lunch') || name.includes('breakfast') || name.includes('cafe') || name.includes('market') || name.includes('tasting') || name.includes('meal')) {
+          return 'Food & Dining';
+        }
+        if (name.includes('museum') || name.includes('gallery') || name.includes('tour') || name.includes('guide') || name.includes('ticket') || name.includes('entrance') || name.includes('admission')) {
+          return 'Activities & Tours';
+        }
+        if (name.includes('hotel') || name.includes('hostel') || name.includes('resort') || name.includes('stay') || name.includes('lodging') || name.includes('accommodation')) {
+          return 'Accommodation';
+        }
+        if (name.includes('flight') || name.includes('train') || name.includes('bus') || name.includes('taxi') || name.includes('uber') || name.includes('ferry') || name.includes('transport') || name.includes('cab') || name.includes('rental') || name.includes('gas') || name.includes('fuel')) {
+          return 'Transportation';
+        }
+        if (name.includes('shop') || name.includes('souvenir') || name.includes('gift') || name.includes('boutique') || name.includes('mall') || name.includes('bazaar')) {
+          return 'Shopping';
+        }
+        if (name.includes('beach') || name.includes('park') || name.includes('hike') || name.includes('trek') || name.includes('nature') || name.includes('scenic') || name.includes('viewpoint')) {
+          return 'Outdoor & Nature';
+        }
+        return 'Miscellaneous';
+      };
+
+      itineraryItems.forEach(item => {
+        const cat = autoCategorize(item);
+        addToCategory(cat, parseFloat(item.estimatedCost || 0), 0);
+      });
+
+      const categoryBreakdown = Object.values(categoryMap).map(c => ({
+        ...c,
+        planned: parseFloat(c.planned.toFixed(2)),
+        actual: parseFloat(c.actual.toFixed(2)),
+        diff: parseFloat((c.actual - c.planned).toFixed(2)),
+      })).sort((a, b) => b.planned - a.planned);
+
+      const dailyMap = {};
+      itineraryItems.forEach(item => {
+        const day = item.day;
+        if (!dailyMap[day]) dailyMap[day] = { day, planned: 0, actual: 0, items: [] };
+        dailyMap[day].planned += parseFloat(item.estimatedCost || 0);
+        dailyMap[day].items.push({
+          type: 'itinerary',
+          name: item.activity,
+          location: item.location,
+          planned: parseFloat(item.estimatedCost || 0),
+          actual: 0,
+          time: item.time,
+        });
+      });
+      const dailyBreakdown = Object.values(dailyMap).sort((a, b) => a.day - b.day);
+
+      setBudgetData({
+        tripId,
+        destination: selectedTrip.destination,
+        totalBudget,
+        totalPlanned,
+        totalActual,
+        remaining,
+        utilizationPercent,
+        categoryBreakdown,
+        dailyBreakdown,
+        expenses,
+        isPrePlanned: true
+      });
+      setBudgetLoading(false);
+      return;
+    }
+
     try {
       const data = await api.get(`/trips/${tripId}/budget`);
       setBudgetData(data);
@@ -947,6 +1053,40 @@ export default function DashboardStub() {
     return days.sort((a, b) => a - b);
   };
 
+  const calculateExpectedBudgetDivision = (itineraries) => {
+    if (!itineraries || itineraries.length === 0) return [];
+    const categoryMap = {};
+    const autoCategorize = (item) => {
+      const name = ((item.activity || '') + ' ' + (item.location || '')).toLowerCase();
+      if (name.includes('food') || name.includes('restaurant') || name.includes('dinner') || name.includes('lunch') || name.includes('breakfast') || name.includes('cafe') || name.includes('market') || name.includes('tasting') || name.includes('meal')) {
+        return 'Food';
+      }
+      if (name.includes('museum') || name.includes('gallery') || name.includes('tour') || name.includes('guide') || name.includes('ticket') || name.includes('entrance') || name.includes('admission')) {
+        return 'Activities';
+      }
+      if (name.includes('hotel') || name.includes('hostel') || name.includes('resort') || name.includes('stay') || name.includes('lodging') || name.includes('accommodation')) {
+        return 'Lodging';
+      }
+      if (name.includes('flight') || name.includes('train') || name.includes('bus') || name.includes('taxi') || name.includes('uber') || name.includes('ferry') || name.includes('transport') || name.includes('cab') || name.includes('rental') || name.includes('gas') || name.includes('fuel')) {
+        return 'Transport';
+      }
+      if (name.includes('shop') || name.includes('souvenir') || name.includes('gift') || name.includes('boutique') || name.includes('mall') || name.includes('bazaar')) {
+        return 'Shopping';
+      }
+      return 'Misc';
+    };
+
+    itineraries.forEach(item => {
+      const cat = autoCategorize(item);
+      const cost = parseFloat(item.estimatedCost || item.estimated_cost || 0);
+      if (cost > 0) {
+        categoryMap[cat] = (categoryMap[cat] || 0) + cost;
+      }
+    });
+
+    return Object.entries(categoryMap).map(([category, amount]) => ({ category, amount }));
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <style>{`
@@ -1104,70 +1244,84 @@ export default function DashboardStub() {
                     setSelectedTrip(trip);
                     setActiveDayTab(1);
                   }}
-                  className="group relative bg-white p-6 rounded-3xl border border-slate-100 hover:border-rose-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
+                  className="group relative bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
                 >
                   <div>
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center space-x-1.5">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-555 border border-rose-100">
+                    {/* Cover image header */}
+                    <div className="relative h-44 w-full overflow-hidden">
+                      <img
+                        src={getTripImage(trip.destination)}
+                        alt={trip.destination}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-black/20" />
+
+                      {/* Top style badge & weather pill */}
+                      <div className="absolute top-4 left-4 flex items-center space-x-2">
+                        <span className="px-3 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-slate-800 backdrop-blur-sm shadow-sm">
                           {style}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-semibold text-slate-505 flex items-center space-x-1">
-                          <WeatherIcon className={`h-3 w-3 ${weather.condition === 'Sunny' ? 'text-amber-500' : weather.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
+                        <span className="px-2.5 py-1 rounded-xl bg-white/20 text-white backdrop-blur-sm text-[10px] font-bold flex items-center space-x-1 border border-white/10 shadow-sm">
+                          <WeatherIcon className={`h-3 w-3 ${weather.condition === 'Sunny' ? 'text-amber-300' : weather.condition === 'Rainy' ? 'text-sky-300' : 'text-slate-100'}`} />
                           <span>{weather.temp}°C</span>
                         </span>
                       </div>
-                      <div className="flex items-center space-x-1">
+
+                      {/* Top Action buttons */}
+                      <div className="absolute top-4 right-4 flex items-center space-x-1.5">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             exportTripToPDF(trip);
                           }}
-                          className="p-1.5 rounded-full hover:bg-rose-50 text-slate-450 hover:text-rose-555 transition cursor-pointer"
+                          className="p-2 rounded-xl bg-white/90 hover:bg-white text-slate-700 hover:text-rose-500 transition-all duration-205 shadow-md cursor-pointer border border-white/20"
                           title="Export Trip PDF"
                         >
-                          <Download className="h-4 w-4" />
+                          <Download className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={(e) => handleDeleteTrip(trip, e)}
-                          className="p-1.5 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition cursor-pointer"
+                          className="p-2 rounded-xl bg-white/90 hover:bg-white text-slate-700 hover:text-red-500 transition-all duration-205 shadow-md cursor-pointer border border-white/20"
                           title="Delete Trip"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </div>
 
-                    <h3 className="text-xl font-bold text-slate-950 mb-2 group-hover:text-rose-500 transition">
-                      {trip.destination}
-                    </h3>
+                    {/* Card Content body */}
+                    <div className="p-6">
+                      <h3 className="text-lg font-extrabold text-slate-900 mb-2 group-hover:text-rose-550 transition-colors duration-205 truncate">
+                        {trip.destination}
+                      </h3>
 
-                    <div className="flex items-center space-x-2 text-slate-500 text-xs mb-4">
-                      <Calendar className="h-3.5 w-3.5 text-rose-400" />
-                      <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? 'day' : 'days'})</span>
-                    </div>
-
-                    <div className="flex items-center space-x-6 text-slate-600 text-xs mb-5">
-                      <div className="flex items-center space-x-1.5">
-                        <Users className="h-4 w-4 text-rose-455" />
-                        <span>{trip.travelers} {trip.travelers === 1 ? 'Traveler' : 'Travelers'}</span>
+                      <div className="flex items-center space-x-2 text-slate-500 text-xs mb-4">
+                        <Calendar className="h-3.5 w-3.5 text-rose-500" />
+                        <span className="font-semibold">{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? 'day' : 'days'})</span>
                       </div>
-                      <div className="flex items-center space-x-1.5">
-                        <span className="text-rose-500 font-bold text-sm">{tripCurrency.symbol}</span>
-                        <span>Budget: {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+
+                      <div className="flex items-center space-x-5 text-slate-650 text-xs">
+                        <div className="flex items-center space-x-1.5">
+                          <Users className="h-4 w-4 text-slate-400" />
+                          <span className="font-bold text-slate-700">{trip.travelers} {trip.travelers === 1 ? 'Traveler' : 'Travelers'}</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-bold text-slate-400">{tripCurrency.symbol}</span>
+                          <span className="font-bold text-slate-750">Budget: {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {trip.interests && trip.interests.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-50">
+                    <div className="flex flex-wrap gap-1.5 px-6 pb-6 pt-3 border-t border-slate-50">
                       {trip.interests.slice(0, 3).map((interest, idx) => (
-                        <span key={idx} className="px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-semibold text-slate-500">
+                        <span key={idx} className="px-2.5 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
                           {interest}
                         </span>
                       ))}
                       {trip.interests.length > 3 && (
-                        <span className="text-[9px] text-slate-400 font-semibold flex items-center">+{trip.interests.length - 3} more</span>
+                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center ml-1">+{trip.interests.length - 3} more</span>
                       )}
                     </div>
                   )}
@@ -1256,8 +1410,52 @@ export default function DashboardStub() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="relative w-full max-w-6xl bg-white border border-slate-200 rounded-3xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden text-slate-800"
+                className={`relative w-full bg-white border border-slate-200 shadow-xl flex flex-col overflow-hidden text-slate-800 transition-all duration-300 ${isModalMaximized
+                    ? 'max-w-[98vw] h-[95vh] max-h-[95vh] rounded-2xl'
+                    : 'max-w-6xl h-[680px] max-h-[90vh] rounded-3xl'
+                  }`}
               >
+                {/* Absolute Top-Right Window Controls & Actions */}
+                <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
+                  <button
+                    disabled={isSavingTrip || isExporting}
+                    onClick={() => exportTripToPDF(selectedTrip)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-355 hover:bg-slate-55 text-slate-705 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
+                  >
+                    {isExporting ? (
+                      <>
+                        <div className="h-3 w-3 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+                        <span>Exporting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-3.5 w-3.5 text-rose-500" />
+                        <span>Export PDF</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    disabled={isSavingTrip || isExporting}
+                    onClick={() => setIsModalMaximized(!isModalMaximized)}
+                    className="h-[36px] w-[36px] rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition cursor-pointer bg-white shadow-sm flex items-center justify-center disabled:opacity-50"
+                    title={isModalMaximized ? "Restore down" : "Maximize"}
+                  >
+                    {isModalMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+                  </button>
+                  <button
+                    disabled={isSavingTrip || isExporting}
+                    onClick={() => {
+                      if (!isSavingTrip && !isExporting) {
+                        setSelectedTrip(null);
+                        setIsModalMaximized(false);
+                      }
+                    }}
+                    className="h-[36px] w-[36px] rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-500 hover:text-rose-600 transition cursor-pointer bg-white shadow-sm flex items-center justify-center disabled:opacity-50"
+                    title="Close"
+                  >
+                    <X className="h-4.5 w-4.5" />
+                  </button>
+                </div>
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                   <div>
                     <div className="flex items-center space-x-2 text-rose-500 mb-1">
@@ -1360,7 +1558,24 @@ export default function DashboardStub() {
                     </button>
                     <button
                       disabled={isSavingTrip || isExporting}
-                      onClick={() => !isSavingTrip && !isExporting && setSelectedTrip(null)}
+                      onClick={() => setIsModalMaximized(!isModalMaximized)}
+                      className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={isModalMaximized ? "Restore down" : "Maximize"}
+                    >
+                      {isModalMaximized ? (
+                        <Minimize2 className="h-5 w-5" />
+                      ) : (
+                        <Maximize2 className="h-5 w-5" />
+                      )}
+                    </button>
+                    <button
+                      disabled={isSavingTrip || isExporting}
+                      onClick={() => {
+                        if (!isSavingTrip && !isExporting) {
+                          setSelectedTrip(null);
+                          setIsModalMaximized(false);
+                        }
+                      }}
                       className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <X className="h-5 w-5" />
@@ -1380,7 +1595,7 @@ export default function DashboardStub() {
                   ))}
                   <button
                     onClick={() => setActiveDayTab('nearby')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'nearby' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-600 hover:text-sky-850 hover:bg-sky-50 border border-sky-200 bg-white'}`}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 md:ml-auto ${activeDayTab === 'nearby' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-600 hover:text-sky-850 hover:bg-sky-50 border border-sky-200 bg-white'}`}
                   >
                     <TripIcon className="h-3.5 w-3.5" />
                     <span>Nearby Places</span>
@@ -1447,11 +1662,20 @@ export default function DashboardStub() {
                       </div>
                     ) : activeDayTab === 'budget' ? (
                       <div className="space-y-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center">
                             <DollarSign className="h-4 w-4 mr-1 text-emerald-500" />
                             <span>Budget Tracking Dashboard</span>
                           </span>
+                          <button
+                            onClick={() => {
+                              setSelectedTrip(null);
+                              navigate(`/trips/${selectedTrip.id}/budget`);
+                            }}
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xl transition shadow-sm cursor-pointer self-start sm:self-auto"
+                          >
+                            Manage Expenses & Details
+                          </button>
                         </div>
 
                         {budgetLoading ? (
@@ -1467,257 +1691,32 @@ export default function DashboardStub() {
                           </div>
                         ) : (
                           <>
-                            {/* Summary Cards */}
-                            <div className="grid grid-cols-3 gap-3">
-                              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-                                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Total Budget</span>
-                                <p className="text-lg font-extrabold text-emerald-800 mt-1">{tripCurrency.symbol}{Number(budgetData.totalBudget).toLocaleString(tripCurrency.locale)}</p>
-                              </div>
-                              <div className="bg-rose-50 border border-rose-100 rounded-xl p-4">
-                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Spent</span>
-                                <p className="text-lg font-extrabold text-rose-800 mt-1">{tripCurrency.symbol}{Number(budgetData.totalActual || budgetData.totalSpent).toLocaleString(tripCurrency.locale)}</p>
-                              </div>
-                              <div className={`${(budgetData.remaining || budgetData.remaining === 0) && budgetData.remaining >= 0 ? 'bg-sky-50 border-sky-100' : 'bg-rose-50 border-rose-100'} border rounded-xl p-4`}>
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Remaining</span>
-                                <p className={`text-lg font-extrabold mt-1 ${(budgetData.remaining || budgetData.remaining === 0) && budgetData.remaining >= 0 ? 'text-sky-800' : 'text-rose-800'}`}>
-                                  {tripCurrency.symbol}{Number(budgetData.remaining || 0).toLocaleString(tripCurrency.locale)}
-                                </p>
-                              </div>
+                            {/* Summary Card */}
+                            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 shadow-sm">
+                              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Total Trip Budget Limit</span>
+                              <p className="text-2xl font-extrabold text-emerald-800">
+                                {tripCurrency.symbol}{Number(budgetData.totalBudget ?? 0).toLocaleString(tripCurrency.locale)}
+                              </p>
+                              <p className="text-[10px] text-slate-500 mt-1">This is the total cap allocated for your travel expenses.</p>
                             </div>
 
-                            {/* Progress Bar */}
-                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Budget Utilization</span>
-                                <span className={`text-xs font-extrabold ${(budgetData.utilizationPercent || budgetData.percentSpent) > 80 ? 'text-rose-600' : (budgetData.utilizationPercent || budgetData.percentSpent) > 50 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                  {Math.round(budgetData.utilizationPercent || budgetData.percentSpent || 0)}%
-                                </span>
-                              </div>
-                              <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full transition-all duration-500 ${(budgetData.utilizationPercent || budgetData.percentSpent) > 80 ? 'bg-rose-500' : (budgetData.utilizationPercent || budgetData.percentSpent) > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                                  style={{ width: `${Math.min(budgetData.utilizationPercent || budgetData.percentSpent || 0, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Category Breakdown */}
+                            {/* Category Breakdown (Allocation) */}
                             {budgetData.categoryBreakdown && budgetData.categoryBreakdown.length > 0 && (
-                              <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
+                              <div className="bg-white border border-slate-100 rounded-xl p-4 mt-3 space-y-2.5">
                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center">
-                                  <Tag className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-                                  Category Breakdown
+                                  <Tag className="h-3.5 w-3.5 mr-1.5 text-emerald-500" />
+                                  Expected Budget Allocation
                                 </span>
-                                {budgetData.categoryBreakdown.map((cat, idx) => (
-                                  <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                                    <div className="flex-1">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {budgetData.categoryBreakdown.map((cat, idx) => (
+                                    <div key={idx} className="bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 flex justify-between items-center shadow-sm">
                                       <span className="text-xs font-bold text-slate-700">{cat.category}</span>
-                                      <div className="flex items-center space-x-2 mt-1">
-                                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                          <div
-                                            className={`h-full rounded-full ${cat.actual > cat.planned ? 'bg-rose-400' : 'bg-emerald-400'}`}
-                                            style={{ width: `${cat.planned > 0 ? Math.min((cat.actual / cat.planned) * 100, 100) : cat.actual > 0 ? 100 : 0}%` }}
-                                          />
-                                        </div>
-                                        <span className="text-[9px] font-semibold text-slate-400 w-12 text-right">
-                                          {cat.count} item{cat.count !== 1 ? 's' : ''}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="text-right ml-4">
-                                      <p className="text-xs font-bold text-slate-800">{tripCurrency.symbol}{Number(cat.actual).toLocaleString(tripCurrency.locale)}</p>
-                                      <p className="text-[9px] text-slate-400">of {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Daily Breakdown */}
-                            {budgetData.dailyBreakdown && budgetData.dailyBreakdown.length > 0 && (
-                              <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Daily Spending</span>
-                                {budgetData.dailyBreakdown.map((day, idx) => (
-                                  <div key={idx} className="py-2 border-b border-slate-50 last:border-0">
-                                    <div className="flex justify-between items-center mb-1">
-                                      <span className="text-xs font-bold text-slate-700">Day {day.day || 'N/A'}</span>
-                                      <span className="text-[10px] font-bold text-slate-500">
-                                        {tripCurrency.symbol}{Number(day.actual).toLocaleString(tripCurrency.locale)} / {tripCurrency.symbol}{Number(day.planned).toLocaleString(tripCurrency.locale)}
+                                      <span className="text-xs font-extrabold text-slate-900">
+                                        {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}
                                       </span>
                                     </div>
-                                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                      <div className={`h-full rounded-full ${day.actual > day.planned ? 'bg-rose-400' : 'bg-emerald-400'}`}
-                                        style={{ width: `${day.planned > 0 ? Math.min((day.actual / day.planned) * 100, 100) : day.actual > 0 ? 100 : 0}%` }} />
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Expense History */}
-                            {budgetData.expenses && budgetData.expenses.length > 0 && (
-                              <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center">
-                                  <Clock className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-                                  Expense History ({budgetData.expenses.length})
-                                </span>
-                                {budgetData.expenses.map((exp, idx) => (
-                                  <div key={exp.id || idx} className="flex items-start justify-between py-2 border-b border-slate-50 last:border-0 group/exp">
-                                    <div className="flex-1">
-                                      <div className="flex items-center space-x-2">
-                                        <span className="text-xs font-bold text-slate-800">{exp.item_name || 'Expense'}</span>
-                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-semibold">{exp.category}</span>
-                                      </div>
-                                      <p className="text-[10px] text-slate-400 mt-0.5">
-                                        {exp.date ? new Date(exp.date).toLocaleDateString() : ''}
-                                        {exp.notes ? ` • ${exp.notes}` : ''}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center space-x-2 shrink-0">
-                                      <span className="text-xs font-extrabold text-rose-600">
-                                        {tripCurrency.symbol}{Number(exp.actual_amount || 0).toLocaleString(tripCurrency.locale)}
-                                      </span>
-                                      <button
-                                        onClick={() => startEditExpense({
-                                          id: exp.id,
-                                          category: exp.category,
-                                          itemName: exp.item_name,
-                                          plannedAmount: exp.planned_amount,
-                                          actualAmount: exp.actual_amount,
-                                          date: exp.date,
-                                          notes: exp.notes,
-                                        })}
-                                        className="opacity-0 group-hover/exp:opacity-100 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                                      >
-                                        <Edit className="h-3 w-3" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleDeleteExpense(selectedTrip.id, exp.id)}
-                                        className="opacity-0 group-hover/exp:opacity-100 p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition cursor-pointer"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Add / Edit Expense Button */}
-                            <button
-                              onClick={() => {
-                                if (editingExpense) setEditingExpense(null);
-                                setShowExpenseForm(!showExpenseForm);
-                              }}
-                              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center space-x-2"
-                            >
-                              <Plus className="h-4 w-4" />
-                              <span>{showExpenseForm ? 'Cancel' : editingExpense ? 'Edit Expense' : 'Add Expense'}</span>
-                            </button>
-
-                            {/* Add / Edit Expense Form */}
-                            {(showExpenseForm || editingExpense) && (
-                              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                  {editingExpense ? 'Edit Expense' : 'New Expense'}
-                                </span>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="text-[9px] font-semibold text-slate-500 mb-1 block">Category</label>
-                                    <select
-                                      value={editingExpense ? editingExpense.category : expenseForm.category}
-                                      onChange={(e) => {
-                                        if (editingExpense) setEditingExpense({...editingExpense, category: e.target.value});
-                                        else setExpenseForm({...expenseForm, category: e.target.value});
-                                      }}
-                                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400"
-                                    >
-                                      <option>Food</option>
-                                      <option>Accommodation</option>
-                                      <option>Transport</option>
-                                      <option>Activities</option>
-                                      <option>Shopping</option>
-                                      <option>Other</option>
-                                    </select>
-                                  </div>
-                                  <div>
-                                    <label className="text-[9px] font-semibold text-slate-500 mb-1 block">Date</label>
-                                    <input
-                                      type="date"
-                                      value={editingExpense ? editingExpense.date : expenseForm.date}
-                                      onChange={(e) => {
-                                        if (editingExpense) setEditingExpense({...editingExpense, date: e.target.value});
-                                        else setExpenseForm({...expenseForm, date: e.target.value});
-                                      }}
-                                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400"
-                                    />
-                                  </div>
+                                  ))}
                                 </div>
-                                <div>
-                                  <label className="text-[9px] font-semibold text-slate-500 mb-1 block">Item Name</label>
-                                  <input
-                                    type="text"
-                                    value={editingExpense ? editingExpense.itemName : expenseForm.itemName}
-                                    onChange={(e) => {
-                                      if (editingExpense) setEditingExpense({...editingExpense, itemName: e.target.value});
-                                      else setExpenseForm({...expenseForm, itemName: e.target.value});
-                                    }}
-                                    placeholder="e.g. Dinner at restaurant"
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <label className="text-[9px] font-semibold text-slate-500 mb-1 block">Planned Amount</label>
-                                    <input
-                                      type="number"
-                                      value={editingExpense ? editingExpense.plannedAmount : expenseForm.plannedAmount}
-                                      onChange={(e) => {
-                                        if (editingExpense) setEditingExpense({...editingExpense, plannedAmount: e.target.value});
-                                        else setExpenseForm({...expenseForm, plannedAmount: e.target.value});
-                                      }}
-                                      placeholder="0.00"
-                                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="text-[9px] font-semibold text-slate-500 mb-1 block">Actual Amount *</label>
-                                    <input
-                                      type="number"
-                                      value={editingExpense ? editingExpense.actualAmount : expenseForm.actualAmount}
-                                      onChange={(e) => {
-                                        if (editingExpense) setEditingExpense({...editingExpense, actualAmount: e.target.value});
-                                        else setExpenseForm({...expenseForm, actualAmount: e.target.value});
-                                      }}
-                                      placeholder="0.00"
-                                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400"
-                                    />
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="text-[9px] font-semibold text-slate-500 mb-1 block">Notes (optional)</label>
-                                  <input
-                                    type="text"
-                                    value={editingExpense ? editingExpense.notes : expenseForm.notes}
-                                    onChange={(e) => {
-                                      if (editingExpense) setEditingExpense({...editingExpense, notes: e.target.value});
-                                      else setExpenseForm({...expenseForm, notes: e.target.value});
-                                    }}
-                                    placeholder="Any additional details"
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400"
-                                  />
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    if (editingExpense) {
-                                      handleUpdateExpense(selectedTrip.id, editingExpense.id);
-                                    } else {
-                                      handleAddExpense(selectedTrip.id);
-                                    }
-                                  }}
-                                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm"
-                                >
-                                  {editingExpense ? 'Update Expense' : 'Save Expense'}
-                                </button>
                               </div>
                             )}
                           </>
@@ -1905,11 +1904,10 @@ export default function DashboardStub() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${
-              toast.type === 'success'
+            className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
                 ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
                 : 'bg-rose-50/95 border-rose-200 text-rose-800'
-            }`}
+              }`}
           >
             <span className="text-xs font-bold tracking-wide">{toast.message}</span>
           </motion.div>

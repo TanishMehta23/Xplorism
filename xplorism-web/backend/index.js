@@ -7,6 +7,8 @@ import { fileURLToPath } from 'url';
 import pool from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import tripRoutes from './routes/tripRoutes.js';
+import budgetRoutes from './routes/budgetRoutes.js';
+import favoriteRoutes from './routes/favoriteRoutes.js';
 import { getNearbyPlacesFromGemini } from './services/geminiService.js';
 
 dotenv.config();
@@ -27,6 +29,8 @@ app.use(express.json());
 // Routes
 app.use('/auth', authRoutes);
 app.use('/trips', tripRoutes);
+app.use('/trips', budgetRoutes);
+app.use('/favorites', favoriteRoutes);
 
 // Nearby Places Route using Gemini
 app.get('/nearby', async (req, res) => {

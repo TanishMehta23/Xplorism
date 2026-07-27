@@ -40,3 +40,35 @@ CREATE TABLE itinerary (
     location VARCHAR(255) NOT NULL,
     estimated_cost DOUBLE PRECISION NOT NULL DEFAULT 0.0
 );
+
+-- Expenses Table (for budget tracking)
+CREATE TABLE expenses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    day INTEGER,
+    category VARCHAR(100) NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    planned_amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+    actual_amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+    currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+    date DATE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Favorites / Wishlist Table
+CREATE TABLE favorites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL DEFAULT 'attraction',
+    description TEXT DEFAULT '',
+    location VARCHAR(255) DEFAULT '',
+    distance VARCHAR(50) DEFAULT '',
+    category VARCHAR(100) DEFAULT '',
+    image_url TEXT DEFAULT '',
+    destination VARCHAR(255) DEFAULT '',
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

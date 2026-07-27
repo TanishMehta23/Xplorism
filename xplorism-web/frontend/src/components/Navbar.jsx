@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar({ activeTab }) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -29,7 +31,7 @@ export default function Navbar({ activeTab }) {
 
   return (
     <>
-      <nav className="relative z-30 w-full bg-white border-b border-slate-100">
+      <nav className="relative z-30 w-full" style={{ backgroundColor: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}>
       <style>{`
         .nav-link {
           position: relative;
@@ -63,7 +65,7 @@ export default function Navbar({ activeTab }) {
             alt="Xplorism Logo" 
             className="h-12 w-12 object-contain rounded-full shadow-sm" 
           />
-          <span className="text-slate-900 font-extrabold tracking-tight">
+          <span style={{ color: 'var(--text-primary)' }} className="font-extrabold tracking-tight">
             Xplorism
           </span>
         </div>
@@ -71,7 +73,7 @@ export default function Navbar({ activeTab }) {
         {/* Right Section: Nav Links + Profile Avatar Dropdown */}
         <div className="flex items-center space-x-6">
           {/* Desktop Nav Links aligned to the right */}
-          <div className="hidden md:flex items-center space-x-6 text-sm font-bold text-slate-500">
+          <div className="hidden md:flex items-center space-x-6 text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>
             <button 
               onClick={() => navigate('/dashboard')}
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'trips' ? 'text-rose-500 font-bold' : ''}`}
@@ -89,7 +91,7 @@ export default function Navbar({ activeTab }) {
           </div>
 
           {/* Mobile Nav Links */}
-          <div className="flex md:hidden items-center space-x-3 text-xs font-bold text-slate-500 mr-2">
+          <div className="flex md:hidden items-center space-x-3 text-xs font-bold mr-2" style={{ color: 'var(--text-secondary)' }}>
             <button 
               onClick={() => navigate('/dashboard')} 
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'trips' ? 'text-rose-500' : ''}`}
@@ -108,24 +110,47 @@ export default function Navbar({ activeTab }) {
           <div className="relative profile-container">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-extrabold flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer select-none text-sm tracking-wide border border-slate-200/60"
+              className="w-10 h-10 rounded-full font-extrabold flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer select-none text-sm tracking-wide border"
+              style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
             >
               {userInitial}
             </button>
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-3 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 z-50">
-                <div className="px-4 py-2 border-b border-slate-50">
-                  <p className="text-slate-400 text-[9px] uppercase font-bold tracking-wider">Logged in as</p>
-                  <p className="text-slate-800 text-xs font-extrabold truncate">{user?.name || 'Traveler'}</p>
+              <div className="absolute right-0 mt-3 w-48 rounded-2xl shadow-xl py-2 z-50 border"
+                style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+              >
+                <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--border-secondary)' }}>
+                  <p className="text-xs uppercase font-bold tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Logged in as</p>
+                  <p className="text-xs font-extrabold truncate" style={{ color: 'var(--text-primary)' }}>{user?.name || 'Traveler'}</p>
                 </div>
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold transition flex items-center space-x-2 cursor-pointer border-b"
+                  style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-secondary)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = theme === 'dark' ? 'rgba(217,119,6,0.12)' : '#fffbeb'; e.currentTarget.style.color = '#d97706'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="h-3.5 w-3.5 text-amber-500" />
+                  ) : (
+                    <Moon className="h-3.5 w-3.5" style={{ color: 'var(--text-tertiary)' }} />
+                  )}
+                  <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+                </button>
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
                     setShowLogoutConfirm(true);
                   }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-rose-50 text-slate-650 hover:text-rose-600 text-xs font-bold transition flex items-center space-x-2 cursor-pointer"
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold transition flex items-center space-x-2 cursor-pointer"
+                  style={{ color: 'var(--text-secondary)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(244,63,94,0.12)'; e.currentTarget.style.color = '#fb7185'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   <span>Log Out</span>
@@ -140,20 +165,23 @@ export default function Navbar({ activeTab }) {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl border border-slate-100 p-6 max-w-sm w-full shadow-xl text-slate-800 relative">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+          <div className="rounded-3xl border p-6 max-w-sm w-full shadow-xl relative" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
             <div className="flex items-center space-x-3 text-rose-500 mb-4">
               <LogOut className="h-5 w-5" />
-              <h3 className="text-lg font-bold text-slate-900 font-sans">Log Out</h3>
+              <h3 className="text-lg font-bold font-sans" style={{ color: 'var(--text-primary)' }}>Log Out</h3>
             </div>
-            <p className="text-sm text-slate-500 mb-6 leading-relaxed font-sans font-medium">
+            <p className="text-sm mb-6 leading-relaxed font-sans font-medium" style={{ color: 'var(--text-secondary)' }}>
               Are you sure you want to log out of your session?
             </p>
             <div className="flex items-center justify-end space-x-3">
               <button
                 type="button"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 font-sans"
+                className="px-4 py-2 rounded-xl border text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 font-sans"
+                style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
                 Cancel
               </button>

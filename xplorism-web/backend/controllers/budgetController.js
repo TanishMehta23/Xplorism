@@ -1,0 +1,316 @@
+import { query } from '../config/db.js';
+
+/**
+ * GET /api/trips/:id/budget
+ * Returns budget overview: totals, category breakdown, daily breakdown, budget utilization %
+ */
+export const getBudgetOverview = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    // Check trip ownership
+    const tripResult = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (tripResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    const trip = tripResult.rows[0];
+    if (trip.user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const totalBudget = parseFloat(trip.budget) || 0;
+
+    // 1. Get all itinerary items (planned costs)
+    const itineraryResult = await query(
+      'SELECT * FROM itinerary WHERE trip_id = $1 ORDER BY day ASC',
+      [id]
+    );
+    const itineraryItems = itineraryResult.rows;
+
+    // 2. Get all expenses (actual costs)
+    const expensesResult = await query(
+      'SELECT * FROM expenses WHERE trip_id = $1 ORDER BY day ASC, created_at ASC',
+      [id]
+    );
+    const expenses = expensesResult.rows;
+
+    // 3. Calculate totals
+    const totalPlannedFromItinerary = itineraryItems.reduce(
+      (sum, item) => sum + parseFloat(item.estimated_cost || 0),
+      0
+    );
+    const totalPlannedFromExpenses = expenses.reduce(
+      (sum, e) => sum + parseFloat(e.planned_amount || 0),
+      0
+    );
+    const totalActual = expenses.reduce(
+      (sum, e) => sum + parseFloat(e.actual_amount || 0),
+      0
+    );
+
+    // Combine planned: itinerary costs + expense planned amounts
+    const totalPlanned = totalPlannedFromItinerary + totalPlannedFromExpenses;
+    const remaining = totalBudget - totalActual;
+    const utilizationPercent = totalBudget > 0
+      ? Math.min(100, Math.round((totalActual / totalBudget) * 100))
+      : 0;
+
+    // 4. Category breakdown (from expenses + itinerary)
+    const categoryMap = {};
+
+    // Helper to add to category map
+    const addToCategory = (cat, planned, actual) => {
+      if (!categoryMap[cat]) {
+        categoryMap[cat] = { category: cat, planned: 0, actual: 0, count: 0, items: [] };
+      }
+      categoryMap[cat].planned += planned;
+      categoryMap[cat].actual += actual;
+      categoryMap[cat].count += 1;
+    };
+
+    // Auto-categorize itinerary items
+    const autoCategorize = (item) => {
+      const name = (item.activity || '').toLowerCase() + ' ' + (item.location || '').toLowerCase();
+      if (name.includes('food') || name.includes('restaurant') || name.includes('dinner') || name.includes('lunch') || name.includes('breakfast') || name.includes('cafe') || name.includes('market') || name.includes('tasting') || name.includes('meal')) {
+        return 'Food & Dining';
+      }
+      if (name.includes('museum') || name.includes('gallery') || name.includes('tour') || name.includes('guide') || name.includes('ticket') || name.includes('entrance') || name.includes('admission')) {
+        return 'Activities & Tours';
+      }
+      if (name.includes('hotel') || name.includes('hostel') || name.includes('resort') || name.includes('stay') || name.includes('lodging') || name.includes('accommodation')) {
+        return 'Accommodation';
+      }
+      if (name.includes('flight') || name.includes('train') || name.includes('bus') || name.includes('taxi') || name.includes('uber') || name.includes('ferry') || name.includes('transport') || name.includes('cab') || name.includes('rental') || name.includes('gas') || name.includes('fuel')) {
+        return 'Transportation';
+      }
+      if (name.includes('shop') || name.includes('souvenir') || name.includes('gift') || name.includes('boutique') || name.includes('mall') || name.includes('bazaar')) {
+        return 'Shopping';
+      }
+      if (name.includes('beach') || name.includes('park') || name.includes('hike') || name.includes('trek') || name.includes('nature') || name.includes('scenic') || name.includes('viewpoint')) {
+        return 'Outdoor & Nature';
+      }
+      return 'Miscellaneous';
+    };
+
+    // Process itinerary items
+    itineraryItems.forEach(item => {
+      const cat = autoCategorize(item);
+      addToCategory(cat, parseFloat(item.estimated_cost || 0), 0);
+    });
+
+    // Process expenses
+    expenses.forEach(e => {
+      const cat = e.category || 'Miscellaneous';
+      addToCategory(cat, parseFloat(e.planned_amount || 0), parseFloat(e.actual_amount || 0));
+    });
+
+    const categoryBreakdown = Object.values(categoryMap).map(c => ({
+      ...c,
+      planned: parseFloat(c.planned.toFixed(2)),
+      actual: parseFloat(c.actual.toFixed(2)),
+      diff: parseFloat((c.actual - c.planned).toFixed(2)),
+    }));
+
+    // 5. Daily breakdown
+    const dailyMap = {};
+    itineraryItems.forEach(item => {
+      const day = item.day;
+      if (!dailyMap[day]) dailyMap[day] = { day, planned: 0, actual: 0, items: [] };
+      dailyMap[day].planned += parseFloat(item.estimated_cost || 0);
+      dailyMap[day].items.push({
+        type: 'itinerary',
+        name: item.activity,
+        location: item.location,
+        planned: parseFloat(item.estimated_cost || 0),
+        actual: 0,
+        time: item.time,
+      });
+    });
+    expenses.forEach(e => {
+      const day = e.day || 0;
+      if (!dailyMap[day]) dailyMap[day] = { day, planned: 0, actual: 0, items: [] };
+      dailyMap[day].planned += parseFloat(e.planned_amount || 0);
+      dailyMap[day].actual += parseFloat(e.actual_amount || 0);
+      dailyMap[day].items.push({
+        type: 'expense',
+        id: e.id,
+        name: e.item_name,
+        category: e.category,
+        planned: parseFloat(e.planned_amount || 0),
+        actual: parseFloat(e.actual_amount || 0),
+        notes: e.notes,
+      });
+    });
+
+    const dailyBreakdown = Object.values(dailyMap).sort((a, b) => a.day - b.day);
+
+    res.json({
+      tripId: id,
+      destination: trip.destination,
+      totalBudget,
+      totalPlanned: parseFloat(totalPlanned.toFixed(2)),
+      totalActual: parseFloat(totalActual.toFixed(2)),
+      remaining: parseFloat(remaining.toFixed(2)),
+      utilizationPercent,
+      status: totalActual > totalBudget ? 'over_budget' : totalActual / totalBudget > 0.8 ? 'warning' : 'on_track',
+      categoryBreakdown,
+      dailyBreakdown,
+      expenses,
+    });
+  } catch (error) {
+    console.error('Budget overview error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * POST /api/trips/:id/expenses
+ * Log a new expense (actual spend)
+ */
+export const createExpense = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { day, category, itemName, plannedAmount, actualAmount, currency, date, notes } = req.body;
+
+    // Check trip ownership
+    const tripResult = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (tripResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    if (tripResult.rows[0].user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const result = await query(
+      `INSERT INTO expenses (trip_id, day, category, item_name, planned_amount, actual_amount, currency, date, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [
+        id,
+        day || null,
+        category || 'Miscellaneous',
+        itemName || 'Unnamed Expense',
+        parseFloat(plannedAmount || 0),
+        parseFloat(actualAmount || 0),
+        currency || 'USD',
+        date || null,
+        notes || '',
+      ]
+    );
+
+    const expense = result.rows[0];
+    res.status(201).json({
+      id: expense.id,
+      tripId: expense.trip_id,
+      day: expense.day,
+      category: expense.category,
+      itemName: expense.item_name,
+      plannedAmount: expense.planned_amount,
+      actualAmount: expense.actual_amount,
+      currency: expense.currency,
+      date: expense.date,
+      notes: expense.notes,
+      createdAt: expense.created_at,
+    });
+  } catch (error) {
+    console.error('Create expense error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * PUT /api/trips/:id/expenses/:expenseId
+ * Update an expense entry
+ */
+export const updateExpense = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id, expenseId } = req.params;
+    const { day, category, itemName, plannedAmount, actualAmount, currency, date, notes } = req.body;
+
+    // Check trip ownership
+    const tripResult = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (tripResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    if (tripResult.rows[0].user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Check expense exists
+    const expenseResult = await query('SELECT * FROM expenses WHERE id = $1 AND trip_id = $2', [expenseId, id]);
+    if (expenseResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    const existing = expenseResult.rows[0];
+    const result = await query(
+      `UPDATE expenses 
+       SET day = $1, category = $2, item_name = $3, planned_amount = $4, actual_amount = $5, 
+           currency = $6, date = $7, notes = $8
+       WHERE id = $9 RETURNING *`,
+      [
+        day !== undefined ? day : existing.day,
+        category || existing.category,
+        itemName || existing.item_name,
+        plannedAmount !== undefined ? parseFloat(plannedAmount) : existing.planned_amount,
+        actualAmount !== undefined ? parseFloat(actualAmount) : existing.actual_amount,
+        currency || existing.currency,
+        date !== undefined ? date : existing.date,
+        notes !== undefined ? notes : existing.notes,
+        expenseId,
+      ]
+    );
+
+    const expense = result.rows[0];
+    res.json({
+      id: expense.id,
+      tripId: expense.trip_id,
+      day: expense.day,
+      category: expense.category,
+      itemName: expense.item_name,
+      plannedAmount: expense.planned_amount,
+      actualAmount: expense.actual_amount,
+      currency: expense.currency,
+      date: expense.date,
+      notes: expense.notes,
+    });
+  } catch (error) {
+    console.error('Update expense error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * DELETE /api/trips/:id/expenses/:expenseId
+ * Delete an expense entry
+ */
+export const deleteExpense = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id, expenseId } = req.params;
+
+    // Check trip ownership
+    const tripResult = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (tripResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    if (tripResult.rows[0].user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const result = await query(
+      'DELETE FROM expenses WHERE id = $1 AND trip_id = $2 RETURNING *',
+      [expenseId, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    res.json({ message: 'Expense deleted successfully' });
+  } catch (error) {
+    console.error('Delete expense error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

@@ -199,15 +199,63 @@ Only return the raw JSON object conforming to the schema above. Do not include m
     return parsed;
   } catch (err) {
     console.warn(`Gemini itinerary generation failed. Trying Ollama fallback. Error: ${err.message}`);
-    return await askOllamaForItinerary({
-      destination,
-      startDate,
-      endDate,
-      budget,
-      travelers,
-      travelStyle,
-      interests
-    });
+    try {
+      return await askOllamaForItinerary({
+        destination,
+        startDate,
+        endDate,
+        budget,
+        travelers,
+        travelStyle,
+        interests
+      });
+    } catch (ollamaErr) {
+      console.warn(`Ollama fallback failed too (Error: ${ollamaErr.message}). Generating static itinerary for offline stability.`);
+      const city = (destination || '').split(',')[0].trim();
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end - start);
+      const daysCount = Math.min(Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1, 1), 30);
+      
+      const itineraries = [];
+      const interestList = (interests && interests.length > 0) ? interests : ['Sightseeing', 'Local Food', 'Historical Architecture'];
+      const dailyBudget = Math.round((budget || 50000) / daysCount);
+
+      for (let day = 1; day <= daysCount; day++) {
+        itineraries.push({
+          day,
+          time: "09:00 AM",
+          activity: `Morning walk around the historic monuments and local landmarks of ${city}.`,
+          location: `${city} Town Center`,
+          estimatedCost: Math.round(dailyBudget * 0.15)
+        });
+        itineraries.push({
+          day,
+          time: "02:00 PM",
+          activity: `Afternoon tour focused on ${interestList[day % interestList.length]} with regional tastings.`,
+          location: `${city} Cultural District`,
+          estimatedCost: Math.round(dailyBudget * 0.25)
+        });
+        itineraries.push({
+          day,
+          time: "06:30 PM",
+          activity: `Evening sunset viewpoint visit followed by a traditional dinner.`,
+          location: `${city} Plaza`,
+          estimatedCost: Math.round(dailyBudget * 0.20)
+        });
+      }
+
+      return {
+        destination,
+        startDate,
+        endDate,
+        budget: budget || 50000,
+        travelers: travelers || 1,
+        travelStyle: travelStyle || 'Adventure',
+        interests: interests || [],
+        itinerary: itineraries
+      };
+    }
   }
 };
 
@@ -325,7 +373,62 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
     return parsed;
   } catch (err) {
     console.warn(`Gemini nearby places call failed. Trying Ollama fallback. Error: ${err.message}`);
-    return await getNearbyPlacesFromOllama(destination);
+    try {
+      return await getNearbyPlacesFromOllama(destination);
+    } catch (ollamaErr) {
+      console.warn(`Ollama fallback failed too (Error: ${ollamaErr.message}). Generating mock local places for stability.`);
+      const city = (destination || '').split(',')[0].trim();
+      return [
+        {
+          name: `${city} City Center`,
+          distance: "2 km",
+          type: "Historical",
+          description: `Explore the vibrant historical streets, architecture, and local culture of ${city}.`
+        },
+        {
+          name: `${city} Royal Gardens`,
+          distance: "5 km",
+          type: "Nature",
+          description: "Stunning landscaped royal gardens offering peaceful pathways, fountains, and exotic flora."
+        },
+        {
+          name: "National Heritage Museum",
+          distance: "8 km",
+          type: "Historical",
+          description: "An exceptional curation of traditional art, weaponry, relics, and regional history."
+        },
+        {
+          name: "Scenic Lake Sanctuary",
+          distance: "12 km",
+          type: "Nature",
+          description: "A serene lake sanctuary home to migratory birds, boating facilities, and scenic nature paths."
+        },
+        {
+          name: "Adventure Hills Park",
+          distance: "20 km",
+          type: "Adventure",
+          description: "High altitude trekking paths, zip-lining, rock climbing, and spectacular panoramic views."
+        },
+        {
+          name: "Shri Dev Mandir",
+          distance: "15 km",
+          type: "Pilgrimage",
+          description: "A gorgeous white-marble temple complex famous for its peaceful spirituality and evening prayers."
+        },
+        {
+          name: "Old Fort Ruins",
+          distance: "28 km",
+          type: "Historical",
+          description: "Ancient stone fortress ruins offering breathtaking historic stone archways and photo opportunities."
+        },
+        {
+          name: "Grand Bazaar Market",
+          distance: "3 km",
+          type: "Shopping",
+          description: "Vibrant traditional shopping lanes full of locally crafted artifacts, textiles, and delicious street food stalls."
+        }
+      ];
+    }
   }
 };
 

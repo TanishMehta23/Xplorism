@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LogOut, Plus, Calendar, Compass as TripIcon, 
+import {
+  LogOut, Plus, Calendar, Compass as TripIcon,
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind
 } from 'lucide-react';
@@ -521,7 +521,7 @@ const PRE_PLANNED_TRIPS = [
   {
     id: 'pre-ayodhya',
     destination: 'Ayodhya, Uttar Pradesh, India',
-    image: 'https://images.unsplash.com/photo-1590050752117-238cb0612b1b?auto=format&fit=crop&w=600&q=80',
+    image: 'https://akhilbharat.in/wp-content/uploads/2025/10/Gemini_Generated_Image_wzfldmwzfldmwzfl-Edited-1.png',
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days
     budget: 12000,
@@ -562,11 +562,11 @@ const PRE_PLANNED_TRIPS = [
 const getWeatherForDestination = (destination, dateStr) => {
   const month = new Date(dateStr).getMonth();
   const name = (destination || '').toLowerCase();
-  
+
   let temp = 22;
   let condition = 'Sunny';
   let desc = 'Clear skies and pleasant breeze';
-  
+
   if (name.includes('tokyo') || name.includes('japan')) {
     if (month >= 11 || month <= 1) { temp = 8; condition = 'Snowy'; desc = 'Chilly with light winter snow'; }
     else if (month >= 5 && month <= 8) { temp = 28; condition = 'Rainy'; desc = 'Warm with summer showers'; }
@@ -592,7 +592,7 @@ const getWeatherForDestination = (destination, dateStr) => {
     else if (month >= 5 && month <= 8) { temp = 30; condition = 'Sunny'; desc = 'Warm and sunny day'; }
     else { temp = 21; condition = 'Windy'; desc = 'Mild temp with refreshing wind'; }
   }
-  
+
   return { temp, condition, desc };
 };
 
@@ -630,7 +630,7 @@ const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
         const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${searchQuery}&format=json&origin=*`;
         const searchRes = await fetch(searchUrl);
         const searchData = await searchRes.json();
-        
+
         if (searchData.query && searchData.query.search && searchData.query.search.length > 0) {
           const pageTitle = searchData.query.search[0].title;
           const imageQueryUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=pageimages&format=json&pithumbsize=500&origin=*`;
@@ -648,12 +648,12 @@ const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
       } catch (err) {
         console.error("Failed to fetch Wikipedia image", err);
       }
-      
+
       if (active) {
         setImageSrc(getActivityImageFallback(item.location, item.time));
       }
     };
-    
+
     fetchWikiImage();
     return () => {
       active = false;
@@ -672,9 +672,9 @@ const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
         {/* Left Card: Image with + button */}
         <div className="relative w-36 h-28 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100 group/img">
           {imageSrc ? (
-            <img 
-              src={imageSrc} 
-              alt={item.location} 
+            <img
+              src={imageSrc}
+              alt={item.location}
               className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
             />
           ) : (
@@ -718,7 +718,7 @@ const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
 export default function DashboardStub() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
+
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTrip, setSelectedTrip] = useState(null);
@@ -732,6 +732,17 @@ export default function DashboardStub() {
   const [nearbyPlaces, setNearbyPlaces] = useState([]);
   const [nearbyPlacesLoading, setNearbyPlacesLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const carouselRef = useRef(null);
+  const [showLeftFade, setShowLeftFade] = useState(false);
+  const [showRightFade, setShowRightFade] = useState(true);
+
+  const handleCarouselScroll = (e) => {
+    const el = e.target;
+    if (!el) return;
+    setShowLeftFade(el.scrollLeft > 5);
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setShowRightFade(el.scrollLeft < maxScroll - 5);
+  };
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -739,6 +750,52 @@ export default function DashboardStub() {
       setToast((prev) => ({ ...prev, show: false }));
     }, 4000);
   };
+
+  // Programmatic smooth auto-scrolling with loop capability
+  useEffect(() => {
+    let scrollInterval;
+    const el = carouselRef.current;
+    if (!el) return;
+
+    let isInteracting = false;
+
+    const startAutoScroll = () => {
+      scrollInterval = setInterval(() => {
+        if (isInteracting) return;
+        el.scrollLeft += 1;
+        // If scroll reaches halfway, reset to start to maintain seamless loop
+        const halfWidth = (el.scrollWidth - el.clientWidth) / 2;
+        if (el.scrollLeft >= halfWidth - 2) {
+          el.scrollLeft = 0;
+        }
+      }, 30);
+    };
+
+    const handleInteractionStart = () => {
+      isInteracting = true;
+    };
+
+    const handleInteractionEnd = () => {
+      isInteracting = false;
+    };
+
+    el.addEventListener('mouseenter', handleInteractionStart);
+    el.addEventListener('mouseleave', handleInteractionEnd);
+    el.addEventListener('touchstart', handleInteractionStart);
+    el.addEventListener('touchend', handleInteractionEnd);
+
+    startAutoScroll();
+
+    return () => {
+      clearInterval(scrollInterval);
+      if (el) {
+        el.removeEventListener('mouseenter', handleInteractionStart);
+        el.removeEventListener('mouseleave', handleInteractionEnd);
+        el.removeEventListener('touchstart', handleInteractionStart);
+        el.removeEventListener('touchend', handleInteractionEnd);
+      }
+    };
+  }, []);
 
 
   const activeCurrency = CURRENCIES[currencyCode] || CURRENCIES.INR;
@@ -821,25 +878,25 @@ export default function DashboardStub() {
   // Handle map rendering and marker plotting
   useEffect(() => {
     if (!mapCoords || !window.L || !selectedTrip || !isLeafletLoaded) return;
-    
+
     // Clear previous map instance if it exists
     if (window.mapInstance) {
       window.mapInstance.remove();
     }
-    
+
     const container = document.getElementById('map-container');
     if (!container) return;
 
     const zoom = activeDayTab === 'nearby' ? 9 : 12;
     const map = window.L.map('map-container', { zoomControl: false }).setView(mapCoords, zoom);
     window.mapInstance = map;
-    
-     window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+
+    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       attribution: '© Google Maps'
     }).addTo(map);
 
     window.L.control.zoom({ position: 'bottomright' }).addTo(map);
-    
+
     // Custom icon configuration to fix Leaflet default marker path issues
     const defaultIcon = window.L.icon({
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -848,8 +905,8 @@ export default function DashboardStub() {
       iconAnchor: [12, 41],
       popupAnchor: [1, -34]
     });
-    
-      
+
+
 
     let isCancelled = false;
 
@@ -866,7 +923,7 @@ export default function DashboardStub() {
             if (data && data.length > 0) {
               const lat = parseFloat(data[0].lat);
               const lon = parseFloat(data[0].lon);
-              
+
               const marker = window.L.marker([lat, lon], { icon: defaultIcon })
                 .addTo(map)
                 .bindPopup(`<b>${place.name}</b><br/><i>${place.distance} - ${place.type}</i><br/>${place.description}`);
@@ -978,7 +1035,7 @@ export default function DashboardStub() {
   const getDayItineraries = (trip) => {
     if (!trip || !trip.itineraries) return [];
     const filtered = trip.itineraries.filter(item => item.day === activeDayTab);
-    
+
     // Sort chronologically (Morning -> Afternoon -> Evening / AM -> PM)
     return filtered.sort((a, b) => {
       const getScore = (timeStr) => {
@@ -987,7 +1044,7 @@ export default function DashboardStub() {
         if (val.startsWith('morning')) return 1;
         if (val.startsWith('afternoon')) return 2;
         if (val.startsWith('evening') || val.startsWith('night')) return 3;
-        
+
         // Parse time format: e.g. "09:30 AM"
         const match = val.match(/(\d+):(\d+)\s*(am|pm)/);
         if (match) {
@@ -1015,24 +1072,20 @@ export default function DashboardStub() {
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
       <style>{`
         .marquee-wrapper {
-          overflow: hidden;
+          overflow-x: auto;
           width: 100%;
           display: flex;
           position: relative;
           padding-bottom: 8px;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE 10+ */
+        }
+        .marquee-wrapper::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
         }
         .marquee-track {
           display: flex;
-          width: max-content;
-          animation: scroll 150s linear infinite;
           gap: 24px;
-        }
-        .marquee-track:hover {
-          animation-play-state: paused;
-        }
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
         }
       `}</style>
 
@@ -1060,72 +1113,73 @@ export default function DashboardStub() {
             <Sparkles className="h-5 w-5 animate-pulse" />
             <h2 className="text-xl font-bold text-slate-900">Recommended Pre-planned Trips</h2>
           </div>
-          
-          {/* Loop Scrolling Marquee Wrapper */}
-          <div className="marquee-wrapper relative">
+
+          <div className="relative w-full">
             {/* Fading Edge Overlays */}
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
-            <div className="marquee-track">
-              {/* Render twice for seamless infinite loop */}
-              {[...PRE_PLANNED_TRIPS, ...PRE_PLANNED_TRIPS].map((trip, index) => {
-                const days = getTripDaysCount(trip.startDate, trip.endDate);
-                const parts = trip.travelStyle.split('|');
-                const style = parts[0];
-                const tripCurrencyCode = parts[1];
-                const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
-                return (
-                  <div
-                    key={`${trip.id}-${index}`}
-                    onClick={() => {
-                      setSelectedTrip(trip);
-                      setActiveDayTab(1);
-                    }}
-                    className="group w-[280px] md:w-[320px] bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
-                  >
-                    <div className="relative h-40 w-full overflow-hidden">
-                      <img 
-                        src={trip.image} 
-                        alt={trip.destination} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 left-3 flex items-center space-x-1.5 z-10">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-rose-550 border border-slate-100/50 backdrop-blur-sm shadow-sm">
-                          {style}
-                        </span>
-                        {/* Mini Weather Pill on cover */}
-                        {(() => {
-                          const w = getWeatherForDestination(trip.destination, trip.startDate);
-                          const Icon = w.condition === 'Sunny' ? Sun : w.condition === 'Cloudy' ? Cloud : w.condition === 'Rainy' ? CloudRain : w.condition === 'Snowy' ? Snowflake : Wind;
-                          return (
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-slate-700 border border-slate-100/50 backdrop-blur-sm shadow-sm flex items-center space-x-1">
-                              <Icon className="h-3 w-3 text-amber-500" />
-                              <span>{w.temp}°C</span>
-                            </span>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900 mb-1 group-hover:text-rose-500 transition truncate">
-                          {trip.destination}
-                        </h3>
-                        <p className="text-slate-500 text-[11px] mb-4">{days} Days Custom Schedule</p>
-                      </div>
-                      <div className="flex items-center justify-between text-slate-500 text-xs pt-3 border-t border-slate-50">
-                        <div className="flex items-center space-x-1.5">
-                          <Users className="h-4 w-4 text-rose-455" />
-                          <span>{trip.travelers} Travelers</span>
-                        </div>
-                        <div className="flex items-center space-x-1.5 font-bold text-slate-900">
-                          <span>{tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+            <div className={`absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-50 to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showLeftFade ? 'opacity-100' : 'opacity-0'}`} />
+            <div className={`absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-50 to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showRightFade ? 'opacity-100' : 'opacity-0'}`} />
+            
+            <div ref={carouselRef} onScroll={handleCarouselScroll} className="marquee-wrapper relative">
+              <div className="marquee-track">
+                {[...PRE_PLANNED_TRIPS, ...PRE_PLANNED_TRIPS].map((trip, index) => {
+                  const days = getTripDaysCount(trip.startDate, trip.endDate);
+                  const parts = trip.travelStyle.split('|');
+                  const style = parts[0];
+                  const tripCurrencyCode = parts[1];
+                  const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
+                  return (
+                    <div
+                      key={`${trip.id}-${index}`}
+                      onClick={() => {
+                        setSelectedTrip(trip);
+                        setActiveDayTab(1);
+                      }}
+                      className="group w-[280px] md:w-[320px] shrink-0 bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
+                    >
+                      <div className="relative h-40 w-full overflow-hidden">
+                        <img 
+                          src={trip.image} 
+                          alt={trip.destination} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute top-3 left-3 flex items-center space-x-1.5 z-10">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-rose-550 border border-slate-100/50 backdrop-blur-sm shadow-sm">
+                            {style}
+                          </span>
+                          {/* Mini Weather Pill on cover */}
+                          {(() => {
+                            const w = getWeatherForDestination(trip.destination, trip.startDate);
+                            const Icon = w.condition === 'Sunny' ? Sun : w.condition === 'Cloudy' ? Cloud : w.condition === 'Rainy' ? CloudRain : w.condition === 'Snowy' ? Snowflake : Wind;
+                            return (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-slate-700 border border-slate-100/50 backdrop-blur-sm shadow-sm flex items-center space-x-1">
+                                <Icon className="h-3 w-3 text-amber-500" />
+                                <span>{w.temp}°C</span>
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
+                      <div className="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 mb-1 group-hover:text-rose-500 transition truncate">
+                            {trip.destination}
+                          </h3>
+                          <p className="text-slate-555 text-[11px] mb-4">{days} Days Custom Schedule</p>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-555 text-xs pt-3 border-t border-slate-50">
+                          <div className="flex items-center space-x-1.5">
+                            <Users className="h-4 w-4 text-rose-455" />
+                            <span>{trip.travelers} Travelers</span>
+                          </div>
+                          <div className="flex items-center space-x-1.5 font-bold text-slate-900">
+                            <span>{tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -1169,7 +1223,7 @@ export default function DashboardStub() {
               const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
               const weather = getWeatherForDestination(trip.destination, trip.startDate);
               const WeatherIcon = weather.condition === 'Sunny' ? Sun : weather.condition === 'Cloudy' ? Cloud : weather.condition === 'Rainy' ? CloudRain : weather.condition === 'Snowy' ? Snowflake : Wind;
-              
+
               return (
                 <div
                   key={trip.id}
@@ -1203,7 +1257,7 @@ export default function DashboardStub() {
                     <h3 className="text-xl font-bold text-slate-950 mb-2 group-hover:text-rose-500 transition">
                       {trip.destination}
                     </h3>
-                    
+
                     <div className="flex items-center space-x-2 text-slate-500 text-xs mb-4">
                       <Calendar className="h-3.5 w-3.5 text-rose-400" />
                       <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? 'day' : 'days'})</span>
@@ -1269,7 +1323,7 @@ export default function DashboardStub() {
                     <p className="text-slate-500 text-xs mt-1">
                       {formatDate(selectedTrip.startDate)} to {formatDate(selectedTrip.endDate)} • {selectedTrip.travelers} {selectedTrip.travelers === 1 ? 'Traveler' : 'Travelers'} • Budget: {tripCurrency.symbol}{Number(selectedTrip.budget).toLocaleString(tripCurrency.locale)}
                     </p>
-                    
+
                     {/* Weather Forecast Details Panel */}
                     <div className="flex items-center space-x-3 mt-3 text-xs text-slate-500 bg-slate-50 border border-slate-100 p-2.5 rounded-2xl w-fit shadow-sm">
                       <div className="flex items-center space-x-1.5 font-bold text-slate-700">
@@ -1361,7 +1415,7 @@ export default function DashboardStub() {
 
                 {/* Split Content Body: Itinerary List (Left) & Leaflet Map (Right) */}
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                  
+
                   {/* Left Panel: Day Activities Checklist or Nearby Places */}
                   <div className="w-full md:w-7/12 overflow-y-auto p-6 border-r border-slate-100 space-y-6">
                     {activeDayTab === 'nearby' ? (
@@ -1388,7 +1442,7 @@ export default function DashboardStub() {
                             <p className="col-span-2 text-slate-400 text-xs text-center py-8">No nearby places found.</p>
                           ) : (
                             nearbyPlaces.map((place, idx) => (
-                              <div 
+                              <div
                                 key={idx}
                                 className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between"
                               >
@@ -1471,13 +1525,13 @@ export default function DashboardStub() {
       </AnimatePresence>
 
       {/* Trip Wizard Modal */}
-      <TripWizard 
-        isOpen={isWizardOpen} 
+      <TripWizard
+        isOpen={isWizardOpen}
         onClose={() => {
           setIsWizardOpen(false);
           setWizardInitialData(null);
-        }} 
-        onTripCreated={fetchTrips} 
+        }}
+        onTripCreated={fetchTrips}
         currencyCode={currencyCode}
         initialData={wizardInitialData}
       />
@@ -1540,11 +1594,10 @@ export default function DashboardStub() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${
-              toast.type === 'success' 
-                ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800' 
+            className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
+                ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
                 : 'bg-rose-50/95 border-rose-200 text-rose-800'
-            }`}
+              }`}
           >
             <span className="text-xs font-bold tracking-wide">{toast.message}</span>
           </motion.div>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
+import Navbar from '../components/Navbar';
 
 export const CURRENCIES = {
   INR: { symbol: '₹', name: 'INR (₹)', locale: 'en-IN' },
@@ -730,6 +731,14 @@ export default function DashboardStub() {
   const [tripToDelete, setTripToDelete] = useState(null);
   const [nearbyPlaces, setNearbyPlaces] = useState([]);
   const [nearbyPlacesLoading, setNearbyPlacesLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 4000);
+  };
 
 
   const activeCurrency = CURRENCIES[currencyCode] || CURRENCIES.INR;
@@ -1027,31 +1036,7 @@ export default function DashboardStub() {
         }
       `}</style>
 
-      {/* Navigation */}
-      <nav className="relative z-30 w-full bg-white border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3 text-2xl font-bold tracking-tight cursor-pointer" onClick={() => navigate('/')}>
-            <img 
-              src="/logo.png" 
-              alt="Xplorism Logo" 
-              className="h-12 w-12 object-contain rounded-full shadow-sm" 
-            />
-            <span className="text-slate-900 font-extrabold tracking-tight">
-              Xplorism
-            </span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-slate-650 text-sm font-semibold hidden sm:inline">Hello, {user?.name || 'Traveler'}!</span>
-            <button
-              onClick={handleLogout}
-              className="p-2.5 rounded-full hover:bg-slate-100 border border-slate-250/60 text-slate-500 hover:text-slate-800 transition cursor-pointer"
-              title="Log Out"
-            >
-              <LogOut className="h-4.5 w-4.5" />
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar activeTab="trips" />
 
       {/* Main Content */}
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
@@ -1330,12 +1315,12 @@ export default function DashboardStub() {
                                 interests: selectedTrip.interests,
                                 itinerary: selectedTrip.itineraries
                               });
-                              alert('Pre-planned itinerary saved to your trips!');
+                              showToast('Pre-planned itinerary saved to your trips!', 'success');
                               fetchTrips();
                               setSelectedTrip(null);
                             } catch (err) {
                               console.error(err);
-                              alert('Failed to copy itinerary.');
+                              showToast('Failed to copy itinerary.', 'error');
                             }
                           }}
                           className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm cursor-pointer"
@@ -1531,10 +1516,11 @@ export default function DashboardStub() {
                       if (selectedTrip?.id === tripToDelete.id) {
                         setSelectedTrip(null);
                       }
+                      showToast('Trip deleted successfully.', 'success');
                       setTripToDelete(null);
                     } catch (err) {
                       console.error('Failed to delete trip:', err);
-                      alert('Failed to delete trip.');
+                      showToast('Failed to delete trip.', 'error');
                     }
                   }}
                   className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95"
@@ -1544,6 +1530,24 @@ export default function DashboardStub() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification Popup */}
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${
+              toast.type === 'success' 
+                ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800' 
+                : 'bg-rose-50/95 border-rose-200 text-rose-800'
+            }`}
+          >
+            <span className="text-xs font-bold tracking-wide">{toast.message}</span>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

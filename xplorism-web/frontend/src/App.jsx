@@ -5,6 +5,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardStub from './pages/DashboardStub';
+import WeatherPage from './pages/WeatherPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route component
@@ -61,6 +62,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <DashboardStub />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/weather" 
+        element={
+          <ProtectedRoute>
+            <WeatherPage />
           </ProtectedRoute>
         } 
       />

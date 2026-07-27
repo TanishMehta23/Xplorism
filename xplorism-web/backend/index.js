@@ -1,11 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import pool from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import tripRoutes from './routes/tripRoutes.js';
 import { getNearbyPlacesFromGemini } from './services/geminiService.js';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -169,6 +176,43 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal Server Error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Database auto-initialization function
+async function initDatabase() {
+  try {
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    if (!fs.existsSync(schemaPath)) {
+      console.warn('schema.sql file not found, skipping database auto-initialization.');
+      return;
+    }
+    
+    let schemaSql = fs.readFileSync(schemaPath, 'utf8');
+
+    // Remove destructive DROP TABLE statements to prevent data loss on restarts
+    schemaSql = schemaSql.replace(/DROP TABLE IF EXISTS \w+;/gi, '');
+
+    // Ensure CREATE TABLE is CREATE TABLE IF NOT EXISTS
+    schemaSql = schemaSql.replace(/CREATE TABLE (\w+)/gi, 'CREATE TABLE IF NOT EXISTS $1');
+
+    // Split statements by semicolon
+    const statements = schemaSql
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+
+    for (const statement of statements) {
+      await pool.query(statement);
+    }
+    console.log('Database tables successfully initialized / verified.');
+  } catch (error) {
+    console.error('Error during database initialization:', error);
+  }
+}
+
+// Initialize database and start server
+initDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}).catch(err => {
+  console.error('Failed to start server due to database init error:', err);
 });

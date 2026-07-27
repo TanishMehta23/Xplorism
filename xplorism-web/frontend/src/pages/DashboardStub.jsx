@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut, Plus, Calendar, Compass as TripIcon,
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
-  Sun, Cloud, CloudRain, Snowflake, Wind
+  Sun, Cloud, CloudRain, Snowflake, Wind, Download, Search
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
@@ -621,9 +621,13 @@ const getActivityImageFallback = (location, time) => {
 
 const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
   const [imageSrc, setImageSrc] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
+    setImageSrc('');
+    setLoading(true);
+
     const fetchWikiImage = async () => {
       try {
         const searchQuery = encodeURIComponent(item.location);
@@ -641,6 +645,7 @@ const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
           if (pages[pageId].thumbnail && pages[pageId].thumbnail.source) {
             if (active) {
               setImageSrc(pages[pageId].thumbnail.source);
+              setLoading(false);
               return;
             }
           }
@@ -651,6 +656,7 @@ const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
 
       if (active) {
         setImageSrc(getActivityImageFallback(item.location, item.time));
+        setLoading(false);
       }
     };
 
@@ -670,22 +676,27 @@ const ActivityCard = ({ item, tripCurrency, Plus, Clock, MapPin }) => {
 
       <div className="flex flex-col sm:flex-row gap-5 items-start">
         {/* Left Card: Image with + button */}
-        <div className="relative w-36 h-28 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100 group/img">
-          {imageSrc ? (
+        <div className="relative w-36 h-28 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100 group/img bg-slate-100">
+          {loading || !imageSrc ? (
+            <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center">
+              <div className="h-4 w-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+            </div>
+          ) : (
             <img
               src={imageSrc}
               alt={item.location}
               className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
             />
-          ) : (
-            <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center">
-              <span className="text-xs text-slate-400">Loading...</span>
-            </div>
           )}
-          {/* Plus action button over image */}
-          <button className="absolute top-2 right-2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer border border-slate-100">
-            <Plus className="h-4 w-4 text-slate-500" />
-          </button>
+          {/* Google Search redirect button over image */}
+          <a
+            href={`https://www.google.com/search?q=${encodeURIComponent(item.location || item.activity)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute top-2 right-2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer border border-slate-100"
+          >
+            <Search className="h-3.5 w-3.5 text-slate-500" />
+          </a>
         </div>
 
         {/* Right Info: Name and Description */}
@@ -733,6 +744,8 @@ export default function DashboardStub() {
   const [nearbyPlacesLoading, setNearbyPlacesLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSavingTrip, setIsSavingTrip] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const carouselRef = useRef(null);
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(true);
@@ -1028,6 +1041,243 @@ export default function DashboardStub() {
     return new Date(dateStr).toLocaleDateString(undefined, options);
   };
 
+  const exportTripToPDF = async (trip) => {
+    try {
+      const parts = (trip.travelStyle || '').split('|');
+      const style = parts[0] || 'Adventure';
+      const tripCurrencyCode = parts[1] || 'INR';
+      const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
+      const daysCount = getTripDaysCount(trip.startDate, trip.endDate);
+
+      // Score helper for sorting
+      const getScore = (timeStr) => {
+        if (!timeStr) return 999;
+        const val = timeStr.toLowerCase().trim();
+        if (val.startsWith('morning')) return 1;
+        if (val.startsWith('afternoon')) return 2;
+        if (val.startsWith('evening') || val.startsWith('night')) return 3;
+
+        const match = val.match(/(\d+):(\d+)\s*(am|pm)/);
+        if (match) {
+          let hrs = parseInt(match[1]);
+          const mins = parseInt(match[2]);
+          const isPm = match[3] === 'pm';
+          if (isPm && hrs < 12) hrs += 12;
+          if (!isPm && hrs === 12) hrs = 0;
+          return hrs * 60 + mins + 10;
+        }
+        return 999;
+      };
+
+      // Fetch dynamic Wikipedia cover image for the destination city
+      let heroImage = '';
+      try {
+        const destCity = (trip.destination || '').split(',')[0].trim();
+        const searchQuery = encodeURIComponent(destCity);
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${searchQuery}&format=json&origin=*`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+
+        if (searchData.query && searchData.query.search && searchData.query.search.length > 0) {
+          const pageTitle = searchData.query.search[0].title;
+          const imageQueryUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=pageimages&format=json&pithumbsize=1000&origin=*`;
+          const imageRes = await fetch(imageQueryUrl);
+          const imageData = await imageRes.json();
+          const pages = imageData.query.pages;
+          const pageId = Object.keys(pages)[0];
+          if (pages[pageId].thumbnail && pages[pageId].thumbnail.source) {
+            heroImage = pages[pageId].thumbnail.source;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch Wikipedia cover image", err);
+      }
+
+      if (!heroImage) {
+        heroImage = trip.image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80';
+      }
+
+      // Group activities by day
+      const daysMap = {};
+      if (trip.itineraries) {
+        trip.itineraries.forEach(item => {
+          if (!daysMap[item.day]) {
+            daysMap[item.day] = [];
+          }
+          daysMap[item.day].push(item);
+        });
+      }
+
+      // Build day sections HTML
+      let daysHtml = '';
+      const sortedDays = Object.keys(daysMap).map(Number).sort((a, b) => a - b);
+
+      sortedDays.forEach((dayNum, index) => {
+        const dayActivities = daysMap[dayNum] || [];
+        const activities = dayActivities.sort((a, b) => getScore(a.time) - getScore(b.time));
+
+        daysHtml += `
+          <div class="day-section">
+            <h3 class="day-title">
+              <svg class="day-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Day ${dayNum} Schedule
+            </h3>
+            <div class="timeline">
+              ${activities.map(act => `
+                <div class="timeline-item">
+                  <div class="time-badge">${act.time || 'All Day'}</div>
+                  <div class="activity-card">
+                    <p class="activity-desc">${act.activity}</p>
+                    <div class="activity-meta">
+                      ${act.location ? `
+                        <span class="meta-item">
+                          <svg class="icon text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                          ${act.location}
+                        </span>
+                      ` : ''}
+                      ${act.estimatedCost !== undefined ? `
+                        <span class="meta-item cost-tag">
+                          Est. Cost: ${tripCurrency.symbol}${Number(act.estimatedCost).toLocaleString(tripCurrency.locale)}
+                        </span>
+                      ` : ''}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      const interestsHtml = (trip.interests && trip.interests.length > 0)
+        ? trip.interests.map(i => `<span class="interest-badge">${i}</span>`).join('')
+        : '<span class="no-interests">None Selected</span>';
+
+      const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Itinerary - ${trip.destination}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; line-height: 1.5; padding: 40px; }
+          .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 24px; }
+          .branding { display: flex; align-items: center; gap: 10px; }
+          .brand-logo { width: 32px; height: 32px; background-color: #f87171; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 16px; }
+          .brand-name { font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+          .doc-type { font-size: 11px; font-weight: 700; color: #ef4444; text-transform: uppercase; letter-spacing: 1px; }
+          
+          .hero-banner { 
+            position: relative;
+            width: 100%;
+            height: 280px;
+            border-radius: 24px;
+            background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.8)), url('${heroImage}');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 35px;
+            margin-bottom: 30px;
+            color: white;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .hero-title { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 800; color: #ffffff; margin-bottom: 6px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+          .hero-subtitle { font-size: 14px; font-weight: 500; color: rgba(255, 255, 255, 0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+          
+          .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+          .metric-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #ef4444; border-radius: 16px; padding: 16px; text-align: left; }
+          .metric-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+          .metric-value { font-size: 15px; font-weight: 750; color: #0f172a; }
+          
+          .interests-section { background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 20px; padding: 18px 24px; margin-bottom: 35px; }
+          .interests-title { font-size: 11px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+          .interests-list { display: flex; flex-wrap: wrap; gap: 8px; }
+          .interest-badge { background-color: #ffffff; border: 1px solid #fde68a; border-radius: 9999px; padding: 4px 12px; font-size: 11px; font-weight: 600; color: #78350f; }
+          
+          .day-section { margin-bottom: 40px; }
+          .day-title { font-size: 22px; font-weight: 800; color: #0f172a; border-bottom: 2px solid #ef4444; padding-bottom: 8px; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+          .day-title-icon { width: 20px; height: 20px; color: #ef4444; }
+          .timeline { position: relative; padding-left: 24px; }
+          .timeline::before { content: ''; position: absolute; left: 5px; top: 12px; bottom: 12px; width: 2px; background-color: #f1f5f9; }
+          .timeline-item { position: relative; margin-bottom: 28px; }
+          .timeline-item::before { content: ''; position: absolute; left: -23px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background-color: #ef4444; border: 2px solid #ffffff; box-shadow: 0 0 0 2px #fee2e2; }
+          .time-badge { font-size: 12px; font-weight: 750; color: #ef4444; margin-bottom: 6px; }
+          
+          .activity-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 3px solid #ef4444; border-radius: 14px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
+          .activity-desc { font-size: 14.5px; color: #1e293b; font-weight: 500; margin-bottom: 8px; }
+          .activity-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+          .meta-item { font-size: 11px; color: #475569; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+          .cost-tag { background-color: #f1f5f9; padding: 2px 8px; border-radius: 6px; color: #334155; }
+          .icon { width: 12px; height: 12px; }
+          
+          @media print {
+            body { padding: 20px; }
+            .timeline-item { page-break-inside: avoid; }
+            .hero-banner { 
+              background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.8)), url('${heroImage}') !important;
+              print-color-adjust: exact !important; 
+              -webkit-print-color-adjust: exact !important; 
+            }
+            .metric-card { background-color: #f8fafc !important; border-left: 4px solid #ef4444 !important; }
+            .interests-section { background-color: #fffbeb !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="branding"><div class="brand-logo">X</div><div class="brand-name">Xplorism</div></div>
+          <div class="doc-type">Personalized Travel Itinerary</div>
+        </div>
+
+        <div class="hero-banner">
+          <div class="hero-content">
+            <h1 class="hero-title">${trip.destination}</h1>
+            <p class="hero-subtitle">${formatDate(trip.startDate)} to ${formatDate(trip.endDate)} • Planned with Xplorism AI</p>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card"><div class="metric-label">Duration</div><div class="metric-value">${daysCount} Days</div></div>
+          <div class="metric-card"><div class="metric-label">Travelers</div><div class="metric-value">${trip.travelers} ${trip.travelers === 1 ? 'Person' : 'People'}</div></div>
+          <div class="metric-card"><div class="metric-label">Style</div><div class="metric-value">${style}</div></div>
+          <div class="metric-card"><div class="metric-label">Budget</div><div class="metric-value">${tripCurrency.symbol}${Number(trip.budget).toLocaleString(tripCurrency.locale)}</div></div>
+        </div>
+
+        <div class="interests-section">
+          <div class="interests-title">Selected Interests</div>
+          <div class="interests-list">${interestsHtml}</div>
+        </div>
+
+        ${daysHtml}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const getTripDaysCount = (start, end) => {
     const diff = Math.abs(new Date(end) - new Date(start));
     return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
@@ -1119,7 +1369,7 @@ export default function DashboardStub() {
             {/* Fading Edge Overlays */}
             <div className={`absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-50 to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showLeftFade ? 'opacity-100' : 'opacity-0'}`} />
             <div className={`absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-50 to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showRightFade ? 'opacity-100' : 'opacity-0'}`} />
-            
+
             <div ref={carouselRef} onScroll={handleCarouselScroll} className="marquee-wrapper relative">
               <div className="marquee-track">
                 {[...PRE_PLANNED_TRIPS, ...PRE_PLANNED_TRIPS].map((trip, index) => {
@@ -1138,9 +1388,9 @@ export default function DashboardStub() {
                       className="group w-[280px] md:w-[320px] shrink-0 bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
                     >
                       <div className="relative h-40 w-full overflow-hidden">
-                        <img 
-                          src={trip.image} 
-                          alt={trip.destination} 
+                        <img
+                          src={trip.image}
+                          alt={trip.destination}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute top-3 left-3 flex items-center space-x-1.5 z-10">
@@ -1246,13 +1496,25 @@ export default function DashboardStub() {
                           <span>{weather.temp}°C</span>
                         </span>
                       </div>
-                      <button
-                        onClick={(e) => handleDeleteTrip(trip, e)}
-                        className="p-1.5 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition cursor-pointer"
-                        title="Delete Trip"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            exportTripToPDF(trip);
+                          }}
+                          className="p-1.5 rounded-full hover:bg-rose-50 text-slate-450 hover:text-rose-555 transition cursor-pointer"
+                          title="Export Trip PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteTrip(trip, e)}
+                          className="p-1.5 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition cursor-pointer"
+                          title="Delete Trip"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
 
                     <h3 className="text-xl font-bold text-slate-950 mb-2 group-hover:text-rose-500 transition">
@@ -1339,7 +1601,9 @@ export default function DashboardStub() {
                     {selectedTrip.isPrePlanned && (
                       <>
                         <button
+                          disabled={isSavingTrip}
                           onClick={() => {
+                            if (isSavingTrip) return;
                             setWizardInitialData({
                               destination: selectedTrip.destination,
                               startDate: selectedTrip.startDate,
@@ -1352,13 +1616,16 @@ export default function DashboardStub() {
                             setIsWizardOpen(true);
                             setSelectedTrip(null);
                           }}
-                          className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                          className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-707 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
                         >
                           <Edit className="h-3.5 w-3.5 text-rose-500" />
                           <span>Customize</span>
                         </button>
                         <button
+                          disabled={isSavingTrip}
                           onClick={async () => {
+                            if (isSavingTrip) return;
+                            setIsSavingTrip(true);
                             try {
                               await api.post('/trips', {
                                 destination: selectedTrip.destination,
@@ -1376,17 +1643,44 @@ export default function DashboardStub() {
                             } catch (err) {
                               console.error(err);
                               showToast('Failed to copy itinerary.', 'error');
+                            } finally {
+                              setIsSavingTrip(false);
                             }
                           }}
-                          className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-805 disabled:bg-slate-700 text-white text-xs font-bold transition shadow-sm cursor-pointer disabled:cursor-not-allowed flex items-center space-x-1.5"
                         >
-                          Add to My Trips
+                          {isSavingTrip ? (
+                            <>
+                              <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              <span>Saving...</span>
+                            </>
+                          ) : (
+                            <span>Add to My Trips</span>
+                          )}
                         </button>
                       </>
                     )}
                     <button
-                      onClick={() => setSelectedTrip(null)}
-                      className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+                      disabled={isSavingTrip || isExporting}
+                      onClick={() => exportTripToPDF(selectedTrip)}
+                      className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-355 hover:bg-slate-55 text-slate-705 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isExporting ? (
+                        <>
+                          <div className="h-3.5 w-3.5 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+                          <span>Exporting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-3.5 w-3.5 text-rose-500" />
+                          <span>Export PDF</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      disabled={isSavingTrip || isExporting}
+                      onClick={() => !isSavingTrip && !isExporting && setSelectedTrip(null)}
+                      className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -1609,8 +1903,8 @@ export default function DashboardStub() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
-                ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
-                : 'bg-rose-50/95 border-rose-200 text-rose-800'
+              ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50/95 border-rose-200 text-rose-800'
               }`}
           >
             <span className="text-xs font-bold tracking-wide">{toast.message}</span>

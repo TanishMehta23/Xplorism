@@ -36,50 +36,50 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={
           <AuthRoute>
             <LandingPage />
           </AuthRoute>
-        } 
+        }
       />
-      
-      <Route 
-        path="/login" 
+
+      <Route
+        path="/login"
         element={
           <AuthRoute>
             <Navigate to="/" state={{ openAuth: true, mode: 'login' }} replace />
           </AuthRoute>
-        } 
+        }
       />
-      <Route 
-        path="/register" 
+      <Route
+        path="/register"
         element={
           <AuthRoute>
             <Navigate to="/" state={{ openAuth: true, mode: 'register' }} replace />
           </AuthRoute>
-        } 
+        }
       />
-      
-      <Route 
-        path="/dashboard" 
+
+      <Route
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <DashboardStub />
           </ProtectedRoute>
-        } 
+        }
       />
-      
-      <Route 
-        path="/weather" 
+
+      <Route
+        path="/weather"
         element={
           <ProtectedRoute>
             <WeatherPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

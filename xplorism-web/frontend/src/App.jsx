@@ -10,35 +10,40 @@ import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#040d12] flex items-center justify-center text-slate-100">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-10 w-10 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm animate-pulse">Loading adventure...</p>
-        </div>
-      </div>
-    );
-  }
-
+  const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 // Route that redirects logged-in users away from auth pages
 const AuthRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) return null;
-
+  const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 };
 
 function AppRoutes() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-800">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-10 w-10 border-4 border-rose-100 border-t-rose-500 rounded-full animate-spin" />
+          <p className="text-slate-500 text-sm animate-pulse font-medium">Loading adventure...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route 
+        path="/" 
+        element={
+          <AuthRoute>
+            <LandingPage />
+          </AuthRoute>
+        } 
+      />
       
       <Route 
         path="/login" 

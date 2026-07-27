@@ -732,6 +732,7 @@ export default function DashboardStub() {
   const [nearbyPlaces, setNearbyPlaces] = useState([]);
   const [nearbyPlacesLoading, setNearbyPlacesLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [isDeleting, setIsDeleting] = useState(false);
   const carouselRef = useRef(null);
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(true);
@@ -1556,14 +1557,18 @@ export default function DashboardStub() {
               <div className="flex items-center justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={() => setTripToDelete(null)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-sm active:scale-95"
+                  disabled={isDeleting}
+                  onClick={() => !isDeleting && setTripToDelete(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
+                  disabled={isDeleting}
                   onClick={async () => {
+                    if (isDeleting) return;
+                    setIsDeleting(true);
                     try {
                       await api.delete(`/trips/${tripToDelete.id}`);
                       setTrips(trips.filter(t => t.id !== tripToDelete.id));
@@ -1575,11 +1580,20 @@ export default function DashboardStub() {
                     } catch (err) {
                       console.error('Failed to delete trip:', err);
                       showToast('Failed to delete trip.', 'error');
+                    } finally {
+                      setIsDeleting(false);
                     }
                   }}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95"
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-505 disabled:bg-rose-400 text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 flex items-center space-x-1.5 disabled:cursor-not-allowed"
                 >
-                  Delete
+                  {isDeleting ? (
+                    <>
+                      <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <span>Delete</span>
+                  )}
                 </button>
               </div>
             </motion.div>

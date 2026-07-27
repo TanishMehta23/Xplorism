@@ -1,11 +1,5 @@
 # 🗺️ Xplorism — Premium AI Trip Planner
 
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D%2018.0.0-blue.svg?style=for-the-badge&logo=nodedotjs)](https://nodejs.org/)
-[![React Version](https://img.shields.io/badge/react-v19.0.0-61dafb.svg?style=for-the-badge&logo=react)](https://react.dev/)
-[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0.0-38bdf8.svg?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
-[![Gemini AI](https://img.shields.io/badge/AI_Engine-Gemini_3.5_Flash-ff4b4b.svg?style=for-the-badge&logo=google)](https://deepmind.google/technologies/gemini/)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791.svg?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
-
 Xplorism is a modern, premium AI-powered Trip Planner web application. Designed to provide travelers with highly personalized, beautiful, and interactive itineraries, it utilizes Gemini AI (with a local Ollama fallback), OpenStreetMap geocoding, Leaflet destination mapping, and Overpass amenities search to deliver an exceptional travel companion experience.
 
 ---

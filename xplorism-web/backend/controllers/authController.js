@@ -71,6 +71,11 @@ export const login = async (req, res) => {
 
     const user = userResult.rows[0];
 
+    // Check if user has a password set (e.g. if they registered via Google Sign-In)
+    if (!user.password || typeof user.password !== 'string') {
+      return res.status(400).json({ message: 'This account uses Google Sign-In. Please sign in with Google.' });
+    }
+
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {

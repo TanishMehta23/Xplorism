@@ -300,7 +300,11 @@ async function initDatabase() {
       .filter(stmt => stmt.length > 0);
 
     for (const statement of statements) {
-      await pool.query(statement);
+      try {
+        await pool.query(statement);
+      } catch (stmtError) {
+        console.warn(`[DB Init Warning] Statement failed: "${statement.trim().substring(0, 80)}..." - ${stmtError.message}`);
+      }
     }
     console.log('Database tables successfully initialized / verified.');
   } catch (error) {

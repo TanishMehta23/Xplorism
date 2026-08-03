@@ -75,3 +75,6 @@ CREATE TABLE favorites (
 
 -- Alter trips table to support custom packing checklist JSON
 ALTER TABLE trips ADD COLUMN IF NOT EXISTS packing_list JSONB;
+
+-- Ensure users table password column is nullable (for Google Sign-In support)
+ALTER TABLE users ALTER COLUMN password DROP NOT NULL;

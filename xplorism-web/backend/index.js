@@ -249,11 +249,21 @@ async function initDatabase() {
     // Ensure CREATE TABLE is CREATE TABLE IF NOT EXISTS
     schemaSql = schemaSql.replace(/CREATE TABLE (\w+)/gi, 'CREATE TABLE IF NOT EXISTS $1');
 
+    // Strip comments to prevent filtering out statements that start with them
+    let cleanedSql = schemaSql
+      .replace(/\/\*[\s\S]*?\*\//g, '') // remove block comments
+      .split('\n')
+      .map(line => {
+        const commentIndex = line.indexOf('--');
+        return commentIndex !== -1 ? line.substring(0, commentIndex) : line;
+      })
+      .join('\n');
+
     // Split statements by semicolon
-    const statements = schemaSql
+    const statements = cleanedSql
       .split(';')
       .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+      .filter(stmt => stmt.length > 0);
 
     for (const statement of statements) {
       await pool.query(statement);

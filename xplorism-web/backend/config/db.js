@@ -1,14 +1,21 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from backend root directory (parent of config)
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+const connectionString = process.env.DATABASE_URL;
+const isLocal = connectionString && (connectionString.includes('localhost') || connectionString.includes('127.0.0.1'));
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL && (process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1'))
-    ? false
-    : { rejectUnauthorized: false }
+  connectionString,
+  ssl: isLocal ? false : { rejectUnauthorized: false }
 });
 
 // Helper query function

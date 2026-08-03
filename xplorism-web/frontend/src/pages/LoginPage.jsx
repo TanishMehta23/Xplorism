@@ -25,10 +25,12 @@ export default function LoginPage() {
     }
   };
 
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   useEffect(() => {
-    if (window.google) {
+    if (clientId && window.google) {
       window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        client_id: clientId,
         callback: handleGoogleCallback,
       });
       window.google.accounts.id.renderButton(
@@ -36,7 +38,7 @@ export default function LoginPage() {
         { theme: 'filled_black', size: 'large', width: '382', text: 'signin_with' }
       );
     }
-  }, [loginWithGoogle]);
+  }, [loginWithGoogle, clientId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -155,14 +157,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="relative my-6 flex items-center justify-center">
-            <div className="border-t border-slate-800/65 w-full"></div>
-            <span className="absolute bg-[#0b1513] px-3 text-xs text-slate-500 uppercase tracking-wider">Or continue with</span>
-          </div>
+          {clientId && (
+            <>
+              <div className="relative my-6 flex items-center justify-center">
+                <div className="border-t border-slate-800/65 w-full"></div>
+                <span className="absolute bg-[#0b1513] px-3 text-xs text-slate-500 uppercase tracking-wider">Or continue with</span>
+              </div>
 
-          <div className="flex justify-center">
-            <div id="google-signin-btn" className="w-full flex justify-center min-h-[44px]"></div>
-          </div>
+              <div className="flex justify-center">
+                <div id="google-signin-btn" className="w-full flex justify-center min-h-[44px]"></div>
+              </div>
+            </>
+          )}
 
           <div className="mt-8 text-center border-t border-slate-800/60 pt-6">
             <span className="text-slate-400 text-xs">Don't have an account? </span>

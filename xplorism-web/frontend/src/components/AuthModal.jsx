@@ -29,11 +29,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     }
   };
 
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   useEffect(() => {
-    if (isOpen && window.google) {
+    if (clientId && isOpen && window.google) {
       const timer = setTimeout(() => {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          client_id: clientId,
           callback: handleGoogleCallback,
         });
         const targetBtn = document.getElementById('modal-google-signin-btn');
@@ -46,7 +48,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, loginWithGoogle]);
+  }, [isOpen, loginWithGoogle, clientId]);
 
   // Reset fields when mode changes or modal opens/closes
   useEffect(() => {
@@ -297,14 +299,18 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
               </button>
             </form>
 
-            <div className="relative my-4 flex items-center justify-center">
-              <div className="border-t border-slate-100 w-full"></div>
-              <span className="absolute bg-white px-3 text-[10px] text-slate-400 uppercase tracking-wider">Or continue with</span>
-            </div>
+            {clientId && (
+              <>
+                <div className="relative my-4 flex items-center justify-center">
+                  <div className="border-t border-slate-100 w-full"></div>
+                  <span className="absolute bg-white px-3 text-[10px] text-slate-400 uppercase tracking-wider">Or continue with</span>
+                </div>
 
-            <div className="flex justify-center">
-              <div id="modal-google-signin-btn" className="w-full flex justify-center min-h-[40px]"></div>
-            </div>
+                <div className="flex justify-center">
+                  <div id="modal-google-signin-btn" className="w-full flex justify-center min-h-[40px]"></div>
+                </div>
+              </>
+            )}
 
             <div className="mt-6 text-center border-t border-slate-100 pt-4">
               <span className="text-slate-400 text-[11px]">

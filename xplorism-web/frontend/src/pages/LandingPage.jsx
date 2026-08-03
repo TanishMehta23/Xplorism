@@ -244,12 +244,14 @@ export default function LandingPage() {
         markersRef.current = [];
 
         // Add user central marker
-        const userMarker = window.L.marker([latitude, longitude])
-          .addTo(mapRef.current)
-          .bindPopup(`<b>Your Location:</b> ${locationName}`)
-          .openPopup();
-        
-        markersRef.current.push(userMarker);
+        if (mapRef.current) {
+          const userMarker = window.L.marker([latitude, longitude])
+            .addTo(mapRef.current)
+            .bindPopup(`<b>Your Location:</b> ${locationName}`)
+            .openPopup();
+          
+          markersRef.current.push(userMarker);
+        }
 
         // Fetch nearby tourist sites
         let places = [];
@@ -287,15 +289,17 @@ export default function LandingPage() {
         setTouristPlaces(places);
 
         places.forEach(place => {
-          const marker = window.L.marker([place.lat, place.lon])
-            .addTo(mapRef.current)
-            .bindPopup(`<b>${place.name}</b><br/>Type: ${place.type.replace('_', ' ')}`);
-          
-          marker.on('click', () => {
-            setSelectedPlace(place);
-          });
+          if (mapRef.current) {
+            const marker = window.L.marker([place.lat, place.lon])
+              .addTo(mapRef.current)
+              .bindPopup(`<b>${place.name}</b><br/>Type: ${place.type.replace('_', ' ')}`);
+            
+            marker.on('click', () => {
+              setSelectedPlace(place);
+            });
 
-          markersRef.current.push(marker);
+            markersRef.current.push(marker);
+          }
         });
 
         if (places.length > 0) {
@@ -401,12 +405,14 @@ export default function LandingPage() {
       markersRef.current = [];
 
       // Add central marker for the searched location
-      const centerMarker = window.L.marker([latitude, longitude])
-        .addTo(mapRef.current)
-        .bindPopup(`<b>Center:</b> ${mapSearchQuery}`)
-        .openPopup();
-      
-      markersRef.current.push(centerMarker);
+      if (mapRef.current) {
+        const centerMarker = window.L.marker([latitude, longitude])
+          .addTo(mapRef.current)
+          .bindPopup(`<b>Center:</b> ${mapSearchQuery}`)
+          .openPopup();
+        
+        markersRef.current.push(centerMarker);
+      }
 
       // 2. Fetch tourist places in 3000m radius using Overpass API
       let places = [];
@@ -445,17 +451,18 @@ export default function LandingPage() {
 
       // Add markers for tourist places
       places.forEach(place => {
-        const marker = window.L.marker([place.lat, place.lon])
-          .addTo(mapRef.current)
-          .bindPopup(`<b>${place.name}</b><br/>Type: ${place.type.replace('_', ' ')}`);
-        
-        marker.on('click', () => {
-          setSelectedPlace(place);
-        });
+        if (mapRef.current) {
+          const marker = window.L.marker([place.lat, place.lon])
+            .addTo(mapRef.current)
+            .bindPopup(`<b>${place.name}</b><br/>Type: ${place.type.replace('_', ' ')}`);
+          
+          marker.on('click', () => {
+            setSelectedPlace(place);
+          });
 
-        markersRef.current.push(marker);
+          markersRef.current.push(marker);
+        }
       });
-
       if (places.length > 0) {
         setSelectedPlace(places[0]);
       } else {
@@ -872,11 +879,13 @@ export default function LandingPage() {
                       markersRef.current = [];
                       
                       // Add central marker
-                      const centerMarker = window.L.marker([latitude, longitude])
-                        .addTo(mapRef.current)
-                        .bindPopup(`<b>Center:</b> ${sug.display_name}`)
-                        .openPopup();
-                      markersRef.current.push(centerMarker);
+                      if (mapRef.current) {
+                        const centerMarker = window.L.marker([latitude, longitude])
+                          .addTo(mapRef.current)
+                          .bindPopup(`<b>Center:</b> ${sug.display_name}`)
+                          .openPopup();
+                        markersRef.current.push(centerMarker);
+                      }
                       
                       // Query attractions
                       const query = `[out:json][timeout:25];(nwr["tourism"~"attraction|museum|gallery|theme_park|viewpoint|zoo|picnic_site|aquarium|artwork"](around:3000,${latitude},${longitude});nwr["historic"~"monument|castle|ruins|memorial|archaeological_site|tomb"](around:3000,${latitude},${longitude});nwr["amenity"="place_of_worship"](around:3000,${latitude},${longitude});nwr["natural"~"waterfall|beach|peak"](around:3000,${latitude},${longitude});nwr["leisure"~"park|garden"](around:3000,${latitude},${longitude}););out center;`;
@@ -914,11 +923,13 @@ export default function LandingPage() {
                           setTouristPlaces(places);
                           
                           places.forEach(place => {
-                            const marker = window.L.marker([place.lat, place.lon])
-                              .addTo(mapRef.current)
-                              .bindPopup(`<b>${place.name}</b><br/>Type: ${place.type.replace('_', ' ')}`);
-                            marker.on('click', () => setSelectedPlace(place));
-                            markersRef.current.push(marker);
+                            if (mapRef.current) {
+                              const marker = window.L.marker([place.lat, place.lon])
+                                .addTo(mapRef.current)
+                                .bindPopup(`<b>${place.name}</b><br/>Type: ${place.type.replace('_', ' ')}`);
+                              marker.on('click', () => setSelectedPlace(place));
+                              markersRef.current.push(marker);
+                            }
                           });
                           
                           if (places.length > 0) {

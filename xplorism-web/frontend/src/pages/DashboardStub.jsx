@@ -683,6 +683,7 @@ export default function DashboardStub() {
               const lat = parseFloat(data[0].lat);
               const lon = parseFloat(data[0].lon);
 
+              if (isCancelled || !window.mapInstance) break;
               const marker = window.L.marker([lat, lon], { icon: defaultIcon })
                 .addTo(map)
                 .bindPopup(`<b>${place.name}</b><br/><i>${place.distance} - ${place.type}</i><br/>${place.description}`);
@@ -731,6 +732,7 @@ export default function DashboardStub() {
               lon = mapCoords[1] + jitterLon;
             }
 
+            if (isCancelled || !window.mapInstance) break;
             const marker = window.L.marker([lat, lon], { icon: defaultIcon })
               .addTo(map)
               .bindPopup(`<b>${activity.time}</b><br/>${activity.activity}<br/><i>${activity.location}</i>`);

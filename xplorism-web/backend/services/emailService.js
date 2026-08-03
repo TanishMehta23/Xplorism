@@ -34,16 +34,17 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
   };
 
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log(`✅ Real OTP email sent successfully to ${email}`);
-    } catch (error) {
-      console.error('❌ Failed to send real email via SMTP. Fallback to console log:', error.message);
-      console.log('====================================');
-      console.log(`✉️  EMAIL SIMULATION FOR: ${email}`);
-      console.log(`🔑  OTP CODE: ${otp}`);
-      console.log('====================================');
-    }
+    transporter.sendMail(mailOptions)
+      .then(() => {
+        console.log(`✅ Real OTP email sent successfully to ${email}`);
+      })
+      .catch((error) => {
+        console.error('❌ Failed to send real email via SMTP. Fallback to console log:', error.message);
+        console.log('====================================');
+        console.log(`✉️  EMAIL SIMULATION FOR: ${email}`);
+        console.log(`🔑  OTP CODE: ${otp}`);
+        console.log('====================================');
+      });
   } else {
     console.log('⚠️ SMTP credentials not configured. Local fallback log:');
     console.log('====================================');

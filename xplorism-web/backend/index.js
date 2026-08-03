@@ -47,6 +47,40 @@ app.get('/nearby', async (req, res) => {
   }
 });
 
+// Overpass Proxy Route to prevent CORS in deployment
+app.get('/overpass', async (req, res) => {
+  const { data } = req.query;
+  if (!data) {
+    return res.status(400).json({ message: 'Query parameter "data" is required' });
+  }
+
+  const endpoints = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.ru/cgi/interpreter'
+  ];
+
+  for (const endpoint of endpoints) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const url = `${endpoint}?data=${encodeURIComponent(data)}`;
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const json = await response.json();
+        return res.json(json);
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.warn(`Proxy Overpass endpoint failed: ${endpoint}`, err.message);
+    }
+  }
+
+  res.status(502).json({ message: 'All Overpass endpoints failed or timed out.' });
+});
+
 const geocodeCache = new Map();
 
 

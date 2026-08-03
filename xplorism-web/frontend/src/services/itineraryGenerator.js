@@ -1,24 +1,33 @@
-// Sequential mirrors to query Overpass API safely
+import { api } from './api';
+
+// Sequential mirrors to query Overpass API safely (proxied via backend to avoid CORS)
 const fetchOverpassWithFallback = async (queryPart) => {
-  const endpoints = [
-    'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.openstreetmap.ru/cgi/interpreter'
-  ];
+  try {
+    const data = await api.get(`/overpass?data=${encodeURIComponent(queryPart)}`);
+    return data;
+  } catch (err) {
+    console.warn('Backend Overpass proxy failed, trying client-side fallback...');
+    // Fallback to direct client-side fetch if backend proxy fails
+    const endpoints = [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+      'https://overpass.openstreetmap.ru/cgi/interpreter'
+    ];
 
-  for (const endpoint of endpoints) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    for (const endpoint of endpoints) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-    try {
-      const url = `${endpoint}?data=${encodeURIComponent(queryPart)}`;
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        return await res.json();
+      try {
+        const url = `${endpoint}?data=${encodeURIComponent(queryPart)}`;
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        clearTimeout(timeoutId);
       }
-    } catch (err) {
-      clearTimeout(timeoutId);
     }
   }
   throw new Error('All Overpass API endpoints failed or timed out.');

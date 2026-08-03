@@ -1,5 +1,5 @@
 import { query } from '../config/db.js';
-import { askGeminiForItinerary } from '../services/geminiService.js';
+import { askGeminiForItinerary, askGeminiForPackingList } from '../services/geminiService.js';
 
 // Get all trips for the authenticated user
 export const getTrips = async (req, res) => {
@@ -34,6 +34,7 @@ export const getTrips = async (req, res) => {
           travelStyle: trip.travel_style,
           interests: trip.interests,
           createdAt: trip.created_at,
+          packingList: trip.packing_list,
           itineraries: itineraryResult.rows.map(item => ({
             id: item.id,
             tripId: item.trip_id,
@@ -123,6 +124,7 @@ export const createTrip = async (req, res) => {
       travelStyle: trip.travel_style,
       interests: trip.interests,
       createdAt: trip.created_at,
+      packingList: trip.packing_list,
       itineraries: insertedItineraries.map(item => ({
         id: item.id,
         tripId: item.trip_id,
@@ -222,6 +224,7 @@ export const updateTrip = async (req, res) => {
       travelStyle: updatedTrip.travel_style,
       interests: updatedTrip.interests,
       createdAt: updatedTrip.created_at,
+      packingList: updatedTrip.packing_list,
       itineraries: insertedItineraries.map(item => ({
         id: item.id,
         tripId: item.trip_id,
@@ -294,6 +297,95 @@ export const generateItinerary = async (req, res) => {
   } catch (error) {
     console.error('Generate itinerary error:', error);
     res.status(550).json({ message: error.message || 'Failed to generate itinerary using Gemini.' });
+  }
+};
+
+// Get or generate packing list
+export const getPackingList = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if trip exists and belongs to user
+    const checkTrip = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (checkTrip.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    const trip = checkTrip.rows[0];
+    if (trip.user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to view this trip' });
+    }
+
+    // If packing list already exists in DB, return it
+    if (trip.packing_list) {
+      return res.json(trip.packing_list);
+    }
+
+    // Otherwise, generate it via Gemini
+    const diff = Math.abs(new Date(trip.end_date) - new Date(trip.start_date));
+    const daysCount = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+    
+    // Get generic weather overview if dynamic weather not available
+    const temp = 22; // default
+    const cond = 'Sunny';
+
+    const rawPackingList = await askGeminiForPackingList({
+      destination: trip.destination,
+      daysCount,
+      weatherTemp: temp,
+      weatherCondition: cond,
+      travelStyle: trip.travel_style,
+      interests: trip.interests || []
+    });
+
+    // Format with checked: false flag
+    const formattedPackingList = rawPackingList.map(cat => ({
+      category: cat.category,
+      items: cat.items.map(item => ({
+        ...item,
+        checked: false
+      }))
+    }));
+
+    // Update in database
+    await query('UPDATE trips SET packing_list = $1 WHERE id = $2', [JSON.stringify(formattedPackingList), id]);
+
+    res.json(formattedPackingList);
+  } catch (error) {
+    console.error('Get packing list error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update packing list checklist state
+export const updatePackingList = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { packingList } = req.body;
+
+    if (!packingList) {
+      return res.status(400).json({ message: 'packingList is required' });
+    }
+
+    // Check auth
+    const checkTrip = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (checkTrip.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    const trip = checkTrip.rows[0];
+    if (trip.user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this trip' });
+    }
+
+    await query('UPDATE trips SET packing_list = $1 WHERE id = $2', [JSON.stringify(packingList), id]);
+
+    res.json({ success: true, packingList });
+  } catch (error) {
+    console.error('Update packing list error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

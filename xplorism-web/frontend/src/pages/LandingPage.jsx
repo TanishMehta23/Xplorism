@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Compass, Zap, MapPin, CloudRain, Star, Plus, Calendar, DollarSign, Users, Navigation, ArrowRight, Locate } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
+import { api } from '../services/api';
 
 const destinations = [
   {
@@ -68,30 +69,36 @@ const destinations = [
   }
 ];
 
-// Helper to query Overpass API with sequential mirrors in case of 429 (rate limits) or 504 (timeouts)
+// Helper to query Overpass API with sequential mirrors (proxied via backend to avoid CORS)
 const fetchOverpassWithFallback = async (queryPart) => {
-  const endpoints = [
-    'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.openstreetmap.ru/cgi/interpreter'
-  ];
+  try {
+    const data = await api.get(`/overpass?data=${encodeURIComponent(queryPart)}`);
+    return data;
+  } catch (err) {
+    console.warn('Backend Overpass proxy failed, trying client-side fallback...');
+    const endpoints = [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+      'https://overpass.openstreetmap.ru/cgi/interpreter'
+    ];
 
-  for (const endpoint of endpoints) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6-second timeout
+    for (const endpoint of endpoints) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000); // 6-second timeout
 
-    try {
-      const url = `${endpoint}?data=${encodeURIComponent(queryPart)}`;
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const data = await res.json();
-        return data;
+      try {
+        const url = `${endpoint}?data=${encodeURIComponent(queryPart)}`;
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          return data;
+        }
+        console.warn(`Overpass endpoint ${endpoint} returned status ${res.status}`);
+      } catch (e) {
+        clearTimeout(timeoutId);
+        console.warn(`Failed to fetch from Overpass endpoint ${endpoint}:`, e);
       }
-      console.warn(`Overpass endpoint ${endpoint} returned status ${res.status}`);
-    } catch (err) {
-      clearTimeout(timeoutId);
-      console.warn(`Failed to fetch from Overpass endpoint ${endpoint}:`, err);
     }
   }
   throw new Error('All Overpass API endpoints failed or timed out.');

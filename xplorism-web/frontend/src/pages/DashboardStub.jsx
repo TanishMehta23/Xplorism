@@ -6,7 +6,7 @@ import {
   LogOut, Plus, Calendar, Compass as TripIcon,
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
-  Maximize2, Minimize2
+  Maximize2, Minimize2, CheckSquare
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
@@ -269,6 +269,10 @@ export default function DashboardStub() {
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
 
+  // Packing List State
+  const [packingList, setPackingList] = useState([]);
+  const [packingLoading, setPackingLoading] = useState(false);
+
   const handleCarouselScroll = (e) => {
     const el = e.target;
     if (!el) return;
@@ -378,6 +382,126 @@ export default function DashboardStub() {
       showToast('Failed to remove favorite.', 'error');
     }
   };
+
+  // Packing List functions
+  const fetchPackingList = async (tripId) => {
+    if (!tripId) return;
+
+    // Use preloaded packing list if available in selectedTrip
+    if (selectedTrip && selectedTrip.id === tripId && selectedTrip.packingList) {
+      setPackingList(selectedTrip.packingList);
+      return;
+    }
+
+    setPackingLoading(true);
+
+    if (typeof tripId === 'string' && tripId.startsWith('pre-')) {
+      const diff = Math.abs(new Date(selectedTrip.endDate) - new Date(selectedTrip.startDate));
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+      const parts = selectedTrip.travelStyle.split('|');
+      const style = parts[0];
+      const weather = getWeatherForDestination(selectedTrip.destination, selectedTrip.startDate);
+
+      const defaultPacking = [
+        {
+          category: "Clothing",
+          items: [
+            { name: "Daily Outfits", quantity: `${days}`, reason: "Outfits matching trip duration", checked: false },
+            { name: "Comfortable Walking Shoes", quantity: "1 pair", reason: "For daily sightseeing", checked: false },
+            { name: "Undergarments & Socks", quantity: `${days + 1}`, reason: "Daily essentials", checked: false },
+            ...(weather.temp < 15 ? [{ name: "Warm Jacket/Sweater", quantity: "1-2", reason: "Cold climate protection", checked: false }] : []),
+            ...(weather.condition.toLowerCase().includes('rain') ? [{ name: "Umbrella / Raincoat", quantity: "1", reason: "Rainy weather", checked: false }] : [])
+          ]
+        },
+        {
+          category: "Toiletries",
+          items: [
+            { name: "Toothbrush & Toothpaste", quantity: "1", reason: "Daily hygiene", checked: false },
+            { name: "Deodorant", quantity: "1", reason: "Stay fresh", checked: false },
+            { name: "Sunscreen", quantity: "1", reason: "Sun protection", checked: false }
+          ]
+        },
+        {
+          category: "Electronics",
+          items: [
+            { name: "Phone Charger", quantity: "1", reason: "Device charging", checked: false },
+            { name: "Universal Travel Adapter", quantity: "1", reason: "Socket compatibility", checked: false },
+            { name: "Power Bank", quantity: "1", reason: "Charging on the go", checked: false }
+          ]
+        },
+        {
+          category: "Documents",
+          items: [
+            { name: "Passport / ID Card", quantity: "1", reason: "Identity verification", checked: false },
+            { name: "Trip Itinerary Printout", quantity: "1", reason: "Offline navigation", checked: false }
+          ]
+        }
+      ];
+
+      // Cache it on the preplanned trip object too
+      selectedTrip.packingList = defaultPacking;
+      setPackingList(defaultPacking);
+      setPackingLoading(false);
+      return;
+    }
+
+    try {
+      const data = await api.get(`/trips/${tripId}/packing`);
+      setPackingList(data || []);
+      
+      // Update selectedTrip locally so it has the list cached
+      setSelectedTrip(prev => {
+        if (prev && prev.id === tripId) {
+          return { ...prev, packingList: data };
+        }
+        return prev;
+      });
+    } catch (err) {
+      console.error('Failed to fetch packing list:', err);
+      setPackingList([]);
+    } finally {
+      setPackingLoading(false);
+    }
+  };
+
+  const handleTogglePackingItem = async (categoryIdx, itemIdx) => {
+    const updatedList = [...packingList];
+    updatedList[categoryIdx].items[itemIdx].checked = !updatedList[categoryIdx].items[itemIdx].checked;
+    setPackingList(updatedList);
+
+    // Update selectedTrip object's cached packingList in state
+    if (selectedTrip) {
+      setSelectedTrip(prev => ({
+        ...prev,
+        packingList: updatedList
+      }));
+
+      // Also update the trip object inside the main trips array so it is preserved if modal is closed & reopened
+      setTrips(prevTrips => 
+        prevTrips.map(t => t.id === selectedTrip.id ? { ...t, packingList: updatedList } : t)
+      );
+    }
+
+    if (selectedTrip && !selectedTrip.isPrePlanned) {
+      try {
+        await api.put(`/trips/${selectedTrip.id}/packing`, { packingList: updatedList });
+      } catch (err) {
+        console.error('Failed to update packing checklist:', err);
+      }
+    }
+  };
+
+  // Fetch packing list when active tab changes to packing
+  useEffect(() => {
+    if (selectedTrip && activeDayTab === 'packing') {
+      fetchPackingList(selectedTrip.id);
+    }
+  }, [selectedTrip, activeDayTab]);
+
+  // Reset packing list state when switching selected trip
+  useEffect(() => {
+    setPackingList([]);
+  }, [selectedTrip]);
 
   // Budget tracking functions
   const fetchBudget = async (tripId) => {
@@ -1572,6 +1696,13 @@ export default function DashboardStub() {
                     <span>Budget</span>
                   </button>
                   <button
+                    onClick={() => setActiveDayTab('packing')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'packing' ? 'bg-amber-600 text-white shadow-sm' : 'text-amber-600 hover:text-amber-800 hover:bg-amber-50 border border-amber-200 bg-white'}`}
+                  >
+                    <CheckSquare className="h-3.5 w-3.5" />
+                    <span>Packing List</span>
+                  </button>
+                  <button
                     onClick={() => setActiveDayTab('favorites')}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'favorites' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-rose-200 bg-white'}`}
                   >
@@ -1684,6 +1815,67 @@ export default function DashboardStub() {
                               </div>
                             )}
                           </>
+                        )}
+                      </div>
+                    ) : activeDayTab === 'packing' ? (
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                            <CheckSquare className="h-4 w-4 mr-1 text-amber-500" />
+                            <span>AI Packing Checklist Assistant</span>
+                          </span>
+                        </div>
+                        {packingLoading ? (
+                          <div className="flex flex-col items-center justify-center py-12 space-y-2">
+                            <div className="h-6 w-6 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
+                            <span className="text-[10px] font-bold text-slate-400">Customizing your packing list...</span>
+                          </div>
+                        ) : packingList.length === 0 ? (
+                          <p className="text-slate-400 text-xs text-center py-8">Failed to generate packing list.</p>
+                        ) : (
+                          <div className="space-y-6">
+                            {packingList.map((cat, catIdx) => (
+                              <div key={catIdx} className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 shadow-sm space-y-3">
+                                <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
+                                  {cat.category}
+                                </h4>
+                                <div className="space-y-2.5">
+                                  {cat.items.map((item, itemIdx) => (
+                                    <label
+                                      key={itemIdx}
+                                      className={`flex items-start space-x-3 p-3 rounded-xl border bg-white cursor-pointer select-none transition ${
+                                        item.checked 
+                                          ? 'border-emerald-100 bg-emerald-50/10 text-slate-400' 
+                                          : 'border-slate-100 hover:border-slate-200 text-slate-800'
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={item.checked || false}
+                                        onChange={() => handleTogglePackingItem(catIdx, itemIdx)}
+                                        className="mt-0.5 w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/40 focus:ring-offset-0 focus:ring-2 cursor-pointer"
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-baseline justify-between gap-2">
+                                          <span className={`text-xs font-bold ${item.checked ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                            {item.name}
+                                          </span>
+                                          <span className="text-[10px] font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full shrink-0">
+                                            Qty: {item.quantity}
+                                          </span>
+                                        </div>
+                                        {item.reason && (
+                                          <p className={`text-[10px] mt-0.5 leading-relaxed ${item.checked ? 'text-slate-300' : 'text-slate-400'}`}>
+                                            {item.reason}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     ) : activeDayTab === 'favorites' ? (

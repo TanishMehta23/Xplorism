@@ -712,5 +712,113 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
       }
     ];
   }
-};;
+};
+
+/**
+ * Calls Gemini API to generate a packing list
+ */
+export const askGeminiForPackingList = async ({
+  destination,
+  daysCount,
+  weatherTemp,
+  weatherCondition,
+  travelStyle,
+  interests
+}) => {
+  const prompt = `You are a professional packing assistant. Generate a highly personalized packing list for a trip to ${destination}.
+Key Details:
+- Duration: ${daysCount} days
+- Climate/Weather: ${weatherTemp}°C, ${weatherCondition}
+- Travel Style: ${travelStyle}
+- Interests: ${interests.join(', ')}
+
+Please categorize the packing list into logical groups, such as "Clothing", "Toiletries", "Electronics", "Documents", and "Miscellaneous". Add specific items based on the weather (e.g. umbrella/raincoat for rainy weather, warm jacket for cold, sunscreen/sunglasses for sunny, etc.) and interests (e.g. hiking shoes for adventure, camera for sightseeing, formal wear for luxury, etc.).
+
+For each item, specify a recommended quantity and a brief reason why it's needed.
+
+You must return a JSON array of categories conforming exactly to this schema:
+[
+  {
+    "category": "Clothing",
+    "items": [
+      { "name": "T-shirts", "quantity": "5", "reason": "Basic layering for warm days" },
+      { "name": "Light jacket", "quantity": "1", "reason": "For cool evenings" }
+    ]
+  },
+  {
+    "category": "Toiletries",
+    "items": [
+      { "name": "Toothbrush & paste", "quantity": "1", "reason": "Personal hygiene" }
+    ]
+  }
+]
+
+Only return the raw JSON array. Do not include markdown code block formatting (like \`\`\`json) or additional conversational text.`;
+
+  let packingResult = null;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (apiKey) {
+    const models = getGeminiModels();
+    for (const model of models) {
+      try {
+        console.log(`Attempting packing list generation with Gemini model: ${model}`);
+        const textResponse = await callGeminiAPI(model, prompt, apiKey);
+        
+        let jsonStr = textResponse.trim();
+        const firstBrace = jsonStr.indexOf('[');
+        const lastBrace = jsonStr.lastIndexOf(']');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+        }
+        
+        packingResult = JSON.parse(jsonStr);
+        console.log(`Successfully generated packing list using Gemini model: ${model}`);
+        break;
+      } catch (err) {
+        console.warn(`Gemini packing list call failed for model ${model}: ${err.message}`);
+      }
+    }
+  }
+
+  if (!packingResult) {
+    packingResult = [
+      {
+        category: "Clothing",
+        items: [
+          { name: "Daily Outfits", quantity: `${daysCount}`, reason: "Outfits matching trip duration" },
+          { name: "Comfortable Walking Shoes", quantity: "1 pair", reason: "For daily sightseeing" },
+          { name: "Undergarments & Socks", quantity: `${daysCount + 1}`, reason: "Daily essentials" },
+          ...(weatherTemp < 15 ? [{ name: "Warm Jacket/Sweater", quantity: "1-2", reason: "Cold climate protection" }] : []),
+          ...(weatherCondition.toLowerCase().includes('rain') ? [{ name: "Umbrella / Raincoat", quantity: "1", reason: "Rainy weather" }] : [])
+        ]
+      },
+      {
+        category: "Toiletries",
+        items: [
+          { name: "Toothbrush & Toothpaste", quantity: "1", reason: "Daily hygiene" },
+          { name: "Deodorant", quantity: "1", reason: "Stay fresh" },
+          { name: "Sunscreen", quantity: "1", reason: "Sun protection" }
+        ]
+      },
+      {
+        category: "Electronics",
+        items: [
+          { name: "Phone Charger", quantity: "1", reason: "Device charging" },
+          { name: "Universal Travel Adapter", quantity: "1", reason: "Socket compatibility" },
+          { name: "Power Bank", quantity: "1", reason: "Charging on the go" }
+        ]
+      },
+      {
+        category: "Documents",
+        items: [
+          { name: "Passport / ID Card", quantity: "1", reason: "Identity verification" },
+          { name: "Trip Itinerary Printout", quantity: "1", reason: "Offline navigation" },
+          { name: "Cash / Forex Card", quantity: "As needed", reason: "Local transactions" }
+        ]
+      }
+    ];
+  }
+
+  return packingResult;
+};
 

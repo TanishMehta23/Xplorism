@@ -72,3 +72,6 @@ CREATE TABLE favorites (
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Alter trips table to support custom packing checklist JSON
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS packing_list JSONB;

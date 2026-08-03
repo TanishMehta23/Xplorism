@@ -67,7 +67,10 @@ const getTripImage = (destination) => {
   if (dest.includes('new york') || dest.includes('york') || dest.includes('usa')) {
     return 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80';
   }
-  return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';
+  
+  // Use LoremFlickr to fetch a real, dynamic photo matching the destination keyword
+  const cleanKeyword = (destination || '').split(',')[0].trim().toLowerCase();
+  return `https://loremflickr.com/600/400/${encodeURIComponent(cleanKeyword)},travel/all`;
 };
 
 const getWeatherForDestination = (destination, dateStr) => {
@@ -1539,47 +1542,6 @@ export default function DashboardStub() {
                         </button>
                       </>
                     )}
-                    <button
-                      disabled={isSavingTrip || isExporting}
-                      onClick={() => exportTripToPDF(selectedTrip)}
-                      className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-355 hover:bg-slate-55 text-slate-705 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isExporting ? (
-                        <>
-                          <div className="h-3.5 w-3.5 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
-                          <span>Exporting...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-3.5 w-3.5 text-rose-500" />
-                          <span>Export PDF</span>
-                        </>
-                      )}
-                    </button>
-                    <button
-                      disabled={isSavingTrip || isExporting}
-                      onClick={() => setIsModalMaximized(!isModalMaximized)}
-                      className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={isModalMaximized ? "Restore down" : "Maximize"}
-                    >
-                      {isModalMaximized ? (
-                        <Minimize2 className="h-5 w-5" />
-                      ) : (
-                        <Maximize2 className="h-5 w-5" />
-                      )}
-                    </button>
-                    <button
-                      disabled={isSavingTrip || isExporting}
-                      onClick={() => {
-                        if (!isSavingTrip && !isExporting) {
-                          setSelectedTrip(null);
-                          setIsModalMaximized(false);
-                        }
-                      }}
-                      className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
                   </div>
                 </div>
 

@@ -50,25 +50,74 @@ app.get('/nearby', async (req, res) => {
 const geocodeCache = new Map();
 
 
-// Helper to fetch from Nominatim
+// Helper to fetch from Nominatim with a timeout
 async function fetchFromNominatim(query) {
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`;
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'XplorismTravelApp/1.0',
-      'Accept-Language': 'en'
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'XplorismTravelApp/1.0',
+        'Accept-Language': 'en'
+      },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      console.warn(`Nominatim returned non-ok status: ${response.status}`);
+      return null; // Return null so we can specifically detect an API/rate limit failure
     }
-  });
-  if (!response.ok) {
-    throw new Error(`Nominatim error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.warn(`Nominatim fetch failed or timed out for query "${query}":`, error.message);
+    return null; // Return null on error
   }
-  return await response.json();
+}
+
+// Helper to fetch from Open-Meteo Geocoding API (Fallback)
+async function fetchFromOpenMeteo(query) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      console.warn(`Open-Meteo geocoding returned non-ok status: ${response.status}`);
+      return [];
+    }
+    
+    const data = await response.json();
+    if (!data.results || data.results.length === 0) return [];
+    
+    return data.results.map(r => ({
+      place_id: `om-${r.id}`,
+      lat: String(r.latitude),
+      lon: String(r.longitude),
+      display_name: `${r.name}${r.admin1 ? ', ' + r.admin1 : ''}, ${r.country}`,
+      address: {
+        country_code: (r.country_code || '').toLowerCase()
+      }
+    }));
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.warn(`Open-Meteo geocoding fallback failed for query "${query}":`, error.message);
+    return [];
+  }
 }
 
 // Advanced query resolution helper to handle complex location names
 async function resolveGeocodeQuery(q) {
   // 1. Try direct query first
   let data = await fetchFromNominatim(q);
+  if (!data || data.length === 0) {
+    console.log(`Nominatim failed or returned no results. Trying Open-Meteo fallback for: "${q}"`);
+    data = await fetchFromOpenMeteo(q);
+  }
   if (data && data.length > 0) return data;
 
   // Swap Mandir/Temple on direct query
@@ -136,6 +185,9 @@ async function resolveGeocodeQuery(q) {
 
   // Last resort: query just the main place without splitters
   data = await fetchFromNominatim(mainPlace);
+  if (!data || data.length === 0) {
+    data = await fetchFromOpenMeteo(mainPlace);
+  }
   if (data && data.length > 0) return data;
 
   return [];

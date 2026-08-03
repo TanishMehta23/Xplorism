@@ -29,9 +29,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    setLoading(true);
     try {
       const data = await api.post('/auth/login', { email, password });
+      if (!data || !data.token || !data.user) {
+        throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
+      }
       
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -39,15 +41,15 @@ export const AuthProvider = ({ children }) => {
       return data.user;
     } catch (error) {
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const register = async (name, email, password) => {
-    setLoading(true);
     try {
       const data = await api.post('/auth/register', { name, email, password });
+      if (!data || !data.token || !data.user) {
+        throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
+      }
       
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -55,15 +57,15 @@ export const AuthProvider = ({ children }) => {
       return data.user;
     } catch (error) {
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const loginWithGoogle = async (credential) => {
-    setLoading(true);
     try {
       const data = await api.post('/auth/google', { credential });
+      if (!data || !data.token || !data.user) {
+        throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
+      }
       
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -71,8 +73,6 @@ export const AuthProvider = ({ children }) => {
       return data.user;
     } catch (error) {
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 

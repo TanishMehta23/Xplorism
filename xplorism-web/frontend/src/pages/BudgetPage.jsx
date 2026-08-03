@@ -332,22 +332,31 @@ export default function BudgetPage() {
 
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
         {/* Back navigation & header */}
-        <div className="flex items-center space-x-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="p-2 rounded-full hover:bg-slate-200 text-slate-650 hover:text-slate-900 transition-all cursor-pointer border border-slate-200 bg-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <div>
+              <div className="flex items-center space-x-2 text-rose-500 mb-1">
+                <TripIcon className="h-4 w-4" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">{style} Mode</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">
+                {trip.destination} Budget Tracker
+              </h1>
+            </div>
+          </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="p-2 rounded-full hover:bg-slate-200 text-slate-650 hover:text-slate-900 transition-all cursor-pointer border border-slate-200 bg-white"
+            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border bg-white border-slate-200 hover:bg-slate-50 active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer text-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dashboard</span>
           </button>
-          <div>
-            <div className="flex items-center space-x-2 text-rose-500 mb-1">
-              <TripIcon className="h-4 w-4" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">{style} Mode</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">
-              {trip.destination} Budget Tracker
-            </h1>
-          </div>
         </div>
 
         {/* Info Banner */}

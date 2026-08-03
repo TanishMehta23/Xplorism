@@ -9,7 +9,7 @@ import authRoutes from './routes/authRoutes.js';
 import tripRoutes from './routes/tripRoutes.js';
 import budgetRoutes from './routes/budgetRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
-import { getNearbyPlacesFromGemini } from './services/geminiService.js';
+import { getNearbyPlacesFromGemini, getHotelsFromGemini } from './services/geminiService.js';
 
 dotenv.config();
 
@@ -250,6 +250,46 @@ app.get('/geocode', async (req, res) => {
   }
 });
 
+// Backend Route for Hotel Search integrating Gemini/Groq
+app.get('/hotels/search', async (req, res) => {
+  const { destination, lat, lon } = req.query;
+  if (!destination) {
+    return res.status(400).json({ message: 'Destination is required' });
+  }
+
+  try {
+    const list = await getHotelsFromGemini(destination);
+    
+    // Assign coordinates distributed around the destination center
+    const centerLat = parseFloat(lat) || 20.5937;
+    const centerLon = parseFloat(lon) || 78.9629;
+    
+    const mappedList = list.map((hotel, idx) => {
+      const latOffset = (Math.random() - 0.5) * 0.015;
+      const lonOffset = (Math.random() - 0.5) * 0.015;
+      return {
+        name: hotel.name,
+        stars: hotel.stars || 4,
+        rating: hotel.rating || 8.5,
+        reviewsCount: hotel.reviewsCount || 200,
+        price: hotel.price || 120,
+        amenities: hotel.amenities || ["WiFi", "AC"],
+        description: hotel.description || "A pleasant accommodation in a convenient location.",
+        geoCode: {
+          latitude: centerLat + latOffset,
+          longitude: centerLon + lonOffset
+        },
+        hotelId: `gemini-${idx}-${Date.now()}`
+      };
+    });
+
+    res.json(mappedList);
+  } catch (err) {
+    console.error('Gemini hotel search failed:', err);
+    res.json([]);
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Xplorism API is running' });
@@ -311,6 +351,66 @@ async function initDatabase() {
     console.error('Error during database initialization:', error);
   }
 }
+
+let amadeusToken = null;
+let amadeusTokenExpiry = 0;
+
+// Fetch or refresh the Amadeus OAuth access token
+async function getAmadeusToken() {
+  const clientId = process.env.AMADEUS_CLIENT_ID;
+  const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
+  
+  if (!clientId || !clientSecret) {
+    return null;
+  }
+
+  if (amadeusToken && Date.now() < amadeusTokenExpiry) {
+    return amadeusToken;
+  }
+
+  try {
+    const response = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      amadeusToken = data.access_token;
+      amadeusTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+      return amadeusToken;
+    } else {
+      console.warn("Failed to retrieve Amadeus auth token:", response.statusText);
+      return null;
+    }
+  } catch (err) {
+    console.error("Amadeus Token Error:", err.message);
+    return null;
+  }
+}
+
+// Fetch hotels around coordinates using Amadeus Geocode API
+async function fetchAmadeusHotels(lat, lon) {
+  const token = await getAmadeusToken();
+  if (!token) return [];
+
+  try {
+    const response = await fetch(`https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-geocode?latitude=${lat}&longitude=${lon}&radius=5&radiusUnit=KM`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.data || [];
+    }
+  } catch (err) {
+    console.error("Amadeus Fetch Error:", err.message);
+  }
+  return [];
+}
+
+
 
 // Initialize database and start server
 initDatabase().then(() => {

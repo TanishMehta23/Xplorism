@@ -822,3 +822,130 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
   return packingResult;
 };
 
+/**
+ * Calls Gemini / fallback APIs to generate actual real-world hotels for a city
+ */
+export const getHotelsFromGemini = async (destination) => {
+  const prompt = `You are an expert hotel booking assistant. For the destination city "${destination}", list 20 famous real hotels that actually exist in this city.
+For each hotel, provide:
+- name: The actual name of the hotel (e.g. "Amatra By The Ganges", "Hotel Ritz Paris").
+- stars: A rating number (3, 4, or 5).
+- rating: A customer rating decimal between 7.5 and 9.8.
+- reviewsCount: Number of reviews (e.g., 420).
+- price: Average cost per night in USD (e.g., 180).
+- amenities: Array containing some of "WiFi", "Pool", "Gym", "Spa", "Breakfast", "AC".
+- description: A short, 1-sentence highlight of the hotel.
+
+You must return a JSON array conforming exactly to this schema:
+[
+  {
+    "name": "Hotel Name",
+    "stars": 5,
+    "rating": 9.4,
+    "reviewsCount": 420,
+    "price": 180,
+    "amenities": ["WiFi", "Pool", "Spa", "AC"],
+    "description": "A luxury wellness sanctuary offering Ganges views and organic dining."
+  }
+]
+
+Only return the raw JSON array. Do not include markdown code block formatting (like \`\`\`json) or additional conversational text.`;
+
+  let hotelResult = null;
+
+  // 1. Try Gemini
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (apiKey) {
+    const models = getGeminiModels();
+    for (const model of models) {
+      try {
+        console.log(`Attempting real hotel generation with Gemini model: ${model}`);
+        const textResponse = await callGeminiAPI(model, prompt, apiKey);
+        
+        let jsonStr = textResponse.trim();
+        const firstBrace = jsonStr.indexOf('[');
+        const lastBrace = jsonStr.lastIndexOf(']');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+        }
+        
+        hotelResult = JSON.parse(jsonStr);
+        console.log(`Successfully generated real hotels using Gemini model: ${model}`);
+        break;
+      } catch (err) {
+        console.warn(`Gemini hotel generation failed for model ${model}: ${err.message}`);
+      }
+    }
+  }
+
+  // 2. Try Groq
+  if (!hotelResult && process.env.GROQ_API_KEY) {
+    console.log('Gemini failed or missing. Trying Groq for real hotels...');
+    const groqModels = ['qwen-2.5-coder-32k', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    for (const model of groqModels) {
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.2
+          })
+        });
+        if (response.ok) {
+          const raw = await response.json();
+          let jsonStr = raw.choices[0].message.content.trim();
+          const firstBrace = jsonStr.indexOf('[');
+          const lastBrace = jsonStr.lastIndexOf(']');
+          if (firstBrace !== -1 && lastBrace !== -1) {
+            jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+          }
+          hotelResult = JSON.parse(jsonStr);
+          console.log(`Successfully generated real hotels using Groq model: ${model}`);
+          break;
+        }
+      } catch (err) {
+        console.warn(`Groq hotel call failed for model ${model}: ${err.message}`);
+      }
+    }
+  }
+
+  // 3. Try Ollama (Local fallback)
+  if (!hotelResult) {
+    console.warn(`Cloud APIs failed. Falling back to local Ollama for real hotels.`);
+    try {
+      const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+      const model = process.env.OLLAMA_MODEL || 'llama3';
+      const response = await fetch(`${ollamaBaseUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt,
+          stream: false,
+          format: 'json'
+        })
+      });
+      if (response.ok) {
+        const raw = await response.json();
+        let jsonStr = raw.response.trim();
+        const firstBrace = jsonStr.indexOf('[');
+        const lastBrace = jsonStr.lastIndexOf(']');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+        }
+        hotelResult = JSON.parse(jsonStr);
+        console.log(`Successfully generated real hotels using Ollama model: ${model}`);
+      }
+    } catch (err) {
+      console.warn(`Ollama local hotel generation failed:`, err.message);
+    }
+  }
+
+  return hotelResult || [];
+};
+

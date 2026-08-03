@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DollarSign, Calendar, Compass as TripIcon,
-  Users, Edit, ArrowRight, AlertCircle, TrendingUp
+  Users, Edit, ArrowRight, AlertCircle, TrendingUp, ArrowLeft
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -66,10 +66,10 @@ export default function BudgetsListPage() {
           </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-200 shadow-sm flex items-center space-x-2 cursor-pointer"
+            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border bg-white border-slate-200 hover:bg-slate-50 active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer text-slate-800"
           >
-            <TripIcon className="h-5 w-5" />
-            <span>Go to Itineraries</span>
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dashboard</span>
           </button>
         </div>
 

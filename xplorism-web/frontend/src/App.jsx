@@ -9,6 +9,7 @@ import DashboardStub from './pages/DashboardStub';
 import WeatherPage from './pages/WeatherPage';
 import BudgetPage from './pages/BudgetPage';
 import BudgetsListPage from './pages/BudgetsListPage';
+import HotelBookingPage from './pages/HotelBookingPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route component
@@ -79,6 +80,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <WeatherPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/hotels"
+        element={
+          <ProtectedRoute>
+            <HotelBookingPage />
           </ProtectedRoute>
         }
       />

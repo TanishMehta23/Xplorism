@@ -190,17 +190,17 @@ export default function WeatherPage() {
   const getThemeBackground = () => {
     switch (weatherTheme) {
       case 'sunny':
-        return 'from-amber-400 via-orange-100 to-sky-100';
+        return 'from-amber-400/90 via-orange-200/70 to-sky-200/60';
       case 'rainy':
-        return 'from-sky-950 via-slate-800 to-indigo-900';
+        return 'from-blue-950 via-slate-900 to-indigo-950';
       case 'snowy':
-        return 'from-sky-200 via-indigo-50 to-slate-200';
+        return 'from-sky-300/80 via-indigo-100 to-slate-200';
       case 'thunder':
-        return 'from-purple-950 via-slate-900 to-violet-950';
+        return 'from-purple-950 via-slate-900/95 to-violet-950';
       case 'overcast':
       case 'foggy':
       default:
-        return 'from-slate-400 via-slate-100 to-sky-100';
+        return 'from-slate-400/80 via-slate-200/60 to-blue-100/50';
     }
   };
 
@@ -252,14 +252,42 @@ export default function WeatherPage() {
 
   const isDarkTheme = ['rainy', 'thunder'].includes(weatherTheme);
 
+  const getCardStyles = () => {
+    switch (weatherTheme) {
+      case 'sunny':
+        return isDarkTheme
+          ? 'bg-gradient-to-br from-amber-950/70 to-yellow-900/50 border-amber-500/30 text-white'
+          : 'bg-gradient-to-br from-amber-100/90 via-orange-50/80 to-sky-50/70 border-amber-300/50 text-slate-900';
+      case 'cloudy':
+      case 'overcast':
+      case 'foggy':
+        return isDarkTheme
+          ? 'bg-gradient-to-br from-slate-900/80 to-zinc-900/60 border-slate-700/40 text-white'
+          : 'bg-gradient-to-br from-slate-200/95 via-slate-100/90 to-blue-50/80 border-slate-300 text-slate-900 shadow-inner';
+      case 'rainy':
+      case 'thunder':
+        return isDarkTheme
+          ? 'bg-gradient-to-br from-blue-950/85 to-purple-950/60 border-blue-800/40 text-white'
+          : 'bg-gradient-to-br from-blue-100/90 via-sky-100/80 to-indigo-50/70 border-blue-200/50 text-slate-900';
+      case 'snowy':
+        return isDarkTheme
+          ? 'bg-gradient-to-br from-indigo-950/60 to-slate-900/40 border-indigo-500/30 text-white'
+          : 'bg-gradient-to-br from-blue-50/95 via-indigo-50/80 to-slate-50/70 border-indigo-200/50 text-slate-900';
+      default:
+        return isDarkTheme
+          ? 'bg-slate-900/60 border-white/10 text-white'
+          : 'bg-white/80 border-white/40 text-slate-800';
+    }
+  };
+
   return (
     <div className={`min-h-screen ${isDarkTheme ? 'text-white' : 'text-slate-800'} flex flex-col font-sans transition-colors duration-500 relative overflow-hidden`}>
       
       {/* Dynamic Animated Atmospheric Background */}
-      <div className={`absolute inset-0 -z-35 bg-gradient-to-br ${getThemeBackground()} transition-all duration-700`} />
+      <div className={`absolute inset-0 -z-10 bg-gradient-to-br ${getThemeBackground()} transition-all duration-700`} />
       
       {/* Atmosphere particles layer */}
-      <div className="absolute inset-0 -z-30 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
         {renderAtmosphereParticles()}
       </div>
 
@@ -301,23 +329,41 @@ export default function WeatherPage() {
       <Navbar activeTab="weather" />
 
       {/* Main Layout container */}
-      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-6 py-12 flex flex-col items-center justify-start space-y-10">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 flex flex-col items-center justify-start space-y-8">
         
-        {/* Page Title & Search bar */}
-        <div className="w-full flex flex-col items-center space-y-6">
-          <div className="text-center space-y-2">
+        {/* Page Header (Centered title with absolutely positioned back button on desktop) */}
+        <div className="w-full relative flex flex-col items-center justify-center text-center">
+          <div className="space-y-2">
             <motion.h1 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-3xl font-extrabold tracking-tight flex items-center justify-center space-x-2.5"
+              className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center justify-center space-x-2.5"
             >
-              <Compass className="h-8 w-8 text-rose-500 animate-spin-slow" />
+              <Compass className="h-7 w-7 text-rose-500 animate-spin-slow shrink-0" />
               <span className={isDarkTheme ? 'text-white' : 'text-slate-900'}>Global Weather Forecast</span>
             </motion.h1>
             <p className={isDarkTheme ? 'text-slate-300 text-sm font-semibold' : 'text-slate-500 text-sm font-semibold'}>
               Check real-time climates before booking your next journey.
             </p>
           </div>
+          
+          <div className="md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2 mt-4 md:mt-0">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border active:scale-95 transition-all select-none cursor-pointer shrink-0 ${
+                isDarkTheme 
+                  ? 'bg-slate-900/40 border-white/10 hover:bg-slate-900/60 text-white' 
+                  : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-800'
+              }`}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Dashboard</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Search widget wrapper */}
+        <div className="w-full flex flex-col items-center space-y-6">
 
           {/* Search bar widget */}
           <div className="w-full max-w-lg relative search-container">
@@ -382,8 +428,8 @@ export default function WeatherPage() {
             className="w-full space-y-8"
           >
             
-            {/* White Weather Card */}
-            <div className={`border rounded-3xl p-8 shadow-lg flex flex-col md:flex-row items-center md:justify-between gap-8 relative overflow-hidden backdrop-blur-md ${isDarkTheme ? 'bg-slate-900/60 border-white/10 text-white' : 'bg-white/70 border-white/40 text-slate-800'}`}>
+            {/* Dynamic Weather Card matching current atmospheric conditions */}
+            <div className={`border rounded-3xl p-8 shadow-lg flex flex-col md:flex-row items-center md:justify-between gap-8 relative overflow-hidden backdrop-blur-md ${getCardStyles()}`}>
               <div className="space-y-4 text-center md:text-left z-10">
                 <div className="flex items-center justify-center md:justify-start space-x-2 text-rose-500">
                   <MapPin className="h-5 w-5 animate-bounce-slow" />

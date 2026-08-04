@@ -8,9 +8,11 @@ import {
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
 import { CURRENCIES } from './DashboardStub';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function BudgetsListPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [tripsWithBudgets, setTripsWithBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -39,7 +41,7 @@ export default function BudgetsListPage() {
       setTripsWithBudgets(combined);
     } catch (err) {
       console.error(err);
-      showToast('Failed to load saved itineraries.', 'error');
+      showToast(t('toast_load_itineraries_fail'), 'error');
     } finally {
       setLoading(false);
     }
@@ -59,39 +61,39 @@ export default function BudgetsListPage() {
           <div>
             <div className="flex items-center space-x-2 text-rose-500 mb-2">
               <TrendingUp className="h-5 w-5" />
-              <span className="text-xs font-bold uppercase tracking-wider">Financial Overview</span>
+              <span className="text-xs font-bold uppercase tracking-wider">{t('financial_overview')}</span>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">My Saved Budgets</h1>
-            <p className="text-slate-500 text-sm">Monitor, track expenses, and manage budgets across all your saved itineraries.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">{t('my_saved_budgets')}</h1>
+            <p className="text-slate-500 text-sm">{t('budgets_desc')}</p>
           </div>
           <button
             onClick={() => navigate('/dashboard')}
             className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border bg-white border-slate-200 hover:bg-slate-50 active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer text-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
+            <span>{t('back_to_dashboard')}</span>
           </button>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
             <div className="h-10 w-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-            <p className="text-slate-500 text-sm">Aggregating budget calculations...</p>
+            <p className="text-slate-500 text-sm">{t('aggregating_budgets')}</p>
           </div>
         ) : tripsWithBudgets.length === 0 ? (
           <div className="bg-white p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed border-slate-200 shadow-sm">
             <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 mb-6 border border-slate-100">
               <DollarSign className="h-8 w-8 text-emerald-500" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">No itineraries budget logged</h2>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">{t('no_budgets')}</h2>
             <p className="text-slate-555 max-w-sm text-sm mb-6 leading-relaxed">
-              Create and save a custom trip itinerary first to track real-time budgets and log expenses.
+              {t('no_budgets_desc')}
             </p>
             <button
               onClick={() => navigate('/dashboard')}
               className="px-6 py-3 rounded-full bg-slate-950 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
             >
-              Start Planning
+              {t('start_planning')}
             </button>
           </div>
         ) : (
@@ -117,7 +119,7 @@ export default function BudgetsListPage() {
                     {/* Header meta */}
                     <div className="flex justify-between items-start mb-4">
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-650 border border-emerald-100">
-                        {style}
+                        {t('style_' + style.toLowerCase()) || style}
                       </span>
                       <div className="flex items-center space-x-1 font-bold text-emerald-650 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-[10px]">
                         <span>{tripCurrency.symbol} {tripCurrencyCode}</span>
@@ -138,13 +140,13 @@ export default function BudgetsListPage() {
                     {/* Stats metrics */}
                     <div className="grid grid-cols-2 gap-3 mb-5 py-3 border-y border-slate-50">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Limit</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{t('budget_limit')}</span>
                         <span className="text-sm font-extrabold text-slate-800">
                           {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Spent</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{t('budget_spent')}</span>
                         <span className="text-sm font-extrabold text-rose-600">
                           {tripCurrency.symbol}{Number(totalActual).toLocaleString(tripCurrency.locale)}
                         </span>
@@ -154,7 +156,7 @@ export default function BudgetsListPage() {
                     {/* Progress Bar */}
                     <div className="space-y-1 mb-4">
                       <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                        <span>Utilization</span>
+                        <span>{t('budget_utilization')}</span>
                         <span className={utilizationPercent > 80 ? 'text-rose-600' : 'text-emerald-600'}>
                           {Math.round(utilizationPercent)}%
                         </span>
@@ -170,11 +172,11 @@ export default function BudgetsListPage() {
                     {/* Expected Allocation */}
                     {trip.budgetData?.categoryBreakdown && trip.budgetData.categoryBreakdown.length > 0 && (
                       <div className="mb-4 pt-3 border-t border-slate-50 space-y-1.5">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Allocation Breakdown</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{t('allocation_breakdown')}</span>
                         <div className="flex flex-wrap gap-1.5">
                           {trip.budgetData.categoryBreakdown.map((cat, cIdx) => (
                             <span key={cIdx} className="inline-flex items-center text-[9px] font-semibold bg-slate-50 border border-slate-100 text-slate-650 px-2 py-0.5 rounded-md">
-                              {cat.category}: <span className="font-extrabold text-slate-800 ml-1">{tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</span>
+                              {t('category_' + cat.category.toLowerCase().replace(/[^a-z0-9]+/g, '_')) || cat.category}: <span className="font-extrabold text-slate-800 ml-1">{tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</span>
                             </span>
                           ))}
                         </div>
@@ -186,7 +188,7 @@ export default function BudgetsListPage() {
                   <div className="flex items-center justify-between text-xs font-bold text-emerald-600 pt-3 border-t border-slate-50 group-hover:text-emerald-700">
                     <span className="flex items-center space-x-1">
                       <Edit className="h-3.5 w-3.5" />
-                      <span>Edit & Log Expenses</span>
+                      <span>{t('edit_log_expenses')}</span>
                     </span>
                     <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
                   </div>

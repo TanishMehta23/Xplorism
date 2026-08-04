@@ -8,9 +8,11 @@ import {
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
 import { CURRENCIES, PRE_PLANNED_TRIPS } from './DashboardStub';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function BudgetPage() {
   const { id } = useParams();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [trip, setTrip] = useState(null);
@@ -42,7 +44,7 @@ export default function BudgetPage() {
         if (preTrip) {
           setTrip(preTrip);
         } else {
-          showToast('Trip not found', 'error');
+          showToast(t('toast_trip_not_found'), 'error');
         }
         setLoading(false);
       } else {
@@ -52,11 +54,11 @@ export default function BudgetPage() {
           if (foundTrip) {
             setTrip(foundTrip);
           } else {
-            showToast('Trip not found', 'error');
+            showToast(t('toast_trip_not_found'), 'error');
           }
         } catch (err) {
           console.error(err);
-          showToast('Failed to load trip details.', 'error');
+          showToast(t('toast_load_trip_fail'), 'error');
         } finally {
           setLoading(false);
         }
@@ -211,13 +213,13 @@ export default function BudgetPage() {
         interests: trip.interests,
         itinerary: trip.itineraries
       });
-      showToast('Pre-planned itinerary saved to your trips!', 'success');
+      showToast(t('toast_save_trip_success'), 'success');
       setTimeout(() => {
         navigate(`/trips/${response.id}/budget`);
       }, 1000);
     } catch (err) {
       console.error(err);
-      showToast('Failed to save trip.', 'error');
+      showToast(t('toast_save_trip_fail'), 'error');
     } finally {
       setIsSavingTrip(false);
     }
@@ -225,7 +227,7 @@ export default function BudgetPage() {
 
   const handleAddExpense = async () => {
     if (!expenseForm.actualAmount || !expenseForm.date) {
-      showToast('Please fill in amount and date.', 'error');
+      showToast(t('toast_fill_fields'), 'error');
       return;
     }
     try {
@@ -241,13 +243,13 @@ export default function BudgetPage() {
         notes: expenseForm.notes || '',
         currency: tripCurrencyCode,
       });
-      showToast('Expense added successfully!', 'success');
+      showToast(t('toast_expense_added'), 'success');
       setExpenseForm({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '' });
       setShowExpenseForm(false);
       fetchBudget();
     } catch (err) {
       console.error('Failed to add expense:', err);
-      showToast('Failed to add expense.', 'error');
+      showToast(t('toast_add_expense_fail'), 'error');
     }
   };
 
@@ -262,13 +264,13 @@ export default function BudgetPage() {
         date: editingExpense.date,
         notes: editingExpense.notes || '',
       });
-      showToast('Expense updated successfully!', 'success');
+      showToast(t('toast_expense_updated'), 'success');
       setEditingExpense(null);
       setShowExpenseForm(false);
       fetchBudget();
     } catch (err) {
       console.error('Failed to update expense:', err);
-      showToast('Failed to update expense.', 'error');
+      showToast(t('toast_update_expense_fail'), 'error');
     }
   };
 
@@ -276,11 +278,11 @@ export default function BudgetPage() {
     if (!window.confirm('Delete this expense?')) return;
     try {
       await api.delete(`/trips/${id}/expenses/${expenseId}`);
-      showToast('Expense deleted.', 'success');
+      showToast(t('toast_expense_deleted'), 'success');
       fetchBudget();
     } catch (err) {
       console.error('Failed to delete expense:', err);
-      showToast('Failed to delete expense.', 'error');
+      showToast(t('toast_delete_expense_fail'), 'error');
     }
   };
 
@@ -302,7 +304,7 @@ export default function BudgetPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-800">
         <div className="flex flex-col items-center space-y-4">
           <div className="h-10 w-10 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin" />
-          <p className="text-slate-500 text-sm animate-pulse font-medium">Loading budget overview...</p>
+          <p className="text-slate-500 text-sm animate-pulse font-medium">{t('loading_saved')}</p>
         </div>
       </div>
     );
@@ -313,9 +315,9 @@ export default function BudgetPage() {
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-800 p-6">
         <AlertCircle className="h-12 w-12 text-rose-500 mb-4" />
         <h2 className="text-xl font-bold mb-2">Trip Not Found</h2>
-        <p className="text-slate-500 text-sm mb-6 text-center max-w-md">We couldn't locate the trip you are looking for. It may have been deleted or the link is invalid.</p>
+        <p className="text-slate-550 text-sm mb-6 text-center max-w-md">We couldn't locate the trip you are looking for.</p>
         <button onClick={() => navigate('/dashboard')} className="px-6 py-2.5 bg-slate-900 text-white rounded-full text-xs font-bold hover:bg-slate-850 transition">
-          Return to Dashboard
+          {t('back_to_dashboard')}
         </button>
       </div>
     );
@@ -325,6 +327,16 @@ export default function BudgetPage() {
   const style = parts[0] || 'Adventure';
   const tripCurrencyCode = parts[1] || 'INR';
   const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
+
+  const getCategoryTranslation = (catName) => {
+    const normalized = (catName || '').toLowerCase();
+    if (normalized === 'food' || normalized === 'food & dining') return t('category_food_dining');
+    if (normalized === 'accommodation') return t('category_accommodation');
+    if (normalized === 'transport' || normalized === 'transportation') return t('category_transportation');
+    if (normalized === 'activities' || normalized === 'activities & tours') return t('category_activities_tours');
+    if (normalized === 'shopping') return t('category_shopping');
+    return t('category_miscellaneous');
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans">
@@ -343,10 +355,10 @@ export default function BudgetPage() {
             <div>
               <div className="flex items-center space-x-2 text-rose-500 mb-1">
                 <TripIcon className="h-4 w-4" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">{style} Mode</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">{t('style_' + style.toLowerCase()) || style} Mode</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">
-                {trip.destination} Budget Tracker
+                {trip.destination} {t('budget_tracker')}
               </h1>
             </div>
           </div>
@@ -355,7 +367,7 @@ export default function BudgetPage() {
             className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border bg-white border-slate-200 hover:bg-slate-50 active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer text-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
+            <span>{t('back_to_dashboard')}</span>
           </button>
         </div>
 
@@ -364,7 +376,7 @@ export default function BudgetPage() {
           <div className="flex items-center space-x-4">
             <Calendar className="h-5 w-5 text-emerald-500" />
             <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Date Schedule</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('date_schedule')}</p>
               <p className="text-sm font-bold text-slate-800">
                 {new Date(trip.startDate).toLocaleDateString()} to {new Date(trip.endDate).toLocaleDateString()}
               </p>
@@ -373,14 +385,14 @@ export default function BudgetPage() {
           <div className="flex items-center space-x-4">
             <Users className="h-5 w-5 text-emerald-500" />
             <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Travelers</p>
-              <p className="text-sm font-bold text-slate-800">{trip.travelers} {trip.travelers === 1 ? 'Traveler' : 'Travelers'}</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('travelers')}</p>
+              <p className="text-sm font-bold text-slate-800">{trip.travelers} {trip.travelers === 1 ? t('traveler') : t('travelers')}</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <DollarSign className="h-5 w-5 text-emerald-500" />
             <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Starting Budget</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('starting_budget')}</p>
               <p className="text-sm font-bold text-slate-800">
                 {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}
               </p>
@@ -391,15 +403,15 @@ export default function BudgetPage() {
         {budgetLoading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
             <div className="h-10 w-10 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin" />
-            <p className="text-slate-500 text-sm">Calculating planned breakdowns...</p>
+            <p className="text-slate-500 text-sm">{t('calculating_breakdowns')}</p>
           </div>
         ) : !budgetData ? (
           <div className="bg-white border border-slate-150 rounded-3xl p-12 text-center shadow-sm">
             <DollarSign className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-slate-900 mb-2">No budget data available</h2>
-            <p className="text-slate-550 text-sm mb-6 max-w-sm mx-auto">We couldn't compute budget trackers for this itinerary.</p>
+            <h2 className="text-lg font-bold text-slate-900 mb-2">{t('no_budget_data')}</h2>
+            <p className="text-slate-550 text-sm mb-6 max-w-sm mx-auto">{t('no_budget_data_desc')}</p>
             <button onClick={() => navigate('/dashboard')} className="px-6 py-2 bg-slate-900 text-white rounded-full text-xs font-bold hover:bg-slate-800 transition">
-              Back to Dashboard
+              {t('back_to_dashboard')}
             </button>
           </div>
         ) : (
@@ -409,25 +421,25 @@ export default function BudgetPage() {
               {/* Summary Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 shadow-sm">
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Total Budget</span>
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{t('total_estimated_budget')}</span>
                   <p className="text-2xl font-extrabold text-emerald-800 mt-2">
                     {tripCurrency.symbol}{Number(budgetData.totalBudget).toLocaleString(tripCurrency.locale)}
                   </p>
-                  <p className="text-[10px] text-slate-500 mt-1">Planned: {tripCurrency.symbol}{Number(budgetData.totalPlanned).toLocaleString(tripCurrency.locale)}</p>
+                  <p className="text-[10px] text-slate-500 mt-1">{t('budget_planned')}: {tripCurrency.symbol}{Number(budgetData.totalPlanned).toLocaleString(tripCurrency.locale)}</p>
                 </div>
                 <div className="bg-rose-50 border border-rose-100 rounded-3xl p-5 shadow-sm">
-                  <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Spent</span>
+                  <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">{t('budget_spent')}</span>
                   <p className="text-2xl font-extrabold text-rose-800 mt-2">
                     {tripCurrency.symbol}{Number(budgetData.totalActual || budgetData.totalSpent || 0).toLocaleString(tripCurrency.locale)}
                   </p>
-                  <p className="text-[10px] text-slate-500 mt-1">Real-time tracked expenses</p>
+                  <p className="text-[10px] text-slate-500 mt-1">{t('tracked_expenses_desc')}</p>
                 </div>
                 <div className={`${(budgetData.remaining || budgetData.remaining === 0) && budgetData.remaining >= 0 ? 'bg-sky-50 border-sky-100' : 'bg-rose-50 border-rose-100'} border rounded-3xl p-5 shadow-sm`}>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Remaining</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('remaining_funds')}</span>
                   <p className={`text-2xl font-extrabold mt-2 ${(budgetData.remaining || budgetData.remaining === 0) && budgetData.remaining >= 0 ? 'text-sky-800' : 'text-rose-800'}`}>
                     {tripCurrency.symbol}{Number(budgetData.remaining || 0).toLocaleString(tripCurrency.locale)}
                   </p>
-                  <p className="text-[10px] text-slate-500 mt-1">Leftover funds</p>
+                  <p className="text-[10px] text-slate-500 mt-1">{t('leftover_funds')}</p>
                 </div>
               </div>
 
@@ -435,8 +447,8 @@ export default function BudgetPage() {
               <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
                 <div className="flex justify-between items-center mb-3">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">Budget Utilization Progress</h3>
-                    <p className="text-xs text-slate-500">Shows current spend relative to total budget limit</p>
+                    <h3 className="text-sm font-bold text-slate-900">{t('utilization_progress')}</h3>
+                    <p className="text-xs text-slate-500">{t('utilization_progress_desc')}</p>
                   </div>
                   <span className={`text-sm font-extrabold ${(budgetData.utilizationPercent || budgetData.percentSpent || 0) > 80 ? 'text-rose-600' : (budgetData.utilizationPercent || budgetData.percentSpent || 0) > 50 ? 'text-amber-600' : 'text-emerald-600'}`}>
                     {Math.round(budgetData.utilizationPercent || budgetData.percentSpent || 0)}%
@@ -478,13 +490,13 @@ export default function BudgetPage() {
                 <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
                   <h3 className="text-sm font-bold text-slate-900 mb-6 flex items-center">
                     <Tag className="h-4 w-4 mr-2 text-emerald-500" />
-                    Category Breakdown
+                    {t('allocation_breakdown')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {budgetData.categoryBreakdown.map((cat, idx) => (
                       <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex justify-between items-center">
                         <div className="flex-1">
-                          <span className="text-xs font-bold text-slate-800">{cat.category}</span>
+                          <span className="text-xs font-bold text-slate-800">{getCategoryTranslation(cat.category)}</span>
                           <div className="flex items-center space-x-2 mt-1.5">
                             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                               <div
@@ -493,13 +505,13 @@ export default function BudgetPage() {
                               />
                             </div>
                             <span className="text-[9px] font-semibold text-slate-400 w-12 text-right">
-                              {cat.count} item{cat.count !== 1 ? 's' : ''}
+                              {cat.count} {cat.count === 1 ? t('item') : t('items')}
                             </span>
                           </div>
                         </div>
                         <div className="text-right ml-4">
                           <p className="text-xs font-bold text-slate-900">{tripCurrency.symbol}{Number(cat.actual).toLocaleString(tripCurrency.locale)}</p>
-                          <p className="text-[9px] text-slate-400">of {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</p>
+                          <p className="text-[9px] text-slate-400">{t('of')} {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</p>
                         </div>
                       </div>
                     ))}
@@ -512,15 +524,15 @@ export default function BudgetPage() {
                 <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
                   <h3 className="text-sm font-bold text-slate-900 mb-6 flex items-center">
                     <Clock className="h-4 w-4 mr-2 text-emerald-500" />
-                    Daily Budget Tracking
+                    {t('budget_tracker')}
                   </h3>
                   <div className="space-y-4">
                     {budgetData.dailyBreakdown.map((day, idx) => (
                       <div key={idx} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/50">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-bold text-slate-800">Day {day.day || 'N/A'}</span>
+                          <span className="text-xs font-bold text-slate-800">{t('day')} {day.day || 'N/A'}</span>
                           <span className="text-xs font-bold text-slate-700">
-                            Spent: {tripCurrency.symbol}{Number(day.actual).toLocaleString(tripCurrency.locale)} / Limit: {tripCurrency.symbol}{Number(day.planned).toLocaleString(tripCurrency.locale)}
+                            {t('budget_spent')}: {tripCurrency.symbol}{Number(day.actual).toLocaleString(tripCurrency.locale)} / {t('budget_limit')}: {tripCurrency.symbol}{Number(day.planned).toLocaleString(tripCurrency.locale)}
                           </span>
                         </div>
                         <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-3">
@@ -530,7 +542,7 @@ export default function BudgetPage() {
                         <div className="pl-4 border-l-2 border-slate-200 space-y-1.5 mt-2">
                           {day.items.map((it, iIdx) => (
                             <div key={iIdx} className="flex justify-between items-center text-[10px] text-slate-500">
-                              <span>{it.name} <span className="text-slate-400">({it.type === 'itinerary' ? 'Planned Activity' : 'Expense'})</span></span>
+                              <span>{it.name} <span className="text-slate-400">({it.type === 'itinerary' ? t('budget_planned') : t('budget_spent')})</span></span>
                               <span className="font-semibold">{tripCurrency.symbol}{Number(it.actual || it.planned || 0).toLocaleString(tripCurrency.locale)}</span>
                             </div>
                           ))}
@@ -549,28 +561,28 @@ export default function BudgetPage() {
                 <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
                   <h3 className="text-sm font-bold text-slate-900 flex items-center">
                     <Plus className="h-4 w-4 mr-2 text-emerald-500" />
-                    Log New Expense
+                    {t('add_new_expense')}
                   </h3>
 
                   <div className="space-y-3">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Category</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('category_label')}</label>
                       <select
                         value={expenseForm.category}
                         onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
                       >
-                        <option>Food</option>
-                        <option>Accommodation</option>
-                        <option>Transport</option>
-                        <option>Activities</option>
-                        <option>Shopping</option>
-                        <option>Other</option>
+                        <option value="Food">{t('category_food_dining')}</option>
+                        <option value="Accommodation">{t('category_accommodation')}</option>
+                        <option value="Transport">{t('category_transportation')}</option>
+                        <option value="Activities">{t('category_activities_tours')}</option>
+                        <option value="Shopping">{t('category_shopping')}</option>
+                        <option value="Other">{t('category_miscellaneous')}</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Date</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('date_label')}</label>
                       <input
                         type="date"
                         value={expenseForm.date}
@@ -580,19 +592,19 @@ export default function BudgetPage() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Item Name</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('item_name_label')}</label>
                       <input
                         type="text"
                         value={expenseForm.itemName}
                         onChange={(e) => setExpenseForm({...expenseForm, itemName: e.target.value})}
-                        placeholder="e.g. Dinner at Bistro"
+                        placeholder={t('item_placeholder')}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Planned Amount</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('planned_cost')}</label>
                         <input
                           type="number"
                           value={expenseForm.plannedAmount}
@@ -602,7 +614,7 @@ export default function BudgetPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Actual Spent *</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('actual_spent')}</label>
                         <input
                           type="number"
                           value={expenseForm.actualAmount}
@@ -614,12 +626,12 @@ export default function BudgetPage() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Notes (optional)</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('notes_label')}</label>
                       <input
                         type="text"
                         value={expenseForm.notes}
                         onChange={(e) => setExpenseForm({...expenseForm, notes: e.target.value})}
-                        placeholder="Any additional details"
+                        placeholder={t('notes_placeholder')}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
                       />
                     </div>
@@ -629,7 +641,7 @@ export default function BudgetPage() {
                         onClick={handleAddExpense}
                         className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
                       >
-                        Save Expense
+                        {t('save_expense')}
                       </button>
                     </div>
                   </div>
@@ -656,10 +668,10 @@ export default function BudgetPage() {
               <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center">
                   <Clock className="h-4 w-4 mr-2 text-emerald-500" />
-                  Expense History ({budgetData.expenses?.length || 0})
+                  {t('expense_history')} ({budgetData.expenses?.length || 0})
                 </h3>
                 {(!budgetData.expenses || budgetData.expenses.length === 0) ? (
-                  <p className="text-xs text-slate-400 py-4 text-center">No actual expenses logged yet.</p>
+                  <p className="text-xs text-slate-400 py-4 text-center">{t('no_expenses_logged')}</p>
                 ) : (
                   <div className="divide-y divide-slate-100 max-h-[350px] overflow-y-auto pr-1">
                     {budgetData.expenses.map((exp, idx) => (
@@ -667,7 +679,7 @@ export default function BudgetPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-1.5 mb-1">
                             <span className="text-xs font-bold text-slate-800 truncate">{exp.item_name || 'Expense'}</span>
-                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold uppercase shrink-0">{exp.category}</span>
+                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold uppercase shrink-0">{getCategoryTranslation(exp.category)}</span>
                           </div>
                           <p className="text-[10px] text-slate-400 truncate">
                             {exp.date ? new Date(exp.date).toLocaleDateString() : ''}
@@ -689,7 +701,7 @@ export default function BudgetPage() {
                               </button>
                               <button
                                 onClick={() => handleDeleteExpense(exp.id)}
-                                className="opacity-0 group-hover/exp:opacity-100 p-1.5 rounded hover:bg-red-50 text-slate-450 hover:text-red-500 transition cursor-pointer"
+                                className="opacity-0 group-hover/exp:opacity-100 p-1.5 rounded hover:bg-red-50 text-slate-455 hover:text-red-500 transition cursor-pointer"
                                 title="Delete Expense"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -718,28 +730,28 @@ export default function BudgetPage() {
             >
               <div className="flex items-center space-x-3 text-emerald-600 mb-4">
                 <Edit className="h-5 w-5" />
-                <h3 className="text-base font-extrabold">Edit Expense Details</h3>
+                <h3 className="text-base font-extrabold">{t('edit_log_expenses')}</h3>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Category</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('category_label')}</label>
                   <select
                     value={editingExpense.category}
                     onChange={(e) => setEditingExpense({...editingExpense, category: e.target.value})}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
                   >
-                    <option>Food</option>
-                    <option>Accommodation</option>
-                    <option>Transport</option>
-                    <option>Activities</option>
-                    <option>Shopping</option>
-                    <option>Other</option>
+                    <option value="Food">{t('category_food_dining')}</option>
+                    <option value="Accommodation">{t('category_accommodation')}</option>
+                    <option value="Transport">{t('category_transportation')}</option>
+                    <option value="Activities">{t('category_activities_tours')}</option>
+                    <option value="Shopping">{t('category_shopping')}</option>
+                    <option value="Other">{t('category_miscellaneous')}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Date</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('date_label')}</label>
                   <input
                     type="date"
                     value={editingExpense.date ? editingExpense.date.split('T')[0] : ''}
@@ -749,19 +761,19 @@ export default function BudgetPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Item Name</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('item_name_label')}</label>
                   <input
                     type="text"
                     value={editingExpense.itemName}
                     onChange={(e) => setEditingExpense({...editingExpense, itemName: e.target.value})}
-                    placeholder="e.g. Dinner at Bistro"
+                    placeholder={t('item_placeholder')}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Planned Amount</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('planned_cost')}</label>
                     <input
                       type="number"
                       value={editingExpense.plannedAmount}
@@ -771,7 +783,7 @@ export default function BudgetPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Actual Spent *</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('actual_spent')}</label>
                     <input
                       type="number"
                       value={editingExpense.actualAmount}
@@ -783,12 +795,12 @@ export default function BudgetPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Notes (optional)</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('notes_label')}</label>
                   <input
                     type="text"
                     value={editingExpense.notes}
                     onChange={(e) => setEditingExpense({...editingExpense, notes: e.target.value})}
-                    placeholder="Any additional details"
+                    placeholder={t('notes_placeholder')}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
                   />
                 </div>
@@ -797,15 +809,15 @@ export default function BudgetPage() {
                   <button
                     type="button"
                     onClick={() => setEditingExpense(null)}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold transition shadow-sm cursor-pointer"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-650 hover:bg-slate-100 text-xs font-bold transition shadow-sm cursor-pointer"
                   >
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <button
                     onClick={() => handleUpdateExpense(editingExpense.id)}
                     className="flex-[2] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
                   >
-                    Update Expense
+                    {t('save_expense')}
                   </button>
                 </div>
               </div>

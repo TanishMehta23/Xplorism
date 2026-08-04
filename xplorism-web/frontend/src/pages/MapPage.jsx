@@ -5,9 +5,11 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { api } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function MapPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const globeElRef = useRef(null);
   const globeInstanceRef = useRef(null);
   
@@ -409,11 +411,11 @@ export default function MapPage() {
           lon: parseFloat(data[0].lon)
         });
       } else {
-        setSearchError('Could not find coordinates for this destination.');
+        setSearchError(t('error_geocode_coordinates'));
       }
     } catch (err) {
       console.error(err);
-      setSearchError('Geocoding request failed. Try again.');
+      setSearchError(t('error_geocode_failed'));
     } finally {
       setSearching(false);
     }
@@ -441,10 +443,10 @@ export default function MapPage() {
           <div>
             <h1 className="text-3xl font-black tracking-tight flex items-center space-x-2.5">
               <Compass className="h-7 w-7 text-blue-500" />
-              <span>Travel Globe</span>
+              <span>{t('globe_title')}</span>
             </h1>
             <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Explore your trips and wishlisted spots on a premium 3D interactive globe.
+              {t('globe_desc')}
             </p>
           </div>
           <button
@@ -456,7 +458,7 @@ export default function MapPage() {
             }}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Back to Dashboard</span>
+            <span>{t('back_to_dashboard')}</span>
           </button>
         </div>
 
@@ -475,7 +477,7 @@ export default function MapPage() {
           <div className="p-6 border-b search-container relative" style={{ borderColor: 'var(--border-secondary)' }}>
             <h3 className="text-xs font-black uppercase tracking-wider mb-3 flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
               <Sparkles className="h-3.5 w-3.5 text-rose-500" />
-              <span>Add Wishlist Pins</span>
+              <span>{t('add_wishlist_pins')}</span>
             </h3>
             
             <form onSubmit={handleAddWishlistPin} className="relative">
@@ -487,7 +489,7 @@ export default function MapPage() {
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                placeholder="e.g. Kyoto, Japan"
+                placeholder={t('wishlist_placeholder')}
                 className="w-full py-2.5 pl-10 pr-12 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition"
                 style={{ 
                   backgroundColor: 'var(--bg-tertiary)',
@@ -550,17 +552,17 @@ export default function MapPage() {
             <div className="space-y-3">
               <h3 className="text-xs font-black uppercase tracking-wider flex items-center space-x-2" style={{ color: 'var(--text-secondary)' }}>
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                <span>My Planned Trips ({trips.length})</span>
+                <span>{t('my_planned_trips')} ({trips.length})</span>
               </h3>
 
               {loading ? (
                 <div className="flex items-center space-x-2 py-4">
                   <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                  <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>Loading destinations...</span>
+                  <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{t('loading_destinations')}</span>
                 </div>
               ) : trips.length === 0 ? (
                 <p className="text-[11px] font-medium py-3 italic" style={{ color: 'var(--text-tertiary)' }}>
-                  No planned trips yet. Generate one on your dashboard!
+                  {t('no_planned_trips')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -581,7 +583,7 @@ export default function MapPage() {
                         </p>
                       </div>
                       <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                        Active
+                        {t('active_badge')}
                       </span>
                     </div>
                   ))}
@@ -593,12 +595,12 @@ export default function MapPage() {
             <div className="space-y-3 pt-6 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
               <h3 className="text-xs font-black uppercase tracking-wider flex items-center space-x-2" style={{ color: 'var(--text-secondary)' }}>
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                <span>Dream Destinations ({wishlist.length})</span>
+                <span>{t('dream_destinations')} ({wishlist.length})</span>
               </h3>
 
               {wishlist.length === 0 ? (
                 <p className="text-[11px] font-medium py-3 italic" style={{ color: 'var(--text-tertiary)' }}>
-                  No wishlisted locations yet. Type above to pin a dream spot!
+                  {t('no_dream_destinations')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -641,7 +643,7 @@ export default function MapPage() {
           {/* Legend Banner */}
           <div className="absolute top-6 right-6 flex items-center space-x-2 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500 shadow-sm z-30 pointer-events-none">
             <Globe className="h-4 w-4 text-blue-500 animate-spin-slow" />
-            <span>Interactive 3D Globe</span>
+            <span>{t('interactive_3d_globe')}</span>
           </div>
 
           {/* Globe Target Div */}
@@ -664,7 +666,7 @@ export default function MapPage() {
                     color: activePopup.type === 'trip' ? '#2563eb' : '#f43f5e'
                   }}
                 >
-                  {activePopup.type === 'trip' ? 'Itinerary' : 'Wishlist Spot'}
+                  {activePopup.type === 'trip' ? t('itinerary_badge') : t('wishlist_spot_badge')}
                 </span>
                 <button 
                   onClick={() => setActivePopup(null)}
@@ -682,7 +684,7 @@ export default function MapPage() {
                   href={`/trips/${activePopup.id}/budget`}
                   className="mt-3 block text-center text-[10px] font-black bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-xl transition"
                 >
-                  View Budget
+                  {t('view_budget_btn')}
                 </a>
               )}
             </div>

@@ -9,30 +9,31 @@ import {
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import { useLanguage } from '../context/LanguageContext';
 
 // WMO Weather Codes mapping to Icons, Descriptions, and dynamic theme colors
 const WEATHER_CODE_MAP = {
-  0: { label: 'Clear Sky', icon: Sun, bg: 'bg-amber-500/10 border-amber-500/20', color: 'text-amber-500', iconBg: 'bg-amber-500/20', theme: 'sunny' },
-  1: { label: 'Mainly Clear', icon: Sun, bg: 'bg-yellow-500/10 border-yellow-500/20', color: 'text-yellow-500', iconBg: 'bg-yellow-500/20', theme: 'sunny' },
-  2: { label: 'Partly Cloudy', icon: Cloud, bg: 'bg-sky-500/10 border-sky-500/20', color: 'text-sky-400', iconBg: 'bg-sky-500/20', theme: 'cloudy' },
-  3: { label: 'Overcast', icon: Cloud, bg: 'bg-slate-500/10 border-slate-500/20', color: 'text-slate-400', iconBg: 'bg-slate-500/20', theme: 'overcast' },
-  45: { label: 'Foggy', icon: CloudFog, bg: 'bg-zinc-500/10 border-zinc-500/20', color: 'text-zinc-400', iconBg: 'bg-zinc-500/20', theme: 'foggy' },
-  48: { label: 'Depositing Rime Fog', icon: CloudFog, bg: 'bg-zinc-600/10 border-zinc-600/20', color: 'text-zinc-400', iconBg: 'bg-zinc-600/20', theme: 'foggy' },
-  51: { label: 'Light Drizzle', icon: CloudDrizzle, bg: 'bg-cyan-500/10 border-cyan-500/20', color: 'text-cyan-400', iconBg: 'bg-cyan-500/20', theme: 'rainy' },
-  53: { label: 'Moderate Drizzle', icon: CloudDrizzle, bg: 'bg-cyan-600/10 border-cyan-605/20', color: 'text-cyan-400', iconBg: 'bg-cyan-600/20', theme: 'rainy' },
-  55: { label: 'Dense Drizzle', icon: CloudDrizzle, bg: 'bg-cyan-700/10 border-cyan-705/20', color: 'text-cyan-400', iconBg: 'bg-cyan-700/20', theme: 'rainy' },
-  61: { label: 'Slight Rain', icon: CloudRain, bg: 'bg-blue-500/10 border-blue-500/20', color: 'text-blue-400', iconBg: 'bg-blue-500/20', theme: 'rainy' },
-  63: { label: 'Moderate Rain', icon: CloudRain, bg: 'bg-blue-600/10 border-blue-600/20', color: 'text-blue-450', iconBg: 'bg-blue-600/20', theme: 'rainy' },
-  65: { label: 'Heavy Rain', icon: CloudRain, bg: 'bg-blue-700/15 border-blue-700/20', color: 'text-blue-400', iconBg: 'bg-blue-700/20', theme: 'rainy' },
-  71: { label: 'Slight Snowfall', icon: Snowflake, bg: 'bg-indigo-400/10 border-indigo-400/20', color: 'text-indigo-350', iconBg: 'bg-indigo-400/20', theme: 'snowy' },
-  73: { label: 'Moderate Snowfall', icon: Snowflake, bg: 'bg-indigo-500/10 border-indigo-500/20', color: 'text-indigo-400', iconBg: 'bg-indigo-500/20', theme: 'snowy' },
-  75: { label: 'Heavy Snowfall', icon: Snowflake, bg: 'bg-indigo-600/15 border-indigo-600/20', color: 'text-indigo-350', iconBg: 'bg-indigo-600/20', theme: 'snowy' },
-  80: { label: 'Slight Rain Showers', icon: CloudRain, bg: 'bg-cyan-500/10 border-cyan-500/20', color: 'text-cyan-400', iconBg: 'bg-cyan-500/20', theme: 'rainy' },
-  81: { label: 'Moderate Rain Showers', icon: CloudRain, bg: 'bg-cyan-600/10 border-cyan-600/20', color: 'text-cyan-400', iconBg: 'bg-cyan-600/20', theme: 'rainy' },
-  82: { label: 'Violent Rain Showers', icon: CloudRain, bg: 'bg-blue-700/15 border-blue-700/20', color: 'text-blue-400', iconBg: 'bg-blue-700/20', theme: 'rainy' },
-  95: { label: 'Thunderstorm', icon: CloudLightning, bg: 'bg-purple-500/10 border-purple-500/20', color: 'text-purple-400', iconBg: 'bg-purple-500/20', theme: 'thunder' },
-  96: { label: 'Thunderstorm with Hail', icon: CloudLightning, bg: 'bg-purple-600/15 border-purple-600/20', color: 'text-purple-400', iconBg: 'bg-purple-600/20', theme: 'thunder' },
-  99: { label: 'Heavy Thunderstorm', icon: CloudLightning, bg: 'bg-violet-700/15 border-violet-700/20', color: 'text-violet-400', iconBg: 'bg-violet-700/20', theme: 'thunder' }
+  0: { label: 'Clear Sky', labelKey: 'weather_clear_sky', icon: Sun, bg: 'bg-amber-500/10 border-amber-500/20', color: 'text-amber-500', iconBg: 'bg-amber-500/20', theme: 'sunny' },
+  1: { label: 'Mainly Clear', labelKey: 'weather_mainly_clear', icon: Sun, bg: 'bg-yellow-500/10 border-yellow-500/20', color: 'text-yellow-500', iconBg: 'bg-yellow-500/20', theme: 'sunny' },
+  2: { label: 'Partly Cloudy', labelKey: 'weather_partly_cloudy', icon: Cloud, bg: 'bg-sky-500/10 border-sky-500/20', color: 'text-sky-400', iconBg: 'bg-sky-500/20', theme: 'cloudy' },
+  3: { label: 'Overcast', labelKey: 'weather_overcast', icon: Cloud, bg: 'bg-slate-500/10 border-slate-500/20', color: 'text-slate-400', iconBg: 'bg-slate-500/20', theme: 'overcast' },
+  45: { label: 'Foggy', labelKey: 'weather_foggy', icon: CloudFog, bg: 'bg-zinc-500/10 border-zinc-500/20', color: 'text-zinc-400', iconBg: 'bg-zinc-500/20', theme: 'foggy' },
+  48: { label: 'Depositing Rime Fog', labelKey: 'weather_rime_fog', icon: CloudFog, bg: 'bg-zinc-600/10 border-zinc-600/20', color: 'text-zinc-400', iconBg: 'bg-zinc-600/20', theme: 'foggy' },
+  51: { label: 'Light Drizzle', labelKey: 'weather_light_drizzle', icon: CloudDrizzle, bg: 'bg-cyan-500/10 border-cyan-500/20', color: 'text-cyan-400', iconBg: 'bg-cyan-500/20', theme: 'rainy' },
+  53: { label: 'Moderate Drizzle', labelKey: 'weather_moderate_drizzle', icon: CloudDrizzle, bg: 'bg-cyan-600/10 border-cyan-605/20', color: 'text-cyan-400', iconBg: 'bg-cyan-600/20', theme: 'rainy' },
+  55: { label: 'Dense Drizzle', labelKey: 'weather_dense_drizzle', icon: CloudDrizzle, bg: 'bg-cyan-700/10 border-cyan-705/20', color: 'text-cyan-400', iconBg: 'bg-cyan-700/20', theme: 'rainy' },
+  61: { label: 'Slight Rain', labelKey: 'weather_slight_rain', icon: CloudRain, bg: 'bg-blue-500/10 border-blue-500/20', color: 'text-blue-400', iconBg: 'bg-blue-500/20', theme: 'rainy' },
+  63: { label: 'Moderate Rain', labelKey: 'weather_moderate_rain', icon: CloudRain, bg: 'bg-blue-600/10 border-blue-600/20', color: 'text-blue-450', iconBg: 'bg-blue-600/20', theme: 'rainy' },
+  65: { label: 'Heavy Rain', labelKey: 'weather_heavy_rain', icon: CloudRain, bg: 'bg-blue-700/15 border-blue-700/20', color: 'text-blue-400', iconBg: 'bg-blue-700/20', theme: 'rainy' },
+  71: { label: 'Slight Snowfall', labelKey: 'weather_slight_snow', icon: Snowflake, bg: 'bg-indigo-400/10 border-indigo-400/20', color: 'text-indigo-350', iconBg: 'bg-indigo-400/20', theme: 'snowy' },
+  73: { label: 'Moderate Snowfall', labelKey: 'weather_moderate_snow', icon: Snowflake, bg: 'bg-indigo-500/10 border-indigo-500/20', color: 'text-indigo-400', iconBg: 'bg-indigo-500/20', theme: 'snowy' },
+  75: { label: 'Heavy Snowfall', labelKey: 'weather_heavy_snow', icon: Snowflake, bg: 'bg-indigo-600/15 border-indigo-600/20', color: 'text-indigo-350', iconBg: 'bg-indigo-600/20', theme: 'snowy' },
+  80: { label: 'Slight Rain Showers', labelKey: 'weather_slight_showers', icon: CloudRain, bg: 'bg-cyan-500/10 border-cyan-500/20', color: 'text-cyan-400', iconBg: 'bg-cyan-500/20', theme: 'rainy' },
+  81: { label: 'Moderate Rain Showers', labelKey: 'weather_moderate_showers', icon: CloudRain, bg: 'bg-cyan-600/10 border-cyan-600/20', color: 'text-cyan-400', iconBg: 'bg-cyan-600/20', theme: 'rainy' },
+  82: { label: 'Violent Rain Showers', labelKey: 'weather_violent_showers', icon: CloudRain, bg: 'bg-blue-700/15 border-blue-700/20', color: 'text-blue-400', iconBg: 'bg-blue-700/20', theme: 'rainy' },
+  95: { label: 'Thunderstorm', labelKey: 'weather_thunderstorm', icon: CloudLightning, bg: 'bg-purple-500/10 border-purple-500/20', color: 'text-purple-400', iconBg: 'bg-purple-500/20', theme: 'thunder' },
+  96: { label: 'Thunderstorm with Hail', labelKey: 'weather_thunder_hail', icon: CloudLightning, bg: 'bg-purple-600/15 border-purple-600/20', color: 'text-purple-400', iconBg: 'bg-purple-600/20', theme: 'thunder' },
+  99: { label: 'Heavy Thunderstorm', labelKey: 'weather_heavy_thunder', icon: CloudLightning, bg: 'bg-violet-700/15 border-violet-700/20', color: 'text-violet-400', iconBg: 'bg-violet-700/20', theme: 'thunder' }
 };
 
 const getDefaultWeather = () => ({
@@ -79,6 +80,7 @@ const GlobeAnimation = () => {
 
 export default function WeatherPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [query, setQuery] = useState('');
@@ -340,10 +342,10 @@ export default function WeatherPage() {
               className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center justify-center space-x-2.5"
             >
               <Compass className="h-7 w-7 text-rose-500 animate-spin-slow shrink-0" />
-              <span className={isDarkTheme ? 'text-white' : 'text-slate-900'}>Global Weather Forecast</span>
+              <span className={isDarkTheme ? 'text-white' : 'text-slate-900'}>{t('global_weather_forecast')}</span>
             </motion.h1>
             <p className={isDarkTheme ? 'text-slate-300 text-sm font-semibold' : 'text-slate-500 text-sm font-semibold'}>
-              Check real-time climates before booking your next journey.
+              {t('weather_desc')}
             </p>
           </div>
           
@@ -357,7 +359,7 @@ export default function WeatherPage() {
               }`}
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Dashboard</span>
+              <span>{t('back_to_dashboard')}</span>
             </button>
           </div>
         </div>
@@ -377,7 +379,7 @@ export default function WeatherPage() {
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                placeholder="Search city, e.g. New York, London, Tokyo..."
+                placeholder={t('search_city_placeholder')}
                 className={`w-full pl-12 pr-4 py-3.5 rounded-full outline-none transition text-sm shadow-md ${isDarkTheme ? 'bg-slate-900/80 border-slate-700/80 text-white focus:border-rose-500' : 'bg-white border-slate-200 text-slate-800 focus:border-rose-400'}`}
               />
             </div>
@@ -419,7 +421,7 @@ export default function WeatherPage() {
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-4">
             <div className={`h-10 w-10 border-4 border-slate-300 border-t-rose-500 rounded-full animate-spin`} />
-            <p className={`text-sm animate-pulse font-semibold ${isDarkTheme ? 'text-slate-300' : 'text-slate-650'}`}>Gathering local atmospheric forecasts...</p>
+            <p className={`text-sm animate-pulse font-semibold ${isDarkTheme ? 'text-slate-300' : 'text-slate-650'}`}>{t('gathering_forecasts')}</p>
           </div>
         ) : weatherData ? (
           <motion.div 
@@ -441,27 +443,27 @@ export default function WeatherPage() {
                   </div>
                   <div className="flex items-center justify-center md:justify-start space-x-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${currentCondition.bg} ${currentCondition.color} border backdrop-blur-sm`}>
-                      {currentCondition.label}
+                      {t(currentCondition.labelKey) || currentCondition.label}
                     </span>
                   </div>
                 </div>
               </div>
-
+ 
               {/* Climate stats list */}
               <div className={`grid grid-cols-3 gap-6 md:gap-8 p-6 rounded-2xl border shrink-0 w-full md:w-auto z-10 ${isDarkTheme ? 'bg-slate-950/40 border-white/5' : 'bg-slate-50/50 border-slate-200/40'}`}>
                 <div className="flex flex-col items-center space-y-2">
                   <Thermometer className="h-5 w-5 text-rose-500 animate-pulse" />
-                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>Feels Like</div>
+                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('feels_like')}</div>
                   <div className="font-extrabold text-sm">{Math.round(weatherData.current.apparent_temperature)}°C</div>
                 </div>
                 <div className="flex flex-col items-center space-y-2">
                   <Droplets className="h-5 w-5 text-blue-400 animate-float" />
-                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>Humidity</div>
+                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('humidity_label')}</div>
                   <div className="font-extrabold text-sm">{weatherData.current.relative_humidity_2m}%</div>
                 </div>
                 <div className="flex flex-col items-center space-y-2">
                   <Wind className="h-5 w-5 text-teal-400 animate-float" style={{ animationDelay: '1s' }} />
-                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>Wind Speed</div>
+                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('wind_speed_label')}</div>
                   <div className="font-extrabold text-sm">{weatherData.current.wind_speed_10m} km/h</div>
                 </div>
               </div>
@@ -474,7 +476,7 @@ export default function WeatherPage() {
             <div className="space-y-4">
               <h3 className="text-lg font-bold flex items-center space-x-2 pl-1">
                 <Calendar className="h-4.5 w-4.5 text-rose-500" />
-                <span>Extended 7-Day Outlook</span>
+                <span>{t('extended_outlook')}</span>
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
@@ -497,7 +499,7 @@ export default function WeatherPage() {
                       className={`border rounded-2xl p-4 flex flex-col items-center justify-between text-center transition-all duration-300 shadow-md group cursor-pointer active:scale-95 ${isDarkTheme ? 'bg-slate-900/40 hover:bg-slate-900/60 border-white/5' : 'bg-white/50 hover:bg-white/80 border-white/30'}`}
                     >
                       <span className={`text-[10px] font-bold tracking-wider uppercase ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>
-                        {isToday ? 'Today' : dateObj.toLocaleDateString(undefined, { weekday: 'short' })}
+                        {isToday ? t('today') : dateObj.toLocaleDateString(undefined, { weekday: 'short' })}
                       </span>
                       
                       <div className={`my-3 p-2.5 rounded-full ${itemConfig.iconBg} ${itemConfig.color}`}>
@@ -506,7 +508,7 @@ export default function WeatherPage() {
 
                       <div className="space-y-1">
                         <div className={`text-[10px] font-bold truncate w-24 ${isDarkTheme ? 'text-slate-200' : 'text-slate-650'}`}>
-                          {itemConfig.label}
+                          {t(itemConfig.labelKey) || itemConfig.label}
                         </div>
                         <div className="flex justify-center space-x-1.5 text-xs font-extrabold pt-0.5">
                           <span>{maxTemp}°</span>
@@ -528,9 +530,9 @@ export default function WeatherPage() {
             className={`border p-12 rounded-3xl text-center w-full max-w-lg shadow-lg flex flex-col items-center backdrop-blur-md ${isDarkTheme ? 'bg-slate-900/60 border-white/10' : 'bg-white/85 border-white/30'}`}
           >
             <GlobeAnimation />
-            <h3 className={`text-xl font-extrabold mt-6 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>Discover Global Climates</h3>
+            <h3 className={`text-xl font-extrabold mt-6 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{t('discover_climates')}</h3>
             <p className={`text-xs mt-2 max-w-xs leading-relaxed ${isDarkTheme ? 'text-slate-300' : 'text-slate-500'}`}>
-              Enter any city in the search bar above to map its atmospheric conditions and retrieve 7-day weather forecasts.
+              {t('discover_climates_desc')}
             </p>
           </motion.div>
         )}
@@ -538,7 +540,7 @@ export default function WeatherPage() {
 
       {/* Footer */}
       <footer className={`w-full text-center py-6 border-t text-xs font-medium ${isDarkTheme ? 'bg-slate-950/80 border-white/5 text-slate-400' : 'bg-white/85 border-slate-100 text-slate-450'}`}>
-        <span>© {new Date().getFullYear()} Xplorism. Climate data powered by Open-Meteo.</span>
+        <span>© {new Date().getFullYear()} Xplorism. {t('powered_by')}</span>
       </footer>
     </div>
   );

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Compass, MapPin, Search, Plus, Trash2, ArrowLeft, Loader2, Sparkles, AlertCircle, CheckCircle, Globe
+  Compass, MapPin, Search, Plus, Trash2, ArrowLeft, Loader2, Sparkles, AlertCircle, CheckCircle, Globe,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { api } from '../services/api';
@@ -11,7 +12,8 @@ export default function MapPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const globeElRef = useRef(null);
-  const globeInstanceRef = useRef(null);
+  const [globeInstance, setGlobeInstance] = useState(null);
+  const cloudsMeshRef = useRef(null);
   
   // State
   const [trips, setTrips] = useState([]);
@@ -23,9 +25,18 @@ export default function MapPage() {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   
+  // Globe Controls State
+  const [autoRotate, setAutoRotate] = useState(true);
+  const [rotationSpeed, setRotationSpeed] = useState(0.3);
+  const [showClouds, setShowClouds] = useState(true);
+  const [globeStyle, setGlobeStyle] = useState('night');
+  const [showArcs, setShowArcs] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   // Projected popup state
   const [activePopup, setActivePopup] = useState(null);
   const [globeReady, setGlobeReady] = useState(false);
+  const [webglError, setWebglError] = useState(false);
 
   // Poll for Globe.gl script load
   useEffect(() => {
@@ -153,28 +164,47 @@ export default function MapPage() {
                    localStorage.getItem('theme') === 'dark';
 
     // Create Globe.gl instance
-    const globe = window.Globe()(globeElRef.current)
+    let globe;
+    try {
+      globe = window.Globe()(globeElRef.current);
+    } catch (err) {
+      console.error("WebGL Initialization failed:", err);
+      setWebglError(true);
+      return;
+    }
+
+    globe
       .width(width)
       .height(height)
-      .globeImageUrl(isDark 
-        ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg' 
-        : 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
+      .globeImageUrl(globeStyle === 'day' 
+        ? 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg' 
+        : globeStyle === 'night' 
+        ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
+        : '//unpkg.com/three-globe/example/img/earth-dark.jpg' // Hologram
       )
       .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-      .backgroundColor('rgba(0,0,0,0)') // Transparent background to allow our custom cosmic styling
+      .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+      .backgroundColor('rgba(0,0,0,0)') // Transparent background fallback
       .showAtmosphere(true)
-      .atmosphereColor(isDark ? '#3b82f6' : '#2563eb')
-      .atmosphereAltitude(isDark ? 0.15 : 0.12);
+      .atmosphereColor(globeStyle === 'hologram' ? '#10b981' : isDark ? '#3b82f6' : '#2563eb')
+      .atmosphereAltitude(globeStyle === 'hologram' ? 0.20 : isDark ? 0.15 : 0.12);
 
     // Apply high realism material configurations (bump scale and specular maps for water reflections)
     const globeMaterial = globe.globeMaterial();
     globeMaterial.bumpScale = 10;
-    globe.controls().autoRotate = true;
-    globe.controls().autoRotateSpeed = 0.3;
+    
+    if (globeStyle === 'hologram') {
+      globeMaterial.color = new window.THREE.Color('#064e3b');
+      globeMaterial.emissive = new window.THREE.Color('#022c22');
+      globeMaterial.wireframe = true;
+    }
+
+    globe.controls().autoRotate = autoRotate;
+    globe.controls().autoRotateSpeed = rotationSpeed;
     globe.controls().enableDamping = true;
     globe.controls().dampingFactor = 0.05;
 
-    if (window.THREE) {
+    if (window.THREE && globeStyle !== 'hologram') {
       new window.THREE.TextureLoader().load('https://unpkg.com/three-globe/example/img/earth-water.png', texture => {
         globeMaterial.specularMap = texture;
         globeMaterial.specular = new window.THREE.Color(isDark ? '#1e293b' : '#94a3b8');
@@ -185,7 +215,7 @@ export default function MapPage() {
     // Add floating, animated clouds layer
     let cloudsMesh;
     let animationFrameId;
-    if (window.THREE) {
+    if (window.THREE && globeStyle !== 'hologram') {
       const CLOUDS_ALT = 0.012; // Altitude above the globe surface
       const CLOUDS_ROTATION_SPEED = -0.004; // Rotating in opposite direction to the globe
 
@@ -198,7 +228,10 @@ export default function MapPage() {
           opacity: isDark ? 0.35 : 0.45
         });
         cloudsMesh = new window.THREE.Mesh(cloudsGeom, cloudsMat);
-        globe.scene().add(cloudsMesh);
+        cloudsMeshRef.current = cloudsMesh;
+        if (showClouds) {
+          globe.scene().add(cloudsMesh);
+        }
 
         const rotateClouds = () => {
           if (cloudsMesh) {
@@ -222,13 +255,13 @@ export default function MapPage() {
       }
     }, 500);
 
-    globeInstanceRef.current = globe;
+    setGlobeInstance(globe);
 
     const handleResize = () => {
-      if (!globeElRef.current || !globeInstanceRef.current) return;
+      if (!globeElRef.current || !globe) return;
       const w = globeElRef.current.clientWidth;
       const h = globeElRef.current.clientHeight;
-      globeInstanceRef.current.width(w).height(h);
+      globe.width(w).height(h);
     };
     window.addEventListener('resize', handleResize);
 
@@ -243,18 +276,87 @@ export default function MapPage() {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
-      if (globeInstanceRef.current) {
-        if (globeElRef.current) {
-          globeElRef.current.innerHTML = '';
-        }
-        globeInstanceRef.current = null;
+      if (globeElRef.current) {
+        globeElRef.current.innerHTML = '';
       }
+      setGlobeInstance(null);
     };
-  }, [globeReady, loading]);
+  }, [globeReady, loading, globeStyle]);
+
+  // Handle auto-rotation speed and toggles dynamically
+  useEffect(() => {
+    if (!globeInstance) return;
+    globeInstance.controls().autoRotate = autoRotate;
+    globeInstance.controls().autoRotateSpeed = rotationSpeed;
+  }, [globeInstance, autoRotate, rotationSpeed]);
+
+  // Handle clouds visibility dynamically
+  useEffect(() => {
+    if (!globeInstance || !cloudsMeshRef.current) return;
+    if (showClouds) {
+      globeInstance.scene().add(cloudsMeshRef.current);
+    } else {
+      globeInstance.scene().remove(cloudsMeshRef.current);
+    }
+  }, [globeInstance, showClouds]);
+
+  // Handle travel arcs (flight paths) dynamically
+  useEffect(() => {
+    if (!globeInstance) return;
+
+    if (!showArcs || trips.length === 0) {
+      globeInstance.arcsData([]);
+      return;
+    }
+
+    const firstTrip = trips[0];
+    const firstCoords = tripCoords[firstTrip.id];
+    if (!firstCoords) return;
+
+    const arcs = [];
+
+    // Connect first trip to other trips
+    trips.slice(1).forEach(trip => {
+      const coords = tripCoords[trip.id];
+      if (coords) {
+        arcs.push({
+          startLat: firstCoords.lat,
+          startLng: firstCoords.lon,
+          endLat: coords.lat,
+          endLng: coords.lon,
+          color: '#3b82f6', // blue arc
+        });
+      }
+    });
+
+    // Connect first trip to wishlist dream destinations
+    wishlist.forEach(pin => {
+      arcs.push({
+        startLat: firstCoords.lat,
+        startLng: firstCoords.lon,
+        endLat: pin.lat,
+        endLng: pin.lon,
+        color: '#f43f5e', // rose arc
+      });
+    });
+
+    globeInstance
+      .arcsData(arcs)
+      .arcStartLat('startLat')
+      .arcStartLng('startLng')
+      .arcEndLat('endLat')
+      .arcEndLng('endLng')
+      .arcColor('color')
+      .arcDashLength(0.25)
+      .arcDashGap(0.1)
+      .arcDashAnimateTime(2000)
+      .arcStroke(1.5)
+      .arcAltitude(0.25);
+  }, [globeInstance, trips, wishlist, tripCoords, showArcs]);
 
   // Update Points and Arcs on Globe when data updates
   useEffect(() => {
-    if (!globeInstanceRef.current) return;
+    if (!globeInstance) return;
 
     const points = [];
 
@@ -291,27 +393,35 @@ export default function MapPage() {
     });
 
     // Set HTML Elements as map pins on globe
-    globeInstanceRef.current
+    globeInstance
       .htmlElementsData(points)
       .htmlLat('lat')
       .htmlLng('lon')
       .htmlAltitude(0.01)
       .htmlElement(d => {
+        // Inject custom pulse style once
+        if (!document.getElementById('globe-pulse-styles')) {
+          const style = document.createElement('style');
+          style.id = 'globe-pulse-styles';
+          style.innerHTML = `
+            @keyframes globe-pulse {
+              0% { transform: scale(0.8); opacity: 0.8; }
+              100% { transform: scale(2.4); opacity: 0; }
+            }
+          `;
+          document.head.appendChild(style);
+        }
+
         const el = document.createElement('div');
         el.style.display = 'flex';
         el.style.flexDirection = 'column';
         el.style.alignItems = 'center';
-        el.style.transform = 'translate(-50%, -100%)';
+        el.style.transform = 'translate(-50%, -50%)'; // Center aligned
         
         el.innerHTML = `
-          <div style="cursor: pointer; transition: transform 0.2s;" class="globe-pin-container">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="${d.color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" fill="${d.color}22"/>
-              <circle cx="12" cy="10" r="3" fill="${d.color}"/>
-            </svg>
-          </div>
-          <div style="font-family: sans-serif; font-size: 11px; font-weight: 800; color: ${d.color}; text-shadow: 0 1.5px 3px rgba(0,0,0,0.85); white-space: nowrap; pointer-events: none; margin-top: -2px;">
-            ${d.name}
+          <div style="cursor: pointer; transition: transform 0.2s; position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;" class="globe-pin-container" title="${d.name}">
+            <span style="position: absolute; width: 20px; height: 20px; border-radius: 50%; border: 2px solid ${d.color}; opacity: 0; animation: globe-pulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;"></span>
+            <span style="position: relative; display: block; width: 8px; height: 8px; border-radius: 50%; background-color: ${d.color}; border: 1.5px solid white; box-shadow: 0 0 10px ${d.color};"></span>
           </div>
         `;
 
@@ -329,7 +439,7 @@ export default function MapPage() {
 
         // Hover animation
         container.onmouseenter = () => {
-          container.style.transform = 'scale(1.25)';
+          container.style.transform = 'scale(1.35)';
         };
         container.onmouseleave = () => {
           container.style.transform = 'scale(1)';
@@ -340,18 +450,18 @@ export default function MapPage() {
       
 
 
-  }, [trips, wishlist, tripCoords]);
+  }, [globeInstance, trips, wishlist, tripCoords]);
 
   // Center & Rotate Globe towards coordinates
   const focusOnCoordinates = (lat, lon) => {
-    if (globeInstanceRef.current) {
-      globeInstanceRef.current.pointOfView({ lat, lng: lon, altitude: 1.5 }, 1200);
+    if (globeInstance) {
+      globeInstance.pointOfView({ lat, lng: lon, altitude: 1.5 }, 1200);
       
       // Briefly pause auto-rotation to let user look at destination
-      globeInstanceRef.current.controls().autoRotate = false;
+      globeInstance.controls().autoRotate = false;
       setTimeout(() => {
-        if (globeInstanceRef.current) {
-          globeInstanceRef.current.controls().autoRotate = true;
+        if (globeInstance) {
+          globeInstance.controls().autoRotate = true;
         }
       }, 5000);
     }
@@ -470,8 +580,9 @@ export default function MapPage() {
              }}>
           
           {/* Left Side Menu - Pinboard controls */}
-          <div className="w-full lg:w-96 flex flex-col border-r shrink-0 overflow-y-auto"
-               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+          {sidebarOpen && (
+            <div className="w-full lg:w-96 flex flex-col border-r shrink-0 overflow-y-auto"
+                 style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
 
           {/* Add Pin Search Box */}
           <div className="p-6 border-b search-container relative" style={{ borderColor: 'var(--border-secondary)' }}>
@@ -636,18 +747,179 @@ export default function MapPage() {
           </div>
 
         </div>
+        )}
 
         {/* Globe.gl Container Viewport */}
-        <div className="flex-1 h-full w-full relative bg-slate-50 dark:bg-slate-950 overflow-hidden">
+        <div 
+          className="flex-1 h-full w-full relative overflow-hidden"
+          style={{
+            background: globeStyle === 'hologram'
+              ? 'radial-gradient(circle, #022c22 0%, #010503 100%)'
+              : (document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark')
+              ? 'radial-gradient(circle, #1e293b 0%, #020617 100%)'
+              : 'radial-gradient(circle, #eff6ff 0%, #dbeafe 100%)'
+          }}
+        >
           
           {/* Legend Banner */}
-          <div className="absolute top-6 right-6 flex items-center space-x-2 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500 shadow-sm z-30 pointer-events-none">
-            <Globe className="h-4 w-4 text-blue-500 animate-spin-slow" />
+          <div className="absolute top-6 right-6 flex items-center space-x-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500 shadow-sm z-30 pointer-events-none">
+            <Globe className="h-4 w-4 text-emerald-500 animate-spin-slow" />
             <span>{t('interactive_3d_globe')}</span>
           </div>
 
-          {/* Globe Target Div */}
-          <div ref={globeElRef} className="w-full h-full relative z-20 cursor-grab active:cursor-grabbing" />
+          {/* Toggle Sidebar Button */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="absolute top-6 left-6 z-30 flex items-center justify-center p-2 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-200 shadow-md hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            title={sidebarOpen ? "Hide Lists" : "Show Lists"}
+          >
+            {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+
+          {/* Floating Settings Panel */}
+          <div className="absolute bottom-6 left-6 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-lg w-64 space-y-3.5 text-xs text-left">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2">
+              <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center">
+                <Compass className="h-3.5 w-3.5 mr-1.5 text-emerald-500" />
+                {t('globe_settings')}
+              </span>
+            </div>
+
+            {/* Style Selector */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Globe Mode</span>
+              <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-950 p-0.5 rounded-xl">
+                <button
+                  onClick={() => setGlobeStyle('night')}
+                  className={`py-1 rounded-lg font-bold text-[10px] transition cursor-pointer text-center ${
+                    globeStyle === 'night' 
+                      ? 'bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Night
+                </button>
+                <button
+                  onClick={() => setGlobeStyle('day')}
+                  className={`py-1 rounded-lg font-bold text-[10px] transition cursor-pointer text-center ${
+                    globeStyle === 'day' 
+                      ? 'bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Day
+                </button>
+                <button
+                  onClick={() => setGlobeStyle('hologram')}
+                  className={`py-1 rounded-lg font-bold text-[10px] transition cursor-pointer text-center ${
+                    globeStyle === 'hologram' 
+                      ? 'bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Cyber
+                </button>
+              </div>
+            </div>
+
+            {/* Toggles */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-600 dark:text-slate-400">Auto Rotate</span>
+                <button
+                  onClick={() => setAutoRotate(!autoRotate)}
+                  className={`w-9 h-5 rounded-full p-0.5 transition cursor-pointer ${
+                    autoRotate ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-800'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition shadow-sm transform ${
+                    autoRotate ? 'translate-x-4' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-600 dark:text-slate-400">Flight Paths</span>
+                <button
+                  onClick={() => setShowArcs(!showArcs)}
+                  className={`w-9 h-5 rounded-full p-0.5 transition cursor-pointer ${
+                    showArcs ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-800'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition shadow-sm transform ${
+                    showArcs ? 'translate-x-4' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+
+              {globeStyle !== 'hologram' && (
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">Atmospheric Clouds</span>
+                  <button
+                    onClick={() => setShowClouds(!showClouds)}
+                    className={`w-9 h-5 rounded-full p-0.5 transition cursor-pointer ${
+                      showClouds ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-800'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full bg-white transition shadow-sm transform ${
+                      showClouds ? 'translate-x-4' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {autoRotate && (
+              <div className="space-y-1 pt-1.5 border-t border-slate-100 dark:border-slate-800/85">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Rotation Speed</span>
+                <div className="grid grid-cols-3 gap-1 bg-slate-50 dark:bg-slate-950 p-0.5 rounded-lg">
+                  <button
+                    onClick={() => setRotationSpeed(0.1)}
+                    className={`py-0.5 rounded font-bold text-[9px] cursor-pointer text-center transition ${
+                      rotationSpeed === 0.1 ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-450'
+                    }`}
+                  >
+                    Slow
+                  </button>
+                  <button
+                    onClick={() => setRotationSpeed(0.3)}
+                    className={`py-0.5 rounded font-bold text-[9px] cursor-pointer text-center transition ${
+                      rotationSpeed === 0.3 ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-450'
+                    }`}
+                  >
+                    Norm
+                  </button>
+                  <button
+                    onClick={() => setRotationSpeed(0.8)}
+                    className={`py-0.5 rounded font-bold text-[9px] cursor-pointer text-center transition ${
+                      rotationSpeed === 0.8 ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-455'
+                    }`}
+                  >
+                    Fast
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Globe Target Div or WebGL Error Fallback */}
+          {webglError ? (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-900/95 text-white space-y-4">
+              <AlertCircle className="h-12 w-12 text-rose-500 animate-bounce" />
+              <h3 className="text-lg font-black uppercase tracking-wider text-rose-400">WebGL Context Blocked / Disabled</h3>
+              <p className="text-xs text-slate-355 max-w-md leading-relaxed">
+                Your browser or system is blocking WebGL context creation. This usually happens when hardware acceleration is disabled in your browser settings.
+              </p>
+              <div className="text-left text-[11px] bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-2 font-mono text-slate-400">
+                <p className="font-bold text-white mb-1">To enable WebGL:</p>
+                <p>1. Open Browser Settings &gt; System</p>
+                <p>2. Toggle on "Use graphics acceleration when available"</p>
+                <p>3. Relaunch your browser and refresh this page</p>
+              </div>
+            </div>
+          ) : (
+            <div ref={globeElRef} className="w-full h-full relative z-20 cursor-grab active:cursor-grabbing" />
+          )}
 
           {/* Floating Projected HTML Popup Overlay */}
           {activePopup && (

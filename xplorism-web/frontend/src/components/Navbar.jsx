@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, Hotel } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -168,18 +168,18 @@ export default function Navbar({ activeTab }) {
                   )}
                   <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                 </button>
-                <button
+                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    setShowLogoutConfirm(true);
+                    navigate('/profile');
                   }}
                   className="w-full text-left px-4 py-2.5 text-xs font-bold transition flex items-center space-x-2 cursor-pointer"
                   style={{ color: 'var(--text-secondary)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(244,63,94,0.12)'; e.currentTarget.style.color = '#fb7185'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(59,130,246,0.12)'; e.currentTarget.style.color = '#3b82f6'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                 >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span>Log Out</span>
+                  <User className="h-3.5 w-3.5" />
+                  <span>Profile</span>
                 </button>
               </div>
             )}

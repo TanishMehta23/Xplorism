@@ -189,6 +189,33 @@ export const verifyOtp = async (req, res) => {
         resetToken,
         message: 'OTP verified successfully. You can now reset your password.'
       });
+    } else if (cachedData.type === 'update-profile') {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(cachedData.password, salt);
+
+      const userResult = await query(
+        'UPDATE users SET name = $1, email = $2, password = $3 WHERE id = $4 RETURNING id, name, email, created_at, google_id',
+        [cachedData.name, cachedData.email, hashedPassword, cachedData.userId]
+      );
+
+      const updatedUser = userResult.rows[0];
+
+      // Generate a fresh JWT
+      const token = jwt.sign(
+        { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name },
+        process.env.JWT_SECRET || 'your_jwt_secret_key_here',
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        message: 'Profile and password updated successfully',
+        token,
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email
+        }
+      });
     }
 
     res.status(400).json({ message: 'Invalid action type' });
@@ -334,3 +361,121 @@ export const googleLogin = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Get User Profile & Stats
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Fetch user details
+    const userResult = await query(
+      'SELECT id, name, email, created_at, google_id FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Fetch stats
+    const tripsResult = await query(
+      'SELECT COUNT(*) as count, COALESCE(SUM(budget), 0) as total_budget FROM trips WHERE user_id = $1',
+      [userId]
+    );
+    const favoritesResult = await query(
+      'SELECT COUNT(*) as count FROM favorites WHERE user_id = $1',
+      [userId]
+    );
+
+    const stats = {
+      tripsCount: parseInt(tripsResult.rows[0].count, 10),
+      totalBudget: parseFloat(tripsResult.rows[0].total_budget),
+      favoritesCount: parseInt(favoritesResult.rows[0].count, 10)
+    };
+
+    res.json({
+      user,
+      stats
+    });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update User Profile
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, email, password } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required' });
+    }
+
+    // Check email uniqueness if email is changed
+    const emailCheck = await query(
+      'SELECT * FROM users WHERE email = $1 AND id != $2',
+      [email, userId]
+    );
+
+    if (emailCheck.rows.length > 0) {
+      return res.status(400).json({ message: 'Email is already taken by another account' });
+    }
+
+    // If password change is requested, we require OTP verification first
+    if (password && password.trim() !== '') {
+      const otp = generateOtp();
+      const expiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
+
+      otpCache.set(email, {
+        userId,
+        name,
+        email,
+        password, // Keep password plain until OTP verified
+        otp,
+        expiresAt,
+        type: 'update-profile'
+      });
+
+      await sendOtpEmail(email, otp, name);
+
+      return res.status(200).json({
+        requiresOtp: true,
+        email,
+        message: 'An OTP has been sent to your email to verify password change'
+      });
+    }
+
+    // Otherwise, update name/email immediately
+    const userResult = await query(
+      'UPDATE users SET name = $1, email = $2 WHERE id = $3 RETURNING id, name, email, created_at, google_id',
+      [name, email, userId]
+    );
+
+    const updatedUser = userResult.rows[0];
+
+    // Generate a fresh JWT token to reflect the updated details
+    const token = jwt.sign(
+      { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name },
+      process.env.JWT_SECRET || 'your_jwt_secret_key_here',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Profile updated successfully',
+      token,
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email
+      }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+

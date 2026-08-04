@@ -5,8 +5,11 @@ import {
   googleLogin, 
   verifyOtp, 
   requestForgotPassword, 
-  resetPassword 
+  resetPassword,
+  getProfile,
+  updateProfile
 } from '../controllers/authController.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -17,4 +20,9 @@ router.post('/verify-otp', verifyOtp);
 router.post('/forgot-password', requestForgotPassword);
 router.post('/reset-password', resetPassword);
 
+// User profile endpoints (Protected)
+router.get('/profile', authMiddleware, getProfile);
+router.put('/profile', authMiddleware, updateProfile);
+
 export default router;
+

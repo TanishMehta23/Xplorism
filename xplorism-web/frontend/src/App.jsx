@@ -10,6 +10,7 @@ import WeatherPage from './pages/WeatherPage';
 import BudgetPage from './pages/BudgetPage';
 import BudgetsListPage from './pages/BudgetsListPage';
 import HotelBookingPage from './pages/HotelBookingPage';
+import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route component
@@ -107,6 +108,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <BudgetsListPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />

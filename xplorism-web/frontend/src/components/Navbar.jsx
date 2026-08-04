@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -89,6 +89,13 @@ export default function Navbar({ activeTab }) {
               <span className="nav-link">Weather</span>
             </button>
             <button 
+              onClick={() => navigate('/tracker')}
+              className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'tracker' ? 'text-rose-500 font-bold' : ''}`}
+            >
+              <Plane className="h-4 w-4" />
+              <span className="nav-link">Tracker</span>
+            </button>
+            <button 
               onClick={() => navigate('/hotels')}
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'hotels' ? 'text-rose-500 font-bold' : ''}`}
             >
@@ -117,6 +124,12 @@ export default function Navbar({ activeTab }) {
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'weather' ? 'text-rose-500' : ''}`}
             >
               Weather
+            </button>
+            <button 
+              onClick={() => navigate('/tracker')} 
+              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'tracker' ? 'text-rose-500' : ''}`}
+            >
+              Tracker
             </button>
             <button 
               onClick={() => navigate('/hotels')} 

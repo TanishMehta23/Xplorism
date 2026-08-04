@@ -290,6 +290,188 @@ app.get('/hotels/search', async (req, res) => {
   }
 });
 
+
+// OpenSky Network API Proxy for Flight Tracker
+const MOCK_FLIGHTS = [
+  { icao24: 'a81a70', callsign: 'AAL120', origin_country: 'United States', longitude: -73.97, latitude: 40.78, baro_altitude: 10500, on_ground: false, velocity: 230, true_track: 85, vertical_rate: 2.5 },
+  { icao24: '400a0b', callsign: 'BAW2276', origin_country: 'United Kingdom', longitude: -0.12, latitude: 51.50, baro_altitude: 8200, on_ground: false, velocity: 195, true_track: 270, vertical_rate: -1.2 },
+  { icao24: '3c65c2', callsign: 'DLH450', origin_country: 'Germany', longitude: 8.68, latitude: 50.11, baro_altitude: 11200, on_ground: false, velocity: 245, true_track: 180, vertical_rate: 0 },
+  { icao24: '7c12b1', callsign: 'ANA006', origin_country: 'Japan', longitude: 139.69, latitude: 35.67, baro_altitude: 9800, on_ground: false, velocity: 220, true_track: 90, vertical_rate: 0.5 },
+  { icao24: '800531', callsign: 'AIC101', origin_country: 'India', longitude: 77.20, latitude: 28.61, baro_altitude: 6400, on_ground: false, velocity: 180, true_track: 45, vertical_rate: -3.0 },
+  { icao24: '7c0d20', callsign: 'SIA317', origin_country: 'Singapore', longitude: 103.85, latitude: 1.35, baro_altitude: 11500, on_ground: false, velocity: 250, true_track: 310, vertical_rate: 0 },
+  { icao24: '7c19bb', callsign: 'QFA001', origin_country: 'Australia', longitude: 151.20, latitude: -33.86, baro_altitude: 12000, on_ground: false, velocity: 260, true_track: 220, vertical_rate: 0.2 },
+  { icao24: '02008b', callsign: 'RAM200', origin_country: 'Morocco', longitude: -7.58, latitude: 33.57, baro_altitude: 7500, on_ground: false, velocity: 200, true_track: 15, vertical_rate: -2.0 },
+  { icao24: 'e8029c', callsign: 'UAE201', origin_country: 'United Arab Emirates', longitude: 55.30, latitude: 25.25, baro_altitude: 10800, on_ground: false, velocity: 240, true_track: 120, vertical_rate: 0.8 },
+  { icao24: '4005ba', callsign: 'AFR006', origin_country: 'France', longitude: 2.35, latitude: 48.85, baro_altitude: 9000, on_ground: false, velocity: 210, true_track: 330, vertical_rate: -0.5 }
+];
+
+function getMockFlights() {
+  const time = Math.floor(Date.now() / 1000);
+  return MOCK_FLIGHTS.map((f, i) => {
+    const driftAngle = (time / 100 + i * 20) * (Math.PI / 180);
+    const driftRadius = 0.05 + (i * 0.01);
+    const newLon = f.longitude + Math.cos(driftAngle) * driftRadius;
+    const newLat = f.latitude + Math.sin(driftAngle) * driftRadius;
+    const newAlt = f.baro_altitude + Math.round(Math.sin(time / 20 + i) * 300);
+    const newSpeed = f.velocity + Math.round(Math.sin(time / 10 + i) * 15);
+    const newTrack = (f.true_track + Math.round(time / 5) % 360) % 360;
+
+    return [
+      f.icao24,
+      f.callsign.padEnd(8, ' '),
+      f.origin_country,
+      time,
+      time,
+      newLon,
+      newLat,
+      newAlt,
+      f.on_ground,
+      newSpeed,
+      newTrack,
+      f.vertical_rate,
+      null,
+      newAlt + 15,
+      "7000",
+      false,
+      0
+    ];
+  });
+}
+const AIRPORTS = [
+  { code: 'JFK', name: 'John F. Kennedy International', city: 'New York', country: 'United States', lat: 40.6413, lon: -73.7781 },
+  { code: 'LHR', name: 'Heathrow Airport', city: 'London', country: 'United Kingdom', lat: 51.4700, lon: -0.4543 },
+  { code: 'CDG', name: 'Charles de Gaulle', city: 'Paris', country: 'France', lat: 49.0097, lon: 2.5479 },
+  { code: 'DEL', name: 'Indira Gandhi International', city: 'Delhi', country: 'India', lat: 28.5562, lon: 77.1000 },
+  { code: 'BOM', name: 'Chhatrapati Shivaji International', city: 'Mumbai', country: 'India', lat: 19.0896, lon: 72.8656 },
+  { code: 'DXB', name: 'Dubai International', city: 'Dubai', country: 'United Arab Emirates', lat: 25.2532, lon: 55.3657 },
+  { code: 'SIN', name: 'Changi Airport', city: 'Singapore', country: 'Singapore', lat: 1.3644, lon: 103.9915 },
+  { code: 'SYD', name: 'Sydney Airport', city: 'Sydney', country: 'Australia', lat: -33.9461, lon: 151.1772 },
+  { code: 'HND', name: 'Haneda Airport', city: 'Tokyo', country: 'Japan', lat: 35.5494, lon: 139.7798 },
+  { code: 'FRA', name: 'Frankfurt Airport', city: 'Frankfurt', country: 'Germany', lat: 50.0379, lon: 8.5622 },
+  { code: 'LAX', name: 'Los Angeles International', city: 'Los Angeles', country: 'United States', lat: 33.9416, lon: -118.4085 },
+  { code: 'AMS', name: 'Schiphol Airport', city: 'Amsterdam', country: 'Netherlands', lat: 52.3105, lon: 4.7683 }
+];
+
+const AIRLINES = {
+  'AIC': 'Air India',
+  'AAL': 'American Airlines',
+  'BAW': 'British Airways',
+  'DLH': 'Lufthansa',
+  'AFR': 'Air France',
+  'UAE': 'Emirates',
+  'SIA': 'Singapore Airlines',
+  'QFA': 'Qantas',
+  'ANA': 'All Nippon Airways',
+  'TVF': 'Transavia France'
+};
+
+const AIRCRAFT_TYPES = [
+  'Boeing 777-300ER', 'Airbus A350-900', 'Boeing 787-9 Dreamliner', 
+  'Airbus A321neo', 'Airbus A380-800', 'Boeing 737 MAX 9'
+];
+
+function getDeterministicIndex(str, max) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % max;
+}
+
+function enrichFlight(state) {
+  const icao24 = state[0];
+  const callsign = (state[1] || '').trim();
+  const originCountry = state[2] || 'Unknown';
+  
+  // Resolve Airline
+  let airlineName = 'Private Flight';
+  const match = callsign.match(/^[A-Za-z]{3}/);
+  if (match) {
+    const prefix = match[0].toUpperCase();
+    if (AIRLINES[prefix]) {
+      airlineName = AIRLINES[prefix];
+    } else {
+      airlineName = `${originCountry} Air`;
+    }
+  } else if (originCountry && originCountry !== 'Unknown') {
+    airlineName = `${originCountry} Charter`;
+  }
+
+  // Determine Aircraft
+  const aircraftIdx = getDeterministicIndex(icao24 + '-air', AIRCRAFT_TYPES.length);
+  const aircraftType = AIRCRAFT_TYPES[aircraftIdx];
+
+  // Determine Airports
+  const originIdx = getDeterministicIndex(icao24, AIRPORTS.length);
+  let destIdx = getDeterministicIndex(icao24 + '-dest', AIRPORTS.length);
+  if (destIdx === originIdx) {
+    destIdx = (destIdx + 1) % AIRPORTS.length;
+  }
+  const departure = AIRPORTS[originIdx];
+  const destination = AIRPORTS[destIdx];
+
+  return {
+    icao24,
+    callsign,
+    originCountry,
+    timePosition: state[3],
+    lastContact: state[4],
+    longitude: state[5],
+    latitude: state[6],
+    altitude: state[7], // raw meters
+    onGround: state[8],
+    velocity: state[9], // raw m/s
+    heading: state[10] || 0,
+    verticalRate: state[11], // raw m/s
+    airlineName,
+    aircraftType,
+    departure,
+    destination
+  };
+}
+
+app.get('/flights', async (req, res) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
+
+  let rawStates = [];
+  let source = 'mock';
+
+  try {
+    const response = await fetch('https://opensky-network.org/api/states/all', {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.states && data.states.length > 0) {
+        rawStates = data.states.slice(0, 100);
+        source = 'opensky';
+      }
+    }
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn("OpenSky API failed or timed out. Falling back to active mock data:", err.message);
+  }
+
+  if (rawStates.length === 0) {
+    rawStates = getMockFlights();
+    source = 'mock';
+  }
+
+  // Enrich flight details deterministically
+  const enrichedStates = rawStates
+    .filter(state => state[5] !== null && state[6] !== null)
+    .map(state => enrichFlight(state));
+
+  return res.json({
+    source,
+    time: Math.floor(Date.now() / 1000),
+    states: enrichedStates
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Xplorism API is running' });
@@ -409,6 +591,7 @@ async function fetchAmadeusHotels(lat, lon) {
   }
   return [];
 }
+
 
 
 

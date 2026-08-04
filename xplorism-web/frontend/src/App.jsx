@@ -11,6 +11,7 @@ import BudgetPage from './pages/BudgetPage';
 import BudgetsListPage from './pages/BudgetsListPage';
 import HotelBookingPage from './pages/HotelBookingPage';
 import ProfilePage from './pages/ProfilePage';
+import TrackerPage from './pages/TrackerPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route component
@@ -81,6 +82,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <WeatherPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/tracker"
+        element={
+          <ProtectedRoute>
+            <TrackerPage />
           </ProtectedRoute>
         }
       />

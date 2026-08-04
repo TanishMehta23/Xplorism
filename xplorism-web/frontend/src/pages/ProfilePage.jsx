@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   User, Mail, Calendar, Compass, Edit2, Key, CheckCircle, 
-  AlertCircle, LogOut, Loader2, Heart, DollarSign, ArrowLeft, ShieldCheck
+  AlertCircle, LogOut, Loader2, Heart, DollarSign, ArrowLeft, ShieldCheck,
+  ChevronDown
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   
   // State
@@ -40,6 +44,8 @@ export default function ProfilePage() {
   const [prefSuccess, setPrefSuccess] = useState('');
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isStyleOpen, setIsStyleOpen] = useState(false);
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
 
   // Preference State (Mock details for rich aesthetics)
   const [preferences, setPreferences] = useState({
@@ -70,6 +76,20 @@ export default function ProfilePage() {
     };
 
     fetchProfileData();
+  }, []);
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.style-select-container')) {
+        setIsStyleOpen(false);
+      }
+      if (!e.target.closest('.currency-select-container')) {
+        setIsCurrencyOpen(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
   const handleUpdateProfile = async (e) => {
@@ -195,8 +215,8 @@ export default function ProfilePage() {
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>User Profile</h1>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Manage your account settings, preferences, and view your stats.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('profile_title')}</h1>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('profile_desc')}</p>
           </div>
           <button
             onClick={() => navigate('/dashboard')}
@@ -210,7 +230,7 @@ export default function ProfilePage() {
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'; }}
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
+            <span>{t('back_to_dashboard')}</span>
           </button>
         </div>
 
@@ -242,12 +262,12 @@ export default function ProfilePage() {
               
               <div className="flex items-center justify-center space-x-1.5 mt-4 text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
                 <Calendar className="h-3.5 w-3.5 text-blue-500" />
-                <span>Joined {memberSinceDate}</span>
+                <span>{t('joined')} {memberSinceDate}</span>
               </div>
 
               {profile?.google_id && (
                 <span className="inline-block mt-3 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                  Google Account Linked
+                  {t('google_account_linked')}
                 </span>
               )}
 
@@ -258,7 +278,7 @@ export default function ProfilePage() {
                   className="w-full py-2.5 rounded-2xl flex items-center justify-center space-x-2 text-xs font-bold cursor-pointer transition border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 active:scale-95"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>Log Out of Session</span>
+                  <span>{t('log_out_session')}</span>
                 </button>
               </div>
 
@@ -268,7 +288,7 @@ export default function ProfilePage() {
             <div className="rounded-3xl border p-6 shadow-md w-full"
                  style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
               
-              <h3 className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: 'var(--text-tertiary)' }}>Your Travel Stats</h3>
+              <h3 className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: 'var(--text-tertiary)' }}>{t('travel_stats')}</h3>
               
               <div className="space-y-4">
                 {/* Trips */}
@@ -278,8 +298,8 @@ export default function ProfilePage() {
                       <Compass className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>Trips Planned</h4>
-                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Total itineraries generated</p>
+                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('trips_planned')}</h4>
+                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('total_itineraries')}</p>
                     </div>
                   </div>
                   <span className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>{stats.tripsCount}</span>
@@ -292,8 +312,8 @@ export default function ProfilePage() {
                       <Heart className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>Favorites</h4>
-                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Saved locations & hotels</p>
+                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('favorites')}</h4>
+                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('saved_locations')}</p>
                     </div>
                   </div>
                   <span className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>{stats.favoritesCount}</span>
@@ -306,8 +326,8 @@ export default function ProfilePage() {
                       <DollarSign className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>Total Budget</h4>
-                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Cumulative planned costs</p>
+                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('total_estimated_budget')}</h4>
+                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('total_spent')}</p>
                     </div>
                   </div>
                   <span className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>
@@ -346,12 +366,12 @@ export default function ProfilePage() {
                 <div className="space-y-4 flex-1">
                 <h3 className="text-base font-black mb-4 flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
                   <Edit2 className="h-4 w-4 text-blue-500" />
-                  <span>Account Details</span>
+                  <span>{t('account_details')}</span>
                 </h3>
 
                 {/* Name Input - Safe inline paddings to prevent overlapping */}
                 <div className="space-y-2">
-                  <label className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
+                  <label className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>{t('full_name')}</label>
                   <div className="relative" style={{ position: 'relative' }}>
                     <User 
                       style={{ 
@@ -384,7 +404,7 @@ export default function ProfilePage() {
 
                 {/* Email Input - Safe inline paddings to prevent overlapping */}
                 <div className="space-y-2">
-                  <label className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
+                  <label className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>{t('email_address')}</label>
                   <div className="relative" style={{ position: 'relative' }}>
                     <Mail 
                       style={{ 
@@ -419,12 +439,12 @@ export default function ProfilePage() {
                 <div className="pt-4 border-t space-y-4" style={{ borderColor: 'var(--border-secondary)' }}>
                   <h4 className="text-xs font-extrabold uppercase tracking-wide mb-2 flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
                     <Key className="h-3.5 w-3.5 text-blue-500" />
-                    <span>Change Password</span>
+                    <span>{t('change_password_label')}</span>
                   </h4>
 
                   {/* New Password */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>New Password</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('new_password_label')}</label>
                     <input
                       type="password"
                       value={password}
@@ -441,7 +461,7 @@ export default function ProfilePage() {
 
                   {/* Confirm Password */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Confirm New Password</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('confirm_new_password_label')}</label>
                     <input
                       type="password"
                       value={confirmPassword}
@@ -461,7 +481,7 @@ export default function ProfilePage() {
                 <div className="pt-6 border-t space-y-3" style={{ borderColor: 'var(--border-secondary)' }}>
                   <h4 className="text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
                     <ShieldCheck className="h-3.5 w-3.5 text-blue-500" style={{ width: '14px', height: '14px' }} />
-                    <span>Security Checklist</span>
+                    <span>{t('security_checklist')}</span>
                   </h4>
                   
                   <div className="space-y-2 pt-1">
@@ -498,7 +518,7 @@ export default function ProfilePage() {
                         <span>Updating...</span>
                       </>
                     ) : (
-                      <span>Save Changes</span>
+                      <span>{t('save_changes')}</span>
                     )}
                   </button>
                 </div>
@@ -519,7 +539,7 @@ export default function ProfilePage() {
                 <div className="space-y-6 flex-1 w-full">
                 <h3 className="text-base font-black mb-4 flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
                   <Compass className="h-4 w-4 text-blue-500" />
-                  <span>Travel Preferences</span>
+                  <span>{t('travel_preferences_title')}</span>
                 </h3>
 
                 {/* Error Banner */}
@@ -539,45 +559,155 @@ export default function ProfilePage() {
                 )}
 
                 {/* Travel Style Selector */}
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Preferred Travel Style</label>
-                  <select
-                    value={preferences.travelStyle}
-                    onChange={(e) => setPreferences({ ...preferences, travelStyle: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-                    style={{ 
-                      borderColor: 'var(--border-primary)', 
-                      color: 'var(--text-primary)', 
-                      backgroundColor: 'var(--bg-tertiary)' 
-                    }}
-                  >
-                    <option value="Adventure" style={{ backgroundColor: 'var(--bg-secondary)' }}>Adventure & Exploring</option>
-                    <option value="Leisure" style={{ backgroundColor: 'var(--bg-secondary)' }}>Relaxation & Leisure</option>
-                    <option value="Balanced" style={{ backgroundColor: 'var(--bg-secondary)' }}>Balanced Mix</option>
-                    <option value="Budget" style={{ backgroundColor: 'var(--bg-secondary)' }}>Budget Backpacking</option>
-                    <option value="Culinary" style={{ backgroundColor: 'var(--bg-secondary)' }}>Culinary & Culture</option>
-                  </select>
-                </div>
+                {(() => {
+                  const stylesList = [
+                    { value: 'Adventure', label: t('style_adventure') },
+                    { value: 'Leisure', label: t('style_leisure') },
+                    { value: 'Balanced', label: t('style_balanced') },
+                    { value: 'Budget', label: t('style_budget') },
+                    { value: 'Culinary', label: t('style_culinary') }
+                  ];
+                  const activeStyle = stylesList.find(s => s.value === preferences.travelStyle) || stylesList[2];
+
+                  return (
+                    <div className="space-y-2 relative style-select-container">
+                      <label className="text-xs font-extrabold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>{t('preferred_style')}</label>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsStyleOpen(!isStyleOpen);
+                          setIsCurrencyOpen(false);
+                        }}
+                        className="w-full py-2.5 px-4 rounded-2xl border text-sm font-semibold flex items-center justify-between cursor-pointer focus:outline-none transition-all duration-200"
+                        style={{ 
+                          borderColor: 'var(--border-primary)', 
+                          color: 'var(--text-primary)', 
+                          backgroundColor: 'var(--bg-tertiary)' 
+                        }}
+                      >
+                        <span>{activeStyle.label}</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isStyleOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
+                      </button>
+
+                      <AnimatePresence>
+                        {isStyleOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="absolute left-0 right-0 mt-1 rounded-2xl border shadow-xl overflow-hidden z-[100]"
+                            style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}
+                          >
+                            {stylesList.map((item) => (
+                              <button
+                                key={item.value}
+                                type="button"
+                                onClick={() => {
+                                  setPreferences({ ...preferences, travelStyle: item.value });
+                                  setIsStyleOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm font-semibold flex items-center justify-between transition cursor-pointer"
+                                style={{ 
+                                  color: preferences.travelStyle === item.value ? 'var(--rose-500)' : 'var(--text-secondary)',
+                                  backgroundColor: preferences.travelStyle === item.value ? 'rgba(244,63,94,0.08)' : 'transparent'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (preferences.travelStyle !== item.value) {
+                                    e.currentTarget.style.backgroundColor = 'rgba(15,23,42,0.04)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (preferences.travelStyle !== item.value) {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }
+                                }}
+                              >
+                                <span>{item.label}</span>
+                                {preferences.travelStyle === item.value && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })()}
 
                 {/* Currency Preference */}
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Preferred Currency</label>
-                  <select
-                    value={preferences.currency}
-                    onChange={(e) => setPreferences({ ...preferences, currency: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-                    style={{ 
-                      borderColor: 'var(--border-primary)', 
-                      color: 'var(--text-primary)', 
-                      backgroundColor: 'var(--bg-tertiary)' 
-                    }}
-                  >
-                    <option value="USD" style={{ backgroundColor: 'var(--bg-secondary)' }}>USD ($)</option>
-                    <option value="EUR" style={{ backgroundColor: 'var(--bg-secondary)' }}>EUR (€)</option>
-                    <option value="GBP" style={{ backgroundColor: 'var(--bg-secondary)' }}>GBP (£)</option>
-                    <option value="INR" style={{ backgroundColor: 'var(--bg-secondary)' }}>INR (₹)</option>
-                  </select>
-                </div>
+                {(() => {
+                  const currenciesList = [
+                    { value: 'USD', label: 'USD ($)' },
+                    { value: 'EUR', label: 'EUR (€)' },
+                    { value: 'GBP', label: 'GBP (£)' },
+                    { value: 'INR', label: 'INR (₹)' }
+                  ];
+                  const activeCurrency = currenciesList.find(c => c.value === preferences.currency) || currenciesList[0];
+
+                  return (
+                    <div className="space-y-2 relative currency-select-container">
+                      <label className="text-xs font-extrabold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>{t('preferred_currency')}</label>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCurrencyOpen(!isCurrencyOpen);
+                          setIsStyleOpen(false);
+                        }}
+                        className="w-full py-2.5 px-4 rounded-2xl border text-sm font-semibold flex items-center justify-between cursor-pointer focus:outline-none transition-all duration-200"
+                        style={{ 
+                          borderColor: 'var(--border-primary)', 
+                          color: 'var(--text-primary)', 
+                          backgroundColor: 'var(--bg-tertiary)' 
+                        }}
+                      >
+                        <span>{activeCurrency.label}</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCurrencyOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
+                      </button>
+
+                      <AnimatePresence>
+                        {isCurrencyOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="absolute left-0 right-0 mt-1 rounded-2xl border shadow-xl overflow-hidden z-[100]"
+                            style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}
+                          >
+                            {currenciesList.map((item) => (
+                              <button
+                                key={item.value}
+                                type="button"
+                                onClick={() => {
+                                  setPreferences({ ...preferences, currency: item.value });
+                                  setIsCurrencyOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm font-semibold flex items-center justify-between transition cursor-pointer"
+                                style={{ 
+                                  color: preferences.currency === item.value ? 'var(--rose-500)' : 'var(--text-secondary)',
+                                  backgroundColor: preferences.currency === item.value ? 'rgba(244,63,94,0.08)' : 'transparent'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (preferences.currency !== item.value) {
+                                    e.currentTarget.style.backgroundColor = 'rgba(15,23,42,0.04)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (preferences.currency !== item.value) {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }
+                                }}
+                              >
+                                <span>{item.label}</span>
+                                {preferences.currency === item.value && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })()}
 
                 {/* Toggle Options */}
                 <div className="space-y-4 pt-6 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
@@ -585,8 +715,8 @@ export default function ProfilePage() {
                   {/* Notifications Toggle */}
                   <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition">
                     <div>
-                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>Email Notifications</h4>
-                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Recommendations and trip reminders</p>
+                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('email_notifications')}</h4>
+                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('recommendations_desc')}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -599,8 +729,8 @@ export default function ProfilePage() {
                   {/* Newsletter Toggle */}
                   <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition">
                     <div>
-                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>Weekly Digest</h4>
-                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Curated newsletters and travel deals</p>
+                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('weekly_digest')}</h4>
+                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('curated_news_desc')}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -616,7 +746,7 @@ export default function ProfilePage() {
                 <div className="pt-6 border-t space-y-3" style={{ borderColor: 'var(--border-secondary)' }}>
                   <h4 className="text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
                     <Compass className="h-3.5 w-3.5 text-blue-500" />
-                    <span>Favorite Travel Themes</span>
+                    <span>{t('favorite_themes')}</span>
                   </h4>
                   <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Choose themes to personalize your recommendations.</p>
                   
@@ -664,7 +794,7 @@ export default function ProfilePage() {
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
                   >
-                    Save Preferences
+                    {t('save_preferences')}
                   </button>
                 </div>
 

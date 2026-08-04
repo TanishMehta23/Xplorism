@@ -11,6 +11,7 @@ import {
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
 import Navbar from '../components/Navbar';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CURRENCIES = {
   INR: { symbol: '₹', name: 'INR (₹)', locale: 'en-IN' },
@@ -353,6 +354,7 @@ const ActivityCard = ({ item, tripCurrency }) => {
 
 export default function DashboardStub() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [trips, setTrips] = useState([]);
@@ -1360,15 +1362,15 @@ export default function DashboardStub() {
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">My Trips Dashboard</h1>
-            <p className="text-slate-500 text-sm">Create and manage your customized itineraries.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">{t('dashboard_title')}</h1>
+            <p className="text-slate-500 text-sm">{t('dashboard_desc')}</p>
           </div>
           <button
             onClick={() => setIsWizardOpen(true)}
             className="px-6 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-205 shadow-sm flex items-center space-x-2 cursor-pointer"
           >
             <Plus className="h-5 w-5" />
-            <span>Create New Trip</span>
+            <span>{t('create_new_trip')}</span>
           </button>
         </div>
 
@@ -1376,7 +1378,7 @@ export default function DashboardStub() {
         <div className="mb-12">
           <div className="flex items-center space-x-2 text-rose-500 mb-6">
             <Sparkles className="h-5 w-5 animate-pulse" />
-            <h2 className="text-xl font-bold text-slate-900">Recommended Pre-planned Trips</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t('recommended_trips')}</h2>
           </div>
 
           <div className="relative w-full">
@@ -1427,12 +1429,12 @@ export default function DashboardStub() {
                           <h3 className="text-base font-bold text-slate-900 mb-1 group-hover:text-rose-500 transition truncate">
                             {trip.destination}
                           </h3>
-                          <p className="text-slate-555 text-[11px] mb-4">{days} Days Custom Schedule</p>
+                          <p className="text-slate-555 text-[11px] mb-4">{days} {t('days_schedule')}</p>
                         </div>
                         <div className="flex items-center justify-between text-slate-555 text-xs pt-3 border-t border-slate-50">
                           <div className="flex items-center space-x-1.5">
                             <Users className="h-4 w-4 text-rose-455" />
-                            <span>{trip.travelers} Travelers</span>
+                            <span>{trip.travelers} {t('travelers')}</span>
                           </div>
                           <div className="flex items-center space-x-1.5 font-bold text-slate-900">
                             <span>{tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
@@ -1449,28 +1451,28 @@ export default function DashboardStub() {
 
         {/* My Saved Itineraries */}
         <div className="mb-6 pt-2 border-t border-slate-200/50">
-          <h2 className="text-xl font-bold text-slate-900">My Saved Itineraries</h2>
+          <h2 className="text-xl font-bold text-slate-900">{t('my_saved_itineraries')}</h2>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
             <div className="h-10 w-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-            <p className="text-slate-500 text-sm">Loading saved itineraries...</p>
+            <p className="text-slate-500 text-sm">{t('loading_saved')}</p>
           </div>
         ) : trips.length === 0 ? (
           <div className="bg-white p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed border-slate-200 shadow-sm">
             <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 mb-6 border border-slate-100">
               <TripIcon className="h-8 w-8 text-rose-400" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">No trips created yet</h2>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">{t('no_trips')}</h2>
             <p className="text-slate-555 max-w-sm text-sm mb-6 leading-relaxed">
-              Get started by planning your first custom travel itinerary.
+              {t('get_started')}
             </p>
             <button
               onClick={() => setIsWizardOpen(true)}
-              className="px-6 py-3 rounded-full bg-slate-950 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
+              className="px-6 py-3 rounded-full bg-slate-955 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
             >
-              Start Planning
+              {t('start_planning')}
             </button>
           </div>
         ) : (
@@ -1544,17 +1546,17 @@ export default function DashboardStub() {
 
                       <div className="flex items-center space-x-2 text-slate-500 text-xs mb-4">
                         <Calendar className="h-3.5 w-3.5 text-rose-500" />
-                        <span className="font-semibold">{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? 'day' : 'days'})</span>
+                        <span className="font-semibold">{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? t('day') : t('days')})</span>
                       </div>
 
                       <div className="flex items-center space-x-5 text-slate-650 text-xs">
                         <div className="flex items-center space-x-1.5">
                           <Users className="h-4 w-4 text-slate-400" />
-                          <span className="font-bold text-slate-700">{trip.travelers} {trip.travelers === 1 ? 'Traveler' : 'Travelers'}</span>
+                          <span className="font-bold text-slate-700">{trip.travelers} {t('travelers')}</span>
                         </div>
                         <div className="flex items-center space-x-1.5">
                           <span className="font-bold text-slate-400">{tripCurrency.symbol}</span>
-                          <span className="font-bold text-slate-750">Budget: {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+                          <span className="font-bold text-slate-755">{t('budget_label')}: {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
                         </div>
                       </div>
                     </div>
@@ -1711,7 +1713,7 @@ export default function DashboardStub() {
                     </div>
                     <h2 className="text-2xl font-extrabold text-slate-955">{selectedTrip.destination}</h2>
                     <p className="text-slate-500 text-xs mt-1">
-                      {formatDate(selectedTrip.startDate)} to {formatDate(selectedTrip.endDate)} • {selectedTrip.travelers} {selectedTrip.travelers === 1 ? 'Traveler' : 'Travelers'} • Budget: {tripCurrency.symbol}{Number(selectedTrip.budget).toLocaleString(tripCurrency.locale)}
+                      {formatDate(selectedTrip.startDate)} - {formatDate(selectedTrip.endDate)} • {selectedTrip.travelers} {t('travelers')} • {t('budget_label')}: {tripCurrency.symbol}{Number(selectedTrip.budget).toLocaleString(tripCurrency.locale)}
                     </p>
 
                     <div className="flex items-center space-x-3 mt-3 text-xs text-slate-500 bg-slate-50 border border-slate-100 p-2.5 rounded-2xl w-fit shadow-sm">

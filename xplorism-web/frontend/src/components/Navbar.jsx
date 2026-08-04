@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar({ activeTab }) {
   const { user, logout } = useAuth();
@@ -11,6 +12,7 @@ export default function Navbar({ activeTab }) {
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = () => {
@@ -23,6 +25,7 @@ export default function Navbar({ activeTab }) {
     const handleOutsideClick = (e) => {
       if (!e.target.closest('.profile-container')) {
         setIsDropdownOpen(false);
+        setIsLangOpen(false);
       }
     };
     document.addEventListener('click', handleOutsideClick);
@@ -116,7 +119,7 @@ export default function Navbar({ activeTab }) {
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'map' ? 'text-rose-500 font-bold' : ''}`}
             >
               <Globe className="h-4 w-4" />
-              <span className="nav-link">Globe</span>
+              <span className="nav-link">{t('globe')}</span>
             </button>
           </div>
 
@@ -156,7 +159,7 @@ export default function Navbar({ activeTab }) {
               onClick={() => navigate('/map')} 
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'map' ? 'text-rose-500' : ''}`}
             >
-              Globe
+              {t('globe')}
             </button>
           </div>
 
@@ -200,23 +203,79 @@ export default function Navbar({ activeTab }) {
                 </button>
 
                 {/* Language Selector Dropdown */}
-                <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--border-secondary)' }}>
-                  <p className="text-[9px] uppercase font-bold tracking-wider mb-1.5" style={{ color: 'var(--text-tertiary)' }}>Language / Idioma</p>
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full text-xs font-bold py-1 px-1.5 rounded-lg border focus:outline-none cursor-pointer"
-                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
-                  >
-                    <option value="en">🇬🇧 English</option>
-                    <option value="es">🇪🇸 Español</option>
-                    <option value="fr">🇫🇷 Français</option>
-                    <option value="de">🇩🇪 Deutsch</option>
-                    <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
-                    <option value="ar">🇦🇪 العربية (Arabic)</option>
-                    <option value="pt">🇵🇹 Português</option>
-                  </select>
-                </div>
+                {(() => {
+                  const languagesList = [
+                    { code: 'en', label: 'English', flag: '🇬🇧' },
+                    { code: 'es', label: 'Español', flag: '🇪🇸' },
+                    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+                    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+                    { code: 'hi', label: 'हिन्दी (Hindi)', flag: '🇮🇳' },
+                    { code: 'ar', label: 'العربية (Arabic)', flag: '🇦🇪' },
+                    { code: 'pt', label: 'Português', flag: '🇵🇹' }
+                  ];
+                  const currentLangObj = languagesList.find(l => l.code === language) || languagesList[0];
+
+                  return (
+                    <div className="px-4 py-2 border-b relative" style={{ borderColor: 'var(--border-secondary)' }}>
+                      <p className="text-[9px] uppercase font-bold tracking-wider mb-1.5" style={{ color: 'var(--text-tertiary)' }}>Language / Idioma</p>
+                      
+                      <button
+                        onClick={() => setIsLangOpen(!isLangOpen)}
+                        className="w-full text-xs font-bold py-1.5 px-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all duration-200 focus:outline-none"
+                        style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
+                      >
+                        <span className="flex items-center space-x-1.5">
+                          <span className="text-sm leading-none">{currentLangObj.flag}</span>
+                          <span>{currentLangObj.label}</span>
+                        </span>
+                        <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
+                      </button>
+
+                      <AnimatePresence>
+                        {isLangOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="absolute left-4 right-4 mt-1 rounded-xl border shadow-xl overflow-hidden z-[100]"
+                            style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}
+                          >
+                            {languagesList.map((lang) => (
+                              <button
+                                key={lang.code}
+                                onClick={() => {
+                                  setLanguage(lang.code);
+                                  setIsLangOpen(false);
+                                }}
+                                className="w-full text-left px-3 py-1.5 text-xs font-bold flex items-center justify-between transition cursor-pointer"
+                                style={{ 
+                                  color: language === lang.code ? 'var(--rose-500)' : 'var(--text-secondary)',
+                                  backgroundColor: language === lang.code ? 'rgba(244,63,94,0.08)' : 'transparent'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (language !== lang.code) {
+                                    e.currentTarget.style.backgroundColor = 'rgba(15,23,42,0.04)';
+                                  }
+                                }}
+                                  onMouseLeave={(e) => {
+                                  if (language !== lang.code) {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }
+                                }}
+                              >
+                                <span className="flex items-center space-x-2">
+                                  <span className="text-sm leading-none">{lang.flag}</span>
+                                  <span>{lang.label}</span>
+                                </span>
+                                {language === lang.code && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })()}
 
                  <button
                   onClick={() => {

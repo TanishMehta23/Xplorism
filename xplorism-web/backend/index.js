@@ -328,10 +328,11 @@ const MOCK_FLIGHTS = [
   { icao24: '02008c', callsign: 'RAM410', origin_country: 'Morocco', longitude: -6.84, latitude: 33.97, baro_altitude: 6200, on_ground: false, velocity: 185, true_track: 95, vertical_rate: -2.2 }
 ];
 
-function getMockFlights() {
+function getMockFlights(searchQuery = '') {
   const time = Math.floor(Date.now() / 1000);
   const totalSimulated = 450;
-  const list = [];
+  const matchingList = [];
+  const otherList = [];
   
   for (let i = 0; i < totalSimulated; i++) {
     const base = MOCK_FLIGHTS[i % MOCK_FLIGHTS.length];
@@ -356,7 +357,7 @@ function getMockFlights() {
     const newSpeed = base.velocity + Math.round(Math.sin(time / 10 + i) * 20) + ((i * 5) % 100);
     const newTrack = (base.true_track + (i * 25)) % 360;
     
-    list.push([
+    const flightState = [
       uniqueIcao,
       uniqueCallsign,
       base.origin_country,
@@ -374,9 +375,15 @@ function getMockFlights() {
       "7000",
       false,
       0
-    ]);
+    ];
+
+    if (searchQuery && (uniqueCallsign.toUpperCase().includes(searchQuery) || base.origin_country.toUpperCase().includes(searchQuery))) {
+      matchingList.push(flightState);
+    } else {
+      otherList.push(flightState);
+    }
   }
-  return list;
+  return [...matchingList, ...otherList];
 }
 const AIRPORTS = [
   { code: 'JFK', name: 'John F. Kennedy International', city: 'New York', country: 'United States', lat: 40.6413, lon: -73.7781 },
@@ -403,7 +410,32 @@ const AIRLINES = {
   'SIA': 'Singapore Airlines',
   'QFA': 'Qantas',
   'ANA': 'All Nippon Airways',
-  'TVF': 'Transavia France'
+  'TVF': 'Transavia France',
+  'UAL': 'United Airlines',
+  'DAL': 'Delta Air Lines',
+  'RYR': 'Ryanair',
+  'IGO': 'IndiGo',
+  'SEJ': 'SpiceJet',
+  'VTI': 'Vistara',
+  'QTR': 'Qatar Airways',
+  'CPA': 'Cathay Pacific',
+  'ETD': 'Etihad Airways',
+  'KLM': 'KLM Royal Dutch Airlines',
+  'EZY': 'EasyJet',
+  'IBE': 'Iberia',
+  'SWR': 'Swiss International Air Lines',
+  'THY': 'Turkish Airlines',
+  'AZA': 'ITA Airways',
+  'JAL': 'Japan Airlines',
+  'CCA': 'Air China',
+  'CES': 'China Eastern Airlines',
+  'CSN': 'China Southern Airlines',
+  'TAP': 'TAP Air Portugal',
+  'FIN': 'Finnair',
+  'SAS': 'Scandinavian Airlines',
+  'FDX': 'FedEx Express',
+  'UPS': 'UPS Airlines',
+  'RAM': 'Royal Air Maroc'
 };
 
 const AIRCRAFT_TYPES = [
@@ -472,6 +504,7 @@ function enrichFlight(state) {
 }
 
 app.get('/flights', async (req, res) => {
+  const searchQuery = req.query.search ? req.query.search.trim().toUpperCase() : '';
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
 
@@ -487,7 +520,22 @@ app.get('/flights', async (req, res) => {
     if (response.ok) {
       const data = await response.json();
       if (data && data.states && data.states.length > 0) {
-        rawStates = data.states.slice(0, 100);
+        if (searchQuery) {
+          const matchingStates = [];
+          const otherStates = [];
+          data.states.forEach(state => {
+            const callsign = (state[1] || '').trim().toUpperCase();
+            const originCountry = (state[2] || '').trim().toUpperCase();
+            if (callsign.includes(searchQuery) || originCountry.includes(searchQuery)) {
+              matchingStates.push(state);
+            } else {
+              otherStates.push(state);
+            }
+          });
+          rawStates = [...matchingStates, ...otherStates].slice(0, 1000);
+        } else {
+          rawStates = data.states.slice(0, 1000);
+        }
         source = 'opensky';
       }
     }
@@ -497,7 +545,7 @@ app.get('/flights', async (req, res) => {
   }
 
   if (rawStates.length === 0) {
-    rawStates = getMockFlights();
+    rawStates = getMockFlights(searchQuery);
     source = 'mock';
   }
 

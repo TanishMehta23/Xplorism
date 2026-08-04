@@ -8,9 +8,12 @@ import {
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function TrackerPage() {
   const { t } = useLanguage();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,7 +69,7 @@ export default function TrackerPage() {
   const fetchFlights = async () => {
     setLoading(true);
     try {
-      const data = await api.get('/flights');
+      const data = await api.get(`/flights?search=${encodeURIComponent(searchQuery)}`);
       if (data && data.states) {
         // Parse states array to friendly flight objects
         const parsedFlights = data.states.map(f => ({
@@ -90,10 +93,19 @@ export default function TrackerPage() {
     }
   };
 
-  // Initial and countdown refresh effect
+  // Fetch flights when searchQuery changes, with debouncing
   useEffect(() => {
-    fetchFlights();
-  }, []);
+    if (!searchQuery) {
+      fetchFlights();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      fetchFlights();
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -106,7 +118,7 @@ export default function TrackerPage() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [refreshInterval]);
+  }, [refreshInterval, searchQuery]);
 
   // Leaflet map initialization
   useEffect(() => {
@@ -119,7 +131,8 @@ export default function TrackerPage() {
         center: [20, 0],
         zoom: 2.5,
         minZoom: 1.5,
-        zoomControl: false
+        zoomControl: false,
+        worldCopyJump: true
       });
 
       L.control.zoom({ position: 'topright' }).addTo(map);
@@ -258,8 +271,35 @@ export default function TrackerPage() {
       const destinationPos = [latestFlight.destination.lat, latestFlight.destination.lon];
       const currentPos = [latestFlight.latitude, latestFlight.longitude];
 
+      // Helper to calculate quadratic Bezier points for curved trails
+      const getBezierPoints = (start, end, numPoints = 50) => {
+        const [lat1, lon1] = start;
+        const [lat2, lon2] = end;
+        const midLat = (lat1 + lat2) / 2;
+        const midLon = (lon1 + lon2) / 2;
+        const dLat = lat2 - lat1;
+        const dLon = lon2 - lon1;
+        
+        // Offset perpendicular to the line to create a curve
+        const curvature = 0.15;
+        const controlLat = midLat - dLon * curvature;
+        const controlLon = midLon + dLat * curvature;
+        
+        const points = [];
+        for (let i = 0; i <= numPoints; i++) {
+          const t = i / numPoints;
+          const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * controlLat + t * t * lat2;
+          const lon = (1 - t) * (1 - t) * lon1 + 2 * (1 - t) * t * controlLon + t * t * lon2;
+          points.push([lat, lon]);
+        }
+        return points;
+      };
+
+      const historyPoints = getBezierPoints(departurePos, currentPos);
+      const projectedPoints = getBezierPoints(currentPos, destinationPos);
+
       // Draw historical path (solid line)
-      const historyPath = L.polyline([departurePos, currentPos], {
+      const historyPath = L.polyline(historyPoints, {
         color: '#f43f5e',
         weight: 3.5,
         opacity: 0.85,
@@ -269,7 +309,7 @@ export default function TrackerPage() {
       routeLayersRef.current.push(historyPath);
 
       // Draw projected path (dashed line)
-      const projectedPath = L.polyline([currentPos, destinationPos], {
+      const projectedPath = L.polyline(projectedPoints, {
         color: '#94a3b8',
         weight: 2.5,
         opacity: 0.65,
@@ -408,9 +448,9 @@ export default function TrackerPage() {
         <div ref={mapRef} className="w-full h-full z-0" style={{ height: '100%', width: '100%', position: 'absolute', top: 0, left: 0 }} />
 
         {!leafletLoaded && (
-          <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center z-20 space-y-4">
+          <div className={`absolute inset-0 flex flex-col items-center justify-center z-20 space-y-4 ${isDark ? 'bg-slate-955' : 'bg-slate-50'}`}>
             <Activity className="h-10 w-10 text-rose-500 animate-pulse" />
-            <p className="text-sm font-bold text-slate-400">Loading Radar Maps...</p>
+            <p className={`text-sm font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading Radar Maps...</p>
           </div>
         )}
 
@@ -425,7 +465,7 @@ export default function TrackerPage() {
               }
             }, 300);
           }}
-          className="absolute top-4 z-20 p-2.5 rounded-xl bg-slate-900/95 text-white shadow-xl border border-slate-700 backdrop-blur-md hover:bg-slate-800 transition active:scale-95 flex items-center justify-center cursor-pointer"
+          className={`absolute top-4 z-20 p-2.5 rounded-xl shadow-xl border backdrop-blur-md transition active:scale-95 flex items-center justify-center cursor-pointer ${isDark ? 'bg-slate-900/95 text-white border-slate-700 hover:bg-slate-800' : 'bg-white/95 text-slate-800 border-slate-200 hover:bg-slate-50'}`}
           style={{ left: sidebarOpen ? '396px' : '16px', transition: 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' }}
           title={sidebarOpen ? "Hide Radar List" : "Show Radar List"}
         >
@@ -440,24 +480,24 @@ export default function TrackerPage() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -380, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="absolute top-4 left-4 bottom-4 w-[360px] md:w-[366px] z-10 flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-md border-slate-850"
-              style={{ backgroundColor: 'rgba(15, 23, 42, 0.94)', color: '#ffffff' }}
+              className={`absolute top-4 left-4 bottom-4 w-[360px] md:w-[366px] z-10 flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-md ${isDark ? 'border-slate-800/80' : 'border-slate-200'}`}
+              style={{ backgroundColor: isDark ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)', color: isDark ? '#ffffff' : '#0f172a' }}
             >
               {/* Header & Search */}
-              <div className="p-5 border-b border-slate-800/80">
+              <div className={`p-5 border-b ${isDark ? 'border-slate-800/80' : 'border-slate-200'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
                     <Radio className="h-5 w-5 text-rose-500 animate-pulse" />
                     <h1 className="text-xl font-black tracking-tight">{t('sky_radar')}</h1>
                   </div>
                   <div className="flex items-center space-x-2 text-xs font-bold text-slate-400">
-                    <span className={`px-2 py-0.5 rounded-full ${dataSource === 'opensky' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                    <span className={`px-2 py-0.5 rounded-full ${dataSource === 'opensky' ? (isDark ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border border-emerald-200') : (isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-amber-50 text-amber-600 border border-amber-200')}`}>
                       {dataSource === 'opensky' ? t('live_api') : t('simulated_radar')}
                     </span>
                     <button 
                       onClick={fetchFlights} 
                       disabled={loading}
-                      className="p-1.5 rounded-lg border border-slate-700 hover:bg-slate-805 transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                      className={`p-1.5 rounded-lg border transition active:scale-95 disabled:opacity-50 cursor-pointer ${isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-650'}`}
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
@@ -466,28 +506,28 @@ export default function TrackerPage() {
 
                 {/* Quick Stats Grid */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="p-2.5 rounded-xl text-center border border-slate-800 bg-slate-900/50">
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">{t('tracked')}</p>
+                  <div className={`p-2.5 rounded-xl text-center border ${isDark ? 'border-slate-800 bg-slate-900/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
+                    <p className={`text-[10px] uppercase font-bold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('tracked')}</p>
                     <p className="text-lg font-black text-rose-500">{totalFlights}</p>
                   </div>
-                  <div className="p-2.5 rounded-xl text-center border border-slate-800 bg-slate-900/50">
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">{t('avg_speed')}</p>
+                  <div className={`p-2.5 rounded-xl text-center border ${isDark ? 'border-slate-800 bg-slate-900/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
+                    <p className={`text-[10px] uppercase font-bold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('avg_speed')}</p>
                     <p className="text-sm font-black">{avgSpeed} <span className="text-[8px] font-normal">kts</span></p>
                   </div>
-                  <div className="p-2.5 rounded-xl text-center border border-slate-800 bg-slate-900/50">
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">{t('avg_altitude')}</p>
+                  <div className={`p-2.5 rounded-xl text-center border ${isDark ? 'border-slate-800 bg-slate-900/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
+                    <p className={`text-[10px] uppercase font-bold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('avg_altitude')}</p>
                     <p className="text-sm font-black">{Math.round(avgAltitude/1000)}k <span className="text-[8px] font-normal">ft</span></p>
                   </div>
                 </div>
 
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                  <Search className={`absolute left-3.5 top-3.5 h-4 w-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t('search_placeholder')}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm border border-slate-800 bg-slate-900/60 focus:outline-none focus:ring-1 focus:ring-rose-500/50 text-white"
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm border focus:outline-none focus:ring-1 focus:ring-rose-500/50 ${isDark ? 'border-slate-800 bg-slate-900/60 text-white' : 'border-slate-200 bg-white text-slate-800'}`}
                   />
                 </div>
               </div>
@@ -497,16 +537,16 @@ export default function TrackerPage() {
                 {loading && flights.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 space-y-4">
                     <div className="h-8 w-8 border-3 border-rose-100 border-t-rose-500 rounded-full animate-spin" />
-                    <p className="text-xs text-slate-400 font-medium">Scanning skies for aircraft...</p>
+                    <p className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Scanning skies for aircraft...</p>
                   </div>
                 ) : error && flights.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center text-slate-400 space-y-2">
+                  <div className="flex flex-col items-center justify-center py-12 text-center text-slate-450 space-y-2">
                     <ShieldAlert className="h-8 w-8 text-rose-500" />
                     <p className="text-sm font-bold">{error}</p>
                     <button onClick={fetchFlights} className="text-xs font-bold text-rose-500 underline cursor-pointer">Try again</button>
                   </div>
                 ) : filteredFlights.length === 0 ? (
-                  <div className="text-center py-12 text-slate-400 text-xs font-medium">
+                  <div className={`text-center py-12 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     No active flights matching search criteria.
                   </div>
                 ) : (
@@ -517,28 +557,28 @@ export default function TrackerPage() {
                         key={f.icao24}
                         onClick={() => handleSelectFlight(f)}
                         className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group 
-                          ${isSelected ? 'border-rose-500/50 shadow-md scale-[1.01]' : 'border-slate-800 hover:border-slate-700'}
+                          ${isSelected ? 'border-rose-500/50 shadow-md scale-[1.01]' : (isDark ? 'border-slate-800 hover:border-slate-700' : 'border-slate-150 hover:border-slate-300')}
                         `}
                         style={{ 
-                          backgroundColor: isSelected ? 'rgba(244, 63, 94, 0.15)' : 'rgba(15, 23, 42, 0.4)'
+                          backgroundColor: isSelected ? (isDark ? 'rgba(244, 63, 94, 0.15)' : 'rgba(244, 63, 94, 0.08)') : (isDark ? 'rgba(15, 23, 42, 0.4)' : 'rgba(241, 245, 249, 0.6)')
                         }}
                       >
                         <div className="flex items-center space-x-3.5">
                           <div className={`p-2 rounded-lg transition-colors duration-200 
-                            ${isSelected ? 'bg-rose-500 text-white' : 'bg-slate-850 text-slate-400 group-hover:text-white'}
+                            ${isSelected ? 'bg-rose-500 text-white' : (isDark ? 'bg-slate-850 text-slate-400 group-hover:text-white' : 'bg-slate-200 text-slate-500 group-hover:text-slate-800')}
                           `}>
                             <Plane className="h-4.5 w-4.5" />
                           </div>
                           <div>
                             <div className="flex items-center space-x-2">
-                              <p className="text-sm font-extrabold tracking-wide text-white">{f.callsign || 'N/A'}</p>
+                              <p className={`text-sm font-extrabold tracking-wide ${isDark ? 'text-white' : 'text-slate-850'}`}>{f.callsign || 'N/A'}</p>
                               {f.departure && f.destination && (
                                 <span className="text-[9px] font-black text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded-full">
                                   {f.departure.code} ➔ {f.destination.code}
                                 </span>
                               )}
                             </div>
-                            <p className="text-[10px] text-slate-400 font-bold flex items-center space-x-1">
+                            <p className={`text-[10px] font-bold flex items-center space-x-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                               <Globe className="h-3 w-3" />
                               <span>{f.airlineName || f.originCountry}</span>
                             </p>
@@ -546,8 +586,8 @@ export default function TrackerPage() {
                         </div>
 
                         <div className="text-right">
-                          <p className="text-xs font-extrabold text-white">{f.altitude.toLocaleString()} <span className="text-[8px] text-slate-400 font-normal">FT</span></p>
-                          <p className="text-[10px] text-slate-400 font-bold">{f.velocity} <span className="text-[8px] font-normal">KTS</span></p>
+                          <p className={`text-xs font-extrabold ${isDark ? 'text-white' : 'text-slate-850'}`}>{f.altitude.toLocaleString()} <span className={`text-[8px] font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>FT</span></p>
+                          <p className={`text-[10px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{f.velocity} <span className="text-[8px] font-normal">KTS</span></p>
                         </div>
                       </div>
                     );
@@ -556,7 +596,7 @@ export default function TrackerPage() {
               </div>
 
               {/* Countdown Refresh Footer */}
-              <div className="p-3.5 border-t border-slate-800/80 text-center text-[10px] text-slate-400 font-semibold bg-slate-900/50">
+              <div className={`p-3.5 border-t text-center text-[10px] font-semibold ${isDark ? 'border-slate-800/80 text-slate-400 bg-slate-900/50' : 'border-slate-200 text-slate-550 bg-slate-50'}`}>
                 <span className="flex items-center justify-center space-x-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
                   <span>Next update in <strong className="text-rose-500 font-black">{countdown}s</strong></span>
@@ -573,7 +613,7 @@ export default function TrackerPage() {
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 30, scale: 0.95 }}
-              className="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-[380px] z-10 rounded-2xl border p-5 shadow-2xl backdrop-blur-lg bg-slate-950/92 border-slate-800 text-white"
+              className={`absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-[380px] z-10 rounded-2xl border p-5 shadow-2xl backdrop-blur-lg ${isDark ? 'bg-slate-950/92 border-slate-800 text-white' : 'bg-white/95 border-slate-200 text-slate-800'}`}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -582,14 +622,14 @@ export default function TrackerPage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-black tracking-tight">{selectedFlight.callsign}</h2>
-                    <p className="text-xs text-rose-400 font-bold">
+                    <p className={`text-xs font-bold ${isDark ? 'text-rose-400' : 'text-rose-600'}`}>
                       {selectedFlight.airlineName || 'International Air'} • {selectedFlight.aircraftType || 'Commercial Jet'}
                     </p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setSelectedFlight(null)} 
-                  className="p-1 rounded-lg hover:bg-slate-800/80 text-slate-400 hover:text-white transition cursor-pointer"
+                  className={`p-1 rounded-lg transition cursor-pointer ${isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'}`}
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
@@ -597,28 +637,28 @@ export default function TrackerPage() {
 
               {/* Route Visualizer Card */}
               {selectedFlight.departure && selectedFlight.destination && (
-                <div className="mb-4 p-4 rounded-xl border border-slate-800 bg-slate-900/60">
+                <div className={`mb-4 p-4 rounded-xl border ${isDark ? 'border-slate-800 bg-slate-900/60' : 'border-slate-200 bg-slate-50'}`}>
                   <div className="flex items-center justify-between">
                     <div className="text-left">
                       <p className="text-2xl font-black tracking-tight text-rose-500 leading-none mb-1">{selectedFlight.departure.code}</p>
-                      <p className="text-[10px] text-slate-300 font-bold truncate max-w-[100px]" title={selectedFlight.departure.city}>
+                      <p className={`text-[10px] font-bold truncate max-w-[100px] ${isDark ? 'text-slate-300' : 'text-slate-605'}`} title={selectedFlight.departure.city}>
                         {selectedFlight.departure.city}
                       </p>
                     </div>
                     <div className="flex-1 px-4 flex flex-col items-center relative">
-                      <div className="w-full border-t border-dashed border-slate-700 relative top-1 flex items-center justify-center">
+                      <div className={`w-full border-t border-dashed relative top-1 flex items-center justify-center ${isDark ? 'border-slate-700' : 'border-slate-300'}`}>
                         <Plane className="h-3.5 w-3.5 text-rose-500 absolute -top-1.5 rotate-90" />
                       </div>
                       <span className="text-[8px] text-rose-400 font-black mt-3 tracking-wider">{t('en_route')}</span>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-black tracking-tight text-rose-500 leading-none mb-1">{selectedFlight.destination.code}</p>
-                      <p className="text-[10px] text-slate-300 font-bold truncate max-w-[100px]" title={selectedFlight.destination.city}>
+                      <p className={`text-[10px] font-bold truncate max-w-[100px] ${isDark ? 'text-slate-300' : 'text-slate-605'}`} title={selectedFlight.destination.city}>
                         {selectedFlight.destination.city}
                       </p>
                     </div>
                   </div>
-                  <div className="mt-3 text-[9px] text-slate-400 font-semibold border-t border-slate-800/80 pt-2 flex flex-col space-y-1">
+                  <div className={`mt-3 text-[9px] font-semibold border-t pt-2 flex flex-col space-y-1 ${isDark ? 'text-slate-400 border-slate-800/80' : 'text-slate-550 border-slate-200'}`}>
                     <div className="flex justify-between">
                       <span className="truncate max-w-[150px]"><span className="text-slate-500">{t('origin')}:</span> {selectedFlight.departure.name}</span>
                       <span className="truncate max-w-[150px]"><span className="text-slate-500">{t('dest')}:</span> {selectedFlight.destination.name}</span>
@@ -629,40 +669,40 @@ export default function TrackerPage() {
 
               {/* Details Grid */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/50">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center space-x-1">
+                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/80 border-slate-800/50' : 'bg-slate-50 border-slate-200'}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center space-x-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Compass className="h-3 w-3 text-emerald-400" />
                     <span>{t('altitude')}</span>
                   </p>
-                  <p className="text-base font-extrabold">{selectedFlight.altitude.toLocaleString()} <span className="text-[10px] text-slate-400 font-normal">FT</span></p>
+                  <p className="text-base font-extrabold">{selectedFlight.altitude.toLocaleString()} <span className={`text-[10px] font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>FT</span></p>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/50">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center space-x-1">
+                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/80 border-slate-800/50' : 'bg-slate-50 border-slate-200'}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center space-x-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Navigation className="h-3 w-3 text-sky-400" />
                     <span>{t('speed')}</span>
                   </p>
-                  <p className="text-base font-extrabold">{selectedFlight.velocity} <span className="text-[10px] text-slate-400 font-normal">KTS</span></p>
+                  <p className="text-base font-extrabold">{selectedFlight.velocity} <span className={`text-[10px] font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>KTS</span></p>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/50">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center space-x-1">
+                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/80 border-slate-800/50' : 'bg-slate-50 border-slate-200'}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center space-x-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Compass className="h-3 w-3 text-amber-500" />
                     <span>{t('heading')}</span>
                   </p>
-                  <p className="text-base font-extrabold">{selectedFlight.heading}° <span className="text-[10px] text-slate-400 font-normal">TRUE</span></p>
+                  <p className="text-base font-extrabold">{selectedFlight.heading}° <span className={`text-[10px] font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>TRUE</span></p>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/50">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center space-x-1">
+                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/80 border-slate-800/50' : 'bg-slate-50 border-slate-200'}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center space-x-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Cloud className="h-3 w-3 text-purple-400" />
                     <span>{t('vrate')}</span>
                   </p>
                   <p className="text-base font-extrabold">
-                    {selectedFlight.verticalRate > 0 ? `+${selectedFlight.verticalRate}` : selectedFlight.verticalRate} <span className="text-[10px] text-slate-400 font-normal">FPM</span>
+                    {selectedFlight.verticalRate > 0 ? `+${selectedFlight.verticalRate}` : selectedFlight.verticalRate} <span className={`text-[10px] font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>FPM</span>
                   </p>
                 </div>
               </div>
 
               {/* Additional Technical Meta */}
-              <div className="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-900 pt-3">
+              <div className={`flex items-center justify-between text-[10px] border-t pt-3 ${isDark ? 'text-slate-400 border-slate-900' : 'text-slate-500 border-slate-100'}`}>
                 <span>ICAO24: <strong>{selectedFlight.icao24}</strong></span>
                 <span>Coords: <strong>{selectedFlight.latitude.toFixed(4)}, {selectedFlight.longitude.toFixed(4)}</strong></span>
               </div>
@@ -672,13 +712,13 @@ export default function TrackerPage() {
 
         {/* Map Legend Overlay */}
         <div 
-          className="absolute bottom-6 z-10 p-3.5 rounded-xl bg-slate-950/90 text-white shadow-2xl border border-slate-800 backdrop-blur-md text-[10px] font-bold space-y-1.5 pointer-events-none hidden md:block"
+          className={`absolute bottom-6 z-10 p-3.5 rounded-xl shadow-2xl backdrop-blur-md text-[10px] font-bold space-y-1.5 pointer-events-none hidden md:block border ${isDark ? 'bg-slate-955/90 text-white border-slate-800' : 'bg-white/95 text-slate-800 border-slate-200'}`}
           style={{ 
             left: sidebarOpen ? '398px' : '24px', 
             transition: 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' 
           }}
         >
-          <p className="text-[9px] uppercase tracking-wider text-slate-400 mb-1 border-b border-slate-800 pb-1">{t('legend_title')}</p>
+          <p className={`text-[9px] uppercase tracking-wider mb-1 border-b pb-1 ${isDark ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-150'}`}>{t('legend_title')}</p>
           <div className="flex items-center space-x-2">
             <div className="w-2.5 h-2.5 rounded-full bg-[#06b6d4]"></div>
             <span>{t('legend_cruising')}</span>
@@ -697,7 +737,6 @@ export default function TrackerPage() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

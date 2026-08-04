@@ -49,7 +49,7 @@ export const PRE_PLANNED_TRIPS = [
   { id: 'pre-ladakh-kashmir', destination: 'Leh-Ladakh & Kashmir, India', image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 45000, travelers: 2, travelStyle: 'Adventure & Scenic|INR', interests: ['Nature', 'Adventure', 'History'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Arrive in Leh, acclimatize to high altitude, and visit Leh Palace', time: '04:00 PM', location: 'Leh Palace', estimatedCost: 500 }, { day: 2, activity: 'Drive to Nubra Valley via spectacular Khardung La Pass', time: '09:00 AM', location: 'Khardung La', estimatedCost: 1500 }, { day: 3, activity: 'Double-humped Bactrian camel safari at Hunder Sand Dunes', time: '08:30 AM', location: 'Hunder Dunes', estimatedCost: 800 }, { day: 4, activity: 'Visit the breathtaking deep blue Pangong Tso Lake', time: '08:00 AM', location: 'Pangong Lake', estimatedCost: 2000 }, { day: 5, activity: 'Travel to Srinagar and explore Dal Lake on a sunset Shikara ride', time: '04:30 PM', location: 'Dal Lake Srinagar', estimatedCost: 1200 }, { day: 6, activity: 'Walk through Shalimar and Nishat Mughal Gardens in Srinagar', time: '10:00 AM', location: 'Mughal Gardens', estimatedCost: 400 }] },
   { id: 'pre-manali', destination: 'Manali, Himachal Pradesh, India', image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 20000, travelers: 2, travelStyle: 'Hill Station Escapade|INR', interests: ['Nature', 'Adventure'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Walk around Mall Road and visit the historical Hadimba Temple', time: '10:00 AM', location: 'Hadimba Temple', estimatedCost: 200 }, { day: 2, activity: 'Day trip to Solang Valley for paragliding and snow activities', time: '09:00 AM', location: 'Solang Valley', estimatedCost: 2500 }, { day: 3, activity: 'Drive through Atal Tunnel to explore Sissu village waterfall in Lahaul', time: '08:30 AM', location: 'Sissu Waterfall', estimatedCost: 1500 }, { day: 4, activity: 'Trek to Jogini Waterfalls and relax at Vashisht hot springs', time: '09:30 AM', location: 'Vashisht', estimatedCost: 100 }] },
   { id: 'pre-lahaulspiti', destination: 'Lahaul & Spiti, Himachal Pradesh, India', image: 'https://images.unsplash.com/photo-1618083707368-b3823daa2726?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 35000, travelers: 2, travelStyle: 'Rugged Mountain Safari|INR', interests: ['Nature', 'Adventure', 'Culture'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Scenic drive from Manali to Kaza via the high Kunzum Pass', time: '07:00 AM', location: 'Kunzum Pass', estimatedCost: 2000 }, { day: 2, activity: 'Explore Key Monastery, the iconic cliffside Buddhist temple, and Kibber village', time: '09:30 AM', location: 'Key Monastery', estimatedCost: 500 }, { day: 3, activity: 'Send a postcard from Hikkim, the world\'s highest post office, and see Langza fossils', time: '10:00 AM', location: 'Hikkim Post Office', estimatedCost: 300 }, { day: 4, activity: 'Visit the scenic Pin Valley National Park and hike near Mud village', time: '09:00 AM', location: 'Mud Village', estimatedCost: 1000 }, { day: 5, activity: 'Camp next to the mesmerizing crescent-shaped Chandra Taal Lake', time: '03:00 PM', location: 'Chandra Taal', estimatedCost: 2500 }] },
-  { id: 'pre-ayodhya', destination: 'Ayodhya, Uttar Pradesh, India', image: 'https://akhilbharat.in/wp-content/uploads/2025/10/Gemini_Generated_Image_wzfldmwzfldmwzfl-Edited-1.png', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 12000, travelers: 2, travelStyle: 'Spiritual & Cultural Heritage|INR', interests: ['History', 'Culture'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Offer prayers at the magnificent Shri Ram Janmabhoomi Mandir', time: '09:00 AM', location: 'Ram Mandir', estimatedCost: 0 }, { day: 1, activity: 'Experience the divine evening Saryu River Aarti at Naya Ghat', time: '06:00 PM', location: 'Saryu Ghat', estimatedCost: 100 }, { day: 2, activity: 'Visit the hilltop Hanuman Garhi temple and beautiful Kanak Bhawan', time: '08:30 AM', location: 'Hanuman Garhi', estimatedCost: 50 }, { day: 2, activity: 'Sunset boat ride on the holy Saryu River with local legends storytelling', time: '04:00 PM', location: 'Saryu River', estimatedCost: 300 }, { day: 3, activity: 'Explore the historic tombs of Gulab Bari and Bahu Begum in Faizabad', time: '10:00 AM', location: 'Gulab Bari', estimatedCost: 150 }] },
+  { id: 'pre-ayodhya', destination: 'Ayodhya, Uttar Pradesh, India', image: 'https://images.unsplash.com/photo-1600664901390-3413f6df1600?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 12000, travelers: 2, travelStyle: 'Spiritual & Cultural Heritage|INR', interests: ['History', 'Culture'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Offer prayers at the magnificent Shri Ram Janmabhoomi Mandir', time: '09:00 AM', location: 'Ram Mandir', estimatedCost: 0 }, { day: 1, activity: 'Experience the divine evening Saryu River Aarti at Naya Ghat', time: '06:00 PM', location: 'Saryu Ghat', estimatedCost: 100 }, { day: 2, activity: 'Visit the hilltop Hanuman Garhi temple and beautiful Kanak Bhawan', time: '08:30 AM', location: 'Hanuman Garhi', estimatedCost: 50 }, { day: 2, activity: 'Sunset boat ride on the holy Saryu River with local legends storytelling', time: '04:00 PM', location: 'Saryu River', estimatedCost: 300 }, { day: 3, activity: 'Explore the historic tombs of Gulab Bari and Bahu Begum in Faizabad', time: '10:00 AM', location: 'Gulab Bari', estimatedCost: 150 }] },
   { id: 'pre-jodhpur-jaisalmer', destination: 'Jodhpur & Jaisalmer, Rajasthan, India', image: 'https://images.unsplash.com/photo-1602643163983-ed0babc39797?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 28000, travelers: 2, travelStyle: 'Royal Desert Odyssey|INR', interests: ['History', 'Culture', 'Food'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Explore the massive Mehrangarh Fort and royal cenotaph Jaswant Thada', time: '09:30 AM', location: 'Mehrangarh Fort', estimatedCost: 800 }, { day: 1, activity: 'Wander the blue-painted streets of Jodhpur Old City and shop at Sardar Market', time: '04:00 PM', location: 'Clock Tower', estimatedCost: 200 }, { day: 2, activity: 'Drive to Jaisalmer and check into a luxury desert camp in Thar Desert', time: '08:00 AM', location: 'Thar Desert', estimatedCost: 3500 }, { day: 2, activity: 'Camel safari, dunes sunset photography, and Rajasthani cultural folk dance show', time: '04:30 PM', location: 'Sam Sand Dunes', estimatedCost: 1500 }, { day: 3, activity: 'Tour the living Jaisalmer Fort (Sonar Qila) and admire Patwon Ki Haveli intricate carvings', time: '09:30 AM', location: 'Jaisalmer Fort', estimatedCost: 500 }, { day: 4, activity: 'Rowboat ride at scenic Gadisar Lake and exploring the mysterious abandoned Kuldhara village', time: '10:00 AM', location: 'Gadisar Lake', estimatedCost: 400 }] },
 ];
 
@@ -67,10 +67,53 @@ const getTripImage = (destination) => {
   if (dest.includes('new york') || dest.includes('york') || dest.includes('usa')) {
     return 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80';
   }
-  
-  // Use LoremFlickr to fetch a real, dynamic photo matching the destination keyword
+  if (dest.includes('london') || dest.includes('uk') || dest.includes('united kingdom')) {
+    return 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('sydney') || dest.includes('australia')) {
+    return 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('rome') || dest.includes('italy') || dest.includes('venice')) {
+    return 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('singapore')) {
+    return 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('zurich') || dest.includes('swiss') || dest.includes('switzerland') || dest.includes('geneva')) {
+    return 'https://images.unsplash.com/photo-1527668752968-14dc70a27c95?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('barcelona') || dest.includes('spain')) {
+    return 'https://images.unsplash.com/photo-1511527661048-7fe73d85e9a4?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('amsterdam') || dest.includes('netherlands')) {
+    return 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('delhi') || dest.includes('india')) {
+    return 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('rishikesh')) {
+    return 'https://images.unsplash.com/photo-1566418879480-1a134a413d33?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('germany') || dest.includes('frankfurt')) {
+    return 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('ayodhya')) {
+    return 'https://images.unsplash.com/photo-1600664901390-3413f6df1600?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('jodhpur') || dest.includes('jaisalmer') || dest.includes('rajasthan')) {
+    return 'https://images.unsplash.com/photo-1602643163983-ed0babc39797?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('manali') || dest.includes('himachal') || dest.includes('spiti') || dest.includes('lahaul')) {
+    return 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('ladakh') || dest.includes('kashmir') || dest.includes('leh')) {
+    return 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80';
+  }
+
+  // Use Picsum photos with a hash based on the keyword to return a real, beautiful, fast, and consistent image
   const cleanKeyword = (destination || '').split(',')[0].trim().toLowerCase();
-  return `https://loremflickr.com/600/400/${encodeURIComponent(cleanKeyword)},travel/all`;
+  const hash = Array.from(cleanKeyword).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return `https://picsum.photos/600/400?random=${hash % 100}`;
 };
 
 const getWeatherForDestination = (destination, dateStr) => {
@@ -131,6 +174,81 @@ const getActivityImageFallback = (location, time) => {
     return 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=500&auto=format&fit=crop&q=60';
   }
   return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&auto=format&fit=crop&q=60';
+};
+
+const TripCoverImage = ({ destination, defaultImage, className }) => {
+  const [imageSrc, setImageSrc] = useState(defaultImage || '');
+  const [loading, setLoading] = useState(!defaultImage);
+
+  useEffect(() => {
+    let active = true;
+    
+    // If we already have a direct unsplash/external URL that isn't a loremflickr or placeholder one, use it
+    if (defaultImage && !defaultImage.includes('loremflickr.com') && !defaultImage.includes('akhilbharat.in')) {
+      setImageSrc(defaultImage);
+      setLoading(false);
+      return;
+    }
+
+    const fetchRealImage = async () => {
+      try {
+        const cleanKeyword = (destination || '').split(',')[0].trim();
+        const searchQuery = encodeURIComponent(cleanKeyword);
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${searchQuery}&format=json&origin=*`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+
+        if (searchData.query && searchData.query.search && searchData.query.search.length > 0) {
+          const pageTitle = searchData.query.search[0].title;
+          const imageQueryUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
+          const imageRes = await fetch(imageQueryUrl);
+          const imageData = await imageRes.json();
+          const pages = imageData.query.pages;
+          const pageId = Object.keys(pages)[0];
+          if (pages[pageId].thumbnail && pages[pageId].thumbnail.source) {
+            if (active) {
+              setImageSrc(pages[pageId].thumbnail.source);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch real image for destination:", destination, err);
+      }
+      
+      // Fallback to our mapped Unsplash/Picsum generator
+      if (active) {
+        setImageSrc(getTripImage(destination));
+        setLoading(false);
+      }
+    };
+
+    fetchRealImage();
+
+    return () => {
+      active = false;
+    };
+  }, [destination, defaultImage]);
+
+  return (
+    <div className={`relative w-full h-full bg-slate-100 ${loading ? 'animate-pulse' : ''}`}>
+      {loading ? (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="h-6 w-6 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+        </div>
+      ) : null}
+      <img
+        src={imageSrc}
+        alt={destination}
+        className={className}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';
+        }}
+      />
+    </div>
+  );
 };
 
 const ActivityCard = ({ item, tripCurrency }) => {
@@ -1283,9 +1401,9 @@ export default function DashboardStub() {
                       className="group w-[280px] md:w-[320px] shrink-0 bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
                     >
                       <div className="relative h-40 w-full overflow-hidden">
-                        <img
-                          src={trip.image}
-                          alt={trip.destination}
+                        <TripCoverImage
+                          destination={trip.destination}
+                          defaultImage={trip.image}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute top-3 left-3 flex items-center space-x-1.5 z-10">
@@ -1378,9 +1496,9 @@ export default function DashboardStub() {
                   <div>
                     {/* Cover image header */}
                     <div className="relative h-44 w-full overflow-hidden">
-                      <img
-                        src={getTripImage(trip.destination)}
-                        alt={trip.destination}
+                      <TripCoverImage
+                        destination={trip.destination}
+                        defaultImage={trip.image}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-black/20" />

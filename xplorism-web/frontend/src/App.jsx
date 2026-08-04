@@ -12,6 +12,7 @@ import BudgetsListPage from './pages/BudgetsListPage';
 import HotelBookingPage from './pages/HotelBookingPage';
 import ProfilePage from './pages/ProfilePage';
 import TrackerPage from './pages/TrackerPage';
+import MapPage from './pages/MapPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route component
@@ -127,6 +128,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/map"
+        element={
+          <ProtectedRoute>
+            <MapPage />
           </ProtectedRoute>
         }
       />

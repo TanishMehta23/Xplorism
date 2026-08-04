@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Navbar({ activeTab }) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -79,35 +81,35 @@ export default function Navbar({ activeTab }) {
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'trips' ? 'text-rose-500 font-bold' : ''}`}
             >
               <Compass className="h-4 w-4" />
-              <span className="nav-link">Trips</span>
+              <span className="nav-link">{t('trips')}</span>
             </button>
             <button 
               onClick={() => navigate('/weather')}
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'weather' ? 'text-rose-500 font-bold' : ''}`}
             >
               <Sun className="h-4 w-4" />
-              <span className="nav-link">Weather</span>
+              <span className="nav-link">{t('weather')}</span>
             </button>
             <button 
               onClick={() => navigate('/tracker')}
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'tracker' ? 'text-rose-500 font-bold' : ''}`}
             >
               <Plane className="h-4 w-4" />
-              <span className="nav-link">Tracker</span>
+              <span className="nav-link">{t('tracker')}</span>
             </button>
             <button 
               onClick={() => navigate('/hotels')}
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'hotels' ? 'text-rose-500 font-bold' : ''}`}
             >
               <Hotel className="h-4 w-4" />
-              <span className="nav-link">Hotels</span>
+              <span className="nav-link">{t('hotels')}</span>
             </button>
             <button 
               onClick={() => navigate('/budgets')}
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'budgets' ? 'text-rose-500 font-bold' : ''}`}
             >
               <DollarSign className="h-4 w-4" />
-              <span className="nav-link">Budgets</span>
+              <span className="nav-link">{t('budgets')}</span>
             </button>
             <button 
               onClick={() => navigate('/map')}
@@ -124,31 +126,31 @@ export default function Navbar({ activeTab }) {
               onClick={() => navigate('/dashboard')} 
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'trips' ? 'text-rose-500' : ''}`}
             >
-              Trips
+              {t('trips')}
             </button>
             <button 
               onClick={() => navigate('/weather')} 
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'weather' ? 'text-rose-500' : ''}`}
             >
-              Weather
+              {t('weather')}
             </button>
             <button 
               onClick={() => navigate('/tracker')} 
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'tracker' ? 'text-rose-500' : ''}`}
             >
-              Tracker
+              {t('tracker')}
             </button>
             <button 
               onClick={() => navigate('/hotels')} 
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'hotels' ? 'text-rose-500' : ''}`}
             >
-              Hotels
+              {t('hotels')}
             </button>
             <button 
               onClick={() => navigate('/budgets')} 
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'budgets' ? 'text-rose-500' : ''}`}
             >
-              Budgets
+              {t('budgets')}
             </button>
             <button 
               onClick={() => navigate('/map')} 
@@ -174,9 +176,11 @@ export default function Navbar({ activeTab }) {
                 style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
               >
                 <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--border-secondary)' }}>
-                  <p className="text-xs uppercase font-bold tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Logged in as</p>
+                  <p className="text-[10px] uppercase font-bold tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('logged_in_as')}</p>
                   <p className="text-xs font-extrabold truncate" style={{ color: 'var(--text-primary)' }}>{user?.name || 'Traveler'}</p>
                 </div>
+                
+                {/* Theme Selector */}
                 <button
                   onClick={() => {
                     toggleTheme();
@@ -192,20 +196,53 @@ export default function Navbar({ activeTab }) {
                   ) : (
                     <Moon className="h-3.5 w-3.5" style={{ color: 'var(--text-tertiary)' }} />
                   )}
-                  <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+                  <span>{theme === 'dark' ? t('light_mode') : t('dark_mode')}</span>
                 </button>
+
+                {/* Language Selector Dropdown */}
+                <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--border-secondary)' }}>
+                  <p className="text-[9px] uppercase font-bold tracking-wider mb-1.5" style={{ color: 'var(--text-tertiary)' }}>Language / Idioma</p>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full text-xs font-bold py-1 px-1.5 rounded-lg border focus:outline-none cursor-pointer"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
+                  >
+                    <option value="en">🇬🇧 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+                    <option value="ar">🇦🇪 العربية (Arabic)</option>
+                    <option value="pt">🇵🇹 Português</option>
+                  </select>
+                </div>
+
                  <button
                   onClick={() => {
                     setIsDropdownOpen(false);
                     navigate('/profile');
                   }}
-                  className="w-full text-left px-4 py-2.5 text-xs font-bold transition flex items-center space-x-2 cursor-pointer"
-                  style={{ color: 'var(--text-secondary)' }}
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold transition flex items-center space-x-2 cursor-pointer border-b"
+                  style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-secondary)' }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(59,130,246,0.12)'; e.currentTarget.style.color = '#3b82f6'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                 >
                   <User className="h-3.5 w-3.5" />
-                  <span>Profile</span>
+                  <span>{t('profile')}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setShowLogoutConfirm(true);
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold transition flex items-center space-x-2 cursor-pointer text-rose-500"
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(244,63,94,0.12)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>{t('logout')}</span>
                 </button>
               </div>
             )}

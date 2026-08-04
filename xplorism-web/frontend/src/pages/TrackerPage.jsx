@@ -7,8 +7,10 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function TrackerPage() {
+  const { t } = useLanguage();
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -446,11 +448,11 @@ export default function TrackerPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
                     <Radio className="h-5 w-5 text-rose-500 animate-pulse" />
-                    <h1 className="text-xl font-black tracking-tight">Sky Radar</h1>
+                    <h1 className="text-xl font-black tracking-tight">{t('sky_radar')}</h1>
                   </div>
                   <div className="flex items-center space-x-2 text-xs font-bold text-slate-400">
                     <span className={`px-2 py-0.5 rounded-full ${dataSource === 'opensky' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
-                      {dataSource === 'opensky' ? 'Live API' : 'Simulated Radar'}
+                      {dataSource === 'opensky' ? t('live_api') : t('simulated_radar')}
                     </span>
                     <button 
                       onClick={fetchFlights} 
@@ -465,15 +467,15 @@ export default function TrackerPage() {
                 {/* Quick Stats Grid */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="p-2.5 rounded-xl text-center border border-slate-800 bg-slate-900/50">
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">Tracked</p>
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">{t('tracked')}</p>
                     <p className="text-lg font-black text-rose-500">{totalFlights}</p>
                   </div>
                   <div className="p-2.5 rounded-xl text-center border border-slate-800 bg-slate-900/50">
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">Avg Speed</p>
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">{t('avg_speed')}</p>
                     <p className="text-sm font-black">{avgSpeed} <span className="text-[8px] font-normal">kts</span></p>
                   </div>
                   <div className="p-2.5 rounded-xl text-center border border-slate-800 bg-slate-900/50">
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">Avg Alt</p>
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-0.5">{t('avg_altitude')}</p>
                     <p className="text-sm font-black">{Math.round(avgAltitude/1000)}k <span className="text-[8px] font-normal">ft</span></p>
                   </div>
                 </div>
@@ -484,7 +486,7 @@ export default function TrackerPage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search flight no. or country..."
+                    placeholder={t('search_placeholder')}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm border border-slate-800 bg-slate-900/60 focus:outline-none focus:ring-1 focus:ring-rose-500/50 text-white"
                   />
                 </div>
@@ -607,7 +609,7 @@ export default function TrackerPage() {
                       <div className="w-full border-t border-dashed border-slate-700 relative top-1 flex items-center justify-center">
                         <Plane className="h-3.5 w-3.5 text-rose-500 absolute -top-1.5 rotate-90" />
                       </div>
-                      <span className="text-[8px] text-rose-400 font-black mt-3 tracking-wider">EN ROUTE</span>
+                      <span className="text-[8px] text-rose-400 font-black mt-3 tracking-wider">{t('en_route')}</span>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-black tracking-tight text-rose-500 leading-none mb-1">{selectedFlight.destination.code}</p>
@@ -618,8 +620,8 @@ export default function TrackerPage() {
                   </div>
                   <div className="mt-3 text-[9px] text-slate-400 font-semibold border-t border-slate-800/80 pt-2 flex flex-col space-y-1">
                     <div className="flex justify-between">
-                      <span className="truncate max-w-[150px]"><span className="text-slate-500">Origin:</span> {selectedFlight.departure.name}</span>
-                      <span className="truncate max-w-[150px]"><span className="text-slate-500">Dest:</span> {selectedFlight.destination.name}</span>
+                      <span className="truncate max-w-[150px]"><span className="text-slate-500">{t('origin')}:</span> {selectedFlight.departure.name}</span>
+                      <span className="truncate max-w-[150px]"><span className="text-slate-500">{t('dest')}:</span> {selectedFlight.destination.name}</span>
                     </div>
                   </div>
                 </div>
@@ -630,28 +632,28 @@ export default function TrackerPage() {
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/50">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center space-x-1">
                     <Compass className="h-3 w-3 text-emerald-400" />
-                    <span>Altitude</span>
+                    <span>{t('altitude')}</span>
                   </p>
                   <p className="text-base font-extrabold">{selectedFlight.altitude.toLocaleString()} <span className="text-[10px] text-slate-400 font-normal">FT</span></p>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/50">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center space-x-1">
                     <Navigation className="h-3 w-3 text-sky-400" />
-                    <span>Speed</span>
+                    <span>{t('speed')}</span>
                   </p>
                   <p className="text-base font-extrabold">{selectedFlight.velocity} <span className="text-[10px] text-slate-400 font-normal">KTS</span></p>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/50">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center space-x-1">
                     <Compass className="h-3 w-3 text-amber-500" />
-                    <span>Heading</span>
+                    <span>{t('heading')}</span>
                   </p>
                   <p className="text-base font-extrabold">{selectedFlight.heading}° <span className="text-[10px] text-slate-400 font-normal">TRUE</span></p>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/50">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center space-x-1">
                     <Cloud className="h-3 w-3 text-purple-400" />
-                    <span>V-Rate</span>
+                    <span>{t('vrate')}</span>
                   </p>
                   <p className="text-base font-extrabold">
                     {selectedFlight.verticalRate > 0 ? `+${selectedFlight.verticalRate}` : selectedFlight.verticalRate} <span className="text-[10px] text-slate-400 font-normal">FPM</span>
@@ -667,6 +669,33 @@ export default function TrackerPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Map Legend Overlay */}
+        <div 
+          className="absolute bottom-6 z-10 p-3.5 rounded-xl bg-slate-950/90 text-white shadow-2xl border border-slate-800 backdrop-blur-md text-[10px] font-bold space-y-1.5 pointer-events-none hidden md:block"
+          style={{ 
+            left: sidebarOpen ? '398px' : '24px', 
+            transition: 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' 
+          }}
+        >
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 mb-1 border-b border-slate-800 pb-1">{t('legend_title')}</p>
+          <div className="flex items-center space-x-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#06b6d4]"></div>
+            <span>{t('legend_cruising')}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></div>
+            <span>{t('legend_transition')}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></div>
+            <span>{t('legend_approach')}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#f43f5e]"></div>
+            <span>{t('legend_selected')}</span>
+          </div>
+        </div>
       </div>
 
     </div>

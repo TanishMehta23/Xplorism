@@ -292,6 +292,7 @@ app.get('/hotels/search', async (req, res) => {
 
 
 // OpenSky Network API Proxy for Flight Tracker
+// OpenSky Network API Proxy for Flight Tracker (Enriched with 40 simulated flights globally)
 const MOCK_FLIGHTS = [
   { icao24: 'a81a70', callsign: 'AAL120', origin_country: 'United States', longitude: -73.97, latitude: 40.78, baro_altitude: 10500, on_ground: false, velocity: 230, true_track: 85, vertical_rate: 2.5 },
   { icao24: '400a0b', callsign: 'BAW2276', origin_country: 'United Kingdom', longitude: -0.12, latitude: 51.50, baro_altitude: 8200, on_ground: false, velocity: 195, true_track: 270, vertical_rate: -1.2 },
@@ -302,40 +303,80 @@ const MOCK_FLIGHTS = [
   { icao24: '7c19bb', callsign: 'QFA001', origin_country: 'Australia', longitude: 151.20, latitude: -33.86, baro_altitude: 12000, on_ground: false, velocity: 260, true_track: 220, vertical_rate: 0.2 },
   { icao24: '02008b', callsign: 'RAM200', origin_country: 'Morocco', longitude: -7.58, latitude: 33.57, baro_altitude: 7500, on_ground: false, velocity: 200, true_track: 15, vertical_rate: -2.0 },
   { icao24: 'e8029c', callsign: 'UAE201', origin_country: 'United Arab Emirates', longitude: 55.30, latitude: 25.25, baro_altitude: 10800, on_ground: false, velocity: 240, true_track: 120, vertical_rate: 0.8 },
-  { icao24: '4005ba', callsign: 'AFR006', origin_country: 'France', longitude: 2.35, latitude: 48.85, baro_altitude: 9000, on_ground: false, velocity: 210, true_track: 330, vertical_rate: -0.5 }
+  { icao24: '4005ba', callsign: 'AFR006', origin_country: 'France', longitude: 2.35, latitude: 48.85, baro_altitude: 9000, on_ground: false, velocity: 210, true_track: 330, vertical_rate: -0.5 },
+  
+  // Additional simulated flights to increase density
+  { icao24: '800532', callsign: 'AIC5BE', origin_country: 'India', longitude: 78.14, latitude: 25.10, baro_altitude: 11000, on_ground: false, velocity: 242, true_track: 276, vertical_rate: 0 },
+  { icao24: '800533', callsign: 'AIC203', origin_country: 'India', longitude: 72.86, latitude: 19.08, baro_altitude: 9500, on_ground: false, velocity: 210, true_track: 120, vertical_rate: 1.5 },
+  { icao24: '800534', callsign: 'AIC990', origin_country: 'India', longitude: 77.10, latitude: 28.55, baro_altitude: 3500, on_ground: false, velocity: 150, true_track: 90, vertical_rate: -2.5 },
+  { icao24: 'a81a71', callsign: 'AAL440', origin_country: 'United States', longitude: -118.40, latitude: 33.94, baro_altitude: 8000, on_ground: false, velocity: 205, true_track: 250, vertical_rate: 0 },
+  { icao24: 'a81a72', callsign: 'AAL921', origin_country: 'United States', longitude: -87.62, latitude: 41.87, baro_altitude: 10200, on_ground: false, velocity: 225, true_track: 15, vertical_rate: -1.0 },
+  { icao24: '400a0c', callsign: 'BAW224', origin_country: 'United Kingdom', longitude: -1.50, latitude: 52.20, baro_altitude: 9000, on_ground: false, velocity: 200, true_track: 180, vertical_rate: 0.5 },
+  { icao24: '400a0d', callsign: 'BAW902', origin_country: 'United Kingdom', longitude: -3.18, latitude: 55.95, baro_altitude: 11500, on_ground: false, velocity: 248, true_track: 340, vertical_rate: 0 },
+  { icao24: '3c65c3', callsign: 'DLH102', origin_country: 'Germany', longitude: 9.99, latitude: 53.55, baro_altitude: 7200, on_ground: false, velocity: 190, true_track: 220, vertical_rate: -2.0 },
+  { icao24: '3c65c4', callsign: 'DLH882', origin_country: 'Germany', longitude: 11.58, latitude: 48.13, baro_altitude: 11000, on_ground: false, velocity: 235, true_track: 45, vertical_rate: 0.8 },
+  { icao24: 'e8029d', callsign: 'UAE412', origin_country: 'United Arab Emirates', longitude: 54.37, latitude: 24.45, baro_altitude: 9000, on_ground: false, velocity: 215, true_track: 140, vertical_rate: 0 },
+  { icao24: 'e8029e', callsign: 'UAE001', origin_country: 'United Arab Emirates', longitude: 56.12, latitude: 25.80, baro_altitude: 12000, on_ground: false, velocity: 265, true_track: 270, vertical_rate: 0.1 },
+  { icao24: '7c0d21', callsign: 'SIA008', origin_country: 'Singapore', longitude: 101.50, latitude: 3.13, baro_altitude: 8500, on_ground: false, velocity: 202, true_track: 15, vertical_rate: -1.5 },
+  { icao24: '7c0d22', callsign: 'SIA224', origin_country: 'Singapore', longitude: 104.20, latitude: 2.10, baro_altitude: 10800, on_ground: false, velocity: 240, true_track: 180, vertical_rate: 0.5 },
+  { icao24: '7c19bc', callsign: 'QFA024', origin_country: 'Australia', longitude: 144.96, latitude: -37.81, baro_altitude: 9200, on_ground: false, velocity: 220, true_track: 330, vertical_rate: -0.8 },
+  { icao24: '7c19bd', callsign: 'QFA402', origin_country: 'Australia', longitude: 153.02, latitude: -27.46, baro_altitude: 11200, on_ground: false, velocity: 250, true_track: 200, vertical_rate: 0 },
+  { icao24: '4005bb', callsign: 'AFR124', origin_country: 'France', longitude: 5.36, latitude: 43.29, baro_altitude: 8100, on_ground: false, velocity: 198, true_track: 110, vertical_rate: -1.2 },
+  { icao24: '4005bc', callsign: 'AFR892', origin_country: 'France', longitude: 4.83, latitude: 45.76, baro_altitude: 10500, on_ground: false, velocity: 232, true_track: 30, vertical_rate: 0 },
+  { icao24: '7c12b2', callsign: 'ANA901', origin_country: 'Japan', longitude: 135.50, latitude: 34.69, baro_altitude: 8800, on_ground: false, velocity: 212, true_track: 245, vertical_rate: -0.5 },
+  { icao24: '7c12b3', callsign: 'ANA008', origin_country: 'Japan', longitude: 141.35, latitude: 43.06, baro_altitude: 11400, on_ground: false, velocity: 245, true_track: 20, vertical_rate: 0.4 },
+  { icao24: '02008c', callsign: 'RAM410', origin_country: 'Morocco', longitude: -6.84, latitude: 33.97, baro_altitude: 6200, on_ground: false, velocity: 185, true_track: 95, vertical_rate: -2.2 }
 ];
 
 function getMockFlights() {
   const time = Math.floor(Date.now() / 1000);
-  return MOCK_FLIGHTS.map((f, i) => {
-    const driftAngle = (time / 100 + i * 20) * (Math.PI / 180);
-    const driftRadius = 0.05 + (i * 0.01);
-    const newLon = f.longitude + Math.cos(driftAngle) * driftRadius;
-    const newLat = f.latitude + Math.sin(driftAngle) * driftRadius;
-    const newAlt = f.baro_altitude + Math.round(Math.sin(time / 20 + i) * 300);
-    const newSpeed = f.velocity + Math.round(Math.sin(time / 10 + i) * 15);
-    const newTrack = (f.true_track + Math.round(time / 5) % 360) % 360;
-
-    return [
-      f.icao24,
-      f.callsign.padEnd(8, ' '),
-      f.origin_country,
+  const totalSimulated = 450;
+  const list = [];
+  
+  for (let i = 0; i < totalSimulated; i++) {
+    const base = MOCK_FLIGHTS[i % MOCK_FLIGHTS.length];
+    
+    // Generate unique hex code
+    const uniqueIcao = (0x800000 + i * 437).toString(16).slice(-6);
+    
+    // Generate unique callsign
+    const prefix = base.callsign.substring(0, 3);
+    const flightNum = (100 + i * 7) % 1000;
+    const uniqueCallsign = `${prefix}${flightNum}`.padEnd(8, ' ');
+    
+    // Spread coordinates around the base country hub
+    // To make sure they are not clustered in exactly the same spot
+    const angle = (time / 150 + i * 15) * (Math.PI / 180);
+    const distanceOffset = 0.8 + ((i * 0.17) % 6.0); // spread up to 6 degrees (~600km)
+    
+    const newLon = base.longitude + Math.cos(angle) * distanceOffset;
+    const newLat = base.latitude + Math.sin(angle) * distanceOffset;
+    
+    const newAlt = base.baro_altitude + Math.round(Math.sin(time / 20 + i) * 600) + ((i * 200) % 8000);
+    const newSpeed = base.velocity + Math.round(Math.sin(time / 10 + i) * 20) + ((i * 5) % 100);
+    const newTrack = (base.true_track + (i * 25)) % 360;
+    
+    list.push([
+      uniqueIcao,
+      uniqueCallsign,
+      base.origin_country,
       time,
       time,
       newLon,
       newLat,
       newAlt,
-      f.on_ground,
+      base.on_ground,
       newSpeed,
       newTrack,
-      f.vertical_rate,
+      base.vertical_rate,
       null,
       newAlt + 15,
       "7000",
       false,
       0
-    ];
-  });
+    ]);
+  }
+  return list;
 }
 const AIRPORTS = [
   { code: 'JFK', name: 'John F. Kennedy International', city: 'New York', country: 'United States', lat: 40.6413, lon: -73.7781 },

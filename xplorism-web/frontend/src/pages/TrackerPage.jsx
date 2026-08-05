@@ -534,7 +534,7 @@ export default function TrackerPage() {
 
               {/* Flights list */}
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {loading && flights.length === 0 ? (
+                {loading ? (
                   <div className="flex flex-col items-center justify-center py-12 space-y-4">
                     <div className="h-8 w-8 border-3 border-rose-100 border-t-rose-500 rounded-full animate-spin" />
                     <p className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Scanning skies for aircraft...</p>

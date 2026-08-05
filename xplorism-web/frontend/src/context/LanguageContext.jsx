@@ -254,7 +254,8 @@ const translations = {
     confirm_delete_post: 'Are you sure you want to delete this post?',
     likes: 'Likes',
     toast_post_deleted: 'Post deleted successfully',
-    toast_delete_post_fail: 'Failed to delete post.'
+    toast_delete_post_fail: 'Failed to delete post.',
+    deleting: 'Deleting...'
   },
   es: {
     // Navbar
@@ -507,7 +508,8 @@ const translations = {
     confirm_delete_post: '¿Estás seguro de que deseas eliminar esta publicación?',
     likes: 'Me gusta',
     toast_post_deleted: 'Publicación eliminada correctamente',
-    toast_delete_post_fail: 'Error al eliminar la publicación.'
+    toast_delete_post_fail: 'Error al eliminar la publicación.',
+    deleting: 'Eliminando...'
   },
   fr: {
     // Navbar
@@ -760,7 +762,8 @@ const translations = {
     confirm_delete_post: 'Êtes-vous sûr de vouloir supprimer cette publication ?',
     likes: 'J\'aime',
     toast_post_deleted: 'Publication supprimée avec succès',
-    toast_delete_post_fail: 'Échec de la suppression de la publication.'
+    toast_delete_post_fail: 'Échec de la suppression de la publication.',
+    deleting: 'Suppression...'
   },
   de: {
     // Navbar
@@ -1013,7 +1016,8 @@ const translations = {
     confirm_delete_post: 'Sind Sie sicher, dass Sie diesen Beitrag löschen möchten?',
     likes: 'Gefällt mir',
     toast_post_deleted: 'Beitrag erfolgreich gelöscht',
-    toast_delete_post_fail: 'Beitrag konnte nicht gelöscht werden.'
+    toast_delete_post_fail: 'Beitrag konnte nicht gelöscht werden.',
+    deleting: 'Löschen...'
   },
   hi: {
     // Navbar
@@ -1266,7 +1270,8 @@ const translations = {
     confirm_delete_post: 'क्या आप वाकई इस पोस्ट को हटाना चाहते हैं?',
     likes: 'पसंद',
     toast_post_deleted: 'पोस्ट सफलतापूर्वक हटा दिया गया',
-    toast_delete_post_fail: 'पोस्ट हटाने में विफल।'
+    toast_delete_post_fail: 'पोस्ट हटाने में विफल।',
+    deleting: 'हटाया जा रहा है...'
   },
   ar: {
     // Navbar
@@ -1519,7 +1524,8 @@ const translations = {
     confirm_delete_post: 'هل أنت متأكد أنك تريد حذف هذا المنشور؟',
     likes: 'إعجابات',
     toast_post_deleted: 'تم حذف المنشور بنجاح',
-    toast_delete_post_fail: 'فشل في حذف المنشور.'
+    toast_delete_post_fail: 'فشل في حذف المنشور.',
+    deleting: 'جاري الحذف...'
   },
   pt: {
     // Navbar
@@ -1773,7 +1779,8 @@ const translations = {
     confirm_delete_post: 'Tem a certeza de que deseja eliminar esta publicação?',
     likes: 'Gostos',
     toast_post_deleted: 'Publicação eliminada com sucesso',
-    toast_delete_post_fail: 'Falha ao eliminar publicação.'
+    toast_delete_post_fail: 'Falha ao eliminar publicação.',
+    deleting: 'A eliminar...'
   }
 };
 

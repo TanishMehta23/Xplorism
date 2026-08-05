@@ -1111,3 +1111,61 @@ function mockOcr(fileName) {
   return { itemName, category, actualAmount };
 }
 
+/**
+ * Calls Gemini API to retrieve real-world flight details for a callsign
+ */
+export const getFlightDetailsFromGemini = async (callsign) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const prompt = `You are a flight tracker database. For the flight callsign "${callsign}", search your knowledge base for the actual, real-world route of this flight (even if it's currently not flying or was flying recently).
+Provide the:
+- Operator/Airline Name
+- Aircraft Type
+- Departure Airport (code, name, city, country, lat, lon)
+- Destination Airport (code, name, city, country, lat, lon)
+
+You must return a JSON object conforming exactly to this schema:
+{
+  "airlineName": "Airline Name (e.g. IndiGo)",
+  "aircraftType": "Aircraft Type (e.g. Airbus A321)",
+  "originCountry": "Country of registration/origin",
+  "departure": {
+    "code": "Origin Airport Code (e.g. DEL)",
+    "name": "Origin Airport Name (e.g. Indira Gandhi International)",
+    "city": "Origin City (e.g. Delhi)",
+    "country": "Origin Country (e.g. India)",
+    "lat": 28.5562,
+    "lon": 77.1000
+  },
+  "destination": {
+    "code": "Destination Airport Code (e.g. VNS)",
+    "name": "Destination Airport Name (e.g. Varanasi Airport)",
+    "city": "Destination City (e.g. Varanasi)",
+    "country": "Destination Country (e.g. India)",
+    "lat": 25.4496,
+    "lon": 82.8596
+  }
+}
+
+Only return the raw JSON object conforming to the schema above. Do not include markdown code block formatting (like \`\`\`json) or additional conversational text.`;
+
+  const models = getGeminiModels();
+  for (const model of models) {
+    try {
+      console.log(`Querying Gemini model ${model} for flight details: ${callsign}`);
+      const textResponse = await callGeminiAPI(model, prompt, apiKey);
+      let jsonStr = textResponse.trim();
+      const firstBrace = jsonStr.indexOf('{');
+      const lastBrace = jsonStr.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+      }
+      return JSON.parse(jsonStr);
+    } catch (err) {
+      console.warn(`Gemini flight details query failed for model ${model}:`, err.message);
+    }
+  }
+  return null;
+};
+

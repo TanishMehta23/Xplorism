@@ -14,6 +14,8 @@ import HotelBookingPage from './pages/HotelBookingPage';
 import ProfilePage from './pages/ProfilePage';
 import TrackerPage from './pages/TrackerPage';
 import MapPage from './pages/MapPage';
+import DocumentVaultPage from './pages/DocumentVaultPage';
+import CommunityFeedPage from './pages/CommunityFeedPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route component
@@ -138,6 +140,24 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MapPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/vault"
+        element={
+          <ProtectedRoute>
+            <DocumentVaultPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/community"
+        element={
+          <ProtectedRoute>
+            <CommunityFeedPage />
           </ProtectedRoute>
         }
       />

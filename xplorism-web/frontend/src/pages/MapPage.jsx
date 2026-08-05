@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Compass, MapPin, Search, Plus, Trash2, ArrowLeft, Loader2, Sparkles, AlertCircle, CheckCircle, Globe,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Heart
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { api } from '../services/api';
@@ -38,19 +38,73 @@ export default function MapPage() {
   const [globeReady, setGlobeReady] = useState(false);
   const [webglError, setWebglError] = useState(false);
 
-  // Poll for Globe.gl script load
+  // Robust script loader with CDN fallbacks
   useEffect(() => {
-    if (window.Globe) {
-      setGlobeReady(true);
-    } else {
-      const interval = setInterval(() => {
-        if (window.Globe) {
+    const loadGlobeAssets = async () => {
+      if (window.Globe && window.THREE) {
+        setGlobeReady(true);
+        return;
+      }
+
+      const scriptPromises = [];
+
+      // Check and load Three.js first
+      if (!window.THREE) {
+        const threePromise = new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/three@0.145.0/build/three.min.js';
+          script.onload = () => {
+            console.log('Three.js loaded successfully from jsdelivr');
+            resolve(true);
+          };
+          script.onerror = () => {
+            console.warn('Three.js jsdelivr load failed, falling back to cdnjs...');
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+            fallbackScript.onload = resolve;
+            fallbackScript.onerror = () => {
+              console.error('Three.js failed to load from fallback CDN');
+              resolve(false);
+            };
+            document.head.appendChild(fallbackScript);
+          };
+          document.head.appendChild(script);
+        });
+        scriptPromises.push(threePromise);
+      } else {
+        scriptPromises.push(Promise.resolve(true));
+      }
+
+      // Wait for Three.js to finish loading before loading Globe.gl to avoid dependencies collision
+      await Promise.all(scriptPromises);
+
+      if (!window.Globe) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/globe.gl@2.28.3/dist/globe.gl.min.js';
+        script.onload = () => {
+          console.log('Globe.gl loaded successfully');
           setGlobeReady(true);
-          clearInterval(interval);
-        }
-      }, 100);
-      return () => clearInterval(interval);
-    }
+        };
+        script.onerror = () => {
+          console.warn('Globe.gl jsdelivr load failed, falling back to unpkg...');
+          const fallbackScript = document.createElement('script');
+          fallbackScript.src = 'https://unpkg.com/globe.gl@2.28.3/dist/globe.gl.min.js';
+          fallbackScript.onload = () => {
+            setGlobeReady(true);
+          };
+          fallbackScript.onerror = () => {
+            console.error('Failed to load Globe.gl from fallback CDN');
+            setWebglError(true);
+          };
+          document.head.appendChild(fallbackScript);
+        };
+        document.head.appendChild(script);
+      } else {
+        setGlobeReady(true);
+      }
+    };
+
+    loadGlobeAssets();
   }, []);
 
   // Fetch Trips & Load Wishlist
@@ -193,16 +247,19 @@ export default function MapPage() {
     const globeMaterial = globe.globeMaterial();
     globeMaterial.bumpScale = 10;
     
-    if (globeStyle === 'hologram') {
+    if (globeStyle === 'hologram' && window.THREE) {
       globeMaterial.color = new window.THREE.Color('#064e3b');
       globeMaterial.emissive = new window.THREE.Color('#022c22');
       globeMaterial.wireframe = true;
     }
 
-    globe.controls().autoRotate = autoRotate;
-    globe.controls().autoRotateSpeed = rotationSpeed;
-    globe.controls().enableDamping = true;
-    globe.controls().dampingFactor = 0.05;
+    const controls = globe.controls();
+    if (controls) {
+      controls.autoRotate = autoRotate;
+      controls.autoRotateSpeed = rotationSpeed;
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+    }
 
     if (window.THREE && globeStyle !== 'hologram') {
       new window.THREE.TextureLoader().load('https://unpkg.com/three-globe/example/img/earth-water.png', texture => {
@@ -257,22 +314,20 @@ export default function MapPage() {
 
     setGlobeInstance(globe);
 
-    const handleResize = () => {
-      if (!globeElRef.current || !globe) return;
-      const w = globeElRef.current.clientWidth;
-      const h = globeElRef.current.clientHeight;
-      globe.width(w).height(h);
-    };
-    window.addEventListener('resize', handleResize);
-
-    // Call resize at multiple layout intervals to ensure perfect alignment & centering
-    const delays = [100, 300, 800, 1500];
-    delays.forEach(delay => {
-      setTimeout(handleResize, delay);
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0 && globe) {
+          globe.width(width).height(height);
+        }
+      }
     });
+    if (globeElRef.current) {
+      resizeObserver.observe(globeElRef.current);
+    }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
@@ -286,8 +341,11 @@ export default function MapPage() {
   // Handle auto-rotation speed and toggles dynamically
   useEffect(() => {
     if (!globeInstance) return;
-    globeInstance.controls().autoRotate = autoRotate;
-    globeInstance.controls().autoRotateSpeed = rotationSpeed;
+    const controls = globeInstance.controls();
+    if (controls) {
+      controls.autoRotate = autoRotate;
+      controls.autoRotateSpeed = rotationSpeed;
+    }
   }, [globeInstance, autoRotate, rotationSpeed]);
 
   // Handle clouds visibility dynamically
@@ -316,7 +374,7 @@ export default function MapPage() {
     const arcs = [];
 
     // Connect first trip to other trips
-    trips.slice(1).forEach(trip => {
+    trips.slice(1).forEach((trip, idx) => {
       const coords = tripCoords[trip.id];
       if (coords) {
         arcs.push({
@@ -324,19 +382,21 @@ export default function MapPage() {
           startLng: firstCoords.lon,
           endLat: coords.lat,
           endLng: coords.lon,
-          color: '#3b82f6', // blue arc
+          color: '#3b82f6',
+          altitude: 0.15 + (idx * 0.05) % 0.25
         });
       }
     });
 
     // Connect first trip to wishlist dream destinations
-    wishlist.forEach(pin => {
+    wishlist.forEach((pin, idx) => {
       arcs.push({
         startLat: firstCoords.lat,
         startLng: firstCoords.lon,
         endLat: pin.lat,
         endLng: pin.lon,
-        color: '#f43f5e', // rose arc
+        color: '#f43f5e',
+        altitude: 0.20 + (idx * 0.05) % 0.25
       });
     });
 
@@ -346,12 +406,12 @@ export default function MapPage() {
       .arcStartLng('startLng')
       .arcEndLat('endLat')
       .arcEndLng('endLng')
-      .arcColor('color')
-      .arcDashLength(0.25)
-      .arcDashGap(0.1)
-      .arcDashAnimateTime(2000)
-      .arcStroke(1.5)
-      .arcAltitude(0.25);
+      .arcColor(d => d.color)
+      .arcDashLength(0.35)
+      .arcDashGap(0.15)
+      .arcDashAnimateTime(1200)
+      .arcStroke(1.2)
+      .arcAltitude('altitude');
   }, [globeInstance, trips, wishlist, tripCoords, showArcs]);
 
   // Update Points and Arcs on Globe when data updates
@@ -458,12 +518,16 @@ export default function MapPage() {
       globeInstance.pointOfView({ lat, lng: lon, altitude: 1.5 }, 1200);
       
       // Briefly pause auto-rotation to let user look at destination
-      globeInstance.controls().autoRotate = false;
-      setTimeout(() => {
-        if (globeInstance) {
-          globeInstance.controls().autoRotate = true;
-        }
-      }, 5000);
+      const controls = globeInstance.controls();
+      if (controls) {
+        controls.autoRotate = false;
+        setTimeout(() => {
+          const freshControls = globeInstance.controls();
+          if (freshControls) {
+            freshControls.autoRotate = true;
+          }
+        }, 5000);
+      }
     }
   };
 
@@ -501,6 +565,57 @@ export default function MapPage() {
     setTimeout(() => {
       focusOnCoordinates(suggestion.lat, suggestion.lon);
     }, 100);
+  };
+
+  // Check if a trip destination is in the wishlist
+  const isTripInWishlist = (trip) => {
+    return wishlist.some(
+      pin => pin.displayName.toLowerCase().trim() === trip.destination.toLowerCase().trim()
+    );
+  };
+
+  // Toggle wishlist state for planned trips
+  const handleToggleTripWishlist = async (trip) => {
+    const alreadyPinned = wishlist.some(
+      pin => pin.displayName.toLowerCase().trim() === trip.destination.toLowerCase().trim()
+    );
+
+    // Sync with backend /favorites DB table
+    try {
+      await api.post('/favorites', {
+        name: trip.destination,
+        type: 'trip',
+        destination: trip.destination,
+        description: `Trip to ${trip.destination}`,
+        imageUrl: trip.image || '',
+        tripId: trip.id
+      });
+    } catch (err) {
+      console.error("Failed to sync favorite with backend:", err);
+    }
+
+    if (alreadyPinned) {
+      // Remove from local storage wishlist
+      const updatedWishlist = wishlist.filter(
+        pin => pin.displayName.toLowerCase().trim() !== trip.destination.toLowerCase().trim()
+      );
+      setWishlist(updatedWishlist);
+      localStorage.setItem('xplorism_wishlist', JSON.stringify(updatedWishlist));
+    } else {
+      // Add to local storage wishlist
+      const coords = tripCoords[trip.id] || { lat: 0, lon: 0 };
+      const newPin = {
+        id: Date.now().toString(),
+        name: trip.destination.split(',')[0],
+        displayName: trip.destination,
+        lat: coords.lat,
+        lon: coords.lon,
+        pinnedAt: new Date().toISOString()
+      };
+      const updatedWishlist = [newPin, ...wishlist];
+      setWishlist(updatedWishlist);
+      localStorage.setItem('xplorism_wishlist', JSON.stringify(updatedWishlist));
+    }
   };
 
   // Add Wishlist Pin Handler
@@ -693,9 +808,25 @@ export default function MapPage() {
                           {new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                         </p>
                       </div>
-                      <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                        {t('active_badge')}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleTripWishlist(trip);
+                          }}
+                          className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+                          title="Pin destination to Wishlist"
+                        >
+                          <Heart 
+                            className={`h-4 w-4 transition-colors ${
+                              isTripInWishlist(trip) ? 'fill-rose-500 text-rose-500' : 'text-slate-400 hover:text-rose-500'
+                            }`} 
+                          />
+                        </button>
+                        <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                          {t('active_badge')}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>

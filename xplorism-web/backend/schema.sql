@@ -78,3 +78,34 @@ ALTER TABLE trips ADD COLUMN IF NOT EXISTS packing_list JSONB;
 
 -- Ensure users table password column is nullable (for Google Sign-In support)
 ALTER TABLE users ALTER COLUMN password DROP NOT NULL;
+
+-- Documents Table for Vault Storage
+CREATE TABLE documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL, -- 'passport', 'visa', 'ticket', 'hotel', 'insurance', 'other'
+    doc_number VARCHAR(100),
+    expiry_date DATE,
+    notes TEXT,
+    file_name VARCHAR(255),
+    file_content TEXT, -- Base64 encoded file content
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Alter expenses table to support paid_by (for co-traveler bill splitting)
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS paid_by VARCHAR(255) DEFAULT 'Me';
+
+-- Posts Table for Community / Social Feed
+CREATE TABLE IF NOT EXISTS posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    username VARCHAR(150) NOT NULL,
+    trip_destination VARCHAR(255),
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    photo_content TEXT, -- Base64 encoded image
+    likes INTEGER NOT NULL DEFAULT 0,
+    liked_by TEXT[] DEFAULT '{}', -- Array of user IDs who liked
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

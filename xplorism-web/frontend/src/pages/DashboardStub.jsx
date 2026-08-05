@@ -252,7 +252,7 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
   );
 };
 
-const ActivityCard = ({ item, tripCurrency }) => {
+const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => {
   const [imageSrc, setImageSrc] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -331,14 +331,23 @@ const ActivityCard = ({ item, tripCurrency }) => {
           </a>
         </div>
 
-        <div className="flex-1 space-y-2">
-          <h4 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug">
-            {item.location}
-          </h4>
+        <div className="flex-1 space-y-2 w-full">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug">
+              {item.location}
+            </h4>
+            <button
+              onClick={onToggleFavorite}
+              className="p-1.5 rounded-full hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0"
+              title="Toggle Favorite"
+            >
+              <Heart className={`h-4 w-4 transition-colors ${isFavorited ? 'fill-rose-500 text-rose-500' : ''}`} />
+            </button>
+          </div>
           <p className="text-slate-600 text-sm leading-relaxed font-normal">
             {item.activity}
           </p>
-          <div className="flex flex-wrap items-center gap-4 text-slate-550 text-xs font-semibold pt-1">
+          <div className="flex flex-wrap items-center gap-4 text-slate-555 text-xs font-semibold pt-1">
             {item.location && (
               <div className="flex items-center space-x-1">
                 <MapPin className="h-3.5 w-3.5 text-slate-400" />
@@ -1600,45 +1609,70 @@ export default function DashboardStub() {
             <p className="text-xs text-slate-400">Save attractions and activities you love from trip details to build your wishlist.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {favorites.map((fav) => (
-              <div key={fav.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition group">
-                {fav.image_url && (
-                  <div className="h-32 w-full overflow-hidden">
-                    <img src={fav.image_url} alt={fav.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  </div>
-                )}
-                <div className="p-4">
-                  <div className="flex items-start justify-between">
-                    <h4 className="text-sm font-bold text-slate-900 flex-1 truncate">{fav.name}</h4>
-                    <button
-                      onClick={() => handleRemoveFavorite(fav.id)}
-                      className="p-1 rounded-full hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition ml-2 cursor-pointer shrink-0"
-                      title="Remove from favorites"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  {fav.location && (
-                    <div className="flex items-center space-x-1 mt-1">
-                      <MapPin className="h-3 w-3 text-slate-400" />
-                      <span className="text-[10px] text-slate-500 truncate">{fav.location}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
+            {favorites.map((fav) => {
+              const isTripFav = fav.type === 'trip';
+              return (
+                <div 
+                  key={fav.id} 
+                  onClick={() => {
+                    if (isTripFav) {
+                      const matchedTrip = trips.find(t => t.id === fav.trip_id || t.id === fav.tripId || t.destination === fav.destination);
+                      if (matchedTrip) {
+                        setSelectedTrip(matchedTrip);
+                        setActiveDayTab(1);
+                      }
+                    }
+                  }}
+                  className={`bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition group ${
+                    isTripFav ? 'cursor-pointer hover:border-rose-400 hover:ring-2 hover:ring-rose-500/10' : ''
+                  }`}
+                >
+                  {fav.image_url && (
+                    <div className="h-32 w-full overflow-hidden relative">
+                      <img src={fav.image_url} alt={fav.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      {isTripFav && (
+                        <div className="absolute inset-0 bg-slate-900/15" />
+                      )}
                     </div>
                   )}
-                  {fav.description && (
-                    <p className="text-[10px] text-slate-400 mt-1.5 line-clamp-2">{fav.description}</p>
-                  )}
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {fav.type && (
-                      <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-500 text-[9px] font-semibold">{fav.type}</span>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between">
+                      <h4 className="text-sm font-bold text-slate-900 flex-1 truncate">{fav.name}</h4>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFavorite(fav.id);
+                        }}
+                        className="p-1 rounded-full hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition ml-2 cursor-pointer shrink-0"
+                        title="Remove from favorites"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    {fav.location && (
+                      <div className="flex items-center space-x-1 mt-1">
+                        <MapPin className="h-3 w-3 text-slate-400" />
+                        <span className="text-[10px] text-slate-500 truncate">{fav.location}</span>
+                      </div>
                     )}
-                    {fav.destination && (
-                      <span className="px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 text-[9px] font-semibold">{fav.destination}</span>
+                    {fav.description && (
+                      <p className="text-[10px] text-slate-400 mt-1.5 line-clamp-2">{fav.description}</p>
                     )}
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${
+                        isTripFav ? 'bg-blue-50 text-blue-500' : 'bg-rose-50 text-rose-500'
+                      }`}>
+                        {isTripFav ? 'Whole Trip' : fav.type}
+                      </span>
+                      {fav.destination && !isTripFav && (
+                        <span className="px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 text-[9px] font-semibold">{fav.destination}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -1855,23 +1889,35 @@ export default function DashboardStub() {
                           ) : nearbyPlaces.length === 0 ? (
                             <p className="col-span-2 text-slate-400 text-xs text-center py-8">No nearby places found.</p>
                           ) : (
-                            nearbyPlaces.map((place, idx) => (
-                              <div key={idx} className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between">
-                                <div>
-                                  <h4 className="text-xs font-bold text-slate-800 mb-1">{place.name}</h4>
-                                  <div className="flex flex-wrap gap-1.5 mb-2">
-                                    <span className="inline-flex items-center text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                                      <TripIcon className="h-2.5 w-2.5 mr-0.5 text-slate-400" />
-                                      {place.distance}
-                                    </span>
-                                    <span className="inline-flex items-center text-[9px] font-medium text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">
-                                      {place.type}
-                                    </span>
+                            nearbyPlaces.map((place, idx) => {
+                              const isFav = favorites.some(fav => fav.name.toLowerCase().trim() === place.name.toLowerCase().trim());
+                              return (
+                                <div key={idx} className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between relative group">
+                                  <div>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h4 className="text-xs font-bold text-slate-800 mb-1">{place.name}</h4>
+                                      <button
+                                        onClick={() => handleToggleFavorite(place)}
+                                        className="p-1 rounded-full hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0"
+                                        title="Toggle Favorite"
+                                      >
+                                        <Heart className={`h-3.5 w-3.5 transition-colors ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
+                                      </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 mb-2">
+                                      <span className="inline-flex items-center text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                        <TripIcon className="h-2.5 w-2.5 mr-0.5 text-slate-400" />
+                                        {place.distance}
+                                      </span>
+                                      <span className="inline-flex items-center text-[9px] font-medium text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">
+                                        {place.type}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 leading-relaxed">{place.description}</p>
                                   </div>
-                                  <p className="text-[10px] text-slate-500 leading-relaxed">{place.description}</p>
                                 </div>
-                              </div>
-                            ))
+                              );
+                            })
                           )}
                         </div>
                       </div>
@@ -2058,9 +2104,18 @@ export default function DashboardStub() {
                         <p className="text-slate-400 text-sm text-center py-8">No activities scheduled for this day.</p>
                       ) : (
                         <div className="space-y-6">
-                          {getDayItineraries(selectedTrip).map((item, idx) => (
-                            <ActivityCard key={item.id || idx} item={item} tripCurrency={tripCurrency} />
-                          ))}
+                          {getDayItineraries(selectedTrip).map((item, idx) => {
+                            const isFav = favorites.some(fav => fav.name.toLowerCase().trim() === item.location.toLowerCase().trim());
+                            return (
+                              <ActivityCard 
+                                key={item.id || idx} 
+                                item={item} 
+                                tripCurrency={tripCurrency} 
+                                isFavorited={isFav}
+                                onToggleFavorite={() => handleToggleFavorite(item)}
+                              />
+                            );
+                          })}
                         </div>
                       )
                     )}

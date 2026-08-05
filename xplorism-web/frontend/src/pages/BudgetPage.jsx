@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DollarSign, Plus, Calendar, Compass as TripIcon,
-  Trash2, Users, Tag, Edit, Clock, ArrowLeft, AlertCircle, Save
+  Trash2, Users, Tag, Edit, Clock, ArrowLeft, AlertCircle, Save,
+  ArrowLeftRight, Coins
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -20,11 +21,113 @@ export default function BudgetPage() {
   const [loading, setLoading] = useState(true);
   const [budgetLoading, setBudgetLoading] = useState(true);
 
+  // Live Currency Rates Converter State
+  const [convAmount, setConvAmount] = useState('1');
+  const [fromCurr, setFromCurr] = useState('USD');
+  const [toCurr, setToCurr] = useState('INR');
+  const [rates, setRates] = useState({});
+  const [ratesLoading, setRatesLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchRates = async () => {
+      setRatesLoading(true);
+      try {
+        const res = await fetch(`https://open.er-api.com/v6/latest/${fromCurr}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.rates) {
+            setRates(data.rates);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch live exchange rates:", err);
+        // Fallback static mock rates mapping (standard conversion averages)
+        const mockRates = {
+          USD: { INR: 83.5, EUR: 0.92, GBP: 0.79, AED: 3.67, CAD: 1.37, AUD: 1.51, JPY: 156.4, USD: 1 },
+          EUR: { INR: 90.7, USD: 1.09, GBP: 0.86, AED: 3.99, CAD: 1.49, AUD: 1.64, JPY: 170.2, EUR: 1 },
+          INR: { USD: 0.012, EUR: 0.011, GBP: 0.009, AED: 0.044, CAD: 0.016, AUD: 0.018, JPY: 1.87, INR: 1 },
+          GBP: { USD: 1.27, EUR: 1.16, INR: 105.7, AED: 4.65, CAD: 1.73, AUD: 1.91, JPY: 198.1, GBP: 1 },
+          AED: { USD: 0.27, EUR: 0.25, INR: 22.7, GBP: 0.21, CAD: 0.37, AUD: 0.41, JPY: 42.6, AED: 1 }
+        };
+        const baseRates = mockRates[fromCurr] || mockRates['USD'];
+        setRates(baseRates);
+      } finally {
+        setRatesLoading(false);
+      }
+    };
+    fetchRates();
+  }, [fromCurr]);
+
+  const convertedValue = (() => {
+    const amt = parseFloat(convAmount);
+    if (isNaN(amt)) return 0;
+    if (fromCurr === toCurr) return amt;
+    const rate = rates[toCurr];
+    return rate ? (amt * rate).toFixed(2) : '...';
+  })();
+
+  const handleSwapCurrencies = () => {
+    const temp = fromCurr;
+    setFromCurr(toCurr);
+    setToCurr(temp);
+  };
+
   // Form State
-  const [expenseForm, setExpenseForm] = useState({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '' });
+  const [expenseForm, setExpenseForm] = useState({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '', paidBy: 'Me' });
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  // AI & OCR States
+  const [aiInsights, setAiInsights] = useState([]);
+  const [aiInsightsLoading, setAiInsightsLoading] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+
+  const handleFetchInsights = async () => {
+    setAiInsightsLoading(true);
+    try {
+      const res = await api.post(`/trips/${id}/budget/insights`);
+      if (res && res.insights) {
+        setAiInsights(res.insights);
+        showToast('AI Insights successfully updated!', 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to load AI Insights.', 'error');
+    } finally {
+      setAiInsightsLoading(false);
+    }
+  };
+
+  const handleReceiptOcr = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setOcrLoading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const res = await api.post(`/trips/${id}/budget/scan-receipt`, {
+          fileContent: reader.result,
+          fileName: file.name
+        });
+        if (res) {
+          setExpenseForm(prev => ({
+            ...prev,
+            itemName: res.itemName || '',
+            category: res.category === 'Food & Dining' ? 'Food' : res.category === 'Accommodation' ? 'Accommodation' : res.category === 'Transportation' ? 'Transport' : res.category === 'Activities & Tours' ? 'Activities' : res.category === 'Shopping' ? 'Shopping' : 'Other',
+            actualAmount: String(res.actualAmount || '')
+          }));
+          showToast('Receipt scanned! Form fields populated.', 'success');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to parse receipt image.', 'error');
+      } finally {
+        setOcrLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -242,9 +345,10 @@ export default function BudgetPage() {
         date: expenseForm.date,
         notes: expenseForm.notes || '',
         currency: tripCurrencyCode,
+        paidBy: expenseForm.paidBy || 'Me',
       });
       showToast(t('toast_expense_added'), 'success');
-      setExpenseForm({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '' });
+      setExpenseForm({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '', paidBy: 'Me' });
       setShowExpenseForm(false);
       fetchBudget();
     } catch (err) {
@@ -263,6 +367,7 @@ export default function BudgetPage() {
         actualAmount: parseFloat(editingExpense.actualAmount),
         date: editingExpense.date,
         notes: editingExpense.notes || '',
+        paidBy: editingExpense.paidBy || 'Me',
       });
       showToast(t('toast_expense_updated'), 'success');
       setEditingExpense(null);
@@ -295,9 +400,32 @@ export default function BudgetPage() {
       actualAmount: expense.actualAmount?.toString() || '',
       date: expense.date || '',
       notes: expense.notes || '',
+      paidBy: expense.paidBy || expense.paid_by || 'Me',
     });
     setShowExpenseForm(true);
   };
+
+  const totalSpentVal = budgetData?.categoryBreakdown?.reduce((sum, c) => sum + parseFloat(c.actual || 0), 0) || 0;
+
+  const getSlices = () => {
+    if (!budgetData || !budgetData.categoryBreakdown) return [];
+    let accumulatedPercent = 0;
+    return budgetData.categoryBreakdown.map(cat => {
+      const val = parseFloat(cat.actual || 0);
+      const pct = totalSpentVal > 0 ? (val / totalSpentVal) * 100 : 0;
+      const color = cat.category.toLowerCase().includes('accommodation') ? '#3b82f6'
+                  : cat.category.toLowerCase().includes('food') ? '#ef4444'
+                  : cat.category.toLowerCase().includes('activities') ? '#eab308'
+                  : cat.category.toLowerCase().includes('transport') ? '#10b981'
+                  : cat.category.toLowerCase().includes('shop') ? '#ec4899'
+                  : '#64748b';
+      const offset = accumulatedPercent;
+      accumulatedPercent += pct;
+      return { ...cat, pct, color, offset };
+    });
+  };
+
+  const slices = getSlices();
 
   if (loading) {
     return (
@@ -448,7 +576,7 @@ export default function BudgetPage() {
                 <div className="flex justify-between items-center mb-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">{t('utilization_progress')}</h3>
-                    <p className="text-xs text-slate-500">{t('utilization_progress_desc')}</p>
+                    <p className="text-xs text-slate-505">{t('utilization_progress_desc')}</p>
                   </div>
                   <span className={`text-sm font-extrabold ${(budgetData.utilizationPercent || budgetData.percentSpent || 0) > 80 ? 'text-rose-600' : (budgetData.utilizationPercent || budgetData.percentSpent || 0) > 50 ? 'text-amber-600' : 'text-emerald-600'}`}>
                     {Math.round(budgetData.utilizationPercent || budgetData.percentSpent || 0)}%
@@ -468,8 +596,8 @@ export default function BudgetPage() {
                   <div className="flex items-start space-x-3">
                     <AlertCircle className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
                     <div>
-                      <h4 className="text-sm font-bold text-emerald-800">Unsaved Pre-planned Itinerary</h4>
-                      <p className="text-xs text-emerald-700 mt-1">
+                      <h4 className="text-sm font-bold text-emerald-800 font-sans">Unsaved Pre-planned Itinerary</h4>
+                      <p className="text-xs text-emerald-705 mt-1 font-sans">
                         We are currently showing calculated budget estimates based on the pre-planned day itineraries. Save this trip to log actual expenses and tracking details.
                       </p>
                     </div>
@@ -477,7 +605,7 @@ export default function BudgetPage() {
                   <button
                     onClick={handleSavePrePlanned}
                     disabled={isSavingTrip}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shrink-0 shadow-sm flex items-center space-x-2"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shrink-0 shadow-sm flex items-center space-x-2 font-sans"
                   >
                     <Save className="h-4 w-4" />
                     <span>{isSavingTrip ? 'Saving...' : 'Save to My Trips'}</span>
@@ -485,14 +613,87 @@ export default function BudgetPage() {
                 </div>
               )}
 
-              {/* Category breakdown */}
+              {/* Visual Breakdown Analytics Dashboard */}
               {budgetData.categoryBreakdown && budgetData.categoryBreakdown.length > 0 && (
-                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                  <h3 className="text-sm font-bold text-slate-900 mb-6 flex items-center">
-                    <Tag className="h-4 w-4 mr-2 text-emerald-500" />
-                    {t('allocation_breakdown')}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
+                  <div className="flex justify-between items-center border-b pb-4 border-slate-100">
+                    <h3 className="text-sm font-bold text-slate-900 flex items-center">
+                      <Tag className="h-4.5 w-4.5 mr-2 text-emerald-500" />
+                      Visual Budget Analytics
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    {/* Doughnut Chart SVG */}
+                    <div className="md:col-span-4 text-center border-r border-slate-50 md:pr-4">
+                      <div className="relative inline-block">
+                        <svg width="120" height="120" viewBox="0 0 36 36" className="transform -rotate-90">
+                          <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
+                          {slices.map((slice, i) => slice.pct > 0 && (
+                            <circle
+                              key={i}
+                              cx="18"
+                              cy="18"
+                              r="15.915"
+                              fill="transparent"
+                              stroke={slice.color}
+                              strokeWidth="3.2"
+                              strokeDasharray={`${slice.pct} ${100 - slice.pct}`}
+                              strokeDashoffset={100 - slice.offset}
+                              className="transition-all duration-300 hover:stroke-[3.8]"
+                              title={`${slice.category}: ${slice.pct.toFixed(1)}%`}
+                            />
+                          ))}
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Spent</span>
+                          <span className="text-sm font-black text-slate-800 mt-0.5">
+                            {tripCurrency.symbol}{Math.round(totalSpentVal).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Comparative Planned vs Actual Bar Chart */}
+                    <div className="md:col-span-8 space-y-3.5">
+                      {budgetData.categoryBreakdown.map((cat, idx) => {
+                        const planned = parseFloat(cat.planned || 0);
+                        const actual = parseFloat(cat.actual || 0);
+                        const maxVal = Math.max(1, ...budgetData.categoryBreakdown.map(c => Math.max(parseFloat(c.planned || 0), parseFloat(c.actual || 0))));
+                        const plannedPct = (planned / maxVal) * 100;
+                        const actualPct = (actual / maxVal) * 100;
+                        const color = cat.category.toLowerCase().includes('accommodation') ? 'bg-blue-500'
+                                    : cat.category.toLowerCase().includes('food') ? 'bg-red-500'
+                                    : cat.category.toLowerCase().includes('activities') ? 'bg-amber-500'
+                                    : cat.category.toLowerCase().includes('transport') ? 'bg-emerald-500'
+                                    : cat.category.toLowerCase().includes('shop') ? 'bg-pink-500'
+                                    : 'bg-slate-500';
+
+                        return (
+                          <div key={idx} className="space-y-1 text-xs">
+                            <div className="flex justify-between font-bold text-slate-700">
+                              <span>{getCategoryTranslation(cat.category)}</span>
+                              <span>
+                                {tripCurrency.symbol}{Math.round(actual)} <span className="text-slate-400 font-medium">/ {tripCurrency.symbol}{Math.round(planned)}</span>
+                              </span>
+                            </div>
+                            <div className="space-y-0.5">
+                              {/* Planned Bar */}
+                              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-slate-300 rounded-full" style={{ width: `${plannedPct}%` }} />
+                              </div>
+                              {/* Actual Bar */}
+                              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div className={`h-full rounded-full ${color}`} style={{ width: `${actualPct}%` }} />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Standard category list grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-5 border-slate-100">
                     {budgetData.categoryBreakdown.map((cat, idx) => (
                       <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex justify-between items-center">
                         <div className="flex-1">
@@ -516,6 +717,47 @@ export default function BudgetPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* AI Smart Assistant Card */}
+              {!budgetData.isPrePlanned && (
+                <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 shadow-2xl relative overflow-hidden group">
+                  <div className="absolute -top-16 -right-16 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl group-hover:scale-125 transition duration-500" />
+                  <h3 className="text-sm font-extrabold flex items-center gap-2 mb-3">
+                    <span className="text-rose-500">🤖</span> Xplorism AI Smart Insights
+                  </h3>
+                  {aiInsightsLoading ? (
+                    <div className="flex items-center space-x-2 text-xs py-4 text-slate-400 font-bold">
+                      <div className="h-4.5 w-4.5 border-2 border-slate-700 border-t-rose-500 rounded-full animate-spin" />
+                      <span>Consulting Gemini for destination cost-saving recommendations...</span>
+                    </div>
+                  ) : aiInsights.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {aiInsights.map((insight, idx) => (
+                        <div key={idx} className="flex items-start space-x-2 text-xs bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/80">
+                          <span className="text-rose-500 font-bold shrink-0 mt-0.5">•</span>
+                          <p className="font-semibold text-slate-350 leading-relaxed">{insight}</p>
+                        </div>
+                      ))}
+                      <button
+                        onClick={handleFetchInsights}
+                        className="text-[10px] font-black text-rose-400 uppercase tracking-wider hover:text-rose-300 mt-2 block cursor-pointer transition"
+                      >
+                        Recalculate Tips
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <p className="text-xs text-slate-400 font-medium max-w-md">Let Gemini analyze your current category expenses and recommend hyper-localized savings for this trip.</p>
+                      <button
+                        onClick={handleFetchInsights}
+                        className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 font-black text-xs text-white transition active:scale-95 cursor-pointer shadow-md"
+                      >
+                        Get AI Coach Tips
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -552,6 +794,80 @@ export default function BudgetPage() {
                   </div>
                 </div>
               )}
+
+              {/* Co-Traveler Split Ledger */}
+              {!budgetData.isPrePlanned && (
+                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center">
+                    <Users className="h-4.5 w-4.5 mr-2 text-emerald-500" />
+                    👥 Co-Traveler Split Share Ledger
+                  </h3>
+                  
+                  {(() => {
+                    const travelersCount = Math.max(1, trip.travelers);
+                    const totalSpentVal = budgetData.totalActual || budgetData.totalSpent || 0;
+                    const targetShare = totalSpentVal / travelersCount;
+                    
+                    const payments = { 'Me': 0 };
+                    for (let i = 0; i < travelersCount - 1; i++) {
+                      payments[`Co-Traveler ${String.fromCharCode(65 + i)}`] = 0;
+                    }
+                    
+                    (budgetData.expenses || []).forEach(exp => {
+                      const payer = exp.paidBy || exp.paid_by || 'Me';
+                      const amt = parseFloat(exp.actualAmount || exp.actual_amount || 0);
+                      if (payments[payer] !== undefined) {
+                        payments[payer] += amt;
+                      } else {
+                        payments['Me'] += amt;
+                      }
+                    });
+                    
+                    return (
+                      <div className="space-y-4 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-2">
+                          {Object.entries(payments).map(([person, paid]) => {
+                            const balance = paid - targetShare;
+                            const isCreditor = balance >= 0;
+                            return (
+                              <div key={person} className="p-3.5 rounded-2xl border bg-slate-50/65 flex flex-col justify-between">
+                                <div>
+                                  <p className="text-[10px] text-slate-400 font-bold uppercase">{person === 'Me' ? 'Me (You)' : person}</p>
+                                  <p className="text-sm font-black text-slate-800 mt-1">{tripCurrency.symbol}{paid.toLocaleString()}</p>
+                                </div>
+                                <span className={`text-[9px] font-black uppercase mt-2.5 px-2.5 py-0.5 rounded-full w-max ${
+                                  isCreditor ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
+                                }`}>
+                                  {isCreditor ? `Owed: +${tripCurrency.symbol}${balance.toFixed(2)}` : `Owes: -${tripCurrency.symbol}${Math.abs(balance).toFixed(2)}`}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        <div className="p-3.5 rounded-2xl bg-slate-900 text-white text-[11px] font-semibold space-y-1.5">
+                          <p className="text-[10px] text-rose-400 font-black uppercase tracking-wider">Settlement Plan</p>
+                          {Object.entries(payments)
+                            .filter(([_, paid]) => paid < targetShare)
+                            .map(([debtor, paid]) => {
+                              const debt = targetShare - paid;
+                              const creditor = Object.entries(payments).find(([_, pPaid]) => pPaid > targetShare)?.[0] || 'Me';
+                              return (
+                                <p key={debtor} className="flex justify-between items-center text-slate-300">
+                                  <span>{debtor === 'Me' ? 'You' : debtor} should pay {creditor === 'Me' ? 'You' : creditor}:</span>
+                                  <span className="font-bold text-emerald-400">{tripCurrency.symbol}{debt.toFixed(2)}</span>
+                                </p>
+                              );
+                            })}
+                          {Object.values(payments).every(p => Math.abs(p - targetShare) < 1) && (
+                            <p className="text-emerald-400 font-bold">All traveler shares are perfectly balanced!</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
 
             {/* Right side: Add expense form & Expense History */}
@@ -563,6 +879,36 @@ export default function BudgetPage() {
                     <Plus className="h-4 w-4 mr-2 text-emerald-500" />
                     {t('add_new_expense')}
                   </h3>
+
+                  {/* Receipt OCR Scanner */}
+                  <div className="border border-dashed border-slate-200 rounded-xl p-3 bg-slate-50/50 hover:bg-slate-50 transition text-center space-y-2 relative">
+                    {ocrLoading ? (
+                      <div className="flex flex-col items-center justify-center py-2 space-y-1">
+                        <div className="h-4.5 w-4.5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin" />
+                        <span className="text-[10px] text-slate-450 font-bold">Scanning receipt & calculating totals...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center justify-center space-y-1">
+                          <Coins className="h-5 w-5 text-emerald-500 animate-pulse" />
+                          <span className="text-[10px] text-slate-500 font-bold">Log expense faster by scanning a receipt</span>
+                        </div>
+                        <input
+                          type="file"
+                          id="receipt-ocr-uploader"
+                          onChange={handleReceiptOcr}
+                          className="hidden"
+                          accept="image/*"
+                        />
+                        <label
+                          htmlFor="receipt-ocr-uploader"
+                          className="mx-auto px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9px] cursor-pointer transition active:scale-95 block w-max shadow-sm"
+                        >
+                          Scan Receipt File
+                        </label>
+                      </>
+                    )}
+                  </div>
 
                   <div className="space-y-3">
                     <div>
@@ -636,6 +982,22 @@ export default function BudgetPage() {
                       />
                     </div>
 
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Paid By</label>
+                      <select
+                        value={expenseForm.paidBy || 'Me'}
+                        onChange={(e) => setExpenseForm({...expenseForm, paidBy: e.target.value})}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-750 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
+                      >
+                        <option value="Me">Me (Current User)</option>
+                        {Array.from({ length: Math.max(0, trip.travelers - 1) }).map((_, i) => (
+                          <option key={i} value={`Co-Traveler ${String.fromCharCode(65 + i)}`}>
+                            Co-Traveler {String.fromCharCode(65 + i)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div className="pt-2">
                       <button
                         onClick={handleAddExpense}
@@ -649,14 +1011,14 @@ export default function BudgetPage() {
               ) : (
                 <div className="bg-white border border-slate-105 rounded-3xl p-6 shadow-sm text-center">
                   <DollarSign className="h-10 w-10 text-emerald-500 mx-auto mb-3" />
-                  <h4 className="text-sm font-bold text-slate-900 mb-2">Save Trip to Log Spending</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                  <h4 className="text-sm font-bold text-slate-900 mb-2 font-sans">Save Trip to Log Spending</h4>
+                  <p className="text-xs text-slate-505 leading-relaxed mb-4 font-sans">
                     To add dynamic expenses, log actual amounts, and manage your travel budget, you'll need to save this pre-planned trip itinerary to your personal account.
                   </p>
                   <button
                     onClick={handleSavePrePlanned}
                     disabled={isSavingTrip}
-                    className="w-full py-3 bg-emerald-650 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center space-x-2"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center space-x-2 font-sans"
                   >
                     <Save className="h-4 w-4" />
                     <span>{isSavingTrip ? 'Saving trip...' : 'Save & Enable Budgeting'}</span>
@@ -713,6 +1075,87 @@ export default function BudgetPage() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Currency Converter Panel */}
+              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="text-sm font-bold text-slate-900 flex items-center">
+                  <Coins className="h-4.5 w-4.5 mr-2 text-emerald-500" />
+                  Live Currency Converter
+                </h3>
+
+                <div className="space-y-3.5 font-semibold text-xs text-slate-600">
+                  {/* Amount Input */}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-450 uppercase mb-1.5 block">Amount</label>
+                    <input
+                      type="number"
+                      value={convAmount}
+                      onChange={(e) => setConvAmount(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                    />
+                  </div>
+
+                  {/* Currencies Dropdowns with Swap Button */}
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1">
+                      <label className="text-[10px] font-bold text-slate-450 uppercase mb-1.5 block">From</label>
+                      <select
+                        value={fromCurr}
+                        onChange={(e) => setFromCurr(e.target.value)}
+                        className="w-full px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
+                      >
+                        {['USD', 'EUR', 'GBP', 'INR', 'AED', 'CAD', 'AUD', 'JPY', 'SGD'].map(curr => (
+                          <option key={curr} value={curr}>{curr}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSwapCurrencies}
+                      className="mt-5 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-95 transition text-slate-500 hover:text-emerald-500 cursor-pointer shadow-sm flex items-center justify-center"
+                      title="Swap Currencies"
+                    >
+                      <ArrowLeftRight className="h-3.5 w-3.5" />
+                    </button>
+
+                    <div className="flex-1">
+                      <label className="text-[10px] font-bold text-slate-450 uppercase mb-1.5 block">To</label>
+                      <select
+                        value={toCurr}
+                        onChange={(e) => setToCurr(e.target.value)}
+                        className="w-full px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
+                      >
+                        {['USD', 'EUR', 'GBP', 'INR', 'AED', 'CAD', 'AUD', 'JPY', 'SGD'].map(curr => (
+                          <option key={curr} value={curr}>{curr}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Output Display */}
+                  <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-100/60 text-center space-y-1">
+                    <p className="text-[10px] font-bold text-slate-450 uppercase">Converted Value</p>
+                    {ratesLoading ? (
+                      <div className="flex items-center justify-center space-x-1.5 py-1">
+                        <div className="h-3 w-3 border-2 border-emerald-250 border-t-emerald-500 rounded-full animate-spin" />
+                        <span className="text-xs text-slate-400 font-semibold">Updating rates...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xl font-extrabold text-emerald-800">
+                          {toCurr} {convertedValue}
+                        </p>
+                        {rates[toCurr] && (
+                          <p className="text-[9px] text-slate-400 font-semibold">
+                            1 {fromCurr} = {rates[toCurr].toFixed(4)} {toCurr}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

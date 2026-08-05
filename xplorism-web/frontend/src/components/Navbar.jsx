@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown, FolderLock, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -115,11 +115,25 @@ export default function Navbar({ activeTab }) {
               <span className="nav-link">{t('budgets')}</span>
             </button>
             <button 
+              onClick={() => navigate('/vault')}
+              className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'vault' ? 'text-rose-500 font-bold' : ''}`}
+            >
+              <FolderLock className="h-4 w-4" />
+              <span className="nav-link">{t('vault')}</span>
+            </button>
+            <button 
               onClick={() => navigate('/map')}
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'map' ? 'text-rose-500 font-bold' : ''}`}
             >
               <Globe className="h-4 w-4" />
               <span className="nav-link">{t('globe')}</span>
+            </button>
+            <button 
+              onClick={() => navigate('/community')}
+              className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'community' ? 'text-rose-500 font-bold' : ''}`}
+            >
+              <Users className="h-4 w-4" />
+              <span className="nav-link">{t('community')}</span>
             </button>
           </div>
 
@@ -156,10 +170,22 @@ export default function Navbar({ activeTab }) {
               {t('budgets')}
             </button>
             <button 
+              onClick={() => navigate('/vault')} 
+              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'vault' ? 'text-rose-500' : ''}`}
+            >
+              {t('vault')}
+            </button>
+            <button 
               onClick={() => navigate('/map')} 
               className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'map' ? 'text-rose-500' : ''}`}
             >
               {t('globe')}
+            </button>
+            <button 
+              onClick={() => navigate('/community')} 
+              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'community' ? 'text-rose-500' : ''}`}
+            >
+              {t('community')}
             </button>
           </div>
 

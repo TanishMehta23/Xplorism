@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, ShieldAlert, Plus, Trash2, Download, Edit3, 
-  FolderLock, Calendar, FileType, CheckCircle, HelpCircle, 
-  FileImage, Loader2, ArrowLeft, ShieldCheck 
+  FolderLock, CheckCircle, HelpCircle, 
+  FileImage, Loader2, ArrowLeft, ShieldCheck, Eye 
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -21,29 +21,58 @@ export default function DocumentVaultPage() {
   const [editingId, setEditingId] = useState(null);
   const [title, setTitle] = useState('');
   const [type, setType] = useState('passport');
-  const [docNumber, setDocNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [notes, setNotes] = useState('');
   const [fileName, setFileName] = useState('');
   const [fileContent, setFileContent] = useState(''); // base64 string
+  
+  // Document Viewer states
+  const [viewingDoc, setViewingDoc] = useState(null);
+  const [viewContent, setViewContent] = useState(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [loadingView, setLoadingView] = useState(false);
   
   // Filter state
   const [activeFilter, setActiveFilter] = useState('all');
 
   // Fetch documents on mount
   useEffect(() => {
-    fetchDocuments();
+    let hasCache = false;
+    const cached = localStorage.getItem('xplorism_documents_cache');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        setDocuments(parsed);
+        setLoading(false);
+        hasCache = true;
+      } catch (e) {
+        console.error('Error parsing cached documents:', e);
+      }
+    }
+    fetchDocuments(hasCache);
   }, []);
 
-  const fetchDocuments = async () => {
-    setLoading(true);
+  const fetchDocuments = async (hasCache = false) => {
+    if (!hasCache) {
+      setLoading(true);
+    }
     try {
       const data = await api.get('/documents');
-      setDocuments(data || []);
+      const docs = data || [];
+      setDocuments(docs);
       setError('');
+      localStorage.setItem('xplorism_documents_cache', JSON.stringify(docs));
     } catch (err) {
       console.error(err);
-      setError(t('error_connecting'));
+      const cached = localStorage.getItem('xplorism_documents_cache');
+      if (cached) {
+        try {
+          setDocuments(JSON.parse(cached));
+          setError('');
+        } catch (e) {
+          setError(t('error_connecting'));
+        }
+      } else {
+        setError(t('error_connecting'));
+      }
     } finally {
       setLoading(false);
     }
@@ -53,6 +82,14 @@ export default function DocumentVaultPage() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Check size limit: 10MB
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > MAX_SIZE) {
+      alert('File size exceeds the 10MB limit.');
+      e.target.value = ''; // Reset input
+      return;
+    }
 
     setFileName(file.name);
     const reader = new FileReader();
@@ -69,9 +106,6 @@ export default function DocumentVaultPage() {
     setEditingId(null);
     setTitle('');
     setType('passport');
-    setDocNumber('');
-    setExpiryDate('');
-    setNotes('');
     setFileName('');
     setFileContent('');
     setIsModalOpen(true);
@@ -81,16 +115,6 @@ export default function DocumentVaultPage() {
     setEditingId(doc.id);
     setTitle(doc.title);
     setType(doc.type);
-    setDocNumber(doc.doc_number || '');
-    // Format date string for HTML input (YYYY-MM-DD)
-    if (doc.expiry_date) {
-      const dateObj = new Date(doc.expiry_date);
-      const formattedDate = dateObj.toISOString().split('T')[0];
-      setExpiryDate(formattedDate);
-    } else {
-      setExpiryDate('');
-    }
-    setNotes(doc.notes || '');
     setFileName(doc.file_name || '');
     setFileContent(doc.file_content || '');
     setIsModalOpen(true);
@@ -103,9 +127,6 @@ export default function DocumentVaultPage() {
     const payload = {
       title,
       type,
-      doc_number: docNumber,
-      expiry_date: expiryDate || null,
-      notes,
       file_name: fileName,
       file_content: fileContent
     };
@@ -118,11 +139,37 @@ export default function DocumentVaultPage() {
         await api.post('/documents', payload);
       }
       setIsModalOpen(false);
-      fetchDocuments();
+      fetchDocuments(true);
     } catch (err) {
-      console.error(err);
-      const errMsg = err.response?.data?.message || err.message || 'Failed to save document.';
-      alert('Error: ' + errMsg);
+      console.error('API save failed, falling back to local cache:', err);
+      // Fallback: save to LocalStorage cache
+      const cachedStr = localStorage.getItem('xplorism_documents_cache');
+      let cached = [];
+      if (cachedStr) {
+        try {
+          cached = JSON.parse(cachedStr);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      
+      if (editingId) {
+        const updated = cached.map(d => 
+          d.id === editingId ? { ...d, ...payload } : d
+        );
+        localStorage.setItem('xplorism_documents_cache', JSON.stringify(updated));
+        setDocuments(updated);
+      } else {
+        const newDoc = {
+          ...payload,
+          id: `local-${Date.now()}`,
+          created_at: new Date().toISOString()
+        };
+        const updated = [newDoc, ...cached];
+        localStorage.setItem('xplorism_documents_cache', JSON.stringify(updated));
+        setDocuments(updated);
+      }
+      setIsModalOpen(false);
     } finally {
       setIsSaving(false);
     }
@@ -131,11 +178,36 @@ export default function DocumentVaultPage() {
   const handleDeleteDocument = async (id) => {
     if (!window.confirm(t('confirm_delete'))) return;
     try {
-      await api.delete(`/documents/${id}`);
-      fetchDocuments();
+      if (!id.toString().startsWith('local-')) {
+        await api.delete(`/documents/${id}`);
+      }
+      const cachedStr = localStorage.getItem('xplorism_documents_cache');
+      if (cachedStr) {
+        try {
+          const cached = JSON.parse(cachedStr);
+          const updated = cached.filter(d => d.id !== id);
+          localStorage.setItem('xplorism_documents_cache', JSON.stringify(updated));
+          setDocuments(updated);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (!id.toString().startsWith('local-')) {
+        fetchDocuments(true);
+      }
     } catch (err) {
-      console.error(err);
-      alert('Failed to delete document.');
+      console.error('API delete failed, removing from local cache anyway:', err);
+      const cachedStr = localStorage.getItem('xplorism_documents_cache');
+      if (cachedStr) {
+        try {
+          const cached = JSON.parse(cachedStr);
+          const updated = cached.filter(d => d.id !== id);
+          localStorage.setItem('xplorism_documents_cache', JSON.stringify(updated));
+          setDocuments(updated);
+        } catch (e) {
+          console.error(e);
+        }
+      }
     }
   };
 
@@ -147,6 +219,45 @@ export default function DocumentVaultPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDownloadDocument = async (doc) => {
+    if (doc.id.toString().startsWith('local-')) {
+      downloadFile(doc.file_content, doc.file_name);
+      return;
+    }
+
+    try {
+      const data = await api.get(`/documents/${doc.id}/download`);
+      downloadFile(data.file_content, data.file_name || doc.file_name);
+    } catch (err) {
+      console.error('Failed to download document:', err);
+      alert('Failed to download document. Please try again.');
+    }
+  };
+
+  const handleViewDocument = async (doc) => {
+    setViewingDoc(doc);
+    setIsViewerOpen(true);
+    setViewContent(null);
+    setLoadingView(true);
+
+    if (doc.id.toString().startsWith('local-')) {
+      setViewContent(doc.file_content);
+      setLoadingView(false);
+      return;
+    }
+
+    try {
+      const data = await api.get(`/documents/${doc.id}/download`);
+      setViewContent(data.file_content);
+    } catch (err) {
+      console.error('Failed to view document:', err);
+      alert('Failed to load document preview.');
+      setIsViewerOpen(false);
+    } finally {
+      setLoadingView(false);
+    }
   };
 
   // Helper to check expiration status
@@ -340,35 +451,6 @@ export default function DocumentVaultPage() {
                     </div>
                   </div>
 
-                  {/* Body Metadata */}
-                  <div className="space-y-2.5 text-xs border-t border-[var(--border-primary)] pt-3">
-                    {doc.doc_number && (
-                      <div className="flex justify-between">
-                        <span className="text-[var(--text-secondary)] font-bold">{t('doc_number')}:</span>
-                        <span className="font-extrabold text-[var(--text-primary)]">{doc.doc_number}</span>
-                      </div>
-                    )}
-                    {doc.expiry_date && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-[var(--text-secondary)] font-bold">{t('expiry_date')}:</span>
-                        <div className="flex items-center space-x-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-[var(--text-secondary)]" />
-                          <span className={`font-extrabold ${isExpired ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-[var(--text-primary)]'}`}>
-                            {new Date(doc.expiry_date).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    {doc.notes && (
-                      <div className="flex flex-col space-y-1">
-                        <span className="text-[var(--text-secondary)] font-bold">{t('notes')}:</span>
-                        <p className="text-[11px] text-[var(--text-secondary)] font-medium bg-[var(--bg-tertiary)] p-2 rounded-lg border border-[var(--border-primary)] max-h-16 overflow-y-auto whitespace-pre-line">
-                          {doc.notes}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
                   {/* Attachment Footer */}
                   {doc.file_name && (
                     <div className="flex items-center justify-between p-2 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-xs">
@@ -376,13 +458,22 @@ export default function DocumentVaultPage() {
                         <FileText className="h-4 w-4 text-rose-500 flex-shrink-0" />
                         <span className="text-[var(--text-primary)] truncate font-semibold text-[11px]">{doc.file_name}</span>
                       </div>
-                      <button
-                        onClick={() => downloadFile(doc.file_content, doc.file_name)}
-                        className="p-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[10px] flex items-center space-x-1 cursor-pointer transition shadow-sm active:scale-95"
-                      >
-                        <Download className="h-3 w-3" />
-                        <span>{t('download')}</span>
-                      </button>
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          onClick={() => handleViewDocument(doc)}
+                          className="p-1 px-2.5 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--border-primary)] text-[var(--text-primary)] border border-[var(--border-primary)] font-extrabold text-[10px] flex items-center space-x-1 cursor-pointer transition active:scale-95"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          onClick={() => handleDownloadDocument(doc)}
+                          className="p-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[10px] flex items-center space-x-1 cursor-pointer transition shadow-sm active:scale-95"
+                        >
+                          <Download className="h-3 w-3" />
+                          <span>{t('download')}</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </motion.div>
@@ -426,68 +517,28 @@ export default function DocumentVaultPage() {
                 </div>
 
                 {/* Type Selection */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col space-y-1.5">
-                    <label className="text-[var(--text-secondary)]">Document Type *</label>
-                    <select
-                      value={type}
-                      onChange={(e) => setType(e.target.value)}
-                      className="p-3.5 rounded-2xl border text-sm cursor-pointer focus:outline-none"
-                      style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
-                    >
-                      <option value="passport">🛂 Passport</option>
-                      <option value="visa">📄 Visa</option>
-                      <option value="ticket">✈️ Ticket</option>
-                      <option value="hotel_voucher">🏨 Hotel Voucher</option>
-                      <option value="insurance">🛡️ Insurance</option>
-                      <option value="other">📂 Other</option>
-                    </select>
-                  </div>
-
-                  {/* Doc Number */}
-                  <div className="flex flex-col space-y-1.5">
-                    <label className="text-[var(--text-secondary)]">Document Number</label>
-                    <input
-                      type="text"
-                      value={docNumber}
-                      onChange={(e) => setDocNumber(e.target.value)}
-                      placeholder="e.g. Z1234567"
-                      className="p-3.5 rounded-2xl border text-sm focus:outline-none"
-                      style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Expiry Date */}
                 <div className="flex flex-col space-y-1.5">
-                  <label className="text-[var(--text-secondary)]">Expiry Date</label>
-                  <input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="p-3.5 rounded-2xl border text-sm focus:outline-none"
+                  <label className="text-[var(--text-secondary)]">Document Type *</label>
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="p-3.5 rounded-2xl border text-sm cursor-pointer focus:outline-none"
                     style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
-                  />
-                </div>
-
-                {/* Notes */}
-                <div className="flex flex-col space-y-1.5">
-                  <label className="text-[var(--text-secondary)]">{t('notes')}</label>
-                  <textarea
-                    rows="2.5"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Enter additional details or remarks..."
-                    className="p-3.5 rounded-2xl border text-sm focus:outline-none resize-none"
-                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
-                  />
+                  >
+                    <option value="passport">🛂 Passport</option>
+                    <option value="visa">📄 Visa</option>
+                    <option value="ticket">✈️ Ticket</option>
+                    <option value="hotel_voucher">🏨 Hotel Voucher</option>
+                    <option value="insurance">🛡️ Insurance</option>
+                    <option value="other">📂 Other</option>
+                  </select>
                 </div>
 
                 {/* File Upload */}
                 <div className="flex flex-col space-y-2 border border-dashed rounded-2xl p-4.5 text-center transition" style={{ borderColor: 'var(--border-primary)', backgroundColor: 'rgba(244, 63, 94, 0.03)' }}>
                   <div className="flex flex-col items-center justify-center space-y-1">
                     <FileImage className="h-6 w-6 text-rose-500" />
-                    <span className="text-[10px] text-[var(--text-secondary)]">Attach File (PDF, Image, text)</span>
+                    <span className="text-[10px] text-[var(--text-secondary)]">Attach File (PDF, Image, text - Max 10MB)</span>
                     {fileName && <span className="text-[var(--text-primary)] text-xs font-black truncate max-w-[250px]">{fileName}</span>}
                   </div>
                   <input
@@ -527,6 +578,83 @@ export default function DocumentVaultPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Document Preview Viewer Modal */}
+      <AnimatePresence>
+        {isViewerOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="rounded-3xl border p-6 max-w-3xl w-full shadow-2xl relative flex flex-col max-h-[85vh]"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+            >
+              <h2 className="text-lg font-black mb-4 flex items-center justify-between border-b pb-3" style={{ borderColor: 'var(--border-primary)' }}>
+                <span className="truncate max-w-[80%]">{viewingDoc?.title} ({viewingDoc?.file_name})</span>
+                <button 
+                  onClick={() => setIsViewerOpen(false)}
+                  className="text-xs font-bold text-[var(--text-secondary)] hover:text-rose-500 cursor-pointer"
+                >
+                  Close
+                </button>
+              </h2>
+              
+              <div className="flex-1 overflow-auto flex items-center justify-center p-2 min-h-[300px]">
+                {loadingView ? (
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <Loader2 className="h-8 w-8 text-rose-500 animate-spin" />
+                    <p className="text-xs font-semibold text-[var(--text-secondary)]">Decrypting secure file...</p>
+                  </div>
+                ) : viewContent ? (
+                  <>
+                    {viewContent.startsWith('data:image/') ? (
+                      <img 
+                        src={viewContent} 
+                        alt={viewingDoc?.title} 
+                        className="max-w-full max-h-[60vh] object-contain rounded-xl shadow-md border" 
+                        style={{ borderColor: 'var(--border-primary)' }}
+                      />
+                    ) : viewContent.startsWith('data:application/pdf') ? (
+                      <object 
+                        data={viewContent} 
+                        type="application/pdf" 
+                        className="w-full h-[60vh] rounded-xl border"
+                        style={{ borderColor: 'var(--border-primary)' }}
+                      >
+                        <iframe 
+                          src={viewContent} 
+                          className="w-full h-[60vh] rounded-xl border-0" 
+                          title={viewingDoc?.title}
+                        />
+                      </object>
+                    ) : viewContent.startsWith('data:text/') || typeof viewContent === 'string' && !viewContent.startsWith('data:') ? (
+                      <pre className="w-full p-4 rounded-xl text-left font-mono text-xs overflow-auto whitespace-pre-wrap max-h-[60vh] border" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}>
+                        {viewContent.startsWith('data:') ? atob(viewContent.split(',')[1]) : viewContent}
+                      </pre>
+                    ) : (
+                      <div className="text-center space-y-3">
+                        <span className="text-3xl">📂</span>
+                        <p className="text-xs text-[var(--text-secondary)] font-bold">No preview available for this file type.</p>
+                        <button
+                          onClick={() => {
+                            downloadFile(viewContent, viewingDoc?.file_name);
+                          }}
+                          className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl text-xs active:scale-95 transition cursor-pointer"
+                        >
+                          Download to View
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-xs text-rose-500 font-bold">Failed to load content.</p>
+                )}
+              </div>
             </motion.div>
           </div>
         )}

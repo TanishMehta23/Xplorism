@@ -13,7 +13,6 @@ import BudgetsListPage from './pages/BudgetsListPage';
 import HotelBookingPage from './pages/HotelBookingPage';
 import ProfilePage from './pages/ProfilePage';
 import TrackerPage from './pages/TrackerPage';
-import MapPage from './pages/MapPage';
 import DocumentVaultPage from './pages/DocumentVaultPage';
 import CommunityFeedPage from './pages/CommunityFeedPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -135,14 +134,6 @@ function AppRoutes() {
         }
       />
 
-      <Route
-        path="/map"
-        element={
-          <ProtectedRoute>
-            <MapPage />
-          </ProtectedRoute>
-        }
-      />
 
       <Route
         path="/vault"

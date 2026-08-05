@@ -85,9 +85,6 @@ CREATE TABLE documents (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL, -- 'passport', 'visa', 'ticket', 'hotel', 'insurance', 'other'
-    doc_number VARCHAR(100),
-    expiry_date DATE,
-    notes TEXT,
     file_name VARCHAR(255),
     file_content TEXT, -- Base64 encoded file content
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -109,3 +106,10 @@ CREATE TABLE IF NOT EXISTS posts (
     liked_by TEXT[] DEFAULT '{}', -- Array of user IDs who liked
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Alter documents table for Secure Vault support
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS encrypted_file_key TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS iv TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS auth_tag TEXT;
+ALTER TABLE documents ALTER COLUMN file_content DROP NOT NULL;
+

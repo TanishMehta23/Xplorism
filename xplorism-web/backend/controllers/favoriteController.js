@@ -66,6 +66,12 @@ export const addFavorite = async (req, res) => {
       return res.json({ message: 'Removed from favorites', favorited: false, id: existing.rows[0].id });
     }
 
+    const isValidUuid = (uuidStr) => {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuidStr);
+    };
+
+    const dbTripId = (tripId && isValidUuid(tripId)) ? tripId : null;
+
     const result = await query(
       `INSERT INTO favorites (user_id, name, type, description, location, distance, category, image_url, destination, trip_id, metadata)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
@@ -79,7 +85,7 @@ export const addFavorite = async (req, res) => {
         category || '',
         imageUrl || '',
         destination || '',
-        tripId || null,
+        dbTripId,
         metadata ? JSON.stringify(metadata) : '{}',
       ]
     );

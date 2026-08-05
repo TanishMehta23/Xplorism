@@ -9,6 +9,8 @@ import authRoutes from './routes/authRoutes.js';
 import tripRoutes from './routes/tripRoutes.js';
 import budgetRoutes from './routes/budgetRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import postRoutes from './routes/postRoutes.js';
 import { getNearbyPlacesFromGemini, getHotelsFromGemini } from './services/geminiService.js';
 
 dotenv.config();
@@ -24,13 +26,16 @@ app.use(cors({
   origin: '*', // For development purposes. Can be restricted to specific clients later.
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
 app.use('/auth', authRoutes);
 app.use('/trips', tripRoutes);
 app.use('/trips', budgetRoutes);
 app.use('/favorites', favoriteRoutes);
+app.use('/documents', documentRoutes);
+app.use('/posts', postRoutes);
 
 // Nearby Places Route using Gemini
 app.get('/nearby', async (req, res) => {
@@ -686,7 +691,7 @@ async function fetchAmadeusHotels(lat, lon) {
 
 // Initialize database and start server
 initDatabase().then(() => {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
   });
 }).catch(err => {

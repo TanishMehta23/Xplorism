@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { getBudgetInsightsFromGemini, scanReceiptWithGemini } from '../services/geminiService.js';
 
 /**
  * GET /api/trips/:id/budget
@@ -191,7 +192,7 @@ export const createExpense = async (req, res) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
-    const { day, category, itemName, plannedAmount, actualAmount, currency, date, notes } = req.body;
+    const { day, category, itemName, plannedAmount, actualAmount, currency, date, notes, paidBy } = req.body;
 
     // Check trip ownership
     const tripResult = await query('SELECT * FROM trips WHERE id = $1', [id]);
@@ -203,8 +204,8 @@ export const createExpense = async (req, res) => {
     }
 
     const result = await query(
-      `INSERT INTO expenses (trip_id, day, category, item_name, planned_amount, actual_amount, currency, date, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      `INSERT INTO expenses (trip_id, day, category, item_name, planned_amount, actual_amount, currency, date, notes, paid_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
         id,
         day || null,
@@ -215,6 +216,7 @@ export const createExpense = async (req, res) => {
         currency || 'USD',
         date || null,
         notes || '',
+        paidBy || 'Me'
       ]
     );
 
@@ -230,6 +232,7 @@ export const createExpense = async (req, res) => {
       currency: expense.currency,
       date: expense.date,
       notes: expense.notes,
+      paidBy: expense.paid_by,
       createdAt: expense.created_at,
     });
   } catch (error) {
@@ -246,7 +249,7 @@ export const updateExpense = async (req, res) => {
   try {
     const userId = req.user.id;
     const { id, expenseId } = req.params;
-    const { day, category, itemName, plannedAmount, actualAmount, currency, date, notes } = req.body;
+    const { day, category, itemName, plannedAmount, actualAmount, currency, date, notes, paidBy } = req.body;
 
     // Check trip ownership
     const tripResult = await query('SELECT * FROM trips WHERE id = $1', [id]);
@@ -267,8 +270,8 @@ export const updateExpense = async (req, res) => {
     const result = await query(
       `UPDATE expenses 
        SET day = $1, category = $2, item_name = $3, planned_amount = $4, actual_amount = $5, 
-           currency = $6, date = $7, notes = $8
-       WHERE id = $9 RETURNING *`,
+           currency = $6, date = $7, notes = $8, paid_by = $9
+       WHERE id = $10 RETURNING *`,
       [
         day !== undefined ? day : existing.day,
         category || existing.category,
@@ -278,6 +281,7 @@ export const updateExpense = async (req, res) => {
         currency || existing.currency,
         date !== undefined ? date : existing.date,
         notes !== undefined ? notes : existing.notes,
+        paidBy || existing.paid_by,
         expenseId,
       ]
     );
@@ -294,6 +298,7 @@ export const updateExpense = async (req, res) => {
       currency: expense.currency,
       date: expense.date,
       notes: expense.notes,
+      paidBy: expense.paid_by
     });
   } catch (error) {
     console.error('Update expense error:', error);
@@ -331,5 +336,67 @@ export const deleteExpense = async (req, res) => {
   } catch (error) {
     console.error('Delete expense error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * POST /api/trips/:id/budget/insights
+ * Trigger Gemini AI budget advice
+ */
+export const getBudgetInsights = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    const tripResult = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (tripResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    const trip = tripResult.rows[0];
+    if (trip.user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const expensesResult = await query('SELECT * FROM expenses WHERE trip_id = $1', [id]);
+    const expenses = expensesResult.rows;
+
+    const totalBudget = parseFloat(trip.budget) || 0;
+    const standardCategories = {
+      'Accommodation': 0.35,
+      'Food & Dining': 0.25,
+      'Activities & Tours': 0.15,
+      'Transportation': 0.15,
+      'Shopping': 0.10
+    };
+    const categories = Object.entries(standardCategories).map(([cat, pct]) => ({
+      category: cat,
+      planned: totalBudget * pct,
+      actual: expenses.filter(e => e.category === cat).reduce((sum, e) => sum + parseFloat(e.actual_amount || 0), 0)
+    }));
+
+    const insights = await getBudgetInsightsFromGemini(trip, { categories }, expenses);
+    res.json({ insights });
+  } catch (error) {
+    console.error('Get budget insights error:', error);
+    res.status(500).json({ message: 'Server error generating insights' });
+  }
+};
+
+/**
+ * POST /api/trips/:id/budget/scan-receipt
+ * OCR receipt parser
+ */
+export const scanReceipt = async (req, res) => {
+  try {
+    const { fileContent, fileName } = req.body;
+    if (!fileContent) {
+      return res.status(400).json({ message: 'fileContent (base64) is required' });
+    }
+
+    const ocrResult = await scanReceiptWithGemini(fileContent, fileName);
+    res.json(ocrResult);
+  } catch (error) {
+    console.error('Scan receipt error:', error);
+    res.status(500).json({ message: 'Server error scanning receipt' });
   }
 };

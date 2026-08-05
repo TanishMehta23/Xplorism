@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Image, Heart, MapPin, Share2, Plus, Sparkles, Loader2, ArrowRight, Search, X, Edit3, Trash2
 } from 'lucide-react';
@@ -29,12 +30,49 @@ export default function CommunityFeedPage() {
   const [uploadedPhotos, setUploadedPhotos] = useState([]); // Array of base64 strings
   const [formError, setFormError] = useState('');
 
-  // Fetch posts
-  const fetchFeedData = async () => {
+  // Custom Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Custom Detail Modal State
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Custom Toast State
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
+  // Safe LocalStorage Caching Helper
+  const cachePostsSafe = (postsToCache) => {
     try {
+      // Keep only last 20 posts in cache, and strip heavy photo base64 strings to save quota space
+      const simplified = postsToCache.slice(0, 20).map(post => ({
+        ...post,
+        photo_content: null
+      }));
+      localStorage.setItem('xplorism_posts_cache', JSON.stringify(simplified));
+    } catch (e) {
+      console.warn('Failed to save posts to localStorage cache (quota limit exceeded):', e);
+    }
+  };
+
+  // Fetch posts
+  const fetchFeedData = async (silent = false) => {
+    if (!silent) {
       setLoading(true);
+    }
+    try {
       const feedData = await api.get('/posts');
-      setPosts(feedData || []);
+      if (feedData) {
+        setPosts(feedData);
+        cachePostsSafe(feedData);
+      }
     } catch (err) {
       console.error('Error loading community feed:', err);
     } finally {
@@ -43,7 +81,21 @@ export default function CommunityFeedPage() {
   };
 
   useEffect(() => {
-    fetchFeedData();
+    let hasCache = false;
+    const cachedStr = localStorage.getItem('xplorism_posts_cache');
+    if (cachedStr) {
+      try {
+        const cached = JSON.parse(cachedStr);
+        if (cached && cached.length > 0) {
+          setPosts(cached);
+          setLoading(false);
+          hasCache = true;
+        }
+      } catch (e) {
+        console.error('Failed to parse cached posts:', e);
+      }
+    }
+    fetchFeedData(hasCache);
   }, []);
 
   // Handle Multiple Photos Upload Conversion to Base64
@@ -134,11 +186,15 @@ export default function CommunityFeedPage() {
       if (editPostId) {
         // Edit flow
         const updatedPost = await api.put(`/posts/${editPostId}`, payload);
-        setPosts(posts.map(post => post.id === editPostId ? updatedPost : post));
+        const updatedPosts = posts.map(post => post.id === editPostId ? updatedPost : post);
+        setPosts(updatedPosts);
+        cachePostsSafe(updatedPosts);
       } else {
         // Create flow
         const newPost = await api.post('/posts', payload);
-        setPosts([newPost, ...posts]);
+        const updatedPosts = [newPost, ...posts];
+        setPosts(updatedPosts);
+        cachePostsSafe(updatedPosts);
       }
       
       // Reset form & close modal
@@ -151,15 +207,37 @@ export default function CommunityFeedPage() {
     }
   };
 
-  // Delete Post Handler
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) return;
+  const triggerDeleteConfirm = (post) => {
+    setPostToDelete(post);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeletePost = async (postId) => {
     try {
-      await api.delete(`/posts/${postId}`);
-      setPosts(posts.filter(post => post.id !== postId));
+      try {
+        await api.delete(`/posts/${postId}`);
+      } catch (err) {
+        // If the server returns 404 (Post not found), it means the post is already deleted on the database.
+        // We can safely proceed with removing it from our local state and cache.
+        if (err.message && (err.message.toLowerCase().includes('not found') || err.message.includes('404'))) {
+          console.warn('Post was already deleted on the server. Cleaning up locally.');
+        } else {
+          throw err;
+        }
+      }
+      const updatedPosts = posts.filter(post => post.id !== postId);
+      setPosts(updatedPosts);
+      cachePostsSafe(updatedPosts);
+      showToast(t('toast_post_deleted') || 'Post deleted successfully', 'success');
     } catch (err) {
       console.error('Failed to delete post:', err);
+      showToast(t('toast_delete_post_fail') || 'Failed to delete post.', 'error');
     }
+  };
+
+  const handleOpenDetailModal = (post) => {
+    setSelectedPost(post);
+    setShowDetailModal(true);
   };
 
   // Edit Post Trigger Modal
@@ -193,7 +271,9 @@ export default function CommunityFeedPage() {
   const handleLikePost = async (postId) => {
     try {
       const updatedPost = await api.post(`/posts/${postId}/like`);
-      setPosts(posts.map(post => post.id === postId ? updatedPost : post));
+      const updatedPosts = posts.map(post => post.id === postId ? updatedPost : post);
+      setPosts(updatedPosts);
+      cachePostsSafe(updatedPosts);
     } catch (err) {
       console.error('Error toggling like:', err);
     }
@@ -245,11 +325,11 @@ export default function CommunityFeedPage() {
             <div className="space-y-2">
               <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/10 text-rose-500 border border-rose-500/20">
                 <Sparkles className="h-3 w-3" />
-                <span>Travel Community</span>
+                <span>{t('community')}</span>
               </span>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Explorers Social Feed</h1>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight">{t('community_feed')}</h1>
               <p className="text-sm max-w-xl" style={{ color: 'var(--text-secondary)' }}>
-                Share logs, highlight moments, and interact with co-travelers from all over the world.
+                {t('community_subtitle')}
               </p>
             </div>
             
@@ -262,7 +342,7 @@ export default function CommunityFeedPage() {
               style={{ backgroundColor: '#f43f5e', boxShadow: '0 8px 30px rgba(244, 63, 94, 0.25)' }}
             >
               <Plus className="h-5 w-5" />
-              <span>Share Experience</span>
+              <span>{t('share_experience')}</span>
             </button>
           </div>
         </div>
@@ -274,7 +354,7 @@ export default function CommunityFeedPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search posts by tags, user, or keywords..."
+              placeholder={t('search_posts_placeholder')}
               className="w-full py-3.5 pl-11 pr-4 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition"
               style={{ 
                 backgroundColor: 'var(--bg-secondary)',
@@ -290,15 +370,15 @@ export default function CommunityFeedPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <Loader2 className="h-10 w-10 animate-spin text-rose-500" />
-            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Loading social logs...</p>
+            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{t('loading_social_logs')}</p>
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="text-center py-20 border rounded-3xl p-6" 
                style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
             <Users className="h-12 w-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-            <h3 className="text-base font-extrabold">No stories shared yet</h3>
+            <h3 className="text-base font-extrabold">{t('no_stories_title')}</h3>
             <p className="text-xs max-w-sm mx-auto mt-1 mb-6" style={{ color: 'var(--text-tertiary)' }}>
-              Be the first traveler to write a log and post pictures about your adventures!
+              {t('no_stories_desc')}
             </p>
             <button
               onClick={() => {
@@ -308,11 +388,11 @@ export default function CommunityFeedPage() {
               className="px-5 py-2.5 rounded-xl border text-xs font-bold transition hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
               style={{ color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
             >
-              Start Writing
+              {t('start_writing')}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
             {filteredPosts.map((post) => {
               const isLikedByUser = post.liked_by?.includes(user?.id);
               const postPhotos = parsePhotos(post.photo_content);
@@ -321,14 +401,15 @@ export default function CommunityFeedPage() {
               return (
                 <div 
                   key={post.id}
-                  className="rounded-3xl border overflow-hidden flex flex-col transition hover:shadow-md"
+                  onClick={() => handleOpenDetailModal(post)}
+                  className="rounded-3xl border overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer group"
                   style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
                 >
                   {/* Photo Gallery Section */}
                   {postPhotos.length > 0 && (
                     <div className="w-full relative border-b" style={{ borderColor: 'var(--border-secondary)' }}>
                       {postPhotos.length === 1 ? (
-                        <div className="w-full h-64 overflow-hidden">
+                        <div className="w-full h-52 overflow-hidden">
                           <img 
                             src={postPhotos[0]} 
                             alt={post.title} 
@@ -336,7 +417,7 @@ export default function CommunityFeedPage() {
                           />
                         </div>
                       ) : (
-                        <div className="w-full h-64 overflow-x-auto flex snap-x snap-mandatory scrollbar-thin">
+                        <div className="w-full h-52 overflow-x-auto flex snap-x snap-mandatory scrollbar-thin">
                           {postPhotos.map((photo, idx) => (
                             <div key={idx} className="w-full h-full shrink-0 snap-center relative">
                               <img 
@@ -355,16 +436,16 @@ export default function CommunityFeedPage() {
                   )}
 
                   {/* Body Content */}
-                  <div className="p-6 flex-1 flex flex-col space-y-4">
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                     {/* Header info */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-9 h-9 rounded-full bg-rose-500/10 text-rose-500 font-black border border-rose-500/20 flex items-center justify-center text-xs tracking-wider">
+                        <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 font-black border border-rose-500/20 flex items-center justify-center text-xs tracking-wider">
                           {post.username.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">{post.username}</h4>
-                          <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                        <div className="text-left">
+                          <h4 className="text-[11px] font-black text-slate-800 dark:text-slate-100">{post.username}</h4>
+                          <p className="text-[9px]" style={{ color: 'var(--text-tertiary)' }}>
                             {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
                         </div>
@@ -372,61 +453,44 @@ export default function CommunityFeedPage() {
 
                       {/* Edit / Delete Buttons for Own Posts */}
                       {isOwnPost && (
-                        <div className="flex items-center space-x-1.5">
+                        <div className="flex items-center space-x-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => handleOpenEditModal(post)}
                             className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
-                            title="Edit Post"
+                            title={t('edit')}
                           >
-                            <Edit3 className="h-3.5 w-3.5" />
+                            <Edit3 className="h-3 w-3" />
                           </button>
                           <button
-                            onClick={() => handleDeletePost(post.id)}
+                            onClick={() => triggerDeleteConfirm(post)}
                             className="p-1.5 rounded-lg border border-rose-500/10 text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
-                            title="Delete Post"
+                            title={t('delete')}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-3 w-3" />
                           </button>
                         </div>
                       )}
                     </div>
 
-                    {/* Text content */}
-                    <div className="space-y-3.5 text-left flex-1">
-                      <div className="space-y-1">
-                        <h3 className="text-base font-black tracking-tight">{post.title}</h3>
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                          {post.content}
-                        </p>
-                      </div>
-
-                      {/* Display Hashtags */}
-                      {post.trip_destination && (
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {post.trip_destination.split(' ').map((tag, idx) => (
-                            <span 
-                              key={idx} 
-                              className="inline-flex items-center text-[10px] font-extrabold bg-rose-500/5 text-rose-500 border border-rose-500/10 px-2 py-0.5 rounded-lg"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <h3 className="text-sm font-black text-left tracking-tight group-hover:text-rose-500 transition line-clamp-2 leading-snug">
+                      {post.title}
+                    </h3>
 
                     {/* Interactions Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                    <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
                       <button 
-                        onClick={() => handleLikePost(post.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLikePost(post.id);
+                        }}
                         className="flex items-center space-x-2 text-xs font-bold transition hover:scale-105 active:scale-95 cursor-pointer"
                         style={{ color: isLikedByUser ? '#f43f5e' : 'var(--text-secondary)' }}
                       >
-                        <Heart className={`h-4.5 w-4.5 transition-colors ${isLikedByUser ? 'fill-rose-500 text-rose-500' : ''}`} />
-                        <span>{post.likes || 0} Likes</span>
+                        <Heart className={`h-4 w-4 transition-colors ${isLikedByUser ? 'fill-rose-500 text-rose-500' : ''}`} />
+                        <span>{post.likes || 0} {t('likes')}</span>
                       </button>
 
-                      <span className="text-[10px] uppercase font-black tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                      <span className="text-[9px] uppercase font-black tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
                         Xplorism Feed
                       </span>
                     </div>
@@ -451,7 +515,7 @@ export default function CommunityFeedPage() {
               <div className="flex items-center space-x-2">
                 <Share2 className="h-5 w-5 text-rose-500 animate-pulse" />
                 <h2 className="text-base font-black uppercase tracking-wider">
-                  {editPostId ? 'Edit Experience' : 'Share an Experience'}
+                  {editPostId ? t('edit_experience') : t('share_an_experience')}
                 </h2>
               </div>
               <button 
@@ -472,7 +536,7 @@ export default function CommunityFeedPage() {
 
               {/* Title input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Experience Title</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('experience_title')}</label>
                 <input 
                   type="text"
                   required
@@ -486,7 +550,7 @@ export default function CommunityFeedPage() {
 
               {/* Dynamic Tag Pills Box Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Hashtags</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">{t('hashtags')}</label>
                 <div className="flex flex-wrap gap-1.5 p-2 rounded-xl border focus-within:ring-2 focus-within:ring-rose-500/25 transition"
                      style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
                   {tags.map((tag, idx) => (
@@ -509,7 +573,7 @@ export default function CommunityFeedPage() {
                     value={currentTag}
                     onChange={(e) => setCurrentTag(e.target.value)}
                     onKeyDown={handleTagKeyDown}
-                    placeholder={tags.length === 0 ? "Type tag & press Space/Enter" : "add more..."}
+                    placeholder={tags.length === 0 ? t('type_tag_placeholder') : t('add_more')}
                     className="flex-1 bg-transparent border-0 outline-none p-0.5 text-xs min-w-[140px]"
                     style={{ color: 'var(--text-primary)' }}
                   />
@@ -518,13 +582,13 @@ export default function CommunityFeedPage() {
 
               {/* Content description */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tell the story</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('tell_story')}</label>
                 <textarea 
                   required
                   rows={4}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Tell us what you experienced, cost-saving tips, or highlights..."
+                  placeholder={t('tell_story_placeholder')}
                   className="w-full p-3 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/25 transition resize-none"
                   style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                 />
@@ -532,7 +596,7 @@ export default function CommunityFeedPage() {
 
               {/* Multiple Photos Upload */}
               <div className="space-y-2.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Add Highlight Photos (Max 5)</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">{t('add_photos_label')}</label>
                 
                 {uploadedPhotos.length > 0 && (
                   <div className="grid grid-cols-5 gap-2.5">
@@ -567,9 +631,9 @@ export default function CommunityFeedPage() {
                 {uploadedPhotos.length === 0 && (
                   <label className="border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition"
                          style={{ borderColor: 'var(--border-secondary)' }}>
-                    <Image className="h-8 w-8 text-slate-455 mb-2" />
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Upload Trip Pictures</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">Supports multiple images (Max 5, 8MB each)</span>
+                    <Image className="h-8 w-8 text-slate-400 mb-2" />
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{t('upload_trip_pictures')}</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">{t('upload_trip_pictures_sub')}</span>
                     <input 
                       type="file"
                       accept="image/*"
@@ -589,7 +653,7 @@ export default function CommunityFeedPage() {
                   className="px-5 py-2.5 rounded-xl border text-xs font-bold transition hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
                   style={{ color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
                 >
-                  Cancel
+                  {t('cancel') || 'Cancel'}
                 </button>
                 <button 
                   type="submit"
@@ -600,12 +664,12 @@ export default function CommunityFeedPage() {
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Publishing...</span>
+                      <span>{t('publishing')}</span>
                     </>
                   ) : (
                     <>
                       <Plus className="h-4 w-4" />
-                      <span>{editPostId ? 'Save Changes' : 'Post Experience'}</span>
+                      <span>{editPostId ? t('save_changes') : t('post_experience')}</span>
                     </>
                   )}
                 </button>
@@ -615,7 +679,226 @@ export default function CommunityFeedPage() {
           </div>
         </div>
       )}
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-955/40 backdrop-blur-sm" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="rounded-3xl border p-6 max-w-sm w-full shadow-2xl relative text-center space-y-4"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+            >
+              <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center text-xl">
+                ⚠️
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-base font-black">Delete Post</h3>
+                <p className="text-xs text-[var(--text-secondary)] font-semibold text-center">
+                  {t('confirm_delete_post') || 'Are you sure you want to delete this post?'}
+                </p>
+              </div>
+              <div className="flex items-center justify-center space-x-3 pt-2">
+                <button
+                  disabled={deleting}
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border font-extrabold transition cursor-pointer active:scale-95 text-xs disabled:opacity-50"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                >
+                  {t('cancel') || 'Cancel'}
+                </button>
+                <button
+                  disabled={deleting}
+                  onClick={async () => {
+                    if (postToDelete) {
+                      setDeleting(true);
+                      await confirmDeletePost(postToDelete.id);
+                      setDeleting(false);
+                      setIsDeleteModalOpen(false);
+                    }
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold transition cursor-pointer active:scale-95 text-xs shadow-md disabled:opacity-50 flex items-center justify-center space-x-1.5 min-w-[90px]"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>{t('deleting') || 'Deleting...'}</span>
+                    </>
+                  ) : (
+                    <span>{t('delete') || 'Delete'}</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
+      {/* Full Post Detail Modal */}
+      <AnimatePresence>
+        {showDetailModal && selectedPost && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-955/40 backdrop-blur-sm" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-2xl rounded-3xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-secondary)' }}>
+                <div className="flex items-center space-x-3">
+                  <div className="w-9 h-9 rounded-full bg-rose-500/10 text-rose-500 font-black border border-rose-500/20 flex items-center justify-center text-xs tracking-wider">
+                    {selectedPost.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-left">
+                    <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">{selectedPost.username}</h4>
+                    <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                      {new Date(selectedPost.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {selectedPost.user_id === user?.id && (
+                    <div className="flex items-center space-x-1.5 mr-2">
+                      <button
+                        onClick={() => {
+                          setShowDetailModal(false);
+                          handleOpenEditModal(selectedPost);
+                        }}
+                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+                        title={t('edit')}
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDetailModal(false);
+                          triggerDeleteConfirm(selectedPost);
+                        }}
+                        className="p-1.5 rounded-lg border border-rose-500/10 text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                        title={t('delete')}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => setShowDetailModal(false)}
+                    className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content Body */}
+              <div className="p-6 overflow-y-auto space-y-6 flex-1 text-left">
+                {/* Images */}
+                {parsePhotos(selectedPost.photo_content).length > 0 && (
+                  <div className="w-full rounded-2xl overflow-hidden border" style={{ borderColor: 'var(--border-secondary)' }}>
+                    {parsePhotos(selectedPost.photo_content).length === 1 ? (
+                      <img 
+                        src={parsePhotos(selectedPost.photo_content)[0]} 
+                        alt={selectedPost.title} 
+                        className="w-full max-h-[40vh] object-cover" 
+                      />
+                    ) : (
+                      <div className="w-full max-h-[40vh] overflow-x-auto flex snap-x snap-mandatory scrollbar-thin">
+                        {parsePhotos(selectedPost.photo_content).map((photo, idx) => (
+                          <div key={idx} className="w-full shrink-0 snap-center relative">
+                            <img 
+                              src={photo} 
+                              alt={`${selectedPost.title} - ${idx + 1}`} 
+                              className="w-full max-h-[40vh] object-cover" 
+                            />
+                            <div className="absolute bottom-3 right-3 bg-black/60 text-[9px] font-black tracking-wider text-white px-2 py-0.5 rounded-full">
+                              {idx + 1} / {parsePhotos(selectedPost.photo_content).length}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Text story */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-black tracking-tight">{selectedPost.title}</h3>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
+                    {selectedPost.content}
+                  </p>
+
+                  {/* Hashtags */}
+                  {selectedPost.trip_destination && (
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {selectedPost.trip_destination.split(' ').map((tag, idx) => (
+                        <span 
+                          key={idx} 
+                          className="inline-flex items-center text-[10px] font-extrabold bg-rose-500/5 text-rose-500 border border-rose-500/10 px-2.5 py-1 rounded-lg"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-6 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-secondary)' }}>
+                <button 
+                  onClick={() => {
+                    handleLikePost(selectedPost.id);
+                    setSelectedPost(prev => ({
+                      ...prev,
+                      likes: (prev.liked_by?.includes(user?.id) ? prev.likes - 1 : prev.likes + 1),
+                      liked_by: prev.liked_by?.includes(user?.id)
+                        ? prev.liked_by.filter(id => id !== user?.id)
+                        : [...(prev.liked_by || []), user?.id]
+                    }));
+                  }}
+                  className="flex items-center space-x-2 text-xs font-bold transition hover:scale-105 active:scale-95 cursor-pointer"
+                  style={{ color: selectedPost.liked_by?.includes(user?.id) ? '#f43f5e' : 'var(--text-secondary)' }}
+                >
+                  <Heart className={`h-4.5 w-4.5 transition-colors ${selectedPost.liked_by?.includes(user?.id) ? 'fill-rose-500 text-rose-500' : ''}`} />
+                  <span>{selectedPost.likes || 0} {t('likes')}</span>
+                </button>
+
+                <button 
+                  onClick={() => setShowDetailModal(false)}
+                  className="px-5 py-2 rounded-xl border text-xs font-bold transition hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+                  style={{ color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-xl font-bold text-xs flex items-center space-x-2 border backdrop-blur-md"
+            style={{
+              backgroundColor: 'var(--toast-bg)',
+              color: toast.type === 'error' ? 'rgba(239, 68, 68, 1)' : 'rgba(16, 185, 129, 1)',
+              borderColor: toast.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'
+            }}
+          >
+            <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
+            <span>{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

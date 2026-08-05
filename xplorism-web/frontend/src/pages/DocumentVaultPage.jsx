@@ -72,7 +72,11 @@ export default function DocumentVaultPage() {
       const docs = data || [];
       setDocuments(docs);
       setError('');
-      localStorage.setItem('xplorism_documents_cache', JSON.stringify(docs));
+      try {
+        localStorage.setItem('xplorism_documents_cache', JSON.stringify(docs));
+      } catch (e) {
+        console.warn('Failed to save documents to localStorage cache (quota limit exceeded):', e);
+      }
     } catch (err) {
       console.error(err);
       const cached = localStorage.getItem('xplorism_documents_cache');
@@ -170,7 +174,11 @@ export default function DocumentVaultPage() {
         const updated = cached.map(d => 
           d.id === editingId ? { ...d, ...payload } : d
         );
-        localStorage.setItem('xplorism_documents_cache', JSON.stringify(updated));
+        try {
+          localStorage.setItem('xplorism_documents_cache', JSON.stringify(updated));
+        } catch (e) {
+          console.warn('Failed to save documents to localStorage cache (quota limit):', e);
+        }
         setDocuments(updated);
       } else {
         const newDoc = {
@@ -179,7 +187,11 @@ export default function DocumentVaultPage() {
           created_at: new Date().toISOString()
         };
         const updated = [newDoc, ...cached];
-        localStorage.setItem('xplorism_documents_cache', JSON.stringify(updated));
+        try {
+          localStorage.setItem('xplorism_documents_cache', JSON.stringify(updated));
+        } catch (e) {
+          console.warn('Failed to save documents to localStorage cache (quota limit):', e);
+        }
         setDocuments(updated);
       }
       setIsModalOpen(false);

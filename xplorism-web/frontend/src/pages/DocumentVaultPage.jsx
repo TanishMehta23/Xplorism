@@ -30,8 +30,21 @@ export default function DocumentVaultPage() {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [loadingView, setLoadingView] = useState(false);
   
+  // Custom Delete Modal states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [docToDelete, setDocToDelete] = useState(null);
+  
   // Filter state
   const [activeFilter, setActiveFilter] = useState('all');
+
+  // Custom Toast State
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 4000);
+  };
 
   // Fetch documents on mount
   useEffect(() => {
@@ -86,7 +99,7 @@ export default function DocumentVaultPage() {
     // Check size limit: 10MB
     const MAX_SIZE = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > MAX_SIZE) {
-      alert('File size exceeds the 10MB limit.');
+      showToast('File size exceeds the 10MB limit.', 'error');
       e.target.value = ''; // Reset input
       return;
     }
@@ -175,8 +188,12 @@ export default function DocumentVaultPage() {
     }
   };
 
-  const handleDeleteDocument = async (id) => {
-    if (!window.confirm(t('confirm_delete'))) return;
+  const triggerDeleteConfirm = (doc) => {
+    setDocToDelete(doc);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteDocument = async (id) => {
     try {
       if (!id.toString().startsWith('local-')) {
         await api.delete(`/documents/${id}`);
@@ -232,7 +249,7 @@ export default function DocumentVaultPage() {
       downloadFile(data.file_content, data.file_name || doc.file_name);
     } catch (err) {
       console.error('Failed to download document:', err);
-      alert('Failed to download document. Please try again.');
+      showToast('Failed to download document. Please try again.', 'error');
     }
   };
 
@@ -253,7 +270,7 @@ export default function DocumentVaultPage() {
       setViewContent(data.file_content);
     } catch (err) {
       console.error('Failed to view document:', err);
-      alert('Failed to load document preview.');
+      showToast('Failed to load document preview.', 'error');
       setIsViewerOpen(false);
     } finally {
       setLoadingView(false);
@@ -442,7 +459,7 @@ export default function DocumentVaultPage() {
                         <Edit3 className="h-4 w-4" />
                       </button>
                       <button 
-                        onClick={() => handleDeleteDocument(doc.id)}
+                        onClick={() => triggerDeleteConfirm(doc)}
                         className="p-1.5 rounded-lg bg-[var(--bg-tertiary)] hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-500 transition cursor-pointer"
                         title={t('delete')}
                       >
@@ -657,6 +674,70 @@ export default function DocumentVaultPage() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="rounded-3xl border p-6 max-w-sm w-full shadow-2xl relative text-center space-y-4"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+            >
+              <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center text-xl">
+                ⚠️
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-base font-black">Delete Document</h3>
+                <p className="text-xs text-[var(--text-secondary)] font-semibold">
+                  Are you sure you want to delete <span className="font-extrabold text-[var(--text-primary)]">"{docToDelete?.title}"</span>? This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex items-center justify-center space-x-3 pt-2">
+                <button
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border font-extrabold transition cursor-pointer active:scale-95 text-xs"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setIsDeleteModalOpen(false);
+                    if (docToDelete) {
+                      await confirmDeleteDocument(docToDelete.id);
+                    }
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold transition cursor-pointer active:scale-95 text-xs shadow-md"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-xl font-bold text-xs flex items-center space-x-2 border backdrop-blur-md"
+            style={{
+              backgroundColor: 'var(--toast-bg)',
+              color: toast.type === 'error' ? 'rgba(239, 68, 68, 1)' : 'rgba(16, 185, 129, 1)',
+              borderColor: toast.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'
+            }}
+          >
+            <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
+            <span>{toast.message}</span>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

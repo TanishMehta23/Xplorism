@@ -13,12 +13,8 @@ import budgetRoutes from './routes/budgetRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import postRoutes from './routes/postRoutes.js';
-<<<<<<< Updated upstream
-import { getNearbyPlacesFromGemini, getHotelsFromGemini, getFlightDetailsFromGemini } from './services/geminiService.js';
-=======
 import notificationRoutes from './routes/notificationRoutes.js';
-import { getNearbyPlacesFromGemini, getHotelsFromGemini } from './services/geminiService.js';
->>>>>>> Stashed changes
+import { getNearbyPlacesFromGemini, getHotelsFromGemini, getFlightDetailsFromGemini } from './services/geminiService.js';
 
 dotenv.config();
 
@@ -464,7 +460,6 @@ function getDeterministicIndex(str, max) {
   return Math.abs(hash) % max;
 }
 
-<<<<<<< Updated upstream
 const CUSTOM_RESOLVED_FLIGHTS = new Map([
   ['IGO6179', {
     airlineName: 'IndiGo',
@@ -551,7 +546,7 @@ const CUSTOM_RESOLVED_FLIGHTS = new Map([
     }
   }]
 ]);
-=======
+
 function getRealisticAirports(lat, lon, heading, icao24) {
   // Convert heading to radians (0 is North, clockwise)
   const rad = (heading * Math.PI) / 180;
@@ -608,13 +603,14 @@ function getRealisticAirports(lat, lon, heading, icao24) {
 
   return { departure, destination };
 }
->>>>>>> Stashed changes
 
 function enrichFlight(state) {
   const icao24 = state[0];
   const callsign = (state[1] || '').trim();
   const originCountry = state[2] || 'Unknown';
-<<<<<<< Updated upstream
+  const longitude = state[5];
+  const latitude = state[6];
+  const heading = state[10] || 0;
 
   const customKey = callsign.toUpperCase();
   if (CUSTOM_RESOLVED_FLIGHTS.has(customKey)) {
@@ -625,12 +621,12 @@ function enrichFlight(state) {
       originCountry,
       timePosition: state[3],
       lastContact: state[4],
-      longitude: state[5],
-      latitude: state[6],
+      longitude,
+      latitude,
       altitude: state[7], // raw meters
       onGround: state[8],
       velocity: state[9],
-      heading: state[10] || 0,
+      heading,
       verticalRate: state[11] || 0,
       airlineName: details.airlineName,
       aircraftType: details.aircraftType,
@@ -638,11 +634,6 @@ function enrichFlight(state) {
       destination: details.destination
     };
   }
-=======
-  const longitude = state[5];
-  const latitude = state[6];
-  const heading = state[10] || 0;
->>>>>>> Stashed changes
   
   // Resolve Airline
   let airlineName = 'Private Flight';

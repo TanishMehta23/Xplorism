@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< Updated upstream
-import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, ChevronDown, FolderLock, Users } from 'lucide-react';
-=======
 import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell } from 'lucide-react';
->>>>>>> Stashed changes
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';

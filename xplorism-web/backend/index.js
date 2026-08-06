@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
@@ -15,6 +16,8 @@ import documentRoutes from './routes/documentRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { getNearbyPlacesFromGemini, getHotelsFromGemini, getFlightDetailsFromGemini } from './services/geminiService.js';
+import { globalLimiter, authLimiter } from './middleware/rateLimiter.js';
+import { sqlInjectionSanitizer } from './middleware/sqlInjectionSanitizer.js';
 
 dotenv.config();
 
@@ -24,16 +27,34 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Hide technology fingerprinting to prevent targeting of server-specific exploits
+app.disable('x-powered-by');
+
+// Trust reverse proxy (needed for rate limiting to work with correct client IPs behind Cloudflare/Nginx/Vercel)
+app.set('trust proxy', 1);
+
 // Middleware
+// Apply HTTP security headers (XSS protection, Content-Security-Policy, HSTS, Clickjacking protection, etc.)
+app.use(helmet({
+  contentSecurityPolicy: false, // Turned off by default if hosting map interpreters or third-party widgets, can be customized
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Allows resource sharing for assets/uploads
+}));
+
 app.use(cors({
-  origin: '*', // For development purposes. Can be restricted to specific clients later.
+  origin: process.env.CLIENT_URL || '*', // Restrict to specific client domain in production
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Apply security sanitizers
+app.use(sqlInjectionSanitizer);
+
+// Apply rate limiter globally
+app.use(globalLimiter);
+
 // Routes
-app.use('/auth', authRoutes);
+app.use('/auth', authLimiter, authRoutes);
 app.use('/trips', tripRoutes);
 app.use('/trips', budgetRoutes);
 app.use('/favorites', favoriteRoutes);

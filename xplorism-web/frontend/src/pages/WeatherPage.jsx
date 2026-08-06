@@ -92,23 +92,36 @@ export default function WeatherPage() {
   const [weatherData, setWeatherData] = useState(null);
   const [error, setError] = useState('');
 
-  // Request location permission on mount to show local weather, with Paris as a fallback
+  // Custom location permission modal state
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
+  // On mount, show the custom location permission modal (only if geolocation is supported)
   useEffect(() => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          fetchWeatherForCity('Your Location', latitude, longitude);
-        },
-        (err) => {
-          console.warn('Geolocation access denied or failed. Falling back to Paris, France. Error:', err.message);
-          fetchWeatherForCity('Paris, France');
-        }
-      );
+      setShowLocationModal(true);
     } else {
       fetchWeatherForCity('Paris, France');
     }
   }, []);
+
+  const handleAllowLocation = () => {
+    setShowLocationModal(false);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        fetchWeatherForCity('Your Location', latitude, longitude);
+      },
+      (err) => {
+        console.warn('Geolocation access denied or failed. Falling back to Paris, France. Error:', err.message);
+        fetchWeatherForCity('Paris, France');
+      }
+    );
+  };
+
+  const handleSkipLocation = () => {
+    setShowLocationModal(false);
+    fetchWeatherForCity('Paris, France');
+  };
 
   // Fetch autocomplete suggestions
   useEffect(() => {
@@ -283,7 +296,7 @@ export default function WeatherPage() {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkTheme ? 'text-white' : 'text-slate-800'} flex flex-col font-sans transition-colors duration-500 relative overflow-hidden`}>
+    <div className={`min-h-screen ${isDarkTheme ? 'text-white' : 'text-slate-800'} flex flex-col font-sans transition-colors duration-500 relative overflow-hidden isolate`}>
       
       {/* Dynamic Animated Atmospheric Background */}
       <div className={`absolute inset-0 -z-10 bg-gradient-to-br ${getThemeBackground()} transition-all duration-700`} />
@@ -330,7 +343,60 @@ export default function WeatherPage() {
 
       <Navbar activeTab="weather" />
 
-      {/* Main Layout container */}
+      {/* Custom Location Permission Modal */}
+      <AnimatePresence>
+        {showLocationModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+            style={{ backgroundColor: 'rgba(100,116,139,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white rounded-3xl shadow-xl w-full max-w-sm px-8 pt-8 pb-7 flex flex-col items-center text-center"
+            >
+              {/* Icon in soft circle */}
+              <div className="w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center mb-5">
+                <MapPin className="h-6 w-6 text-rose-500" />
+              </div>
+
+              {/* Title */}
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-1.5">
+                Enable Location
+              </h3>
+
+              {/* Description */}
+              <p className="text-sm text-slate-500 leading-relaxed max-w-[260px] mb-7">
+                Allow Xplorism to use your location for <span className="font-semibold text-slate-700">real-time weather</span> at your current position.
+              </p>
+
+              {/* Side-by-side buttons */}
+              <div className="flex items-center gap-3 w-full">
+                <button
+                  onClick={handleSkipLocation}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 cursor-pointer transition-all duration-150 hover:bg-slate-50 active:scale-[0.97]"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={handleAllowLocation}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-rose-500 border border-rose-500 cursor-pointer transition-all duration-150 hover:bg-rose-600 hover:border-rose-600 active:scale-[0.97]"
+                >
+                  Allow
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 flex flex-col items-center justify-start space-y-8">
         
         {/* Page Header (Centered title with absolutely positioned back button on desktop) */}
@@ -380,19 +446,61 @@ export default function WeatherPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder={t('search_city_placeholder')}
-                className={`w-full pl-12 pr-4 py-3.5 rounded-full outline-none transition text-sm shadow-md ${isDarkTheme ? 'bg-slate-900/80 border-slate-700/80 text-white focus:border-rose-500' : 'bg-white border-slate-200 text-slate-800 focus:border-rose-400'}`}
+                className={`w-full pl-12 pr-12 py-3.5 rounded-full outline-none transition text-sm shadow-md ${isDarkTheme ? 'bg-slate-900/80 border-slate-700/80 text-white focus:border-rose-500' : 'bg-white border-slate-200 text-slate-800 focus:border-rose-400'}`}
               />
+              <button
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        const { latitude, longitude } = position.coords;
+                        fetchWeatherForCity('Your Location', latitude, longitude);
+                      },
+                      (err) => {
+                        console.warn('Geolocation access denied or failed. Falling back to Paris, France. Error:', err.message);
+                        fetchWeatherForCity('Paris, France');
+                      }
+                    );
+                  }
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 hover:text-rose-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition cursor-pointer"
+                title="Use current location"
+              >
+                <MapPin className="h-4.5 w-4.5" />
+              </button>
             </div>
 
             {/* Auto-suggest dropdown */}
             <AnimatePresence>
-              {showSuggestions && suggestions.length > 0 && (
+              {showSuggestions && (suggestions.length > 0 || query.trim() === '') && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
                   className="absolute left-0 right-0 mt-2 z-40 max-h-52 overflow-y-auto bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl shadow-xl divide-y divide-slate-100"
                 >
+                  {query.trim() === '' && (
+                    <button
+                      onClick={() => {
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                              const { latitude, longitude } = position.coords;
+                              fetchWeatherForCity('Your Location', latitude, longitude);
+                            },
+                            (err) => {
+                              console.warn('Geolocation access denied or failed. Falling back to Paris, France. Error:', err.message);
+                              fetchWeatherForCity('Paris, France');
+                            }
+                          );
+                        }
+                      }}
+                      className="w-full text-left px-5 py-3.5 hover:bg-slate-100/50 transition text-rose-500 text-xs flex items-center space-x-2 font-semibold"
+                    >
+                      <MapPin className="h-4 w-4 text-rose-500 shrink-0 animate-bounce-slow" />
+                      <span>Use current location</span>
+                    </button>
+                  )}
                   {suggestions.map((item) => (
                     <button
                       key={item.place_id}

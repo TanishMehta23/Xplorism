@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, ShieldAlert, Plus, Trash2, Download, Edit3, 
   FolderLock, CheckCircle, HelpCircle, 
-  FileImage, Loader2, ArrowLeft, ShieldCheck, Eye 
+  FileImage, Loader2, ArrowLeft, ShieldCheck, Eye,
+  Plane, Hotel
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -312,12 +313,12 @@ export default function DocumentVaultPage() {
 
   const getTypeIcon = (docType) => {
     switch (docType) {
-      case 'passport': return '🛂';
-      case 'visa': return '📄';
-      case 'ticket': return '✈️';
-      case 'hotel_voucher': return '🏨';
-      case 'insurance': return '🛡️';
-      default: return '📂';
+      case 'passport': return <FileText className="h-5 w-5 text-indigo-500" />;
+      case 'visa': return <FileText className="h-5 w-5 text-sky-500" />;
+      case 'ticket': return <Plane className="h-5 w-5 text-rose-500" />;
+      case 'hotel_voucher': return <Hotel className="h-5 w-5 text-emerald-500" />;
+      case 'insurance': return <ShieldCheck className="h-5 w-5 text-teal-500" />;
+      default: return <FolderLock className="h-5 w-5 text-slate-500" />;
     }
   };
 
@@ -350,7 +351,7 @@ export default function DocumentVaultPage() {
           </div>
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center justify-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold px-5 py-3 rounded-2xl transition cursor-pointer shadow-lg active:scale-95 text-sm"
+            className="flex items-center justify-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold px-5 py-3 rounded-2xl transition cursor-pointer shadow-lg active:scale-95 text-sm self-start md:self-auto"
           >
             <Plus className="h-4.5 w-4.5" />
             <span>{t('add_document')}</span>
@@ -375,7 +376,9 @@ export default function DocumentVaultPage() {
                     style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'rgba(244, 63, 94, 0.2)' }}
                   >
                     <div className="flex items-center space-x-3">
-                      <span className="text-xl">{getTypeIcon(doc.type)}</span>
+                      <div className="p-2 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center shrink-0">
+                        {getTypeIcon(doc.type)}
+                      </div>
                       <div>
                         <p className="font-extrabold text-[var(--text-primary)] truncate max-w-[150px]">{doc.title}</p>
                         <p className="text-[10px] text-[var(--text-secondary)] font-semibold">{doc.doc_number}</p>
@@ -393,22 +396,26 @@ export default function DocumentVaultPage() {
           </div>
         )}
 
-        {/* Filter categories */}
-        <div className="flex flex-wrap items-center gap-2 pb-2">
-          {['all', 'passport', 'visa', 'ticket', 'hotel_voucher', 'insurance', 'other'].map(filter => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer border active:scale-95 ${
-                activeFilter === filter 
-                  ? 'bg-rose-500 text-white border-rose-500 shadow-md' 
-                  : 'bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] border-[var(--border-primary)]'
-              }`}
-            >
-              <span className="mr-1.5">{getTypeIcon(filter)}</span>
-              <span className="capitalize">{filter === 'all' ? 'All' : t(filter)}</span>
-            </button>
-          ))}
+        {/* Filter categories (Horizontal Swipeable Pill Category Row) */}
+        <div className="flex items-center space-x-2 overflow-x-auto pb-3 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 whitespace-nowrap">
+          {['all', 'passport', 'visa', 'ticket', 'hotel_voucher', 'insurance', 'other'].map(filter => {
+            const isActive = activeFilter === filter;
+            return (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`inline-flex items-center space-x-1.5 px-4.5 py-2.5 rounded-full text-xs font-bold transition-all duration-200 border cursor-pointer shrink-0 active:scale-95 shadow-sm ${
+                  isActive 
+                    ? 'text-white border-rose-500 bg-rose-500' 
+                    : 'border-[var(--border-primary)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)]'
+                }`}
+                style={{ color: isActive ? '#ffffff' : 'var(--text-secondary)' }}
+              >
+                <span className="shrink-0">{getTypeIcon(filter)}</span>
+                <span className="capitalize">{filter === 'all' ? 'All' : t(filter)}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Documents Grid / Table */}
@@ -453,7 +460,7 @@ export default function DocumentVaultPage() {
                   {/* Top Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3.5">
-                      <div className="text-3xl p-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center">
+                      <div className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center shrink-0">
                         {getTypeIcon(doc.type)}
                       </div>
                       <div>

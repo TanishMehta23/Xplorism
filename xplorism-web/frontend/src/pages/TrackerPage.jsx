@@ -458,8 +458,7 @@ export default function TrackerPage() {
             <p className={`text-sm font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading Radar Maps...</p>
           </div>
         )}
-
-        {/* Sidebar Toggle Button */}
+             {/* Sidebar Toggle Button */}
         <button
           onClick={() => {
             const nextState = !sidebarOpen;
@@ -470,7 +469,9 @@ export default function TrackerPage() {
               }
             }, 300);
           }}
-          className={`absolute top-4 z-20 p-2.5 rounded-xl shadow-xl border backdrop-blur-md transition active:scale-95 flex items-center justify-center cursor-pointer ${isDark ? 'bg-slate-900/95 text-white border-slate-700 hover:bg-slate-800' : 'bg-white/95 text-slate-800 border-slate-200 hover:bg-slate-50'}`}
+          className={`absolute top-4 z-20 p-2.5 rounded-xl shadow-xl border backdrop-blur-md transition active:scale-95 flex items-center justify-center cursor-pointer ${
+            sidebarOpen ? 'hidden md:flex' : 'flex'
+          } ${isDark ? 'bg-slate-900/95 text-white border-slate-700 hover:bg-slate-800' : 'bg-white/95 text-slate-800 border-slate-200 hover:bg-slate-50'}`}
           style={{ left: sidebarOpen ? '396px' : '16px', transition: 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' }}
           title={sidebarOpen ? "Hide Radar List" : "Show Radar List"}
         >
@@ -485,7 +486,7 @@ export default function TrackerPage() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -380, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className={`absolute top-4 left-4 bottom-4 w-[360px] md:w-[366px] z-10 flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-md ${isDark ? 'border-slate-800/80' : 'border-slate-200'}`}
+              className={`absolute top-4 bottom-4 left-4 right-4 md:right-auto md:w-[366px] z-10 flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-md ${isDark ? 'border-slate-800/80' : 'border-slate-200'}`}
               style={{ backgroundColor: isDark ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)', color: isDark ? '#ffffff' : '#0f172a' }}
             >
               {/* Header & Search */}
@@ -505,6 +506,13 @@ export default function TrackerPage() {
                       className={`p-1.5 rounded-lg border transition active:scale-95 disabled:opacity-50 cursor-pointer ${isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-650'}`}
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
+                    <button 
+                      onClick={() => setSidebarOpen(false)}
+                      className="p-1.5 rounded-lg border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition active:scale-95 cursor-pointer md:hidden"
+                      title="Hide Panel"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>

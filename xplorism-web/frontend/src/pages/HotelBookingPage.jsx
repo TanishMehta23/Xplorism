@@ -151,6 +151,7 @@ export default function HotelBookingPage() {
   const [hotels, setHotels] = useState([]);
   const [filteredHotels, setFilteredHotels] = useState([]);
   const [selectedHotel, setSelectedHotel] = useState(null);
+  const [mobileTab, setMobileTab] = useState('list');
   const [userTrips, setUserTrips] = useState([]);
 
   // Geocoding & Map States
@@ -201,6 +202,14 @@ export default function HotelBookingPage() {
       })
       .catch(err => console.error('Failed to load trips:', err));
   }, []);
+
+  useEffect(() => {
+    if (mobileTab === 'map' && mapInstance) {
+      setTimeout(() => {
+        mapInstance.invalidateSize();
+      }, 150);
+    }
+  }, [mobileTab, mapInstance]);
 
   // Handle Search Submission
   const handleSearch = async (e) => {
@@ -582,12 +591,20 @@ export default function HotelBookingPage() {
                 <span>Check-In</span>
               </label>
               <div className="relative">
+                {/* Visual backdrop card */}
+                <div className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center justify-between transition-all select-none cursor-pointer hover:border-rose-300"
+                     style={{ borderColor: 'var(--border-primary)', color: checkIn ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
+                  <span>{checkIn ? new Date(checkIn).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Select check-in date'}</span>
+                  <Calendar className="h-4 w-4 text-rose-500 shrink-0" />
+                </div>
+                {/* Real input layered on top */}
                 <input
                   type="date"
                   value={checkIn}
                   onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
-                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                  onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
+                  onFocus={(e) => { try { e.target.showPicker(); } catch (err) {} }}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                 />
               </div>
             </div>
@@ -598,12 +615,20 @@ export default function HotelBookingPage() {
                 <span>Check-Out</span>
               </label>
               <div className="relative">
+                {/* Visual backdrop card */}
+                <div className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center justify-between transition-all select-none cursor-pointer hover:border-rose-300"
+                     style={{ borderColor: 'var(--border-primary)', color: checkOut ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
+                  <span>{checkOut ? new Date(checkOut).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Select check-out date'}</span>
+                  <Calendar className="h-4 w-4 text-rose-500 shrink-0" />
+                </div>
+                {/* Real input layered on top */}
                 <input
                   type="date"
                   value={checkOut}
                   onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
-                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                  onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
+                  onFocus={(e) => { try { e.target.showPicker(); } catch (err) {} }}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                 />
               </div>
             </div>
@@ -618,7 +643,7 @@ export default function HotelBookingPage() {
                   <select
                     value={guests}
                     onChange={(e) => setGuests(e.target.value)}
-                    className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                    className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all cursor-pointer"
                     style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                   >
                     <option value="1">1 Guest</option>
@@ -651,7 +676,7 @@ export default function HotelBookingPage() {
         {/* Main Dashboard Layout */}
         {!hasSearched ? (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-            <div className="p-4 rounded-full bg-rose-500/10 text-rose-500 animate-bounce">
+            <div className="p-4 rounded-full bg-rose-500/10 text-rose-500">
               <Hotel className="h-12 w-12" />
             </div>
             <h2 className="text-xl font-bold">Find Your Next Premium Stay</h2>
@@ -660,12 +685,38 @@ export default function HotelBookingPage() {
             </p>
           </div>
         ) : (
+          <>
+            {/* Mobile View Toggle */}
+            <div className="lg:hidden flex border border-slate-200 dark:border-slate-800 mb-6 bg-[var(--bg-secondary)] rounded-2xl p-1.5 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setMobileTab('list')}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition ${mobileTab === 'list' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-500'}`}
+            >
+              Stays ({filteredHotels.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab('map')}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition ${mobileTab === 'map' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-500'}`}
+            >
+              Map
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab('filters')}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition ${mobileTab === 'filters' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-500'}`}
+            >
+              Filters {selectedAmenities.length > 0 ? `(${selectedAmenities.length})` : ''}
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Filter & Map Pane (Sticky on desktop) */}
-            <div className="lg:col-span-5 space-y-4 md:sticky md:top-24 self-start">
+            <div className={`lg:col-span-5 space-y-4 md:sticky md:top-24 self-start ${mobileTab === 'list' ? 'hidden lg:block' : 'block'}`}>
 
               {/* Filter Card (Compact & Clean) */}
-              <div className="rounded-3xl border p-4 shadow-md space-y-4" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+              <div className={`rounded-3xl border p-4 shadow-md space-y-4 ${mobileTab === 'filters' ? 'block' : 'hidden lg:block'}`} style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
                 <div className="flex items-center space-x-2 pb-2 border-b" style={{ borderColor: 'var(--border-primary)' }}>
                   <SlidersHorizontal className="h-4 w-4 text-rose-500" />
                   <h3 className="text-xs font-extrabold uppercase tracking-wider">Filter Stays</h3>
@@ -746,7 +797,7 @@ export default function HotelBookingPage() {
 
               {/* Map Panel */}
               <div
-                className="rounded-3xl border overflow-hidden shadow-sm relative h-52 lg:h-56"
+                className={`rounded-3xl border overflow-hidden shadow-sm relative h-80 lg:h-56 ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}
                 style={{ borderColor: 'var(--border-primary)' }}
               >
                 <div id="hotels-map-container" className="w-full h-full z-10" />
@@ -761,7 +812,7 @@ export default function HotelBookingPage() {
             </div>
 
             {/* Right Hotels List Pane */}
-            <div className="lg:col-span-7 space-y-4">
+            <div className={`lg:col-span-7 space-y-4 ${mobileTab === 'list' ? 'block' : 'hidden lg:block'}`}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
                   Stays in {destination} ({filteredHotels.length} found)
@@ -869,6 +920,7 @@ export default function HotelBookingPage() {
             </div>
 
           </div>
+          </>
         )}
       </div>
 

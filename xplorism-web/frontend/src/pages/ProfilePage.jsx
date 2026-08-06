@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   User, Mail, Calendar, Compass, Edit2, Key, CheckCircle, 
   AlertCircle, LogOut, Loader2, Heart, DollarSign, ArrowLeft, ShieldCheck,
-  ChevronDown, Trash2, Plus
+  ChevronDown, Trash2, Plus, Users, FileText, Globe, Activity
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -64,6 +64,12 @@ export default function ProfilePage() {
   const [showLogPastModal, setShowLogPastModal] = useState(false);
   const [newPastTrip, setNewPastTrip] = useState({ destination: '', dates: '', notes: '' });
 
+  // Additional settings and feature states
+  const [coTravelers, setCoTravelers] = useState([]);
+  const [emergencyContact, setEmergencyContact] = useState({ name: '', relation: '', phone: '', bloodGroup: '' });
+  const [localeSettings, setLocaleSettings] = useState({ timezone: 'GMT+5:30', dateFormat: 'DD/MM/YYYY', tempUnit: 'C' });
+  const [hoveredPastTripId, setHoveredPastTripId] = useState(null);
+
   // Fetch Profile & Stats from Backend
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -87,6 +93,15 @@ export default function ProfilePage() {
           });
           if (data.user.preferences.favoriteThemes) {
             setSelectedThemes(data.user.preferences.favoriteThemes);
+          }
+          if (data.user.preferences.coTravelers) {
+            setCoTravelers(data.user.preferences.coTravelers);
+          }
+          if (data.user.preferences.emergencyContact) {
+            setEmergencyContact(data.user.preferences.emergencyContact);
+          }
+          if (data.user.preferences.localeSettings) {
+            setLocaleSettings(data.user.preferences.localeSettings);
           }
         }
         if (data.user.travel_history) {
@@ -149,7 +164,7 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSavePreferences = async () => {
+  const handleSavePreferences = async (updatedPreferences = {}) => {
     setPrefError('');
     setPrefSuccess('');
     try {
@@ -158,7 +173,11 @@ export default function ProfilePage() {
         email,
         preferences: {
           ...preferences,
-          favoriteThemes: selectedThemes
+          favoriteThemes: selectedThemes,
+          coTravelers,
+          emergencyContact,
+          localeSettings,
+          ...updatedPreferences
         }
       });
       setProfile(prev => ({ ...prev, preferences: data.user.preferences }));
@@ -198,6 +217,42 @@ export default function ProfilePage() {
       console.error(err);
       alert('Failed to save travel history.');
     }
+  };
+
+  const [showAddCompanionModal, setShowAddCompanionModal] = useState(false);
+  const [newCompanion, setNewCompanion] = useState({ name: '', relation: 'Friend', email: '' });
+
+  const handleAddCompanion = async (e) => {
+    e.preventDefault();
+    if (!newCompanion.name || !newCompanion.email) {
+      alert('Please fill in name and email.');
+      return;
+    }
+    const updated = [
+      ...coTravelers,
+      {
+        id: Date.now().toString(),
+        name: newCompanion.name,
+        relation: newCompanion.relation,
+        email: newCompanion.email
+      }
+    ];
+    setCoTravelers(updated);
+    await handleSavePreferences({ coTravelers: updated });
+    setNewCompanion({ name: '', relation: 'Friend', email: '' });
+    setShowAddCompanionModal(false);
+  };
+
+  const handleRemoveCompanion = async (id) => {
+    if (!window.confirm('Remove this co-traveler?')) return;
+    const updated = coTravelers.filter(c => c.id !== id);
+    setCoTravelers(updated);
+    await handleSavePreferences({ coTravelers: updated });
+  };
+
+  const handleSaveEmergencyContact = async (e) => {
+    e.preventDefault();
+    await handleSavePreferences({ emergencyContact });
   };
 
   const handleRemovePastTrip = async (id) => {
@@ -844,6 +899,71 @@ export default function ProfilePage() {
                   );
                 })()}
 
+                {/* Locale & Settings */}
+                <div className="space-y-4 pt-6 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                  <h4 className="text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
+                    <span>Locale & Display Settings</span>
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Timezone */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Timezone</label>
+                      <select
+                        value={localeSettings.timezone}
+                        onChange={(e) => setLocaleSettings({ ...localeSettings, timezone: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none transition-all duration-200"
+                        style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                      >
+                        <option value="GMT-8:00">PST (GMT-8)</option>
+                        <option value="GMT+0:00">UTC (GMT+0)</option>
+                        <option value="GMT+1:00">CET (GMT+1)</option>
+                        <option value="GMT+5:30">IST (GMT+5:30)</option>
+                        <option value="GMT+9:00">JST (GMT+9)</option>
+                      </select>
+                    </div>
+
+                    {/* Date Format */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Date Format</label>
+                      <select
+                        value={localeSettings.dateFormat}
+                        onChange={(e) => setLocaleSettings({ ...localeSettings, dateFormat: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none transition-all duration-200"
+                        style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                      >
+                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Temp Unit */}
+                  <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                    <div>
+                      <h5 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>Temperature Unit</h5>
+                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Preferred temperature scale</p>
+                    </div>
+                    <div className="flex space-x-1 bg-slate-200 dark:bg-slate-800 p-0.5 rounded-xl">
+                      {['C', 'F'].map((unit) => (
+                        <button
+                          key={unit}
+                          type="button"
+                          onClick={() => setLocaleSettings({ ...localeSettings, tempUnit: unit })}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition select-none cursor-pointer ${
+                            localeSettings.tempUnit === unit
+                              ? 'bg-blue-500 text-white shadow-sm'
+                              : 'text-slate-555 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-350'
+                          }`}
+                        >
+                          °{unit}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Toggle Options */}
                 <div className="space-y-4 pt-6 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
                   
@@ -934,63 +1054,355 @@ export default function ProfilePage() {
 
         </div>
 
-        {/* TRAVEL HISTORY SECTION */}
-        <div className="mt-12 rounded-3xl border shadow-md p-6 md:p-8 w-full"
-             style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        {/* TRAVEL MAP & HISTORY SECTION */}
+        <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+          {/* Interactive World Map */}
+          <div className="rounded-3xl border shadow-md p-6 md:p-8 flex flex-col justify-between"
+               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
             <div>
               <h3 className="text-xl font-black flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
-                <Compass className="h-5 w-5 text-indigo-500" />
-                <span>Travel History & Logs</span>
+                <Globe className="h-5 w-5 text-blue-505" />
+                <span>Interactive Travel Map</span>
               </h3>
-              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Keep track of your past adventures and destinations.</p>
+              <p className="text-xs mb-6" style={{ color: 'var(--text-tertiary)' }}>Visual route map connecting your trips to your home base.</p>
             </div>
-            <button
-              onClick={() => setShowLogPastModal(true)}
-              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-indigo-750 active:scale-95 shadow-md self-start sm:self-auto"
-              style={{ backgroundColor: '#4f46e5' }}
-            >
-              <Plus className="h-4 w-4" />
-              <span>Log Past Trip</span>
-            </button>
+
+            <div className="relative flex-1 flex items-center justify-center min-h-[300px]">
+              {(() => {
+                const CITY_COORDINATES = {
+                  'new delhi': { x: 650, y: 245, label: 'New Delhi' },
+                  'delhi': { x: 650, y: 245, label: 'New Delhi' },
+                  'dharamshala': { x: 645, y: 230, label: 'Dharamshala' },
+                  'kyoto': { x: 780, y: 220, label: 'Kyoto' },
+                  'tokyo': { x: 790, y: 215, label: 'Tokyo' },
+                  'paris': { x: 480, y: 170, label: 'Paris' },
+                  'london': { x: 465, y: 155, label: 'London' },
+                  'sydney': { x: 880, y: 410, label: 'Sydney' },
+                  'new york': { x: 270, y: 190, label: 'New York' },
+                  'san francisco': { x: 180, y: 195, label: 'San Francisco' },
+                  'rome': { x: 505, y: 190, label: 'Rome' },
+                  'cairo': { x: 550, y: 240, label: 'Cairo' },
+                  'cape town': { x: 540, y: 395, label: 'Cape Town' },
+                  'rio de janeiro': { x: 380, y: 350, label: 'Rio de Janeiro' },
+                  'dubai': { x: 600, y: 240, label: 'Dubai' },
+                  'singapore': { x: 710, y: 295, label: 'Singapore' },
+                  'bangkok': { x: 690, y: 275, label: 'Bangkok' },
+                  'toronto': { x: 260, y: 175, label: 'Toronto' }
+                };
+
+                const getCityCoords = (destination) => {
+                  const clean = destination.toLowerCase().trim();
+                  for (const [key, coords] of Object.entries(CITY_COORDINATES)) {
+                    if (clean.includes(key)) return coords;
+                  }
+                  let hash = 0;
+                  for (let i = 0; i < destination.length; i++) {
+                    hash = destination.charCodeAt(i) + ((hash << 5) - hash);
+                  }
+                  const x = 200 + (Math.abs(hash) % 600);
+                  const y = 100 + (Math.abs(hash >> 2) % 280);
+                  return { x, y, label: destination };
+                };
+
+                return (
+                  <svg viewBox="0 0 1000 500" className="w-full h-auto bg-slate-950 rounded-2xl border border-slate-800 shadow-inner relative overflow-hidden">
+                    <defs>
+                      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                    
+                    {/* Continent regions */}
+                    <circle cx="230" cy="180" r="110" fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+                    <circle cx="360" cy="350" r="90" fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+                    <circle cx="490" cy="160" r="60" fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+                    <circle cx="530" cy="290" r="85" fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+                    <circle cx="680" cy="220" r="120" fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+                    <circle cx="850" cy="380" r="70" fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+
+                    {/* Home Pin (New Delhi) */}
+                    <g>
+                      <circle cx="650" cy="245" r="8" className="fill-rose-500/30 animate-ping" />
+                      <circle cx="650" cy="245" r="5" className="fill-rose-500" />
+                      <text x="650" y="232" className="fill-rose-400 text-[10px] font-bold text-center" textAnchor="middle">Home</text>
+                    </g>
+
+                    {/* Trip Pins & Arcs */}
+                    {travelHistory.map((trip) => {
+                      const coords = getCityCoords(trip.destination);
+                      const homeX = 650;
+                      const homeY = 245;
+                      const isHovered = hoveredPastTripId === trip.id;
+                      
+                      if (coords.x === homeX && coords.y === homeY) return null;
+
+                      return (
+                        <g key={trip.id}>
+                          <path
+                            d={`M ${homeX} ${homeY} Q ${(homeX + coords.x)/2} ${Math.min(homeY, coords.y) - 60} ${coords.x} ${coords.y}`}
+                            fill="none"
+                            stroke={isHovered ? '#fb7185' : '#3b82f6'}
+                            strokeWidth={isHovered ? 2.5 : 1}
+                            strokeDasharray="4 4"
+                            className="transition-all duration-300 opacity-60"
+                          />
+                          <circle
+                            cx={coords.x}
+                            cy={coords.y}
+                            r={isHovered ? 12 : 6}
+                            className={`transition-all duration-300 cursor-pointer fill-rose-500/20`}
+                          />
+                          <circle
+                            cx={coords.x}
+                            cy={coords.y}
+                            r={isHovered ? 7 : 4}
+                            className={`transition-all duration-300 cursor-pointer ${isHovered ? 'fill-rose-400' : 'fill-blue-400'}`}
+                            onMouseEnter={() => setHoveredPastTripId(trip.id)}
+                            onMouseLeave={() => setHoveredPastTripId(null)}
+                          />
+                          {isHovered && (
+                            <g>
+                              <rect x={coords.x - 50} y={coords.y - 32} width="100" height="20" rx="6" className="fill-slate-900 stroke-slate-800" strokeWidth="1" />
+                              <text x={coords.x} y={coords.y - 18} className="fill-white text-[9px] font-bold" textAnchor="middle">{coords.label}</text>
+                            </g>
+                          )}
+                        </g>
+                      );
+                    })}
+                  </svg>
+                );
+              })()}
+            </div>
           </div>
 
-          {travelHistory.length === 0 ? (
-            <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-8 text-center dark:bg-indigo-950/10 dark:border-indigo-900/30">
-              <Compass className="h-8 w-8 text-indigo-300 mx-auto mb-3" />
-              <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No past trips logged yet</p>
-              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Click "Log Past Trip" to start building your personal travel map.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {travelHistory.map((trip) => (
-                <div key={trip.id} className="rounded-2xl border p-5 relative shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
-                     style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
-                  <div>
-                    <div className="flex items-start justify-between gap-2 mb-2 pr-6">
-                      <h4 className="text-sm font-bold truncate pr-6" style={{ color: 'var(--text-primary)' }}>{trip.destination}</h4>
-                      <button
-                        onClick={() => handleRemovePastTrip(trip.id)}
-                        className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0 absolute top-4 right-4"
-                        title="Remove past trip"
+          {/* Travel History Logs listing */}
+          <div className="rounded-3xl border shadow-md p-6 md:p-8 flex flex-col justify-between"
+               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+            <div>
+              <div className="flex items-center justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-xl font-black flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
+                    <Calendar className="h-5 w-5 text-indigo-500" />
+                    <span>Travel Logs & History</span>
+                  </h3>
+                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Keep track of your past adventures and destinations.</p>
+                </div>
+                <button
+                  onClick={() => setShowLogPastModal(true)}
+                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-indigo-750 active:scale-95 shadow-md shrink-0"
+                  style={{ backgroundColor: '#4f46e5' }}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Log Trip</span>
+                </button>
+              </div>
+
+              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                {travelHistory.length === 0 ? (
+                  <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-8 text-center dark:bg-indigo-950/10 dark:border-indigo-900/30">
+                    <Compass className="h-8 w-8 text-indigo-350 mx-auto mb-3" />
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No past trips logged yet</p>
+                    <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Add a past trip to map your adventures.</p>
+                  </div>
+                ) : (
+                  travelHistory.map((trip) => {
+                    const isHovered = hoveredPastTripId === trip.id;
+                    return (
+                      <div
+                        key={trip.id}
+                        onMouseEnter={() => setHoveredPastTripId(trip.id)}
+                        onMouseLeave={() => setHoveredPastTripId(null)}
+                        className={`rounded-2xl border p-4 relative transition-all duration-200 group flex flex-col justify-between ${
+                          isHovered 
+                            ? 'border-rose-400 bg-rose-50/10 shadow-md' 
+                            : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40'
+                        }`}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                        <div className="flex items-start justify-between gap-2 pr-6">
+                          <h4 className="text-sm font-bold truncate pr-6" style={{ color: 'var(--text-primary)' }}>{trip.destination}</h4>
+                          <button
+                            onClick={() => handleRemovePastTrip(trip.id)}
+                            className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0 absolute top-4 right-4"
+                            title="Remove past trip"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <div className="flex items-center space-x-1 text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-0.5 rounded-full w-fit mb-2 mt-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{trip.dates}</span>
+                        </div>
+                        {trip.notes && (
+                          <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{trip.notes}</p>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CO-TRAVELERS & EMERGENCY GRID */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+          
+          {/* Co-Travelers & Family Section */}
+          <div className="rounded-3xl border shadow-md p-6 md:p-8"
+               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-xl font-black flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
+                  <Users className="h-5 w-5 text-teal-500" />
+                  <span>Co-Travelers & Companions</span>
+                </h3>
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Manage travel partners you frequently plan itineraries with.</p>
+              </div>
+              <button
+                onClick={() => setShowAddCompanionModal(true)}
+                className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-teal-700 active:scale-95 shadow-md shrink-0"
+                style={{ backgroundColor: '#0d9488' }}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Companion</span>
+              </button>
+            </div>
+
+            {coTravelers.length === 0 ? (
+              <div className="bg-teal-50/50 border border-teal-100/50 rounded-2xl p-8 text-center dark:bg-teal-950/10 dark:border-teal-900/30">
+                <Users className="h-8 w-8 text-teal-300 mx-auto mb-3" />
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No companions added yet</p>
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Add family or friends to sync itineraries together.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-1">
+                {coTravelers.map((traveler) => (
+                  <div key={traveler.id} className="rounded-2xl border p-4 relative flex items-center space-x-3 bg-slate-50/50 dark:bg-slate-900/40"
+                       style={{ borderColor: 'var(--border-primary)' }}>
+                    <div className="h-10 w-10 rounded-full bg-teal-500/10 text-teal-655 flex items-center justify-center font-extrabold text-sm uppercase">
+                      {traveler.name.charAt(0)}
                     </div>
-                    <div className="flex items-center space-x-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/20 px-2 py-0.5 rounded-full w-fit mb-3">
-                      <Calendar className="h-3 w-3" />
-                      <span>{trip.dates}</span>
+                    <div className="flex-1 min-w-0 pr-6">
+                      <h4 className="text-xs font-black truncate" style={{ color: 'var(--text-primary)' }}>{traveler.name}</h4>
+                      <p className="text-[10px] font-bold text-teal-605">{traveler.relation}</p>
+                      <p className="text-[9px] truncate" style={{ color: 'var(--text-tertiary)' }}>{traveler.email}</p>
                     </div>
-                    {trip.notes && (
-                      <p className="text-xs leading-relaxed line-clamp-3" style={{ color: 'var(--text-secondary)' }}>{trip.notes}</p>
-                    )}
+                    <button
+                      onClick={() => handleRemoveCompanion(traveler.id)}
+                      className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer absolute top-3 right-3"
+                      title="Remove Companion"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Emergency Info & Documents Vault Section */}
+          <div className="rounded-3xl border shadow-md p-6 md:p-8 flex flex-col justify-between"
+               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+            <div>
+              <h3 className="text-xl font-black flex items-center space-x-2 mb-1" style={{ color: 'var(--text-primary)' }}>
+                <Activity className="h-5 w-5 text-rose-500" />
+                <span>Emergency Profile & Documents</span>
+              </h3>
+              <p className="text-xs mb-6" style={{ color: 'var(--text-tertiary)' }}>Keep emergency contact info and documents accessible.</p>
+
+              <form onSubmit={handleSaveEmergencyContact} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Contact Name</label>
+                    <input
+                      type="text"
+                      value={emergencyContact.name}
+                      onChange={(e) => setEmergencyContact({ ...emergencyContact, name: e.target.value })}
+                      placeholder="Jane Doe"
+                      className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Relationship</label>
+                    <input
+                      type="text"
+                      value={emergencyContact.relation}
+                      onChange={(e) => setEmergencyContact({ ...emergencyContact, relation: e.target.value })}
+                      placeholder="Spouse / Parent"
+                      className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Phone Number</label>
+                    <input
+                      type="text"
+                      value={emergencyContact.phone}
+                      onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
+                      placeholder="+91 98765 43210"
+                      className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Blood Group</label>
+                    <select
+                      value={emergencyContact.bloodGroup}
+                      onChange={(e) => setEmergencyContact({ ...emergencyContact, bloodGroup: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                    >
+                      <option value="">Select Group</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl text-white text-xs font-bold transition hover:bg-rose-700 active:scale-95 shadow-md cursor-pointer"
+                    style={{ backgroundColor: '#e11d48' }}
+                  >
+                    Save Contact Info
+                  </button>
+                </div>
+              </form>
+
+              {/* Vault Documents quick access panel */}
+              <div className="pt-6 border-t mt-4" style={{ borderColor: 'var(--border-secondary)' }}>
+                <h4 className="text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5 mb-3" style={{ color: 'var(--text-secondary)' }}>
+                  <FileText className="h-4 w-4 text-rose-500" />
+                  <span>Linked Vault Documents</span>
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
+                  <a href="/vault" className="flex items-center space-x-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/40 hover:bg-rose-500/10 border border-slate-200/40 dark:border-slate-800 transition">
+                    <FileText className="h-3.5 w-3.5 text-blue-500" />
+                    <span className="truncate" style={{ color: 'var(--text-secondary)' }}>Passport Scan</span>
+                  </a>
+                  <a href="/vault" className="flex items-center space-x-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/40 hover:bg-rose-500/10 border border-slate-200/40 dark:border-slate-800 transition">
+                    <FileText className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="truncate" style={{ color: 'var(--text-secondary)' }}>Travel Insurance</span>
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
 
       </div>
@@ -1181,6 +1593,86 @@ export default function ProfilePage() {
                   style={{ backgroundColor: '#4f46e5' }}
                 >
                   <span>Save Log</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Add Companion Modal */}
+      {showAddCompanionModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+          <div className="rounded-3xl border p-6 max-w-md w-full shadow-2xl relative" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+            
+            <div className="flex items-center space-x-3 mb-4 text-teal-500">
+              <div className="p-2 bg-teal-500/10 rounded-xl">
+                <Users className="h-6 w-6 text-teal-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Add a Co-Traveler</h3>
+                <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Save partner details for group planning</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAddCompanion} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. John Doe"
+                  value={newCompanion.name}
+                  onChange={(e) => setNewCompanion({ ...newCompanion, name: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>Relationship</label>
+                <select
+                  value={newCompanion.relation}
+                  onChange={(e) => setNewCompanion({ ...newCompanion, relation: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                >
+                  <option value="Friend">Friend</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Family">Family Member</option>
+                  <option value="Colleague">Colleague</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
+                <input
+                  type="email"
+                  placeholder="e.g. john@example.com"
+                  value={newCompanion.email}
+                  onChange={(e) => setNewCompanion({ ...newCompanion, email: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddCompanionModal(false)}
+                  className="px-4 py-2 rounded-xl border text-xs font-bold transition cursor-pointer shadow-sm active:scale-95"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 flex items-center space-x-1.5"
+                  style={{ backgroundColor: '#0d9488' }}
+                >
+                  <span>Add Companion</span>
                 </button>
               </div>
             </form>

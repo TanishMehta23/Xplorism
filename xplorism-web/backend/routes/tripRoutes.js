@@ -6,13 +6,18 @@ import {
   deleteTrip, 
   generateItinerary, 
   getPackingList, 
-  updatePackingList 
+  updatePackingList,
+  getSharedTrip,
+  getTripLocalEvents
 } from '../controllers/tripController.js';
 import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Apply auth middleware to protect all trip endpoints
+// Public route for shared trips
+router.get('/share/:id', getSharedTrip);
+
+// Apply auth middleware to protect all other trip endpoints
 router.use(authMiddleware);
 
 router.get('/', getTrips);
@@ -25,4 +30,8 @@ router.delete('/:id', deleteTrip);
 router.get('/:id/packing', getPackingList);
 router.put('/:id/packing', updatePackingList);
 
+// Local events route
+router.get('/:id/events', getTripLocalEvents);
+
 export default router;
+

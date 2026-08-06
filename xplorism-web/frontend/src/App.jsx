@@ -16,6 +16,8 @@ import TrackerPage from './pages/TrackerPage';
 import DocumentVaultPage from './pages/DocumentVaultPage';
 import CommunityFeedPage from './pages/CommunityFeedPage';
 import NotFoundPage from './pages/NotFoundPage';
+import SharedTripPage from './pages/SharedTripPage';
+
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -151,6 +153,11 @@ function AppRoutes() {
             <CommunityFeedPage />
           </ProtectedRoute>
         }
+      />
+
+      <Route
+        path="/shared-trip/:id"
+        element={<SharedTripPage />}
       />
 
       <Route path="*" element={<NotFoundPage />} />

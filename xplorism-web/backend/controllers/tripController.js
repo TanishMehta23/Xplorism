@@ -1,5 +1,5 @@
 import { query } from '../config/db.js';
-import { askGeminiForItinerary, askGeminiForPackingList } from '../services/geminiService.js';
+import { askGeminiForItinerary, askGeminiForPackingList, getLocalEventsFromGemini } from '../services/geminiService.js';
 
 // Get all trips for the authenticated user
 export const getTrips = async (req, res) => {
@@ -388,4 +388,75 @@ export const updatePackingList = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Get a trip publicly for sharing
+export const getSharedTrip = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const checkTrip = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (checkTrip.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    const trip = checkTrip.rows[0];
+
+    // Fetch itineraries
+    const itineraryResult = await query(
+      'SELECT * FROM itinerary WHERE trip_id = $1 ORDER BY day ASC',
+      [trip.id]
+    );
+
+    res.json({
+      id: trip.id,
+      userId: trip.user_id,
+      destination: trip.destination,
+      startDate: trip.start_date,
+      endDate: trip.end_date,
+      budget: trip.budget,
+      travelers: trip.travelers,
+      travelStyle: trip.travel_style,
+      interests: trip.interests,
+      createdAt: trip.created_at,
+      packingList: trip.packing_list,
+      itineraries: itineraryResult.rows.map(item => ({
+        id: item.id,
+        tripId: item.trip_id,
+        day: item.day,
+        activity: item.activity,
+        time: item.time,
+        location: item.location,
+        estimatedCost: item.estimated_cost
+      }))
+    });
+  } catch (error) {
+    console.error('Get shared trip error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getTripLocalEvents = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if trip exists and belongs to user
+    const checkTrip = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (checkTrip.rows.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    const trip = checkTrip.rows[0];
+    if (trip.user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to view this trip' });
+    }
+
+    // Call Gemini API to fetch events
+    const events = await getLocalEventsFromGemini(trip.destination, trip.start_date, trip.end_date);
+    res.json(events);
+  } catch (error) {
+    console.error('Get trip local events error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 

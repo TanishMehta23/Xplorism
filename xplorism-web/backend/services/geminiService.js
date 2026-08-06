@@ -823,6 +823,126 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
 };
 
 /**
+ * Calls Gemini / fallback APIs to generate local events for a city and date range
+ */
+export const getLocalEventsFromGemini = async (destination, startDate, endDate) => {
+  const prompt = `You are an expert local event guide. For the travel destination "${destination}" during the dates from ${startDate} to ${endDate}, suggest 6 realistic annual events, festivals, concerts, exhibitions, seasonal happenings, or major local activities that take place in or near this destination during these dates.
+Provide the date/duration, category, a detailed description, and venue/location for each.
+You must return a JSON array conforming exactly to this schema:
+[
+  {
+    "title": "Event Name",
+    "date": "Date or Duration during trip",
+    "category": "Festival / Concert / Sports / Exhibition / Cultural / Seasonal",
+    "description": "Short description of the event and why it is worth visiting.",
+    "location": "Venue or Location name"
+  }
+]
+
+Only return the raw JSON array. Do not include markdown code block formatting (like \`\`\`json) or additional conversational text.`;
+
+  let eventsResult = null;
+
+  // 1. Try Gemini
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (apiKey) {
+    const models = getGeminiModels();
+    for (const model of models) {
+      try {
+        console.log(`Attempting local events generation with Gemini model: ${model}`);
+        const textResponse = await callGeminiAPI(model, prompt, apiKey);
+        
+        let jsonStr = textResponse.trim();
+        const firstBrace = jsonStr.indexOf('[');
+        const lastBrace = jsonStr.lastIndexOf(']');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+        }
+        
+        eventsResult = JSON.parse(jsonStr);
+        console.log(`Successfully generated local events using Gemini model: ${model}`);
+        break;
+      } catch (err) {
+        console.warn(`Gemini local events call failed for model ${model}: ${err.message}`);
+      }
+    }
+  }
+
+  // 2. Try Groq
+  if (!eventsResult && process.env.GROQ_API_KEY) {
+    console.log('Gemini failed or missing. Attempting Groq cloud fallback for local events...');
+    const groqModels = ['qwen-2.5-coder-32k', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    for (const model of groqModels) {
+      try {
+        const textResponse = await callGroqAPI(model, prompt, process.env.GROQ_API_KEY);
+        let jsonStr = textResponse.trim();
+        const firstBrace = jsonStr.indexOf('[');
+        const lastBrace = jsonStr.lastIndexOf(']');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+        }
+        eventsResult = JSON.parse(jsonStr);
+        console.log(`Successfully generated local events using Groq model: ${model}`);
+        break;
+      } catch (err) {
+        console.warn(`Groq local events call failed for model ${model}: ${err.message}`);
+      }
+    }
+  }
+
+  if (eventsResult) {
+    return eventsResult;
+  }
+
+  // Static Fallback
+  const city = (destination || '').split(',')[0].trim();
+  return [
+    {
+      title: `${city} Summer Music Festival`,
+      date: `${startDate}`,
+      category: "Concert",
+      description: "An annual open-air festival featuring local acoustic bands, food stalls, and art installations.",
+      location: "Central Park / Town Square"
+    },
+    {
+      title: `${city} Cultural Heritage Parade`,
+      date: `${startDate}`,
+      category: "Cultural",
+      description: "A colorful parade showcasing traditional costumes, folk dance performances, and local culinary heritage.",
+      location: "Main Street Boulevard"
+    },
+    {
+      title: `${city} Seasonal Food & Wine Fair`,
+      date: `${endDate}`,
+      category: "Festival",
+      description: "Discover local farm-to-table flavors, organic wines, craft breweries, and live cooking demonstrations.",
+      location: "Riverside Promenade"
+    },
+    {
+      title: `${city} International Art & Craft Expo`,
+      date: `${startDate}`,
+      category: "Exhibition",
+      description: "Gathering of regional and global artists displaying paintings, handmade crafts, pottery, and sculptures.",
+      location: "City Exhibition Center"
+    },
+    {
+      title: `${city} Morning Yoga & Wellness Session`,
+      date: `${startDate}`,
+      category: "Seasonal",
+      description: "Relaxing group outdoor yoga and meditation session led by professional wellness trainers.",
+      location: "Botanical Gardens Lawn"
+    },
+    {
+      title: `${city} Weekend Flea Market & Live Jazz`,
+      date: `${endDate}`,
+      category: "Festival",
+      description: "Browse vintage items, antique clothing, handmade jewelry while enjoying smooth live jazz tunes.",
+      location: "Historic Plaza"
+    }
+  ];
+};
+
+/**
  * Calls Gemini / fallback APIs to generate actual real-world hotels for a city
  */
 export const getHotelsFromGemini = async (destination) => {

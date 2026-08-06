@@ -194,8 +194,24 @@ export const verifyOtp = async (req, res) => {
       const hashedPassword = await bcrypt.hash(cachedData.password, salt);
 
       const userResult = await query(
-        'UPDATE users SET name = $1, email = $2, password = $3 WHERE id = $4 RETURNING id, name, email, created_at, google_id',
-        [cachedData.name, cachedData.email, hashedPassword, cachedData.userId]
+        `UPDATE users 
+         SET name = $1, 
+             email = $2, 
+             password = $3,
+             profile_photo = COALESCE($4, profile_photo), 
+             preferences = COALESCE($5, preferences), 
+             travel_history = COALESCE($6, travel_history)
+         WHERE id = $7 
+         RETURNING id, name, email, created_at, google_id, profile_photo, preferences, travel_history`,
+        [
+          cachedData.name, 
+          cachedData.email, 
+          hashedPassword, 
+          cachedData.profilePhoto || null, 
+          cachedData.preferences ? JSON.stringify(cachedData.preferences) : null, 
+          cachedData.travelHistory ? JSON.stringify(cachedData.travelHistory) : null, 
+          cachedData.userId
+        ]
       );
 
       const updatedUser = userResult.rows[0];
@@ -213,7 +229,10 @@ export const verifyOtp = async (req, res) => {
         user: {
           id: updatedUser.id,
           name: updatedUser.name,
-          email: updatedUser.email
+          email: updatedUser.email,
+          profilePhoto: updatedUser.profile_photo,
+          preferences: updatedUser.preferences,
+          travelHistory: updatedUser.travel_history
         }
       });
     }
@@ -369,7 +388,7 @@ export const getProfile = async (req, res) => {
 
     // Fetch user details
     const userResult = await query(
-      'SELECT id, name, email, created_at, google_id FROM users WHERE id = $1',
+      'SELECT id, name, email, created_at, google_id, profile_photo, preferences, travel_history FROM users WHERE id = $1',
       [userId]
     );
 
@@ -409,7 +428,7 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email, password } = req.body;
+    const { name, email, password, profilePhoto, preferences, travelHistory } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ message: 'Name and email are required' });
@@ -435,6 +454,9 @@ export const updateProfile = async (req, res) => {
         name,
         email,
         password, // Keep password plain until OTP verified
+        profilePhoto,
+        preferences,
+        travelHistory,
         otp,
         expiresAt,
         type: 'update-profile'
@@ -449,10 +471,24 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Otherwise, update name/email immediately
+    // Otherwise, update details immediately
     const userResult = await query(
-      'UPDATE users SET name = $1, email = $2 WHERE id = $3 RETURNING id, name, email, created_at, google_id',
-      [name, email, userId]
+      `UPDATE users 
+       SET name = $1, 
+           email = $2, 
+           profile_photo = COALESCE($3, profile_photo), 
+           preferences = COALESCE($4, preferences), 
+           travel_history = COALESCE($5, travel_history) 
+       WHERE id = $6 
+       RETURNING id, name, email, created_at, google_id, profile_photo, preferences, travel_history`,
+      [
+        name, 
+        email, 
+        profilePhoto || null, 
+        preferences ? JSON.stringify(preferences) : null, 
+        travelHistory ? JSON.stringify(travelHistory) : null, 
+        userId
+      ]
     );
 
     const updatedUser = userResult.rows[0];
@@ -470,7 +506,10 @@ export const updateProfile = async (req, res) => {
       user: {
         id: updatedUser.id,
         name: updatedUser.name,
-        email: updatedUser.email
+        email: updatedUser.email,
+        profilePhoto: updatedUser.profile_photo,
+        preferences: updatedUser.preferences,
+        travelHistory: updatedUser.travel_history
       }
     });
   } catch (error) {

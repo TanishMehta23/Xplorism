@@ -874,7 +874,13 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
     const groqModels = ['qwen-2.5-coder-32k', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
     for (const model of groqModels) {
       try {
-        const textResponse = await callGroqAPI(model, prompt, process.env.GROQ_API_KEY);
+        const textResponse = await callOpenAICompatibleAPI(
+          'https://api.groq.com/openai/v1/chat/completions',
+          process.env.GROQ_API_KEY,
+          model,
+          prompt,
+          false
+        );
         let jsonStr = textResponse.trim();
         const firstBrace = jsonStr.indexOf('[');
         const lastBrace = jsonStr.lastIndexOf(']');

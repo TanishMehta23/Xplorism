@@ -312,7 +312,7 @@ export default function CommunityFeedPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 py-8 space-y-8">
         
         {/* Header Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl p-8 border"
+        <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 border"
              style={{ 
                backgroundColor: 'var(--bg-secondary)', 
                borderColor: 'var(--border-primary)',
@@ -543,7 +543,7 @@ export default function CommunityFeedPage() {
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Hiking the Himalayas! 🏔️"
+                  placeholder="e.g. Hiking the Himalayas!"
                   className="w-full p-3 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/25 transition"
                   style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                 />

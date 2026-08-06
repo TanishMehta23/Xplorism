@@ -9,7 +9,7 @@ export default function Footer() {
 
   return (
     <footer className={`border-t pt-16 pb-12 mt-auto mt-16 sm:mt-24 transition-colors duration-200 ${
-      isDark ? 'bg-slate-950 border-slate-900 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'
+      isDark ? 'bg-slate-950 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 text-slate-950'
     }`}>
       <div className="max-w-7xl mx-auto px-6">
         <div className={`grid grid-cols-2 md:grid-cols-12 gap-8 md:gap-10 pb-12 border-b ${
@@ -27,7 +27,9 @@ export default function Footer() {
                 isDark ? 'text-white' : 'text-slate-900'
               }`}>Xplorism</span>
             </div>
-            <p className="text-xs sm:text-sm leading-relaxed max-w-sm">
+            <p className={`text-xs sm:text-sm leading-relaxed max-w-sm transition-colors duration-200 ${
+              isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
+            }`}>
               Plan simpler, travel better. Experience the world with personalized itineraries, real-time updates, and collaborative planning tools.
             </p>
             <div className="flex items-center space-x-4">
@@ -81,11 +83,11 @@ export default function Footer() {
               isDark ? 'text-slate-200' : 'text-slate-800'
             }`}>Features</h4>
             <ul className="space-y-2.5">
-              <li><Link to="/dashboard" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Itinerary Builder</Link></li>
-              <li><Link to="/tracker" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Interactive Map</Link></li>
-              <li><Link to="/weather" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Weather Forecast</Link></li>
-              <li><Link to="/budgets" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Budget Manager</Link></li>
-              <li><Link to="/vault" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Document Vault</Link></li>
+              <li><Link to="/dashboard" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Itinerary Builder</Link></li>
+              <li><Link to="/tracker" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Interactive Map</Link></li>
+              <li><Link to="/weather" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Weather Forecast</Link></li>
+              <li><Link to="/budgets" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Budget Manager</Link></li>
+              <li><Link to="/vault" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Document Vault</Link></li>
             </ul>
           </div>
 
@@ -95,11 +97,11 @@ export default function Footer() {
               isDark ? 'text-slate-200' : 'text-slate-800'
             }`}>Resources</h4>
             <ul className="space-y-2.5">
-              <li><Link to="/" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Travel Guides</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Help Center</Link></li>
-              <li><Link to="/community" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Community Feed</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Terms of Service</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-900'}`}>Privacy Policy</Link></li>
+              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Travel Guides</Link></li>
+              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Help Center</Link></li>
+              <li><Link to="/community" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Community Feed</Link></li>
+              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Terms of Service</Link></li>
+              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Privacy Policy</Link></li>
             </ul>
           </div>
 
@@ -108,7 +110,9 @@ export default function Footer() {
             <h4 className={`text-xs font-bold uppercase tracking-wider ${
               isDark ? 'text-slate-200' : 'text-slate-800'
             }`}>Stay Updated</h4>
-            <p className="text-xs sm:text-sm leading-relaxed">
+            <p className={`text-xs sm:text-sm leading-relaxed transition-colors duration-200 ${
+              isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
+            }`}>
               Subscribe to our newsletter for the latest travel guides, tips, and feature updates.
             </p>
             <form onSubmit={(e) => e.preventDefault()} className="flex items-center space-x-2">
@@ -141,12 +145,14 @@ export default function Footer() {
         </div>
 
         {/* Bottom Copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between pt-8 text-slate-400 text-xs">
-          <p>&copy; {new Date().getFullYear()} Xplorism. All rights reserved.</p>
+        <div className={`flex flex-col sm:flex-row items-center justify-between pt-8 text-xs transition-colors duration-200 ${
+          isDark ? 'text-slate-500' : 'text-slate-400'
+        }`}>
+          <p className={`transition-colors duration-200 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>&copy; {new Date().getFullYear()} Xplorism. All rights reserved.</p>
           <div className="flex items-center space-x-6 mt-4 sm:mt-0">
-            <a href="#" className={`transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-650'}`}>Privacy Policy</a>
-            <a href="#" className={`transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-650'}`}>Terms of Service</a>
-            <a href="#" className={`transition-colors duration-200 ${isDark ? 'hover:text-white' : 'hover:text-slate-650'}`}>Cookie Settings</a>
+            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>Privacy Policy</a>
+            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>Terms of Service</a>
+            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>Cookie Settings</a>
           </div>
         </div>
       </div>

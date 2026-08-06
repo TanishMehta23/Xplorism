@@ -11,6 +11,73 @@ import Footer from '../components/Footer';
 import { CURRENCIES } from './DashboardStub';
 import { useLanguage } from '../context/LanguageContext';
 
+const getTripImage = (destination) => {
+  const dest = (destination || '').toLowerCase();
+  if (dest.includes('vancouver')) {
+    return 'https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('tokyo') || dest.includes('japan')) {
+    return 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('paris') || dest.includes('france')) {
+    return 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('new york') || dest.includes('york') || dest.includes('usa')) {
+    return 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('london') || dest.includes('uk') || dest.includes('united kingdom')) {
+    return 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('sydney') || dest.includes('australia')) {
+    return 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('rome') || dest.includes('italy') || dest.includes('venice')) {
+    return 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('singapore')) {
+    return 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('zurich') || dest.includes('swiss') || dest.includes('switzerland') || dest.includes('geneva')) {
+    return 'https://images.unsplash.com/photo-1527668752968-14dc70a27c95?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('barcelona') || dest.includes('spain')) {
+    return 'https://images.unsplash.com/photo-1511527661048-7fe73d85e9a4?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('amsterdam') || dest.includes('netherlands')) {
+    return 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('delhi') || dest.includes('india')) {
+    return 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('rishikesh')) {
+    return 'https://images.unsplash.com/photo-1566418879480-1a134a413d33?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('germany') || dest.includes('frankfurt')) {
+    return 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('ayodhya')) {
+    return 'https://images.unsplash.com/photo-1600664901390-3413f6df1600?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('jodhpur') || dest.includes('jaisalmer') || dest.includes('rajasthan')) {
+    return 'https://images.unsplash.com/photo-1602643163983-ed0babc39797?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('manali') || dest.includes('himachal') || dest.includes('spiti') || dest.includes('lahaul')) {
+    return 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('ladakh') || dest.includes('kashmir') || dest.includes('leh')) {
+    return 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('dharamshala')) {
+    return 'https://images.unsplash.com/photo-1626621341515-bbf8a53a914c?auto=format&fit=crop&w=600&q=80';
+  }
+  if (dest.includes('agra')) {
+    return 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=600&q=80';
+  }
+
+  // Use a beautiful Unsplash travel scene as fallback instead of random Picsum stock photos
+  return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';
+};
+
 export default function BudgetsListPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -53,7 +120,7 @@ export default function BudgetsListPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans">
+    <div className="min-h-screen flex flex-col font-sans transition-colors duration-300" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <Navbar activeTab="budgets" />
 
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
@@ -64,12 +131,13 @@ export default function BudgetsListPage() {
               <TrendingUp className="h-5 w-5" />
               <span className="text-xs font-bold uppercase tracking-wider">{t('financial_overview')}</span>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">{t('my_saved_budgets')}</h1>
-            <p className="text-slate-500 text-sm">{t('budgets_desc')}</p>
+            <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('my_saved_budgets')}</h1>
+            <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{t('budgets_desc')}</p>
           </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border bg-white border-slate-200 hover:bg-slate-50 active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer text-slate-800"
+            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border hover:bg-[var(--bg-tertiary)] active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer"
+            style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-secondary)' }}
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{t('back_to_dashboard')}</span>
@@ -78,27 +146,27 @@ export default function BudgetsListPage() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
-            <div className="h-10 w-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-            <p className="text-slate-500 text-sm">{t('aggregating_budgets')}</p>
+            <div className="h-10 w-10 border-4 border-slate-205 border-t-rose-550 rounded-full animate-spin" />
+            <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{t('aggregating_budgets')}</p>
           </div>
         ) : tripsWithBudgets.length === 0 ? (
-          <div className="bg-white p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed border-slate-200 shadow-sm">
-            <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 mb-6 border border-slate-100">
+          <div className="p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed shadow-sm" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center mb-6 border" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
               <DollarSign className="h-8 w-8 text-emerald-500" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">{t('no_budgets')}</h2>
-            <p className="text-slate-555 max-w-sm text-sm mb-6 leading-relaxed">
+            <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{t('no_budgets')}</h2>
+            <p className="max-w-sm text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               {t('no_budgets_desc')}
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-3 rounded-full bg-slate-950 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
+              className="px-6 py-3 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
             >
               {t('start_planning')}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {tripsWithBudgets.map((trip) => {
               const parts = (trip.travelStyle || '').split('|');
               const style = parts[0] || 'Adventure';
@@ -114,84 +182,100 @@ export default function BudgetsListPage() {
                 <div
                   key={trip.id}
                   onClick={() => navigate(`/trips/${trip.id}/budget`)}
-                  className="group relative bg-white p-6 rounded-3xl border border-slate-100 hover:border-emerald-300 hover:shadow-md transition-all duration-205 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
+                  className="group relative rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl"
+                  style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--rose-500)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-primary)'; }}
                 >
-                  <div>
-                    {/* Header meta */}
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-650 border border-emerald-100">
-                        {t('style_' + style.toLowerCase()) || style}
-                      </span>
-                      <div className="flex items-center space-x-1 font-bold text-emerald-650 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-[10px]">
-                        <span>{tripCurrency.symbol} {tripCurrencyCode}</span>
-                      </div>
+                  {/* Trip Cover Image (Flush Top) */}
+                  <div className="relative h-44 overflow-hidden">
+                    <img
+                      src={getTripImage(trip.destination)}
+                      alt={trip.destination}
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    
+                    {/* Style Badge floating on top-left of image */}
+                    <span className="absolute top-4 left-4 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-rose-650 backdrop-blur-sm border border-white/20 shadow-sm">
+                      {t('style_' + style.toLowerCase()) || style}
+                    </span>
+                    
+                    {/* Currency floating on top-right of image */}
+                    <div className="absolute top-4 right-4 flex items-center space-x-1 font-bold text-white bg-black/40 backdrop-blur-sm border border-white/10 px-2.5 py-1 rounded-lg text-[10px]">
+                      <span>{tripCurrency.symbol} {tripCurrencyCode}</span>
                     </div>
-
-                    <h3 className="text-lg font-bold text-slate-950 mb-1 group-hover:text-emerald-600 transition truncate">
-                      {trip.destination}
-                    </h3>
-
-                    <div className="flex items-center space-x-2 text-slate-500 text-[11px] mb-4">
-                      <Calendar className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>
-                        {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {/* Stats metrics */}
-                    <div className="grid grid-cols-2 gap-3 mb-5 py-3 border-y border-slate-50">
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{t('budget_limit')}</span>
-                        <span className="text-sm font-extrabold text-slate-800">
-                          {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{t('budget_spent')}</span>
-                        <span className="text-sm font-extrabold text-rose-600">
-                          {tripCurrency.symbol}{Number(totalActual).toLocaleString(tripCurrency.locale)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="space-y-1 mb-4">
-                      <div className="flex justify-between text-[10px] font-bold text-slate-500">
-                        <span>{t('budget_utilization')}</span>
-                        <span className={utilizationPercent > 80 ? 'text-rose-600' : 'text-emerald-600'}>
-                          {Math.round(utilizationPercent)}%
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${utilizationPercent > 80 ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                          style={{ width: `${Math.min(utilizationPercent, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Expected Allocation */}
-                    {trip.budgetData?.categoryBreakdown && trip.budgetData.categoryBreakdown.length > 0 && (
-                      <div className="mb-4 pt-3 border-t border-slate-50 space-y-1.5">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{t('allocation_breakdown')}</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {trip.budgetData.categoryBreakdown.map((cat, cIdx) => (
-                            <span key={cIdx} className="inline-flex items-center text-[9px] font-semibold bg-slate-50 border border-slate-100 text-slate-650 px-2 py-0.5 rounded-md">
-                              {t('category_' + cat.category.toLowerCase().replace(/[^a-z0-9]+/g, '_')) || cat.category}: <span className="font-extrabold text-slate-800 ml-1">{tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</span>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Call to action bar */}
-                  <div className="flex items-center justify-between text-xs font-bold text-emerald-600 pt-3 border-t border-slate-50 group-hover:text-emerald-700">
-                    <span className="flex items-center space-x-1">
-                      <Edit className="h-3.5 w-3.5" />
-                      <span>{t('edit_log_expenses')}</span>
-                    </span>
-                    <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+                  {/* Content Container (Padded) */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-extrabold mb-1 group-hover:text-rose-500 transition-colors truncate" style={{ color: 'var(--text-primary)' }}>
+                        {trip.destination}
+                      </h3>
+
+                      <div className="flex items-center space-x-2 text-[11px] mb-4" style={{ color: 'var(--text-tertiary)' }}>
+                        <Calendar className="h-3.5 w-3.5 text-rose-500" />
+                        <span>
+                          {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      {/* Stats metrics */}
+                      <div className="grid grid-cols-2 gap-3 mb-4 py-3 border-y" style={{ borderColor: 'var(--border-secondary)' }}>
+                        <div>
+                          <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('budget_limit')}</span>
+                          <span className="text-sm font-extrabold" style={{ color: 'var(--text-primary)' }}>
+                            {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('budget_spent')}</span>
+                          <span className="text-sm font-extrabold text-rose-500">
+                            {tripCurrency.symbol}{Number(totalActual).toLocaleString(tripCurrency.locale)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="space-y-1 mb-4">
+                        <div className="flex justify-between text-[10px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+                          <span>{t('budget_utilization')}</span>
+                          <span className={utilizationPercent > 80 ? 'text-rose-500' : 'text-emerald-500'}>
+                            {Math.round(utilizationPercent)}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${utilizationPercent > 80 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                            style={{ width: `${Math.min(utilizationPercent, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Expected Allocation */}
+                      {trip.budgetData?.categoryBreakdown && trip.budgetData.categoryBreakdown.length > 0 && (
+                        <div className="mb-4 pt-3 border-t space-y-1.5" style={{ borderColor: 'var(--border-secondary)' }}>
+                          <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('allocation_breakdown')}</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {trip.budgetData.categoryBreakdown.map((cat, cIdx) => (
+                              <span key={cIdx} className="inline-flex items-center text-[9px] font-bold border px-2 py-0.5 rounded-md" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}>
+                                {t('category_' + cat.category.toLowerCase().replace(/[^a-z0-9]+/g, '_')) || cat.category}: <span className="font-extrabold ml-1" style={{ color: 'var(--text-primary)' }}>{tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Call to action bar */}
+                    <div className="flex items-center justify-between text-xs font-extrabold pt-3 border-t group-hover:text-rose-500 transition-colors" style={{ borderColor: 'var(--border-secondary)', color: 'var(--text-secondary)' }}>
+                      <span className="flex items-center space-x-1.5">
+                        <Edit className="h-3.5 w-3.5 text-rose-500" />
+                        <span>{t('edit_log_expenses')}</span>
+                      </span>
+                      <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
                 </div>
               );

@@ -109,17 +109,17 @@ export default function Navbar({ activeTab }) {
           transform: scaleX(1);
         }
       `}</style>
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         
         {/* Left Section: Logo */}
         <div 
-          className="flex items-center space-x-3 text-2xl font-bold tracking-tight cursor-pointer" 
+          className="flex items-center space-x-2 sm:space-x-3 text-xl sm:text-2xl font-bold tracking-tight cursor-pointer" 
           onClick={() => navigate('/')}
         >
           <img 
             src="/logo.png" 
             alt="Xplorism Logo" 
-            className="h-12 w-12 object-contain rounded-full shadow-sm" 
+            className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full shadow-sm" 
           />
           <span style={{ color: 'var(--text-primary)' }} className="font-extrabold tracking-tight">
             Xplorism
@@ -127,7 +127,7 @@ export default function Navbar({ activeTab }) {
         </div>
         
         {/* Right Section: Nav Links + Profile Avatar Dropdown */}
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-3 sm:space-x-6">
           {/* Desktop Nav Links aligned to the right */}
           <div className="hidden md:flex items-center space-x-6 text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>
             <button 

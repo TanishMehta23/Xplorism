@@ -1057,14 +1057,14 @@ export default function BudgetPage() {
                             <>
                               <button
                                 onClick={() => startEditExpense(exp)}
-                                className="opacity-0 group-hover/exp:opacity-100 p-1.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                                className="opacity-100 md:opacity-0 group-hover/exp:opacity-100 p-1.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
                                 title="Edit Expense"
                               >
                                 <Edit className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDeleteExpense(exp.id)}
-                                className="opacity-0 group-hover/exp:opacity-100 p-1.5 rounded hover:bg-red-50 text-slate-455 hover:text-red-500 transition cursor-pointer"
+                                className="opacity-100 md:opacity-0 group-hover/exp:opacity-100 p-1.5 rounded hover:bg-red-50 text-slate-455 hover:text-red-500 transition cursor-pointer"
                                 title="Delete Expense"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />

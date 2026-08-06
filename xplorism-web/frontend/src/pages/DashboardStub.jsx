@@ -185,7 +185,7 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
 
   useEffect(() => {
     let active = true;
-    
+
     // If we already have a direct unsplash/external URL that isn't a loremflickr or placeholder one, use it
     if (defaultImage && !defaultImage.includes('loremflickr.com') && !defaultImage.includes('akhilbharat.in')) {
       setImageSrc(defaultImage);
@@ -219,7 +219,7 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
       } catch (err) {
         console.error("Failed to fetch real image for destination:", destination, err);
       }
-      
+
       // Fallback to our mapped Unsplash/Picsum generator
       if (active) {
         setImageSrc(getTripImage(destination));
@@ -695,7 +695,7 @@ export default function DashboardStub() {
     try {
       const data = await api.get(`/trips/${tripId}/packing`);
       setPackingList(data || []);
-      
+
       // Update selectedTrip locally so it has the list cached
       setSelectedTrip(prev => {
         if (prev && prev.id === tripId) {
@@ -724,7 +724,7 @@ export default function DashboardStub() {
       }));
 
       // Also update the trip object inside the main trips array so it is preserved if modal is closed & reopened
-      setTrips(prevTrips => 
+      setTrips(prevTrips =>
         prevTrips.map(t => t.id === selectedTrip.id ? { ...t, packingList: updatedList } : t)
       );
     }
@@ -1473,7 +1473,7 @@ export default function DashboardStub() {
       });
 
       icsContent.push('END:VCALENDAR');
-      
+
       const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -1580,7 +1580,7 @@ export default function DashboardStub() {
           width: 100%;
           display: flex;
           position: relative;
-          padding-bottom: 8px;
+          padding-bottom: 12px;
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
@@ -1589,23 +1589,36 @@ export default function DashboardStub() {
         }
         .marquee-track {
           display: flex;
+          flex-direction: row;
+          flex-wrap: nowrap;
           gap: 24px;
+        }
+        .marquee-card {
+          width: 280px;
+          min-width: 280px;
+          flex-shrink: 0;
+        }
+        @media (min-width: 768px) {
+          .marquee-card {
+            width: 320px;
+            min-width: 320px;
+          }
         }
       `}</style>
 
       <Navbar activeTab="trips" />
 
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 text-center md:text-left">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">{t('dashboard_title')}</h1>
-            <p className="text-slate-500 text-sm">{t('dashboard_desc')}</p>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-1.5">{t('dashboard_title')}</h1>
+            <p className="text-slate-500 text-xs md:text-sm">{t('dashboard_desc')}</p>
           </div>
           <button
             onClick={() => setIsWizardOpen(true)}
-            className="px-6 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-205 shadow-sm flex items-center space-x-2 cursor-pointer"
+            className="mx-auto md:mx-0 px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-extrabold text-xs transition-all duration-200 shadow-md shadow-rose-500/10 active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-3.5 w-3.5" />
             <span>{t('create_new_trip')}</span>
           </button>
         </div>
@@ -1618,8 +1631,14 @@ export default function DashboardStub() {
           </div>
 
           <div className="relative w-full">
-            <div className={`absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-50 to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showLeftFade ? 'opacity-100' : 'opacity-0'}`} />
-            <div className={`absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-50 to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showRightFade ? 'opacity-100' : 'opacity-0'}`} />
+            <div
+              className={`absolute left-0 top-0 bottom-0 w-12 z-20 pointer-events-none transition-opacity duration-300 ${showLeftFade ? 'opacity-100' : 'opacity-0'}`}
+              style={{ background: 'linear-gradient(to right, var(--bg-primary), transparent)' }}
+            />
+            <div
+              className={`absolute right-0 top-0 bottom-0 w-12 z-20 pointer-events-none transition-opacity duration-300 ${showRightFade ? 'opacity-100' : 'opacity-0'}`}
+              style={{ background: 'linear-gradient(to left, var(--bg-primary), transparent)' }}
+            />
 
             <div ref={carouselRef} onScroll={handleCarouselScroll} className="marquee-wrapper relative">
               <div className="marquee-track">
@@ -1636,7 +1655,7 @@ export default function DashboardStub() {
                         setSelectedTrip(trip);
                         setActiveDayTab(1);
                       }}
-                      className="group w-[280px] md:w-[320px] shrink-0 bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
+                      className="group marquee-card bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
                     >
                       <div className="relative h-40 w-full overflow-hidden">
                         <TripCoverImage
@@ -1842,8 +1861,8 @@ export default function DashboardStub() {
             {favorites.map((fav) => {
               const isTripFav = fav.type === 'trip';
               return (
-                <div 
-                  key={fav.id} 
+                <div
+                  key={fav.id}
                   onClick={() => {
                     if (isTripFav) {
                       const matchedTrip = trips.find(t => t.id === fav.trip_id || t.id === fav.tripId || t.destination === fav.destination);
@@ -1853,9 +1872,8 @@ export default function DashboardStub() {
                       }
                     }
                   }}
-                  className={`bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition group ${
-                    isTripFav ? 'cursor-pointer hover:border-rose-400 hover:ring-2 hover:ring-rose-500/10' : ''
-                  }`}
+                  className={`bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition group ${isTripFav ? 'cursor-pointer hover:border-rose-400 hover:ring-2 hover:ring-rose-500/10' : ''
+                    }`}
                 >
                   {fav.image_url && (
                     <div className="h-32 w-full overflow-hidden relative">
@@ -1889,9 +1907,8 @@ export default function DashboardStub() {
                       <p className="text-[10px] text-slate-400 mt-1.5 line-clamp-2">{fav.description}</p>
                     )}
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${
-                        isTripFav ? 'bg-blue-50 text-blue-500' : 'bg-rose-50 text-rose-500'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${isTripFav ? 'bg-blue-50 text-blue-500' : 'bg-rose-50 text-rose-500'
+                        }`}>
                         {isTripFav ? 'Whole Trip' : fav.type}
                       </span>
                       {fav.destination && !isTripFav && (
@@ -1917,14 +1934,14 @@ export default function DashboardStub() {
           const WeatherIcon = weather.condition === 'Sunny' ? Sun : weather.condition === 'Cloudy' ? Cloud : weather.condition === 'Rainy' ? CloudRain : weather.condition === 'Snowy' ? Snowflake : Wind;
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-900/40 backdrop-blur-sm">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`relative w-full bg-white border border-slate-200 shadow-xl flex flex-col overflow-hidden text-slate-800 transition-all duration-300 ${isModalMaximized
-                    ? 'max-w-[98vw] h-[95vh] max-h-[95vh] rounded-2xl'
-                    : 'max-w-6xl h-[680px] max-h-[90vh] rounded-3xl'
+                className={`relative w-full mx-auto bg-white border border-slate-200 shadow-xl flex flex-col overflow-hidden text-slate-800 transition-all duration-300 ${isModalMaximized
+                  ? 'max-w-[98vw] h-[95vh] max-h-[95vh] rounded-2xl'
+                  : 'max-w-6xl h-[680px] max-h-[90vh] rounded-3xl'
                   }`}
               >
                 {/* Absolute Top-Right Window Controls & Actions */}
@@ -1932,35 +1949,35 @@ export default function DashboardStub() {
                   <button
                     disabled={isSavingTrip || isExporting}
                     onClick={() => shareTripLink(selectedTrip)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
+                    className="p-2.5 md:px-4 md:py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
                     title="Copy shareable link"
                   >
                     <Share2 className="h-3.5 w-3.5 text-rose-500" />
-                    <span>Share Link</span>
+                    <span className="hidden md:inline">Share Link</span>
                   </button>
                   <button
                     disabled={isSavingTrip || isExporting}
                     onClick={() => exportTripToICS(selectedTrip)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
+                    className="p-2.5 md:px-4 md:py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
                     title="Export calendar file (.ics)"
                   >
                     <Calendar className="h-3.5 w-3.5 text-rose-500" />
-                    <span>Export Calendar</span>
+                    <span className="hidden md:inline">Export Calendar</span>
                   </button>
                   <button
                     disabled={isSavingTrip || isExporting}
                     onClick={() => exportTripToPDF(selectedTrip)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-355 hover:bg-slate-55 text-slate-705 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
+                    className="p-2.5 md:px-4 md:py-2 rounded-xl border border-slate-200 hover:border-slate-355 hover:bg-slate-55 text-slate-705 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
                   >
                     {isExporting ? (
                       <>
                         <div className="h-3 w-3 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
-                        <span>Exporting...</span>
+                        <span className="hidden md:inline">Exporting...</span>
                       </>
                     ) : (
                       <>
                         <Download className="h-3.5 w-3.5 text-rose-500" />
-                        <span>Export PDF</span>
+                        <span className="hidden md:inline">Export PDF</span>
                       </>
                     )}
                   </button>
@@ -1986,8 +2003,8 @@ export default function DashboardStub() {
                     <X className="h-4.5 w-4.5" />
                   </button>
                 </div>
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                  <div>
+                <div className="pt-16 pb-6 px-6 md:p-6 border-b border-slate-100 flex items-center justify-between">
+                  <div className="pr-[165px] md:pr-[420px]">
                     <div className="flex items-center space-x-2 text-rose-500 mb-1">
                       <Sparkles className="h-4.5 w-4.5" />
                       <span className="text-xs font-bold uppercase tracking-wider">{style} Mode</span>
@@ -2131,7 +2148,7 @@ export default function DashboardStub() {
                     <CheckSquare className="h-4 w-4" />
                     <span>Packing List</span>
                   </button>
-                   <button
+                  <button
                     onClick={() => setActiveDayTab('favorites')}
                     className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'favorites' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20' : 'text-rose-600 hover:text-rose-750 hover:bg-rose-50 border border-rose-200 bg-white shadow-sm'}`}
                   >
@@ -2140,7 +2157,7 @@ export default function DashboardStub() {
                   </button>
                   <button
                     onClick={() => setActiveDayTab('events')}
-                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'events' ? 'bg-indigo-650 text-white shadow-md shadow-indigo-600/20' : 'text-indigo-600 hover:text-indigo-750 hover:bg-indigo-50 border border-indigo-200 bg-white shadow-sm'}`}
+                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'events' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-indigo-600 hover:text-indigo-750 hover:bg-indigo-50 border border-indigo-200 bg-white shadow-sm'}`}
                   >
                     <Calendar className="h-4 w-4" />
                     <span>Local Events</span>
@@ -2314,11 +2331,10 @@ export default function DashboardStub() {
                                     {cat.items.map((item, itemIdx) => (
                                       <label
                                         key={itemIdx}
-                                        className={`flex items-start space-x-3 p-3 rounded-xl border bg-white cursor-pointer select-none transition ${
-                                          item.checked 
-                                            ? 'border-emerald-100 bg-emerald-50/10 text-slate-400' 
-                                            : 'border-slate-100 hover:border-slate-200 text-slate-800'
-                                        }`}
+                                        className={`flex items-start space-x-3 p-3 rounded-xl border bg-white cursor-pointer select-none transition ${item.checked
+                                          ? 'border-emerald-100 bg-emerald-50/10 text-slate-400'
+                                          : 'border-slate-100 hover:border-slate-200 text-slate-800'
+                                          }`}
                                       >
                                         <input
                                           type="checkbox"
@@ -2480,15 +2496,15 @@ export default function DashboardStub() {
                       ) : (
                         <div className="space-y-6">
                           {getDayItineraries(selectedTrip).map((item, idx) => {
-                            const isFav = favorites.some(fav => 
+                            const isFav = favorites.some(fav =>
                               fav.name.toLowerCase().trim() === (item.location || '').toLowerCase().trim() ||
                               fav.name.toLowerCase().trim() === (item.activity || '').toLowerCase().trim()
                             );
                             return (
-                              <ActivityCard 
-                                key={item.id || idx} 
-                                item={item} 
-                                tripCurrency={tripCurrency} 
+                              <ActivityCard
+                                key={item.id || idx}
+                                item={item}
+                                tripCurrency={tripCurrency}
                                 isFavorited={isFav}
                                 onToggleFavorite={() => handleToggleFavorite(item)}
                               />
@@ -2614,8 +2630,8 @@ export default function DashboardStub() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
-                ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
-                : 'bg-rose-50/95 border-rose-200 text-rose-800'
+              ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50/95 border-rose-200 text-rose-800'
               }`}
           >
             <span className="text-xs font-bold tracking-wide">{toast.message}</span>

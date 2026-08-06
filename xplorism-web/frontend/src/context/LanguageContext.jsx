@@ -17,7 +17,7 @@ const translations = {
     dark_mode: 'Dark Mode',
     vault: 'Vault',
     community: 'Community',
-    
+
     // Tracker Page
     sky_radar: 'Sky Radar',
     live_api: 'Live API',
@@ -271,7 +271,7 @@ const translations = {
     dark_mode: 'Modo Oscuro',
     vault: 'Bóveda',
     community: 'Comunidad',
-    
+
     // Tracker Page
     sky_radar: 'Radar del Cielo',
     live_api: 'API en Vivo',
@@ -525,7 +525,7 @@ const translations = {
     dark_mode: 'Mode Sombre',
     vault: 'Coffre',
     community: 'Communauté',
-    
+
     // Tracker Page
     sky_radar: 'Radar Aérien',
     live_api: 'API en Direct',
@@ -779,7 +779,7 @@ const translations = {
     dark_mode: 'Dunkler Modus',
     vault: 'Tresor',
     community: 'Gemeinschaft',
-    
+
     // Tracker Page
     sky_radar: 'Flugradar',
     live_api: 'Live-API',
@@ -1033,7 +1033,7 @@ const translations = {
     dark_mode: 'डार्क मोड',
     vault: 'तिजोरी',
     community: 'कम्युनिटी',
-    
+
     // Tracker Page
     sky_radar: 'आकाश रडार',
     live_api: 'लाइव एपीआई',
@@ -1287,7 +1287,7 @@ const translations = {
     dark_mode: 'وضع داكن',
     vault: 'الخزنة',
     community: 'المجتمع',
-    
+
     // Tracker Page
     sky_radar: 'رادار السماء',
     live_api: 'بث مباشر',
@@ -1542,7 +1542,7 @@ const translations = {
     dark_mode: 'Modo Escuro',
     vault: 'Cofre',
     community: 'Comunidade',
-    
+
     // Tracker Page
     sky_radar: 'Radar Aéreo',
     live_api: 'API em Tempo Real',

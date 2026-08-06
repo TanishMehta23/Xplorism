@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -19,6 +19,7 @@ export default function Navbar({ activeTab }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [emailingTripId, setEmailingTripId] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -66,13 +67,16 @@ export default function Navbar({ activeTab }) {
     }
   };
 
-  // Close dropdown on click outside
+  // Close dropdown and mobile menu on click outside
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (!e.target.closest('.profile-container') && !e.target.closest('.notifications-container')) {
         setIsDropdownOpen(false);
         setIsLangOpen(false);
         setIsNotificationsOpen(false);
+      }
+      if (!e.target.closest('.mobile-menu-toggle') && !e.target.closest('.mobile-menu-drawer')) {
+        setIsMobileMenuOpen(false);
       }
     };
     document.addEventListener('click', handleOutsideClick);
@@ -177,51 +181,7 @@ export default function Navbar({ activeTab }) {
             </button>
           </div>
 
-          {/* Mobile Nav Links */}
-          <div className="flex md:hidden items-center space-x-3 text-xs font-bold mr-2" style={{ color: 'var(--text-secondary)' }}>
-            <button 
-              onClick={() => navigate('/dashboard')} 
-              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'trips' ? 'text-rose-500' : ''}`}
-            >
-              {t('trips')}
-            </button>
-            <button 
-              onClick={() => navigate('/weather')} 
-              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'weather' ? 'text-rose-500' : ''}`}
-            >
-              {t('weather')}
-            </button>
-            <button 
-              onClick={() => navigate('/tracker')} 
-              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'tracker' ? 'text-rose-500' : ''}`}
-            >
-              {t('tracker')}
-            </button>
-            <button 
-              onClick={() => navigate('/hotels')} 
-              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'hotels' ? 'text-rose-500' : ''}`}
-            >
-              {t('hotels')}
-            </button>
-            <button 
-              onClick={() => navigate('/budgets')} 
-              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'budgets' ? 'text-rose-500' : ''}`}
-            >
-              {t('budgets')}
-            </button>
-            <button 
-              onClick={() => navigate('/vault')} 
-              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'vault' ? 'text-rose-500' : ''}`}
-            >
-              {t('vault')}
-            </button>
-            <button 
-              onClick={() => navigate('/community')} 
-              className={`hover:text-rose-500 transition cursor-pointer ${activeTab === 'community' ? 'text-rose-500' : ''}`}
-            >
-              {t('community')}
-            </button>
-          </div>
+
 
           {/* Notifications Dropdown Container */}
           {user && (
@@ -246,7 +206,7 @@ export default function Navbar({ activeTab }) {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-3 w-80 rounded-2xl shadow-xl p-4 z-50 border max-h-[400px] overflow-y-auto"
+                    className="absolute right-[-60px] sm:right-0 mt-3 w-[calc(100vw-32px)] sm:w-80 max-w-xs rounded-2xl shadow-xl p-4 z-50 border max-h-[400px] overflow-y-auto"
                     style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
                   >
                     <div className="flex items-center justify-between border-b pb-3 mb-3" style={{ borderColor: 'var(--border-secondary)' }}>
@@ -433,9 +393,92 @@ export default function Navbar({ activeTab }) {
               </div>
             )}
           </div>
-        </div>
 
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+            className="mobile-menu-toggle flex md:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Drawer Panel */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mobile-menu-drawer md:hidden w-full overflow-hidden border-t px-6 py-4 space-y-3"
+            style={{ 
+              backgroundColor: 'var(--nav-bg)', 
+              borderColor: 'var(--nav-border)' 
+            }}
+          >
+            <div className="flex flex-col space-y-2.5">
+              <button 
+                onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }} 
+                className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'trips' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
+                style={{ color: activeTab === 'trips' ? '' : 'var(--text-secondary)' }}
+              >
+                <Compass className="h-4 w-4" />
+                <span>{t('trips')}</span>
+              </button>
+              <button 
+                onClick={() => { navigate('/weather'); setIsMobileMenuOpen(false); }} 
+                className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'weather' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
+                style={{ color: activeTab === 'weather' ? '' : 'var(--text-secondary)' }}
+              >
+                <Sun className="h-4 w-4" />
+                <span>{t('weather')}</span>
+              </button>
+              <button 
+                onClick={() => { navigate('/tracker'); setIsMobileMenuOpen(false); }} 
+                className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'tracker' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
+                style={{ color: activeTab === 'tracker' ? '' : 'var(--text-secondary)' }}
+              >
+                <Plane className="h-4 w-4" />
+                <span>{t('tracker')}</span>
+              </button>
+              <button 
+                onClick={() => { navigate('/hotels'); setIsMobileMenuOpen(false); }} 
+                className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'hotels' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
+                style={{ color: activeTab === 'hotels' ? '' : 'var(--text-secondary)' }}
+              >
+                <Hotel className="h-4 w-4" />
+                <span>{t('hotels')}</span>
+              </button>
+              <button 
+                onClick={() => { navigate('/budgets'); setIsMobileMenuOpen(false); }} 
+                className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'budgets' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
+                style={{ color: activeTab === 'budgets' ? '' : 'var(--text-secondary)' }}
+              >
+                <DollarSign className="h-4 w-4" />
+                <span>{t('budgets')}</span>
+              </button>
+              <button 
+                onClick={() => { navigate('/vault'); setIsMobileMenuOpen(false); }} 
+                className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'vault' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
+                style={{ color: activeTab === 'vault' ? '' : 'var(--text-secondary)' }}
+              >
+                <FolderLock className="h-4 w-4" />
+                <span>{t('vault')}</span>
+              </button>
+              <button 
+                onClick={() => { navigate('/community'); setIsMobileMenuOpen(false); }} 
+                className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'community' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
+                style={{ color: activeTab === 'community' ? '' : 'var(--text-secondary)' }}
+              >
+                <Users className="h-4 w-4" />
+                <span>{t('community')}</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
 
       {/* Logout Confirmation Modal */}

@@ -5,6 +5,7 @@ import {
   Users, Image, Heart, MapPin, Share2, Plus, Sparkles, Loader2, ArrowRight, Search, X, Edit3, Trash2
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -899,6 +900,7 @@ export default function CommunityFeedPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Footer />
     </div>
   );
 }

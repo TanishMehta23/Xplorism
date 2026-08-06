@@ -12,6 +12,7 @@ import {
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { useLanguage } from '../context/LanguageContext';
 
 export const CURRENCIES = {
@@ -240,15 +241,17 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
           <div className="h-6 w-6 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
         </div>
       ) : null}
-      <img
-        src={imageSrc}
-        alt={destination}
-        className={className}
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';
-        }}
-      />
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          alt={destination}
+          className={className}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80';
+          }}
+        />
+      ) : null}
     </div>
   );
 };
@@ -2619,6 +2622,7 @@ export default function DashboardStub() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Footer />
     </div>
   );
 }

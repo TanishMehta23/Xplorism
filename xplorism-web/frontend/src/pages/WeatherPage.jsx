@@ -9,6 +9,7 @@ import {
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { useLanguage } from '../context/LanguageContext';
 
 // WMO Weather Codes mapping to Icons, Descriptions, and dynamic theme colors
@@ -646,10 +647,7 @@ export default function WeatherPage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className={`w-full text-center py-6 border-t text-xs font-medium ${isDarkTheme ? 'bg-slate-950/80 border-white/5 text-slate-400' : 'bg-white/85 border-slate-100 text-slate-450'}`}>
-        <span>© {new Date().getFullYear()} Xplorism. {t('powered_by')}</span>
-      </footer>
+      <Footer />
     </div>
   );
 }

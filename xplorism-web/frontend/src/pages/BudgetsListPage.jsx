@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { CURRENCIES } from './DashboardStub';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -215,6 +216,7 @@ export default function BudgetsListPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Footer />
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Compass, Zap, MapPin, CloudRain, Star, Plus, Calendar, DollarSign, Users, Navigation, ArrowRight, Locate } from 'lucide-react';
+import { Compass, Zap, MapPin, CloudRain, Star, Plus, Calendar, DollarSign, Users, Navigation, ArrowRight, Locate, Wallet, FolderLock, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
+import Footer from '../components/Footer';
 import { api } from '../services/api';
 
 const destinations = [
@@ -1119,59 +1120,77 @@ export default function LandingPage() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-50px' }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8"
+          className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8"
         >
           {/* Card 1 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-5 sm:p-8 rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 mb-4 sm:mb-6">
-              <Zap className="h-5 w-5 sm:h-6 sm:w-6" />
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 mb-3 sm:mb-4 md:mb-6">
+              <Zap className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Custom Itinerary Builder</h3>
-            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
+            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Custom Itinerary Builder</h3>
+            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
               Enter your budget, dates, and styles. Get customized day-by-day plans, dining recommendations, and travel markers.
             </p>
           </motion.div>
 
           {/* Card 2 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-5 sm:p-8 rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-teal-50 flex items-center justify-center text-teal-650 mb-4 sm:mb-6">
-              <MapPin className="h-5 w-5 sm:h-6 sm:w-6" />
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-teal-50 flex items-center justify-center text-teal-650 mb-3 sm:mb-4 md:mb-6">
+              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Interactive Mapping</h3>
-            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
+            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Interactive Mapping</h3>
+            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
               Map out destinations on Leaflet OpenStreetMap. Keep coordinates of all sights, hotels, and restaurants in one place.
             </p>
           </motion.div>
 
           {/* Card 3 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-5 sm:p-8 rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-4 sm:mb-6">
-              <CloudRain className="h-5 w-5 sm:h-6 sm:w-6" />
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-3 sm:mb-4 md:mb-6">
+              <CloudRain className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Weather Forecasting</h3>
-            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
+            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Weather Forecasting</h3>
+            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
               Check real-time 5-day forecasts and suggestions on clothing to optimize your daily activity selection.
+            </p>
+          </motion.div>
+
+          {/* Card 4 */}
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-3 sm:mb-4 md:mb-6">
+              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+            </div>
+            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Expense & Budget Tracker</h3>
+            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+              Keep tabs on your travel expenses, set budget caps, and categorize your spending in real-time.
+            </p>
+          </motion.div>
+
+          {/* Card 5 */}
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-blue-50 flex items-center justify-center text-blue-650 mb-3 sm:mb-4 md:mb-6">
+              <FolderLock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+            </div>
+            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Secure Document Vault</h3>
+            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+              Store your passports, visas, boarding passes, and booking confirmations securely and access them anywhere.
+            </p>
+          </motion.div>
+
+          {/* Card 6 */}
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-purple-50 flex items-center justify-center text-purple-650 mb-3 sm:mb-4 md:mb-6">
+              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+            </div>
+            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Community Feed & Sharing</h3>
+            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+              Share your travel diaries and itineraries with other travelers, or discover exciting recommendations.
             </p>
           </motion.div>
         </motion.div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-100 bg-slate-50 py-12">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
-          <div className="flex items-center space-x-2.5 text-xl font-bold">
-            <img
-              src="/logo.png"
-              alt="Xplorism Logo"
-              className="h-11 w-11 object-contain rounded-full"
-            />
-            <span className="text-slate-900 font-extrabold">Xplorism</span>
-          </div>
-          <p className="text-xs text-slate-400 mt-4 md:mt-0">
-            &copy; {new Date().getFullYear()} Xplorism. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
 
       <AuthModal
         isOpen={isAuthModalOpen}

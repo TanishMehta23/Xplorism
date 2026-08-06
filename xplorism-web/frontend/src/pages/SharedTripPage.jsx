@@ -7,6 +7,7 @@ import {
   CloudRain, Snowflake, Wind
 } from 'lucide-react';
 import { api } from '../services/api';
+import Footer from '../components/Footer';
 import { CURRENCIES } from './DashboardStub';
 
 export default function SharedTripPage() {
@@ -648,6 +649,7 @@ export default function SharedTripPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Footer />
     </div>
   );
 }

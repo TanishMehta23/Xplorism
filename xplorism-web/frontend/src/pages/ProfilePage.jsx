@@ -6,6 +6,7 @@ import {
   ChevronDown, Trash2, Plus
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -377,7 +378,7 @@ export default function ProfilePage() {
                      color: 'var(--text-primary)', 
                      borderColor: 'var(--border-secondary)'
                    }}>
-                {profilePhoto ? (
+                {profilePhoto && profilePhoto !== "" ? (
                   <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <span>{name ? name.charAt(0).toUpperCase() : 'T'}</span>
@@ -1186,6 +1187,7 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 // Pre-defined high-quality hotel templates to generate mock hotels dynamically
 const HOTEL_TEMPLATES = [
@@ -1070,6 +1071,7 @@ export default function HotelBookingPage() {
         )}
       </AnimatePresence>
 
+      <Footer />
     </div>
   );
 }

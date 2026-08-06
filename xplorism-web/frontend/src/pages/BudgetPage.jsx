@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { CURRENCIES, PRE_PLANNED_TRIPS } from './DashboardStub';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -1282,6 +1283,7 @@ export default function BudgetPage() {
             <span className="text-xs font-bold tracking-wide">{toast.message}</span>
           </motion.div>
         )}
+        <Footer />
       </AnimatePresence>
     </div>
   );

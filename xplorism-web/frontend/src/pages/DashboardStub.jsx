@@ -253,6 +253,8 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
   );
 };
 
+
+
 const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => {
   const [imageSrc, setImageSrc] = useState('');
   const [loading, setLoading] = useState(true);
@@ -301,14 +303,15 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => 
   }, [item.location, item.time]);
 
   return (
-    <div className="mb-6 border-b border-slate-100 pb-6 last:border-0 last:pb-0">
-      <div className="flex items-center space-x-2 text-rose-500 text-xs font-bold mb-3 uppercase tracking-wider">
-        <Clock className="h-4 w-4" />
-        <span>{item.time}</span>
+    <div className="relative pl-8 pb-8 last:pb-0 group">
+      {/* Timeline line and node */}
+      <div className="absolute left-[11px] top-2 bottom-0 w-[2px] bg-slate-200 group-last:hidden z-0" />
+      <div className="absolute left-0 top-1.5 w-6 h-6 rounded-full bg-white border-[3px] border-rose-500 flex items-center justify-center z-10 shadow-sm transition-transform duration-300 group-hover:scale-110">
+        <div className="w-1.5 h-1.5 bg-rose-500 rounded-full" />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-5 items-start">
-        {/* Left Card: Image with + button */}
+      <div className="bg-gradient-to-r from-slate-50 to-white/70 hover:from-white hover:to-white border border-slate-100 hover:border-rose-200 rounded-3xl p-5 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col sm:flex-row gap-5 items-start">
+        {/* Left image block */}
         <div className="relative w-36 h-28 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100 group/img bg-slate-100">
           {loading || !imageSrc ? (
             <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center">
@@ -318,10 +321,9 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => 
             <img
               src={imageSrc}
               alt={item.location}
-              className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover group-hover/img:scale-108 transition-transform duration-500"
             />
           )}
-          {/* Google Search redirect button over image */}
           <a
             href={`https://www.google.com/search?q=${encodeURIComponent(item.location || item.activity)}`}
             target="_blank"
@@ -332,35 +334,48 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => 
           </a>
         </div>
 
-        <div className="flex-1 space-y-2 w-full">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug">
-              {item.location}
-            </h4>
+        {/* Right content block */}
+        <div className="flex-1 space-y-2.5 w-full">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-2 text-rose-500 text-[10px] font-black uppercase tracking-wider bg-rose-50 px-2.5 py-1 rounded-xl border border-rose-100/50">
+              <Clock className="h-3.5 w-3.5" />
+              <span>{item.time}</span>
+            </div>
             <button
               onClick={onToggleFavorite}
-              className="p-1.5 rounded-full hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0 border border-slate-200/50 active:scale-90"
               title="Toggle Favorite"
             >
               <Heart className={`h-4 w-4 transition-colors ${isFavorited ? 'fill-rose-500 text-rose-500' : ''}`} />
             </button>
           </div>
+
+          <h4 className="text-base font-extrabold text-slate-900 tracking-tight leading-snug">
+            {item.location}
+          </h4>
+
           <p className="text-slate-600 text-sm leading-relaxed font-normal">
             {item.activity}
           </p>
-          <div className="flex flex-wrap items-center gap-4 text-slate-555 text-xs font-semibold pt-1">
+
+          <div className="flex flex-wrap items-center gap-2 text-xs pt-1.5">
             {item.location && (
-              <div className="flex items-center space-x-1">
-                <MapPin className="h-3.5 w-3.5 text-slate-400" />
+              <div className="flex items-center space-x-1.5 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-xl text-slate-500 font-bold">
+                <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                 <span>{item.location}</span>
               </div>
             )}
+            <div className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl font-bold ${Number(item.estimatedCost) > 0 ? 'bg-emerald-50 border border-emerald-100 text-emerald-600' : 'bg-slate-50 border border-slate-100 text-slate-400'}`}>
+              <span className="shrink-0">{tripCurrency.symbol}</span>
+              <span>{Number(item.estimatedCost) > 0 ? `${tripCurrency.symbol}${Number(item.estimatedCost).toLocaleString(tripCurrency.locale)}` : 'Free'}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
 
 export default function DashboardStub() {
   const { user, logout } = useAuth();
@@ -1711,84 +1726,86 @@ export default function DashboardStub() {
                     setSelectedTrip(trip);
                     setActiveDayTab(1);
                   }}
-                  className="group relative bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
+                  className="group relative bg-gradient-to-b from-white to-slate-50/50 rounded-[32px] border border-slate-200/60 hover:border-rose-300 hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
                 >
                   <div>
                     {/* Cover image header */}
-                    <div className="relative h-44 w-full overflow-hidden">
+                    <div className="relative h-48 w-full overflow-hidden">
                       <TripCoverImage
                         destination={trip.destination}
                         defaultImage={trip.image}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-black/20" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-black/10" />
 
                       {/* Top style badge & weather pill */}
                       <div className="absolute top-4 left-4 flex items-center space-x-2">
-                        <span className="px-3 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-slate-800 backdrop-blur-sm shadow-sm">
+                        <span className="px-3 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-wider bg-slate-900/90 text-white backdrop-blur-md border border-white/10 shadow-lg">
                           {style}
                         </span>
-                        <span className="px-2.5 py-1 rounded-xl bg-white/20 text-white backdrop-blur-sm text-[10px] font-bold flex items-center space-x-1 border border-white/10 shadow-sm">
-                          <WeatherIcon className={`h-3 w-3 ${weather.condition === 'Sunny' ? 'text-amber-300' : weather.condition === 'Rainy' ? 'text-sky-300' : 'text-slate-100'}`} />
+                        <span className="px-3 py-1.5 rounded-2xl bg-white/80 text-slate-800 backdrop-blur-md text-[9px] font-black flex items-center space-x-1.5 border border-white/40 shadow-lg">
+                          <WeatherIcon className={`h-3.5 w-3.5 ${weather.condition === 'Sunny' ? 'text-amber-500 animate-spin-slow' : weather.condition === 'Rainy' ? 'text-sky-500' : 'text-slate-500'}`} />
                           <span>{weather.temp}°C</span>
                         </span>
                       </div>
 
                       {/* Top Action buttons */}
-                      <div className="absolute top-4 right-4 flex items-center space-x-1.5">
+                      <div className="absolute top-4 right-4 flex items-center space-x-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             exportTripToPDF(trip);
                           }}
-                          className="p-2 rounded-xl bg-white/90 hover:bg-white text-slate-700 hover:text-rose-500 transition-all duration-205 shadow-md cursor-pointer border border-white/20"
+                          className="h-9 w-9 rounded-2xl bg-white/90 hover:bg-rose-500 text-slate-700 hover:text-white hover:border-rose-500 transition-all duration-300 shadow-md cursor-pointer border border-slate-200/50 flex items-center justify-center active:scale-90"
                           title="Export Trip PDF"
                         >
-                          <Download className="h-3.5 w-3.5" />
+                          <Download className="h-4 w-4" />
                         </button>
                         <button
                           onClick={(e) => handleDeleteTrip(trip, e)}
-                          className="p-2 rounded-xl bg-white/90 hover:bg-white text-slate-700 hover:text-red-500 transition-all duration-205 shadow-md cursor-pointer border border-white/20"
+                          className="h-9 w-9 rounded-2xl bg-white/90 hover:bg-red-650 text-slate-700 hover:text-white hover:border-red-650 transition-all duration-300 shadow-md cursor-pointer border border-slate-200/50 flex items-center justify-center active:scale-90"
                           title="Delete Trip"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
 
                     {/* Card Content body */}
-                    <div className="p-6">
-                      <h3 className="text-lg font-extrabold text-slate-900 mb-2 group-hover:text-rose-550 transition-colors duration-205 truncate">
+                    <div className="p-6 pb-4">
+                      <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-rose-500 transition-colors duration-300 truncate">
                         {trip.destination}
                       </h3>
 
-                      <div className="flex items-center space-x-2 text-slate-500 text-xs mb-4">
-                        <Calendar className="h-3.5 w-3.5 text-rose-500" />
-                        <span className="font-semibold">{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? t('day') : t('days')})</span>
+                      <div className="flex items-center space-x-2 text-slate-500 text-[11px] mb-4 bg-slate-100/50 px-3 py-1.5 rounded-2xl w-fit border border-slate-200/30">
+                        <Calendar className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                        <span className="font-bold">{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? t('day') : t('days')})</span>
                       </div>
 
-                      <div className="flex items-center space-x-5 text-slate-650 text-xs">
-                        <div className="flex items-center space-x-1.5">
-                          <Users className="h-4 w-4 text-slate-400" />
-                          <span className="font-bold text-slate-700">{trip.travelers} {t('travelers')}</span>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="flex items-center space-x-2 bg-slate-50 border border-slate-100 px-3 py-2.5 rounded-2xl">
+                          <Users className="h-4 w-4 text-slate-400 shrink-0" />
+                          <span className="font-extrabold text-slate-700 truncate">{trip.travelers} {t('travelers')}</span>
                         </div>
-                        <div className="flex items-center space-x-1.5">
-                          <span className="font-bold text-slate-400">{tripCurrency.symbol}</span>
-                          <span className="font-bold text-slate-755">{t('budget_label')}: {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+                        <div className="flex items-center space-x-2 bg-slate-50 border border-slate-100 px-3 py-2.5 rounded-2xl">
+                          <span className="font-extrabold text-rose-500 shrink-0">{tripCurrency.symbol}</span>
+                          <span className="font-extrabold text-slate-700 truncate" title={Number(trip.budget).toLocaleString(tripCurrency.locale)}>
+                            {t('budget_label')}: {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {trip.interests && trip.interests.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 px-6 pb-6 pt-3 border-t border-slate-50">
+                    <div className="flex flex-wrap gap-2 px-6 pb-6 pt-3 border-t border-slate-100/60">
                       {trip.interests.slice(0, 3).map((interest, idx) => (
-                        <span key={idx} className="px-2.5 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                        <span key={idx} className="px-2.5 py-1 rounded-xl bg-slate-100/60 border border-slate-200/40 text-[9px] font-extrabold text-slate-500 uppercase tracking-wider hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all duration-200">
                           {interest}
                         </span>
                       ))}
                       {trip.interests.length > 3 && (
-                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center ml-1">+{trip.interests.length - 3} more</span>
+                        <span className="text-[10px] text-rose-500 font-extrabold uppercase tracking-wider flex items-center ml-1 shrink-0">+{trip.interests.length - 3} more</span>
                       )}
                     </div>
                   )}
@@ -2080,49 +2097,49 @@ export default function DashboardStub() {
                   </div>
                 </div>
 
-                <div className="px-6 py-3 border-b border-slate-100 bg-slate-50 flex items-center space-x-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
+                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/70 flex items-center space-x-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
                   {getDaysArray(selectedTrip).map((day) => (
                     <button
                       key={day}
                       onClick={() => setActiveDayTab(day)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${activeDayTab === day ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 bg-white'}`}
+                      className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer active:scale-95 ${activeDayTab === day ? 'bg-slate-900 text-white shadow-md shadow-slate-950/20' : 'text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200/60 shadow-sm'}`}
                     >
                       Day {day}
                     </button>
                   ))}
                   <button
                     onClick={() => setActiveDayTab('nearby')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 md:ml-auto ${activeDayTab === 'nearby' ? 'bg-sky-600 text-white shadow-sm' : 'text-sky-600 hover:text-sky-850 hover:bg-sky-50 border border-sky-200 bg-white'}`}
+                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 md:ml-auto active:scale-95 ${activeDayTab === 'nearby' ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20' : 'text-sky-600 hover:text-sky-750 hover:bg-sky-50 border border-sky-200 bg-white shadow-sm'}`}
                   >
-                    <TripIcon className="h-3.5 w-3.5" />
+                    <TripIcon className="h-4 w-4" />
                     <span>Nearby Places</span>
                   </button>
                   <button
                     onClick={() => setActiveDayTab('budget')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'budget' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 border border-emerald-200 bg-white'}`}
+                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'budget' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'text-emerald-600 hover:text-emerald-750 hover:bg-emerald-50 border border-emerald-200 bg-white shadow-sm'}`}
                   >
-                    <DollarSign className="h-3.5 w-3.5" />
+                    <DollarSign className="h-4 w-4" />
                     <span>Budget</span>
                   </button>
                   <button
                     onClick={() => setActiveDayTab('packing')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'packing' ? 'bg-amber-600 text-white shadow-sm' : 'text-amber-600 hover:text-amber-800 hover:bg-amber-50 border border-amber-200 bg-white'}`}
+                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'packing' ? 'bg-amber-605 text-white shadow-md shadow-amber-600/20' : 'text-amber-600 hover:text-amber-750 hover:bg-amber-50 border border-amber-200 bg-white shadow-sm'}`}
                   >
-                    <CheckSquare className="h-3.5 w-3.5" />
+                    <CheckSquare className="h-4 w-4" />
                     <span>Packing List</span>
                   </button>
                    <button
                     onClick={() => setActiveDayTab('favorites')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'favorites' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-rose-200 bg-white'}`}
+                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'favorites' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20' : 'text-rose-600 hover:text-rose-750 hover:bg-rose-50 border border-rose-200 bg-white shadow-sm'}`}
                   >
-                    <Heart className="h-3.5 w-3.5" />
+                    <Heart className="h-4 w-4" />
                     <span>Favorites</span>
                   </button>
                   <button
                     onClick={() => setActiveDayTab('events')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'events' ? 'bg-indigo-650 text-white shadow-sm' : 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 bg-white'}`}
+                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'events' ? 'bg-indigo-650 text-white shadow-md shadow-indigo-600/20' : 'text-indigo-600 hover:text-indigo-750 hover:bg-indigo-50 border border-indigo-200 bg-white shadow-sm'}`}
                   >
-                    <Calendar className="h-3.5 w-3.5" />
+                    <Calendar className="h-4 w-4" />
                     <span>Local Events</span>
                   </button>
                 </div>
@@ -2231,14 +2248,23 @@ export default function DashboardStub() {
                                   Expected Budget Allocation
                                 </span>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {budgetData.categoryBreakdown.map((cat, idx) => (
-                                    <div key={idx} className="bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 flex justify-between items-center shadow-sm">
-                                      <span className="text-xs font-bold text-slate-700">{cat.category}</span>
-                                      <span className="text-xs font-extrabold text-slate-900">
-                                        {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}
-                                      </span>
-                                    </div>
-                                  ))}
+                                  {budgetData.categoryBreakdown.map((cat, idx) => {
+                                    const percent = budgetData.totalBudget > 0 ? Math.round((Number(cat.planned) / Number(budgetData.totalBudget)) * 100) : 0;
+                                    return (
+                                      <div key={idx} className="bg-slate-50/70 border border-slate-100/80 rounded-2xl p-4 flex flex-col justify-between shadow-sm space-y-2.5">
+                                        <div className="flex justify-between items-center w-full">
+                                          <span className="text-xs font-bold text-slate-700">{cat.category}</span>
+                                          <span className="text-xs font-black text-slate-900">
+                                            {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}
+                                          </span>
+                                        </div>
+                                        <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden">
+                                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${percent}%` }} />
+                                        </div>
+                                        <span className="text-[9px] font-bold text-slate-400 block">{percent}% of total budget</span>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
@@ -2260,51 +2286,66 @@ export default function DashboardStub() {
                           </div>
                         ) : packingList.length === 0 ? (
                           <p className="text-slate-400 text-xs text-center py-8">Failed to generate packing list.</p>
-                        ) : (
-                          <div className="space-y-6">
-                            {packingList.map((cat, catIdx) => (
-                              <div key={catIdx} className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 shadow-sm space-y-3">
-                                <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
-                                  {cat.category}
-                                </h4>
-                                <div className="space-y-2.5">
-                                  {cat.items.map((item, itemIdx) => (
-                                    <label
-                                      key={itemIdx}
-                                      className={`flex items-start space-x-3 p-3 rounded-xl border bg-white cursor-pointer select-none transition ${
-                                        item.checked 
-                                          ? 'border-emerald-100 bg-emerald-50/10 text-slate-400' 
-                                          : 'border-slate-100 hover:border-slate-200 text-slate-800'
-                                      }`}
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={item.checked || false}
-                                        onChange={() => handleTogglePackingItem(catIdx, itemIdx)}
-                                        className="mt-0.5 w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/40 focus:ring-offset-0 focus:ring-2 cursor-pointer"
-                                      />
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-baseline justify-between gap-2">
-                                          <span className={`text-xs font-bold ${item.checked ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                                            {item.name}
-                                          </span>
-                                          <span className="text-[10px] font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full shrink-0">
-                                            Qty: {item.quantity}
-                                          </span>
-                                        </div>
-                                        {item.reason && (
-                                          <p className={`text-[10px] mt-0.5 leading-relaxed ${item.checked ? 'text-slate-300' : 'text-slate-400'}`}>
-                                            {item.reason}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </label>
-                                  ))}
+                        ) : (() => {
+                          const totalItems = packingList.reduce((acc, cat) => acc + cat.items.length, 0);
+                          const checkedItems = packingList.reduce((acc, cat) => acc + cat.items.filter(i => i.checked).length, 0);
+                          const percentCompleted = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
+                          return (
+                            <div className="space-y-6">
+                              {/* Progress bar */}
+                              <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 shadow-sm">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Checklist Progress</span>
+                                  <span className="text-xs font-black text-amber-800">{checkedItems} / {totalItems} items ({percentCompleted}%)</span>
+                                </div>
+                                <div className="w-full h-2.5 bg-amber-100/50 rounded-full overflow-hidden border border-amber-200/30">
+                                  <div className="h-full bg-amber-500 rounded-full transition-all duration-550 ease-out" style={{ width: `${percentCompleted}%` }} />
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        )}
+                              {packingList.map((cat, catIdx) => (
+                                <div key={catIdx} className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 shadow-sm space-y-3">
+                                  <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
+                                    {cat.category}
+                                  </h4>
+                                  <div className="space-y-2.5">
+                                    {cat.items.map((item, itemIdx) => (
+                                      <label
+                                        key={itemIdx}
+                                        className={`flex items-start space-x-3 p-3 rounded-xl border bg-white cursor-pointer select-none transition ${
+                                          item.checked 
+                                            ? 'border-emerald-100 bg-emerald-50/10 text-slate-400' 
+                                            : 'border-slate-100 hover:border-slate-200 text-slate-800'
+                                        }`}
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={item.checked || false}
+                                          onChange={() => handleTogglePackingItem(catIdx, itemIdx)}
+                                          className="mt-0.5 w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/40 focus:ring-offset-0 focus:ring-2 cursor-pointer"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-baseline justify-between gap-2">
+                                            <span className={`text-xs font-bold ${item.checked ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                              {item.name}
+                                            </span>
+                                            <span className="text-[10px] font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full shrink-0">
+                                              Qty: {item.quantity}
+                                            </span>
+                                          </div>
+                                          {item.reason && (
+                                            <p className={`text-[10px] mt-0.5 leading-relaxed ${item.checked ? 'text-slate-300' : 'text-slate-400'}`}>
+                                              {item.reason}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     ) : activeDayTab === 'favorites' ? (
                       <div className="space-y-6">

@@ -842,7 +842,7 @@ async function initDatabase() {
     schemaSql = schemaSql.replace(/DROP TABLE IF EXISTS \w+;/gi, '');
 
     // Ensure CREATE TABLE is CREATE TABLE IF NOT EXISTS
-    schemaSql = schemaSql.replace(/CREATE TABLE (\w+)/gi, 'CREATE TABLE IF NOT EXISTS $1');
+    schemaSql = schemaSql.replace(/CREATE TABLE\s+(?!IF\s+NOT\s+EXISTS\s+)(\w+)/gi, 'CREATE TABLE IF NOT EXISTS $1');
 
     // Strip comments to prevent filtering out statements that start with them
     let cleanedSql = schemaSql

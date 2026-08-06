@@ -118,3 +118,12 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS travel_history JSONB DEFAULT '[]';
 
+-- Table for Trip Collaborators / Co-travelers
+CREATE TABLE IF NOT EXISTS trip_collaborators (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(trip_id, user_id)
+);
+

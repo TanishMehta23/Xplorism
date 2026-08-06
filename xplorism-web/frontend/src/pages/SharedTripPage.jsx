@@ -554,71 +554,71 @@ export default function SharedTripPage() {
         {/* Right Column: Timelines & Itineraries */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl flex flex-col h-full min-h-[500px]">
-            {/* Tabs Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
-              <h2 className="text-lg font-black text-white">Daily Itinerary</h2>
-              <div className="flex space-x-1.5 overflow-x-auto max-w-[60%] no-scrollbar py-1">
-                {dayTabs.map((dayNum) => (
-                  <button
-                    key={dayNum}
-                    onClick={() => setActiveDayTab(dayNum)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer shrink-0 ${
-                      activeDayTab === dayNum
-                        ? 'bg-rose-550 text-white'
-                        : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-850'
-                    }`}
-                  >
-                    Day {dayNum}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Timelines content */}
-            <div className="flex-1 relative">
-              {activeDayItineraries.length > 0 ? (
-                <div className="relative pl-6 border-l border-slate-800 space-y-6 ml-2">
-                  <AnimatePresence mode="popLayout">
-                    {activeDayItineraries.map((act, index) => (
-                      <motion.div
-                        key={act.id || index}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
-                        transition={{ duration: 0.2, delay: index * 0.05 }}
-                        className="relative group"
-                      >
-                        {/* Timeline Point */}
-                        <div className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full bg-rose-500 border border-slate-900 shadow-md group-hover:scale-110 transition-transform duration-300" />
-                        
-                        <div className="bg-slate-950 border border-slate-850 rounded-2xl p-5 hover:border-slate-800 transition-all duration-300">
-                          <div className="flex items-center space-x-2 text-rose-455 font-bold text-xs mb-2">
-                            <Clock className="h-3.5 w-3.5" />
-                            <span>{act.time || 'All Day'}</span>
-                          </div>
-
-                          <p className="text-slate-250 font-medium text-sm leading-relaxed mb-3">
-                            {act.activity}
-                          </p>
-
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                            {act.location && (
-                              <span className="flex items-center space-x-1">
-                                <MapPin className="h-3.5 w-3.5 text-rose-500" />
-                                <span>{act.location}</span>
-                              </span>
-                            )}
-                            {act.estimatedCost !== undefined && (
-                              <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-slate-400">
-                                Est: {tripCurrency.symbol}{Number(act.estimatedCost).toLocaleString(tripCurrency.locale)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
+             {/* Tabs Header */}
+             <div className="flex items-center justify-between border-b border-slate-800/60 pb-4 mb-6">
+               <h2 className="text-lg font-black text-white">Daily Itinerary</h2>
+               <div className="flex space-x-1.5 overflow-x-auto max-w-[60%] no-scrollbar py-1">
+                 {dayTabs.map((dayNum) => (
+                   <button
+                     key={dayNum}
+                     onClick={() => setActiveDayTab(dayNum)}
+                     className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer shrink-0 active:scale-95 ${
+                       activeDayTab === dayNum
+                         ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
+                         : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-850'
+                     }`}
+                   >
+                     Day {dayNum}
+                   </button>
+                 ))}
+               </div>
+             </div>
+ 
+             {/* Timelines content */}
+             <div className="flex-1 relative">
+               {activeDayItineraries.length > 0 ? (
+                 <div className="relative pl-7 border-l border-slate-800/80 space-y-6 ml-2.5">
+                   <AnimatePresence mode="popLayout">
+                     {activeDayItineraries.map((act, index) => (
+                       <motion.div
+                         key={act.id || index}
+                         initial={{ opacity: 0, x: -10 }}
+                         animate={{ opacity: 1, x: 0 }}
+                         exit={{ opacity: 0, x: 10 }}
+                         transition={{ duration: 0.2, delay: index * 0.05 }}
+                         className="relative group"
+                       >
+                         {/* Timeline Point */}
+                         <div className="absolute -left-[36px] top-1.5 h-4 w-4 rounded-full bg-slate-950 border-[3px] border-rose-500 shadow-md group-hover:scale-110 transition-transform duration-300" />
+                         
+                         <div className="bg-slate-950 border border-slate-850 hover:border-rose-900/50 rounded-2xl p-5 hover:shadow-lg transition-all duration-300">
+                           <div className="flex items-center space-x-2 text-rose-455 font-bold text-xs mb-2">
+                             <Clock className="h-3.5 w-3.5" />
+                             <span>{act.time || 'All Day'}</span>
+                           </div>
+ 
+                           <p className="text-slate-200 font-medium text-sm leading-relaxed mb-3">
+                             {act.activity}
+                           </p>
+ 
+                           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                             {act.location && (
+                               <span className="flex items-center space-x-1">
+                                 <MapPin className="h-3.5 w-3.5 text-rose-500" />
+                                 <span>{act.location}</span>
+                               </span>
+                             )}
+                             {act.estimatedCost !== undefined && (
+                               <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-black text-emerald-400">
+                                 Est: {tripCurrency.symbol}{Number(act.estimatedCost).toLocaleString(tripCurrency.locale)}
+                               </span>
+                             )}
+                           </div>
+                         </div>
+                       </motion.div>
+                     ))}
+                   </AnimatePresence>
+                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
                   <TripIcon className="h-10 w-10 text-slate-600 mb-4 animate-bounce" />

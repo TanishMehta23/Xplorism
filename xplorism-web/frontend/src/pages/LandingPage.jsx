@@ -133,7 +133,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
-  
+
   // Leaflet Map States & Refs
   const [leafletLoaded, setLeafletLoaded] = useState(false);
   const [mapSearchQuery, setMapSearchQuery] = useState('Paris');
@@ -195,7 +195,7 @@ export default function LandingPage() {
           }))
           .filter(amenity => amenity.lat && amenity.lon)
           .slice(0, 5); // Limit to top 5 amenities
-        
+
         setNearbyAmenities(amenities);
       } else {
         setNearbyAmenities([]);
@@ -230,7 +230,7 @@ export default function LandingPage() {
     setNearbyAmenities([]);
     navigator.geolocation.getCurrentPosition(async (position) => {
       const { latitude, longitude } = position.coords;
-      
+
       try {
         // Reverse geocode to find city/area name using free Nominatim API
         const revUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`;
@@ -238,7 +238,7 @@ export default function LandingPage() {
           headers: { 'Accept-Language': 'en' }
         });
         const data = await res.json();
-        
+
         // Extract city/town/village
         const locationName = data.address.city || data.address.town || data.address.village || data.address.suburb || 'My Location';
         setMapSearchQuery(locationName);
@@ -256,7 +256,7 @@ export default function LandingPage() {
             .addTo(mapRef.current)
             .bindPopup(`<b>Your Location:</b> ${locationName}`)
             .openPopup();
-          
+
           markersRef.current.push(userMarker);
         }
 
@@ -300,7 +300,7 @@ export default function LandingPage() {
             const marker = window.L.marker([place.lat, place.lon])
               .addTo(mapRef.current)
               .bindPopup(`<b>${place.name}</b><br/>Type: ${place.type.replace('_', ' ')}`);
-            
+
             marker.on('click', () => {
               setSelectedPlace(place);
             });
@@ -371,7 +371,7 @@ export default function LandingPage() {
       scrollWheelZoom: true
     }).setView([lat, lon], zoom);
 
-     window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       attribution: '&copy; Google Maps'
     }).addTo(mapRef.current);
   };
@@ -417,7 +417,7 @@ export default function LandingPage() {
           .addTo(mapRef.current)
           .bindPopup(`<b>Center:</b> ${mapSearchQuery}`)
           .openPopup();
-        
+
         markersRef.current.push(centerMarker);
       }
 
@@ -462,7 +462,7 @@ export default function LandingPage() {
           const marker = window.L.marker([place.lat, place.lon])
             .addTo(mapRef.current)
             .bindPopup(`<b>${place.name}</b><br/>Type: ${place.type.replace('_', ' ')}`);
-          
+
           marker.on('click', () => {
             setSelectedPlace(place);
           });
@@ -496,7 +496,7 @@ export default function LandingPage() {
       }, 100);
     }
   }, [touristPlaces]);
-  
+
   const { scrollY } = useScroll();
 
   // Maps scroll positions from 0px (top of page) to 400px down.
@@ -535,36 +535,36 @@ export default function LandingPage() {
 
   return (
     <div className="bg-white text-slate-800 min-h-screen font-sans selection:bg-rose-100 selection:text-rose-600">
-      
+
       {/* Navigation */}
-      <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between border-b border-slate-100">
-        <Link to="/" className="flex items-center space-x-3 text-2xl font-bold tracking-tight">
-          <img 
-            src="/logo.png" 
-            alt="Xplorism Logo" 
-            className="h-14 w-14 object-contain rounded-full shadow-sm" 
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100 flex-nowrap">
+        <Link to="/" className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <img
+            src="/logo.png"
+            alt="Xplorism Logo"
+            className="h-10 sm:h-14 w-10 sm:w-14 object-contain rounded-full shadow-sm"
           />
-          <span className="text-slate-900 font-extrabold tracking-tight">
+          <span className="text-slate-900 font-extrabold tracking-tight text-lg sm:text-2xl">
             Xplorism
           </span>
         </Link>
-        
-        <div className="flex items-center space-x-4">
+
+        <div className="flex items-center shrink-0">
           {isAuthenticated ? (
             <Link
               to="/dashboard"
-              className="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-200"
+              className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all duration-200"
             >
               Dashboard
             </Link>
           ) : (
-            <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-3">
               <button
                 onClick={() => {
                   setAuthModalMode('login');
                   setIsAuthModalOpen(true);
                 }}
-                className="px-4 py-2.5 text-slate-600 hover:text-slate-900 font-semibold text-sm transition-all duration-200 cursor-pointer"
+                className="px-2 sm:px-4 py-2 text-slate-600 hover:text-slate-900 font-semibold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
               >
                 Sign In
               </button>
@@ -573,7 +573,7 @@ export default function LandingPage() {
                   setAuthModalMode('register');
                   setIsAuthModalOpen(true);
                 }}
-                className="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
               >
                 Sign Up
               </button>
@@ -632,20 +632,20 @@ export default function LandingPage() {
       </header>
 
       {/* Interactive 3D Laptop Showcase */}
-      <section className="relative max-w-6xl mx-auto px-6 py-10 flex flex-col items-center overflow-hidden">
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-10 animate-pulse">
+      <section className="relative max-w-6xl mx-auto px-6 pt-10 pb-10 flex flex-col items-center overflow-hidden">
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-12 mb-14 animate-pulse">
           Scroll down to open your planner
         </div>
 
         {/* 3D Viewport container */}
         <div className="w-full flex flex-col items-center" style={{ perspective: '1500px' }}>
-          
+
           {/* Laptop Screen (Lid) */}
           <motion.div
-            style={{ 
-              rotateX, 
+            style={{
+              rotateX,
               scale,
-              transformOrigin: 'bottom', 
+              transformOrigin: 'bottom',
               transformStyle: 'preserve-3d',
             }}
             className="w-[90%] md:w-[85%] max-w-[800px] aspect-[16/10] bg-[#0c111d] border-[10px] md:border-[14px] border-slate-900 rounded-t-3xl relative shadow-[0_-20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
@@ -658,25 +658,25 @@ export default function LandingPage() {
 
             {/* Inner Screen Mockup Content */}
             <div className="absolute inset-0 bg-white overflow-hidden text-slate-800 p-3 md:p-6 select-none font-sans text-[10px] md:text-xs">
-              
+
               {/* Mock Screen Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center space-x-2">
-                  <img 
-                    src="/logo.png" 
-                    alt="Xplorism Logo" 
-                    className="h-8 w-8 object-contain rounded-full" 
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-nowrap gap-1">
+                <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
+                  <img
+                    src="/logo.png"
+                    alt="Xplorism Logo"
+                    className="h-5 w-5 sm:h-8 sm:w-8 object-contain rounded-full"
                   />
-                  <span className="font-extrabold text-slate-900 tracking-tight">Xplorism</span>
+                  <span className="font-extrabold text-slate-900 tracking-tight text-[8px] sm:text-xs">Xplorism</span>
                 </div>
-                <div className="flex items-center space-x-2 scale-90 md:scale-100 origin-right">
-                  <button className="px-2.5 py-1 rounded-full border border-slate-200 hover:bg-slate-50 font-medium text-[9px] md:text-[10px] text-slate-600 transition">
+                <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
+                  <button className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-slate-200 hover:bg-slate-50 font-medium text-[6px] sm:text-[9px] text-slate-600 transition whitespace-nowrap">
                     + Create Trip
                   </button>
-                  <button className="px-2.5 py-1 rounded-full border border-slate-200 hover:bg-slate-50 font-medium text-[9px] md:text-[10px] text-slate-600 transition">
+                  <button className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-slate-200 hover:bg-slate-50 font-medium text-[6px] sm:text-[9px] text-slate-600 transition whitespace-nowrap">
                     My Trips
                   </button>
-                  <div className="h-6 w-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">
+                  <div className="h-4 w-4 sm:h-6 sm:w-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[7px] sm:text-[10px] shrink-0">
                     G
                   </div>
                 </div>
@@ -684,9 +684,9 @@ export default function LandingPage() {
 
               {/* Main Banner */}
               <div className="mt-3 relative rounded-xl overflow-hidden aspect-[16/6.5] bg-slate-100">
-                <img 
-                  src="/las_vegas.png" 
-                  alt="Las Vegas Strip" 
+                <img
+                  src="/las_vegas.png"
+                  alt="Las Vegas Strip"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -710,7 +710,7 @@ export default function LandingPage() {
                     </span>
                   </div>
                 </div>
-                
+
                 <button className="h-7 w-7 rounded-lg bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 transition">
                   <Navigation className="h-3.5 w-3.5 fill-current rotate-45" />
                 </button>
@@ -719,7 +719,7 @@ export default function LandingPage() {
               {/* Hotel Recommendations Section */}
               <div className="mt-5">
                 <h4 className="text-[10px] md:text-xs font-extrabold text-slate-900 mb-2">Hotel Recommendation</h4>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {/* Card 1 */}
                   <div className="border border-slate-100 rounded-lg overflow-hidden bg-white p-1.5 flex flex-col justify-between">
@@ -794,17 +794,17 @@ export default function LandingPage() {
           <div className="w-[85%] max-w-[760px] h-[8px] bg-slate-955 z-10 border-b border-slate-800" />
 
           {/* Laptop Base (Keyboard Tray) */}
-          <div 
+          <div
             className="w-[98%] md:w-[94%] max-w-[880px] h-[18px] md:h-[24px] bg-gradient-to-b from-slate-700 via-slate-800 to-slate-950 rounded-b-2xl relative shadow-[0_20px_40px_rgba(0,0,0,0.35)] border-t border-slate-500/20"
-            style={{ 
-              transform: 'rotateX(15deg)', 
+            style={{
+              transform: 'rotateX(15deg)',
               transformOrigin: 'top',
               transformStyle: 'preserve-3d'
             }}
           >
             {/* Trackpad indentation */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 md:w-32 h-[8px] md:h-[12px] bg-gradient-to-b from-slate-900 to-slate-950 rounded-b-lg border-x border-b border-slate-700/20" />
-            
+
             {/* Front Lip shadow edge */}
             <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-950 rounded-b-2xl" />
           </div>
@@ -868,23 +868,23 @@ export default function LandingPage() {
                       setMapSearchQuery(sug.display_name);
                       setSuggestions([]);
                       setShowSuggestions(false);
-                      
+
                       const latitude = parseFloat(sug.lat);
                       const longitude = parseFloat(sug.lon);
-                      
+
                       // Reset states
                       setTouristPlaces([]);
                       setSelectedPlace(null);
                       setNearbyAmenities([]);
                       setMapLoading(true);
-                      
+
                       // Pan map
                       initMap(latitude, longitude, 13);
-                      
+
                       // Clear markers
                       markersRef.current.forEach(marker => marker.remove());
                       markersRef.current = [];
-                      
+
                       // Add central marker
                       if (mapRef.current) {
                         const centerMarker = window.L.marker([latitude, longitude])
@@ -893,7 +893,7 @@ export default function LandingPage() {
                           .openPopup();
                         markersRef.current.push(centerMarker);
                       }
-                      
+
                       // Query attractions
                       const query = `[out:json][timeout:25];(nwr["tourism"~"attraction|museum|gallery|theme_park|viewpoint|zoo|picnic_site|aquarium|artwork"](around:3000,${latitude},${longitude});nwr["historic"~"monument|castle|ruins|memorial|archaeological_site|tomb"](around:3000,${latitude},${longitude});nwr["amenity"="place_of_worship"](around:3000,${latitude},${longitude});nwr["natural"~"waterfall|beach|peak"](around:3000,${latitude},${longitude});nwr["leisure"~"park|garden"](around:3000,${latitude},${longitude}););out center;`;
                       fetchOverpassWithFallback(query)
@@ -928,7 +928,7 @@ export default function LandingPage() {
                         })
                         .then(places => {
                           setTouristPlaces(places);
-                          
+
                           places.forEach(place => {
                             if (mapRef.current) {
                               const marker = window.L.marker([place.lat, place.lon])
@@ -938,7 +938,7 @@ export default function LandingPage() {
                               markersRef.current.push(marker);
                             }
                           });
-                          
+
                           if (places.length > 0) {
                             setSelectedPlace(places[0]);
                           } else {
@@ -1021,11 +1021,10 @@ export default function LandingPage() {
                               mapRef.current.setView([place.lat, place.lon], 15);
                             }
                           }}
-                          className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs font-semibold flex items-center justify-between cursor-pointer ${
-                            isSelected
+                          className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs font-semibold flex items-center justify-between cursor-pointer ${isSelected
                               ? 'bg-rose-50/50 border-rose-200 text-rose-600'
                               : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
-                          }`}
+                            }`}
                         >
                           <span className="truncate pr-2">{place.name}</span>
                           <span className="text-[9px] uppercase text-slate-400 font-bold shrink-0">
@@ -1107,10 +1106,10 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-6 py-20 border-t border-slate-100">
-        <div className="text-center mb-16">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3">Plan Simpler. Travel Better.</h2>
-          <p className="text-slate-500 max-w-xl mx-auto text-sm">
+      <section className="max-w-7xl mx-auto px-6 py-10 sm:py-20 border-t border-slate-100">
+        <div className="text-center mb-8 sm:mb-16">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 mb-2 sm:mb-3">Plan Simpler. Travel Better.</h2>
+          <p className="text-slate-500 max-w-xl mx-auto text-xs sm:text-sm">
             Everything you need for an unforgettable journey, organized in a clean layout.
           </p>
         </div>
@@ -1120,37 +1119,37 @@ export default function LandingPage() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-50px' }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8"
         >
           {/* Card 1 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-8 rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-12 w-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 mb-6">
-              <Zap className="h-6 w-6" />
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-5 sm:p-8 rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 mb-4 sm:mb-6">
+              <Zap className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Custom Itinerary Builder</h3>
-            <p className="text-slate-500 text-sm leading-relaxed">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Custom Itinerary Builder</h3>
+            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
               Enter your budget, dates, and styles. Get customized day-by-day plans, dining recommendations, and travel markers.
             </p>
           </motion.div>
 
           {/* Card 2 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-8 rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-12 w-12 rounded-xl bg-teal-55 flex items-center justify-center text-teal-600 mb-6">
-              <MapPin className="h-6 w-6" />
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-5 sm:p-8 rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-teal-50 flex items-center justify-center text-teal-650 mb-4 sm:mb-6">
+              <MapPin className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Interactive Mapping</h3>
-            <p className="text-slate-500 text-sm leading-relaxed">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Interactive Mapping</h3>
+            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
               Map out destinations on Leaflet OpenStreetMap. Keep coordinates of all sights, hotels, and restaurants in one place.
             </p>
           </motion.div>
 
           {/* Card 3 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-8 rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-6">
-              <CloudRain className="h-6 w-6" />
+          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-5 sm:p-8 rounded-2xl hover:shadow-md transition-all duration-200">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-4 sm:mb-6">
+              <CloudRain className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Weather Forecasting</h3>
-            <p className="text-slate-500 text-sm leading-relaxed">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Weather Forecasting</h3>
+            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
               Check real-time 5-day forecasts and suggestions on clothing to optimize your daily activity selection.
             </p>
           </motion.div>
@@ -1161,10 +1160,10 @@ export default function LandingPage() {
       <footer className="border-t border-slate-100 bg-slate-50 py-12">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
           <div className="flex items-center space-x-2.5 text-xl font-bold">
-            <img 
-              src="/logo.png" 
-              alt="Xplorism Logo" 
-              className="h-11 w-11 object-contain rounded-full" 
+            <img
+              src="/logo.png"
+              alt="Xplorism Logo"
+              className="h-11 w-11 object-contain rounded-full"
             />
             <span className="text-slate-900 font-extrabold">Xplorism</span>
           </div>
@@ -1174,10 +1173,10 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-        initialMode={authModalMode} 
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
       />
     </div>
   );

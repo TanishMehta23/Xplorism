@@ -7,7 +7,7 @@ import {
   LogOut, Plus, Calendar, Compass as TripIcon,
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
-  Maximize2, Minimize2, CheckSquare, Share2
+  Maximize2, Minimize2, CheckSquare, Share2, CloudSun, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
@@ -160,6 +160,29 @@ const getWeatherForDestination = (destination, dateStr) => {
   return { temp, condition, desc };
 };
 
+const get3DayForecast = (destination, startDateStr) => {
+  const day1 = getWeatherForDestination(destination, startDateStr);
+  const start = new Date(startDateStr);
+  
+  const day2Date = new Date(start);
+  day2Date.setDate(start.getDate() + 1);
+  const day2 = getWeatherForDestination(destination, day2Date.toISOString());
+  day2.temp = day2.temp + 1;
+  if (day2.condition === 'Sunny') day2.condition = 'Cloudy';
+  
+  const day3Date = new Date(start);
+  day3Date.setDate(start.getDate() + 2);
+  const day3 = getWeatherForDestination(destination, day3Date.toISOString());
+  day3.temp = day3.temp - 1;
+  if (day3.condition === 'Sunny') day3.condition = 'Windy';
+
+  return [
+    { date: start, ...day1 },
+    { date: day2Date, ...day2 },
+    { date: dateStr => day3Date, ...day3, date: day3Date }
+  ];
+};
+
 const getActivityImageFallback = (location, time) => {
   const loc = (location || '').toLowerCase();
   if (loc.includes('lake') || loc.includes('sukhna') || loc.includes('beach') || loc.includes('water')) {
@@ -262,7 +285,7 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
 
 
 
-const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => {
+const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMoveUp, onMoveDown }) => {
   const [imageSrc, setImageSrc] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -339,7 +362,7 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => 
             rel="noopener noreferrer"
             className="absolute top-2 right-2 w-7 h-7 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-700 dark:text-slate-355 hover:bg-white dark:hover:bg-slate-800 hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer border border-slate-100 dark:border-slate-800"
           >
-            <Search className="h-3.5 w-3.5 text-slate-505" />
+            <Search className="h-3.5 w-3.5 text-slate-500" />
           </a>
         </div>
 
@@ -351,13 +374,33 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => 
                 <Clock className="h-3.5 w-3.5" />
                 <span>{item.time}</span>
               </div>
-              <button
-                onClick={onToggleFavorite}
-                className="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0 border border-[var(--border-primary)] active:scale-90"
-                title="Toggle Favorite"
-              >
-                <Heart className={`h-4 w-4 transition-colors ${isFavorited ? 'fill-rose-500 text-rose-500' : ''}`} />
-              </button>
+              <div className="flex items-center space-x-1.5">
+                {onMoveUp && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+                    className="p-1.5 rounded-lg bg-[var(--bg-tertiary)] hover:bg-[var(--border-primary)] text-slate-400 hover:text-rose-500 transition cursor-pointer border border-[var(--border-primary)] active:scale-90"
+                    title="Move Up"
+                  >
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                {onMoveDown && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+                    className="p-1.5 rounded-lg bg-[var(--bg-tertiary)] hover:bg-[var(--border-primary)] text-slate-400 hover:text-rose-500 transition cursor-pointer border border-[var(--border-primary)] active:scale-90"
+                    title="Move Down"
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+                  className="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0 border border-[var(--border-primary)] active:scale-90"
+                  title="Toggle Favorite"
+                >
+                  <Heart className={`h-4 w-4 transition-colors ${isFavorited ? 'fill-rose-500 text-rose-500' : ''}`} />
+                </button>
+              </div>
             </div>
 
             <h4 className="text-base font-extrabold tracking-tight leading-snug" style={{ color: 'var(--text-primary)' }}>
@@ -370,12 +413,6 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite }) => 
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs pt-1.5">
-            {item.location && (
-              <div className="flex items-center space-x-1.5 border px-2.5 py-1.5 rounded-xl font-bold" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}>
-                <MapPin className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                <span>{item.location}</span>
-              </div>
-            )}
             <div className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl font-bold border ${Number(item.estimatedCost) > 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] text-slate-400 dark:text-slate-550'}`}>
               <DollarSign className={`h-3.5 w-3.5 shrink-0 ${Number(item.estimatedCost) > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
               <span>{Number(item.estimatedCost) > 0 ? `${tripCurrency.symbol}${Number(item.estimatedCost).toLocaleString(tripCurrency.locale)}` : 'Free'}</span>
@@ -410,6 +447,7 @@ export default function DashboardStub() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showWeatherPopup, setShowWeatherPopup] = useState(false);
   const carouselRef = useRef(null);
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(true);
@@ -545,6 +583,40 @@ export default function DashboardStub() {
     } catch (err) {
       console.error('Failed to remove favorite:', err);
       showToast('Failed to remove favorite.', 'error');
+    }
+  };
+
+  const handleMoveActivity = async (index, direction) => {
+    if (!selectedTrip) return;
+    const activeDayList = getDayItineraries(selectedTrip);
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex < 0 || targetIndex >= activeDayList.length) return;
+    
+    const itemA = activeDayList[index];
+    const itemB = activeDayList[targetIndex];
+    
+    const tempTime = itemA.time;
+    itemA.time = itemB.time;
+    itemB.time = tempTime;
+    
+    const updatedItineraries = selectedTrip.itineraries.map(it => {
+      if (it.id === itemA.id) return { ...it, time: itemA.time };
+      if (it.id === itemB.id) return { ...it, time: itemB.time };
+      return it;
+    });
+
+    try {
+      const updatedTrip = await api.put(`/trips/${selectedTrip.id}`, {
+        itinerary: updatedItineraries
+      });
+      if (updatedTrip) {
+        setSelectedTrip(updatedTrip);
+        setTrips(trips.map(t => t.id === updatedTrip.id ? updatedTrip : t));
+        showToast('Activity order updated.', 'success');
+      }
+    } catch (err) {
+      showToast('Failed to update activity order.', 'error');
     }
   };
 
@@ -1957,18 +2029,48 @@ export default function DashboardStub() {
                   : 'max-w-6xl h-full md:h-[680px] max-h-screen md:max-h-[90vh] rounded-none md:rounded-3xl'
                   }`}
               >
-                {/* Floating Close Button on Mobile */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedTrip(null);
-                    setIsModalMaximized(false);
-                  }}
-                  className="md:hidden absolute top-4 right-4 z-55 h-9 w-9 rounded-full bg-slate-900/10 hover:bg-slate-900/20 text-slate-700 dark:text-slate-200 flex items-center justify-center transition active:scale-90"
-                  title="Close"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                {/* Mobile Quick Action Buttons & Close Button */}
+                <div className="md:hidden absolute top-4 right-4 z-55 flex items-center space-x-2">
+                  <button
+                    disabled={isSavingTrip || isExporting}
+                    onClick={() => shareTripLink(selectedTrip)}
+                    className="h-9 w-9 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-primary)] text-[var(--text-primary)] flex items-center justify-center transition active:scale-90 shadow-sm cursor-pointer"
+                    title="Share Link"
+                  >
+                    <Share2 className="h-4 w-4 text-rose-500" />
+                  </button>
+                  <button
+                    disabled={isSavingTrip || isExporting}
+                    onClick={() => exportTripToICS(selectedTrip)}
+                    className="h-9 w-9 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-primary)] text-[var(--text-primary)] flex items-center justify-center transition active:scale-90 shadow-sm cursor-pointer"
+                    title="Export Calendar"
+                  >
+                    <Calendar className="h-4 w-4 text-rose-500" />
+                  </button>
+                  <button
+                    disabled={isSavingTrip || isExporting}
+                    onClick={() => exportTripToPDF(selectedTrip)}
+                    className="h-9 w-9 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-primary)] text-[var(--text-primary)] flex items-center justify-center transition active:scale-90 shadow-sm cursor-pointer"
+                    title="Export PDF"
+                  >
+                    {isExporting ? (
+                      <div className="h-3.5 w-3.5 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 text-rose-500" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTrip(null);
+                      setIsModalMaximized(false);
+                    }}
+                    className="h-9 w-9 rounded-full bg-slate-900/10 hover:bg-slate-900/20 text-slate-700 dark:text-slate-200 flex items-center justify-center transition active:scale-90"
+                    title="Close"
+                  >
+                    <X className="h-4.5 w-4.5" />
+                  </button>
+                </div>
 
                 {/* Absolute Top-Right Window Controls & Actions (Desktop Only) */}
                 <div className="hidden md:flex absolute top-4 right-4 z-50 items-center space-x-2">
@@ -2040,14 +2142,20 @@ export default function DashboardStub() {
                       {formatDate(selectedTrip.startDate)} - {formatDate(selectedTrip.endDate)} • {selectedTrip.travelers} {t('travelers')} • {t('budget_label')}: {tripCurrency.symbol}{Number(selectedTrip.budget).toLocaleString(tripCurrency.locale)}
                     </p>
 
-                    <div className="flex items-center space-x-3 mt-3 text-xs text-slate-500 bg-slate-50 border border-slate-100 p-2.5 rounded-2xl w-fit shadow-sm">
-                      <div className="flex items-center space-x-1.5 font-bold text-slate-700">
-                        <WeatherIcon className={`h-4 w-4 ${weather.condition === 'Sunny' ? 'text-amber-500' : weather.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
+                    <button
+                      onClick={() => setShowWeatherPopup(true)}
+                      className="flex items-center space-x-3 mt-3 text-xs bg-[var(--bg-tertiary)] border border-[var(--border-primary)] p-2.5 rounded-2xl w-fit shadow-sm hover:bg-[var(--border-primary)] transition cursor-pointer active:scale-95 text-left group/weather"
+                      style={{ color: 'var(--text-secondary)' }}
+                      title="View 3-Day Weather Forecast"
+                    >
+                      <div className="flex items-center space-x-1.5 font-bold" style={{ color: 'var(--text-primary)' }}>
+                        <WeatherIcon className={`h-4 w-4 group-hover/weather:scale-110 transition-transform ${weather.condition === 'Sunny' ? 'text-amber-500' : weather.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
                         <span>{weather.temp}°C • {weather.condition}</span>
                       </div>
-                      <span className="h-3 w-[1px] bg-slate-200" />
+                      <span className="h-3 w-[1px] bg-[var(--border-primary)]" />
                       <span className="italic">{weather.desc}</span>
-                    </div>
+                      <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest pl-1 opacity-0 group-hover/weather:opacity-100 transition-opacity">Forecast →</span>
+                    </button>
                   </div>
                   <div className="flex items-center space-x-3">
                     {/* Real-time Collaboration Active Avatars */}
@@ -2522,21 +2630,26 @@ export default function DashboardStub() {
                         <p className="text-slate-400 text-sm text-center py-8">No activities scheduled for this day.</p>
                       ) : (
                         <div className="space-y-6">
-                          {getDayItineraries(selectedTrip).map((item, idx) => {
-                            const isFav = favorites.some(fav =>
-                              fav.name.toLowerCase().trim() === (item.location || '').toLowerCase().trim() ||
-                              fav.name.toLowerCase().trim() === (item.activity || '').toLowerCase().trim()
-                            );
-                            return (
-                              <ActivityCard
-                                key={item.id || idx}
-                                item={item}
-                                tripCurrency={tripCurrency}
-                                isFavorited={isFav}
-                                onToggleFavorite={() => handleToggleFavorite(item)}
-                              />
-                            );
-                          })}
+                          {(() => {
+                            const activeDayList = getDayItineraries(selectedTrip);
+                            return activeDayList.map((item, idx) => {
+                              const isFav = favorites.some(fav =>
+                                fav.name.toLowerCase().trim() === (item.location || '').toLowerCase().trim() ||
+                                fav.name.toLowerCase().trim() === (item.activity || '').toLowerCase().trim()
+                              );
+                              return (
+                                <ActivityCard
+                                  key={item.id || idx}
+                                  item={item}
+                                  tripCurrency={tripCurrency}
+                                  isFavorited={isFav}
+                                  onToggleFavorite={() => handleToggleFavorite(item)}
+                                  onMoveUp={idx > 0 && !selectedTrip.isPrePlanned ? () => handleMoveActivity(idx, 'up') : null}
+                                  onMoveDown={idx < activeDayList.length - 1 && !selectedTrip.isPrePlanned ? () => handleMoveActivity(idx, 'down') : null}
+                                />
+                              );
+                            });
+                          })()}
                         </div>
                       )
                     )}
@@ -2683,6 +2796,84 @@ export default function DashboardStub() {
           >
             <span className="text-xs font-bold tracking-wide">{toast.message}</span>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showWeatherPopup && selectedTrip && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md rounded-3xl border shadow-2xl overflow-hidden flex flex-col"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+            >
+              <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-secondary)' }}>
+                <div className="flex items-center space-x-2">
+                  <CloudSun className="h-5 w-5 text-rose-500" />
+                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-[var(--text-primary)]">Weather Forecast</h3>
+                </div>
+                <button 
+                  onClick={() => setShowWeatherPopup(false)}
+                  className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-450 hover:text-rose-500 transition cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6 text-left overflow-y-auto">
+                <div className="text-center pb-2">
+                  <h4 className="text-lg font-black text-[var(--text-primary)]">{selectedTrip.destination}</h4>
+                  <p className="text-xs text-[var(--text-secondary)]">3-Day Trip Outlook</p>
+                </div>
+
+                <div className="space-y-4">
+                  {get3DayForecast(selectedTrip.destination, selectedTrip.startDate).map((dayForecast, idx) => {
+                    const WeatherIcon = dayForecast.condition === 'Sunny' ? Sun : dayForecast.condition === 'Cloudy' ? Cloud : dayForecast.condition === 'Rainy' ? CloudRain : dayForecast.condition === 'Snowy' ? Snowflake : Wind;
+                    const dateFormatted = dayForecast.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                    
+                    return (
+                      <div 
+                        key={idx} 
+                        className="p-4 rounded-2xl border flex items-center justify-between bg-[var(--bg-tertiary)] border-[var(--border-primary)] shadow-sm"
+                      >
+                        <div className="space-y-1">
+                          <p className="text-xs font-black text-[var(--text-primary)]">{dateFormatted}</p>
+                          <p className="text-[11px] text-[var(--text-secondary)] italic">{dayForecast.desc}</p>
+                        </div>
+                        <div className="flex items-center space-x-3.5">
+                          <div className="text-right">
+                            <p className="text-base font-black text-[var(--text-primary)]">{dayForecast.temp}°C</p>
+                            <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">{dayForecast.condition}</p>
+                          </div>
+                          <div className="p-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] flex items-center justify-center">
+                            <WeatherIcon className={`h-5 w-5 ${dayForecast.condition === 'Sunny' ? 'text-amber-500' : dayForecast.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Additional metrics box */}
+                <div className="grid grid-cols-3 gap-3 pt-2 text-center">
+                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                    <p className="text-[9px] uppercase font-bold text-slate-400">Humidity</p>
+                    <p className="text-xs font-black text-[var(--text-primary)]">65%</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                    <p className="text-[9px] uppercase font-bold text-slate-400">Wind</p>
+                    <p className="text-xs font-black text-[var(--text-primary)]">14 km/h</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                    <p className="text-[9px] uppercase font-bold text-slate-400">UV Index</p>
+                    <p className="text-xs font-black text-[var(--text-primary)]">4 Mod</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
       <Footer />

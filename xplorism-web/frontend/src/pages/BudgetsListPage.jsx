@@ -146,7 +146,7 @@ export default function BudgetsListPage() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
-            <div className="h-10 w-10 border-4 border-slate-205 border-t-rose-550 rounded-full animate-spin" />
+            <div className="h-10 w-10 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
             <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{t('aggregating_budgets')}</p>
           </div>
         ) : tripsWithBudgets.length === 0 ? (
@@ -182,10 +182,8 @@ export default function BudgetsListPage() {
                 <div
                   key={trip.id}
                   onClick={() => navigate(`/trips/${trip.id}/budget`)}
-                  className="group relative rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl"
+                  className="group relative rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl hover:border-rose-500"
                   style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--rose-500)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-primary)'; }}
                 >
                   {/* Trip Cover Image (Flush Top) */}
                   <div className="relative h-44 overflow-hidden">

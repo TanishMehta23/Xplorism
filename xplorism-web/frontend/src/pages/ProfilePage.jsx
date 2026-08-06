@@ -1054,14 +1054,16 @@ export default function ProfilePage() {
 
         </div>
 
-        {/* TRAVEL MAP & HISTORY SECTION */}
+      </div>
+
+      {/* TRAVEL MAP & HISTORY SECTION */}
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
           {/* Interactive World Map */}
           <div className="rounded-3xl border shadow-md p-6 md:p-8 flex flex-col justify-between"
                style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
             <div>
               <h3 className="text-xl font-black flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
-                <Globe className="h-5 w-5 text-blue-505" />
+                <Globe className="h-5 w-5 text-blue-500" />
                 <span>Interactive Travel Map</span>
               </h3>
               <p className="text-xs mb-6" style={{ color: 'var(--text-tertiary)' }}>Visual route map connecting your trips to your home base.</p>
@@ -1105,7 +1107,7 @@ export default function ProfilePage() {
                 };
 
                 return (
-                  <svg viewBox="0 0 1000 500" className="w-full h-auto bg-slate-950 rounded-2xl border border-slate-800 shadow-inner relative overflow-hidden">
+                  <svg viewBox="0 0 1000 500" className="w-full h-auto bg-slate-955 rounded-2xl border border-slate-800 shadow-inner relative overflow-hidden">
                     <defs>
                       <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                         <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
@@ -1190,7 +1192,7 @@ export default function ProfilePage() {
                 </div>
                 <button
                   onClick={() => setShowLogPastModal(true)}
-                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-indigo-750 active:scale-95 shadow-md shrink-0"
+                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-indigo-700 active:scale-95 shadow-md shrink-0"
                   style={{ backgroundColor: '#4f46e5' }}
                 >
                   <Plus className="h-4 w-4" />
@@ -1201,7 +1203,7 @@ export default function ProfilePage() {
               <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                 {travelHistory.length === 0 ? (
                   <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-8 text-center dark:bg-indigo-950/10 dark:border-indigo-900/30">
-                    <Compass className="h-8 w-8 text-indigo-350 mx-auto mb-3" />
+                    <Compass className="h-8 w-8 text-indigo-300 mx-auto mb-3" />
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No past trips logged yet</p>
                     <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Add a past trip to map your adventures.</p>
                   </div>
@@ -1215,7 +1217,7 @@ export default function ProfilePage() {
                         onMouseLeave={() => setHoveredPastTripId(null)}
                         className={`rounded-2xl border p-4 relative transition-all duration-200 group flex flex-col justify-between ${
                           isHovered 
-                            ? 'border-rose-400 bg-rose-50/10 shadow-md' 
+                            ? 'border-rose-450 bg-rose-50/10 shadow-md' 
                             : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40'
                         }`}
                       >
@@ -1229,7 +1231,7 @@ export default function ProfilePage() {
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                        <div className="flex items-center space-x-1 text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-0.5 rounded-full w-fit mb-2 mt-1">
+                        <div className="flex items-center space-x-1 text-[9px] font-bold text-indigo-650 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-0.5 rounded-full w-fit mb-2 mt-1">
                           <Calendar className="h-3 w-3" />
                           <span>{trip.dates}</span>
                         </div>
@@ -1247,7 +1249,6 @@ export default function ProfilePage() {
 
         {/* CO-TRAVELERS & EMERGENCY GRID */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
-          
           {/* Co-Travelers & Family Section */}
           <div className="rounded-3xl border shadow-md p-6 md:p-8"
                style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
@@ -1280,18 +1281,18 @@ export default function ProfilePage() {
                 {coTravelers.map((traveler) => (
                   <div key={traveler.id} className="rounded-2xl border p-4 relative flex items-center space-x-3 bg-slate-50/50 dark:bg-slate-900/40"
                        style={{ borderColor: 'var(--border-primary)' }}>
-                    <div className="h-10 w-10 rounded-full bg-teal-500/10 text-teal-655 flex items-center justify-center font-extrabold text-sm uppercase">
+                    <div className="h-10 w-10 rounded-full bg-teal-500/10 text-teal-600 flex items-center justify-center font-extrabold text-sm uppercase">
                       {traveler.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0 pr-6">
                       <h4 className="text-xs font-black truncate" style={{ color: 'var(--text-primary)' }}>{traveler.name}</h4>
-                      <p className="text-[10px] font-bold text-teal-605">{traveler.relation}</p>
+                      <p className="text-[10px] font-bold text-teal-600">{traveler.relation}</p>
                       <p className="text-[9px] truncate" style={{ color: 'var(--text-tertiary)' }}>{traveler.email}</p>
                     </div>
                     <button
                       onClick={() => handleRemoveCompanion(traveler.id)}
-                      className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer absolute top-3 right-3"
-                      title="Remove Companion"
+                      className="p-1 rounded-full hover:bg-rose-500/10 text-slate-450 hover:text-rose-500 transition cursor-pointer absolute top-4 right-4"
+                      title="Remove companion"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -1312,70 +1313,72 @@ export default function ProfilePage() {
               <p className="text-xs mb-6" style={{ color: 'var(--text-tertiary)' }}>Keep emergency contact info and documents accessible.</p>
 
               <form onSubmit={handleSaveEmergencyContact} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Contact Name</label>
-                    <input
-                      type="text"
-                      value={emergencyContact.name}
-                      onChange={(e) => setEmergencyContact({ ...emergencyContact, name: e.target.value })}
-                      placeholder="Jane Doe"
-                      className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
-                    />
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Contact Name</label>
+                      <input
+                        type="text"
+                        value={emergencyContact.name}
+                        onChange={(e) => setEmergencyContact({ ...emergencyContact, name: e.target.value })}
+                        placeholder="Jane Doe"
+                        className="w-full px-4 py-2.5 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                        style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Relationship</label>
+                      <input
+                        type="text"
+                        value={emergencyContact.relation}
+                        onChange={(e) => setEmergencyContact({ ...emergencyContact, relation: e.target.value })}
+                        placeholder="Spouse / Parent"
+                        className="w-full px-4 py-2.5 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                        style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Relationship</label>
-                    <input
-                      type="text"
-                      value={emergencyContact.relation}
-                      onChange={(e) => setEmergencyContact({ ...emergencyContact, relation: e.target.value })}
-                      placeholder="Spouse / Parent"
-                      className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
-                    />
-                  </div>
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Phone Number</label>
+                      <input
+                        type="text"
+                        value={emergencyContact.phone}
+                        onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
+                        placeholder="+91 9999999999"
+                        className="w-full px-4 py-2.5 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                        style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                      />
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Phone Number</label>
-                    <input
-                      type="text"
-                      value={emergencyContact.phone}
-                      onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
-                      placeholder="+91 98765 43210"
-                      className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Blood Group</label>
-                    <select
-                      value={emergencyContact.bloodGroup}
-                      onChange={(e) => setEmergencyContact({ ...emergencyContact, bloodGroup: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
-                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
-                    >
-                      <option value="">Select Group</option>
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
-                    </select>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Blood Group</label>
+                      <select
+                        value={emergencyContact.bloodGroup}
+                        onChange={(e) => setEmergencyContact({ ...emergencyContact, bloodGroup: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                        style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                      >
+                        <option value="">Select Group</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-2">
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl text-white text-xs font-bold transition hover:bg-rose-700 active:scale-95 shadow-md cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl text-white text-xs font-bold transition hover:bg-rose-700 active:scale-95 shadow-md cursor-pointer"
                     style={{ backgroundColor: '#e11d48' }}
                   >
                     Save Contact Info
@@ -1384,17 +1387,17 @@ export default function ProfilePage() {
               </form>
 
               {/* Vault Documents quick access panel */}
-              <div className="pt-6 border-t mt-4" style={{ borderColor: 'var(--border-secondary)' }}>
+              <div className="pt-6 border-t mt-6" style={{ borderColor: 'var(--border-secondary)' }}>
                 <h4 className="text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5 mb-3" style={{ color: 'var(--text-secondary)' }}>
                   <FileText className="h-4 w-4 text-rose-500" />
                   <span>Linked Vault Documents</span>
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
-                  <a href="/vault" className="flex items-center space-x-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/40 hover:bg-rose-500/10 border border-slate-200/40 dark:border-slate-800 transition">
+                  <a href="/vault" className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 hover:bg-rose-500/10 border border-slate-200/40 dark:border-slate-800 transition">
                     <FileText className="h-3.5 w-3.5 text-blue-500" />
                     <span className="truncate" style={{ color: 'var(--text-secondary)' }}>Passport Scan</span>
                   </a>
-                  <a href="/vault" className="flex items-center space-x-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/40 hover:bg-rose-500/10 border border-slate-200/40 dark:border-slate-800 transition">
+                  <a href="/vault" className="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 hover:bg-rose-500/10 border border-slate-200/40 dark:border-slate-800 transition">
                     <FileText className="h-3.5 w-3.5 text-emerald-500" />
                     <span className="truncate" style={{ color: 'var(--text-secondary)' }}>Travel Insurance</span>
                   </a>
@@ -1404,9 +1407,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-
-      </div>
-
       </main>
 
       {/* OTP Verification Modal (For Password Changes) */}

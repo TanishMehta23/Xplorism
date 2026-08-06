@@ -107,9 +107,16 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+<<<<<<< Updated upstream
 -- Alter documents table for Secure Vault support
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS encrypted_file_key TEXT;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS iv TEXT;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS auth_tag TEXT;
 ALTER TABLE documents ALTER COLUMN file_content DROP NOT NULL;
+=======
+-- Alter users table to support profile_photo, preferences, and travel_history
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS travel_history JSONB DEFAULT '[]';
+>>>>>>> Stashed changes
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   User, Mail, Calendar, Compass, Edit2, Key, CheckCircle, 
   AlertCircle, LogOut, Loader2, Heart, DollarSign, ArrowLeft, ShieldCheck,
-  ChevronDown
+  ChevronDown, Trash2, Plus
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
@@ -56,6 +56,12 @@ export default function ProfilePage() {
   });
 
   const [selectedThemes, setSelectedThemes] = useState(['Adventure', 'Food', 'Nature']);
+  
+  // Real Profile & Travel History States
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [travelHistory, setTravelHistory] = useState([]);
+  const [showLogPastModal, setShowLogPastModal] = useState(false);
+  const [newPastTrip, setNewPastTrip] = useState({ destination: '', dates: '', notes: '' });
 
   // Fetch Profile & Stats from Backend
   useEffect(() => {
@@ -67,6 +73,24 @@ export default function ProfilePage() {
         setStats(data.stats);
         setName(data.user.name);
         setEmail(data.user.email);
+        
+        if (data.user.profile_photo) {
+          setProfilePhoto(data.user.profile_photo);
+        }
+        if (data.user.preferences) {
+          setPreferences({
+            travelStyle: data.user.preferences.travelStyle || 'Balanced',
+            notifications: data.user.preferences.notifications !== false,
+            currency: data.user.preferences.currency || 'USD',
+            newsletter: !!data.user.preferences.newsletter
+          });
+          if (data.user.preferences.favoriteThemes) {
+            setSelectedThemes(data.user.preferences.favoriteThemes);
+          }
+        }
+        if (data.user.travel_history) {
+          setTravelHistory(data.user.travel_history);
+        }
       } catch (err) {
         console.error('Failed to load profile details:', err);
         setAccountError('Could not fetch profile information.');
@@ -91,6 +115,105 @@ export default function ProfilePage() {
     document.addEventListener('click', handleOutsideClick);
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      setAccountError('Photo must be less than 2MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Photo = reader.result;
+      setProfilePhoto(base64Photo);
+      
+      try {
+        setUpdating(true);
+        const data = await api.put('/auth/profile', {
+          name,
+          email,
+          profilePhoto: base64Photo
+        });
+        setAccountSuccess('Profile photo updated successfully!');
+      } catch (err) {
+        console.error(err);
+        setAccountError('Failed to upload profile photo.');
+      } finally {
+        setUpdating(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSavePreferences = async () => {
+    setPrefError('');
+    setPrefSuccess('');
+    try {
+      const data = await api.put('/auth/profile', {
+        name,
+        email,
+        preferences: {
+          ...preferences,
+          favoriteThemes: selectedThemes
+        }
+      });
+      setProfile(prev => ({ ...prev, preferences: data.user.preferences }));
+      setPrefSuccess('Preferences saved successfully!');
+    } catch (err) {
+      console.error(err);
+      setPrefError('Failed to save preferences.');
+    }
+  };
+
+  const handleAddPastTrip = async (e) => {
+    e.preventDefault();
+    if (!newPastTrip.destination || !newPastTrip.dates) {
+      alert('Please fill in destination and dates.');
+      return;
+    }
+    const updatedHistory = [
+      ...travelHistory,
+      {
+        id: Date.now().toString(),
+        destination: newPastTrip.destination,
+        dates: newPastTrip.dates,
+        notes: newPastTrip.notes
+      }
+    ];
+    setTravelHistory(updatedHistory);
+    try {
+      await api.put('/auth/profile', {
+        name,
+        email,
+        travelHistory: updatedHistory
+      });
+      setNewPastTrip({ destination: '', dates: '', notes: '' });
+      setShowLogPastModal(false);
+      setAccountSuccess('Travel history updated!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save travel history.');
+    }
+  };
+
+  const handleRemovePastTrip = async (id) => {
+    if (!window.confirm('Remove this past trip from history?')) return;
+    const updatedHistory = travelHistory.filter(t => t.id !== id);
+    setTravelHistory(updatedHistory);
+    try {
+      await api.put('/auth/profile', {
+        name,
+        email,
+        travelHistory: updatedHistory
+      });
+      setAccountSuccess('Past trip removed from history.');
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -248,13 +371,24 @@ export default function ProfilePage() {
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-rose-500" />
 
               {/* Avatar circle */}
-              <div className="mx-auto w-24 h-24 rounded-full flex items-center justify-center text-3xl font-extrabold shadow-inner mb-4 mt-2 select-none border-4"
+              <div className="relative mx-auto w-24 h-24 rounded-full flex items-center justify-center text-3xl font-extrabold shadow-inner mb-4 mt-2 select-none border-4 group overflow-hidden"
                    style={{ 
                      backgroundColor: 'var(--bg-tertiary)', 
                      color: 'var(--text-primary)', 
-                     borderColor: 'var(--border-secondary)' 
+                     borderColor: 'var(--border-secondary)'
                    }}>
-                {name ? name.charAt(0).toUpperCase() : 'T'}
+                {profilePhoto ? (
+                  <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span>{name ? name.charAt(0).toUpperCase() : 'T'}</span>
+                )}
+                
+                {/* Upload Overlay */}
+                <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity duration-200">
+                  <Edit2 className="h-4 w-4 text-white" />
+                  <span className="text-[8px] text-white font-bold mt-1 uppercase tracking-wider">Change</span>
+                  <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                </label>
               </div>
 
               <h2 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>{name}</h2>
@@ -781,14 +915,7 @@ export default function ProfilePage() {
 
                 <div className="flex justify-end pt-4 mt-auto">
                   <button
-                    onClick={() => {
-                      setPrefError('');
-                      setPrefSuccess('');
-                      // Simulate save action
-                      setTimeout(() => {
-                        setPrefSuccess('Preferences saved successfully!');
-                      }, 300);
-                    }}
+                    onClick={handleSavePreferences}
                     className="px-6 py-3 rounded-full text-white font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center active:scale-95 shadow-md"
                     style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
@@ -803,6 +930,65 @@ export default function ProfilePage() {
             </div>
 
           </div>
+
+        </div>
+
+        {/* TRAVEL HISTORY SECTION */}
+        <div className="mt-12 rounded-3xl border shadow-md p-6 md:p-8 w-full"
+             style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h3 className="text-xl font-black flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
+                <Compass className="h-5 w-5 text-indigo-500" />
+                <span>Travel History & Logs</span>
+              </h3>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Keep track of your past adventures and destinations.</p>
+            </div>
+            <button
+              onClick={() => setShowLogPastModal(true)}
+              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-indigo-750 active:scale-95 shadow-md self-start sm:self-auto"
+              style={{ backgroundColor: '#4f46e5' }}
+            >
+              <Plus className="h-4 w-4" />
+              <span>Log Past Trip</span>
+            </button>
+          </div>
+
+          {travelHistory.length === 0 ? (
+            <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-8 text-center dark:bg-indigo-950/10 dark:border-indigo-900/30">
+              <Compass className="h-8 w-8 text-indigo-300 mx-auto mb-3" />
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No past trips logged yet</p>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Click "Log Past Trip" to start building your personal travel map.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {travelHistory.map((trip) => (
+                <div key={trip.id} className="rounded-2xl border p-5 relative shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between"
+                     style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2 pr-6">
+                      <h4 className="text-sm font-bold truncate pr-6" style={{ color: 'var(--text-primary)' }}>{trip.destination}</h4>
+                      <button
+                        onClick={() => handleRemovePastTrip(trip.id)}
+                        className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0 absolute top-4 right-4"
+                        title="Remove past trip"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex items-center space-x-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/20 px-2 py-0.5 rounded-full w-fit mb-3">
+                      <Calendar className="h-3 w-3" />
+                      <span>{trip.dates}</span>
+                    </div>
+                    {trip.notes && (
+                      <p className="text-xs leading-relaxed line-clamp-3" style={{ color: 'var(--text-secondary)' }}>{trip.notes}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
         </div>
 
@@ -919,6 +1105,84 @@ export default function ProfilePage() {
                 Log Out
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log Past Trip Modal */}
+      {showLogPastModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+          <div className="rounded-3xl border p-6 max-w-md w-full shadow-2xl relative" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+            
+            <div className="flex items-center space-x-3 mb-4 text-indigo-500">
+              <div className="p-2 bg-indigo-500/10 rounded-xl">
+                <Compass className="h-6 w-6 text-indigo-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Log a Past Trip</h3>
+                <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Add a memory to your profile history</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAddPastTrip} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>Destination</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Kyoto, Japan"
+                  value={newPastTrip.destination}
+                  onChange={(e) => setNewPastTrip({ ...newPastTrip, destination: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>Dates / Season</label>
+                <input
+                  type="text"
+                  placeholder="e.g. October 2024 / Spring 2025"
+                  value={newPastTrip.dates}
+                  onChange={(e) => setNewPastTrip({ ...newPastTrip, dates: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>Memories & Notes</label>
+                <textarea
+                  placeholder="What was the highlight? Best food, sights, etc."
+                  value={newPastTrip.notes}
+                  onChange={(e) => setNewPastTrip({ ...newPastTrip, notes: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowLogPastModal(false)}
+                  className="px-4 py-2 rounded-xl border text-xs font-bold transition cursor-pointer shadow-sm active:scale-95"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 flex items-center space-x-1.5"
+                  style={{ backgroundColor: '#4f46e5' }}
+                >
+                  <span>Save Log</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

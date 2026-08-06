@@ -335,6 +335,10 @@ export default function TrackerPage() {
       const departureMarker = L.marker(departurePos, { icon: createAirportIcon(latestFlight.departure.code) }).addTo(map);
       const destinationMarker = L.marker(destinationPos, { icon: createAirportIcon(latestFlight.destination.code) }).addTo(map);
       routeLayersRef.current.push(departureMarker, destinationMarker);
+
+      // Fit bounds to show the entire flight path
+      const bounds = L.latLngBounds([departurePos, currentPos, destinationPos]);
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 6 });
     }
   }, [selectedFlight, flights, leafletLoaded]);
 

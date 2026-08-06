@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,7 +7,7 @@ import {
   LogOut, Plus, Calendar, Compass as TripIcon,
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
-  Maximize2, Minimize2, CheckSquare
+  Maximize2, Minimize2, CheckSquare, Share2
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
@@ -398,9 +399,17 @@ export default function DashboardStub() {
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
 
-  // Packing List State
   const [packingList, setPackingList] = useState([]);
   const [packingLoading, setPackingLoading] = useState(false);
+
+  // Local Events State
+  const [localEvents, setLocalEvents] = useState([]);
+  const [localEventsLoading, setLocalEventsLoading] = useState(false);
+
+  // Collaboration State
+  const socketRef = useRef(null);
+  const [collaborators, setCollaborators] = useState([]);
+  const [presenceList, setPresenceList] = useState({});
 
   const handleCarouselScroll = (e) => {
     const el = e.target;
@@ -512,6 +521,97 @@ export default function DashboardStub() {
     }
   };
 
+  const fetchLocalEvents = async (tripId) => {
+    if (!tripId) return;
+    setLocalEventsLoading(true);
+    try {
+      const data = await api.get(`/trips/${tripId}/events`);
+      setLocalEvents(data);
+    } catch (err) {
+      console.error('Failed to fetch local events:', err);
+    } finally {
+      setLocalEventsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTrip && activeDayTab === 'events') {
+      fetchLocalEvents(selectedTrip.id);
+    }
+  }, [selectedTrip, activeDayTab]);
+
+  // Socket.io Client Connection Effect
+  useEffect(() => {
+    if (!selectedTrip || selectedTrip.isPrePlanned) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      setCollaborators([]);
+      return;
+    }
+
+    // Connect to Socket.io backend
+    const socket = io('http://localhost:5000');
+    socketRef.current = socket;
+
+    // Join room
+    socket.emit('join-trip-room', { tripId: selectedTrip.id, userName: user.name });
+
+    // Listeners
+    socket.on('collaborators-list', (list) => {
+      setCollaborators(list.filter(name => name !== user.name));
+    });
+
+    socket.on('collaborator-joined', (name) => {
+      showToast(`${name} joined collaborative editing session!`, 'info');
+    });
+
+    socket.on('collaborator-left', (name) => {
+      showToast(`${name} left collaborative editing session.`, 'info');
+    });
+
+    socket.on('budget-updated', () => {
+      fetchBudget(selectedTrip.id);
+      showToast('Collaborator updated trip budget.', 'info');
+    });
+
+    socket.on('packing-updated', ({ data }) => {
+      setPackingList(data);
+      setSelectedTrip(prev => {
+        if (prev && prev.id === selectedTrip.id) {
+          return { ...prev, packingList: data };
+        }
+        return prev;
+      });
+      showToast('Collaborator updated packing list.', 'info');
+    });
+
+    socket.on('presence-updated', ({ userName, activeTab }) => {
+      setPresenceList(prev => ({
+        ...prev,
+        [userName]: activeTab
+      }));
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+      setCollaborators([]);
+    };
+  }, [selectedTrip]);
+
+  // Sync user presence tab selection
+  useEffect(() => {
+    if (socketRef.current && selectedTrip) {
+      socketRef.current.emit('presence-changed', {
+        tripId: selectedTrip.id,
+        userName: user.name,
+        activeTab: activeDayTab
+      });
+    }
+  }, [activeDayTab, selectedTrip]);
+
   // Packing List functions
   const fetchPackingList = async (tripId) => {
     if (!tripId) return;
@@ -614,6 +714,13 @@ export default function DashboardStub() {
     if (selectedTrip && !selectedTrip.isPrePlanned) {
       try {
         await api.put(`/trips/${selectedTrip.id}/packing`, { packingList: updatedList });
+        if (socketRef.current) {
+          socketRef.current.emit('packing-changed', {
+            tripId: selectedTrip.id,
+            action: 'update',
+            data: updatedList
+          });
+        }
       } catch (err) {
         console.error('Failed to update packing checklist:', err);
       }
@@ -759,6 +866,9 @@ export default function DashboardStub() {
       setExpenseForm({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '' });
       setShowExpenseForm(false);
       fetchBudget(tripId);
+      if (socketRef.current) {
+        socketRef.current.emit('budget-changed', { tripId, action: 'create' });
+      }
     } catch (err) {
       console.error('Failed to add expense:', err);
       showToast('Failed to add expense.', 'error');
@@ -780,6 +890,9 @@ export default function DashboardStub() {
       setEditingExpense(null);
       setShowExpenseForm(false);
       fetchBudget(tripId);
+      if (socketRef.current) {
+        socketRef.current.emit('budget-changed', { tripId, action: 'update' });
+      }
     } catch (err) {
       console.error('Failed to update expense:', err);
       showToast('Failed to update expense.', 'error');
@@ -792,6 +905,9 @@ export default function DashboardStub() {
       await api.delete(`/trips/${tripId}/expenses/${expenseId}`);
       showToast('Expense deleted.', 'success');
       fetchBudget(tripId);
+      if (socketRef.current) {
+        socketRef.current.emit('budget-changed', { tripId, action: 'delete' });
+      }
     } catch (err) {
       console.error('Failed to delete expense:', err);
       showToast('Failed to delete expense.', 'error');
@@ -1273,6 +1389,99 @@ export default function DashboardStub() {
     }
   };
 
+  const exportTripToICS = (trip) => {
+    try {
+      let icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Xplorism//Itinerary Export//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH'
+      ];
+
+      const formatICSDate = (date, hrs, mins) => {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const hh = String(hrs).padStart(2, '0');
+        const mi = String(mins).padStart(2, '0');
+        return `${yyyy}${mm}${dd}T${hh}${mi}00`;
+      };
+
+      const itineraries = trip.itineraries || [];
+      const tripStartDate = new Date(trip.startDate);
+
+      itineraries.forEach((act, idx) => {
+        const dayNum = parseInt(act.day) || 1;
+        const eventDate = new Date(tripStartDate);
+        eventDate.setDate(eventDate.getDate() + (dayNum - 1));
+
+        let hours = 9;
+        let minutes = 0;
+        const timeStr = act.time || '';
+        const cleanTime = timeStr.toLowerCase().trim();
+        const match = cleanTime.match(/(\d+):(\d+)\s*(am|pm)/);
+        if (match) {
+          hours = parseInt(match[1]);
+          minutes = parseInt(match[2]);
+          const isPm = match[3] === 'pm';
+          if (isPm && hours < 12) hours += 12;
+          if (!isPm && hours === 12) hours = 0;
+        } else {
+          if (cleanTime.includes('morning')) { hours = 9; }
+          else if (cleanTime.includes('afternoon')) { hours = 14; }
+          else if (cleanTime.includes('evening')) { hours = 18; }
+          else if (cleanTime.includes('night')) { hours = 21; }
+        }
+
+        const dtStart = formatICSDate(eventDate, hours, minutes);
+        const endMinutes = (minutes + 30) % 60;
+        const endHours = hours + Math.floor((minutes + 30) / 60) + 1;
+        const dtEnd = formatICSDate(eventDate, endHours % 24, endMinutes);
+
+        const escapeText = (str) => (str || '').replace(/[,;\\]/g, '\\$&').replace(/\n/g, '\\n');
+
+        icsContent.push('BEGIN:VEVENT');
+        icsContent.push(`UID:trip-${trip.id}-day-${dayNum}-${idx}@xplorism.com`);
+        icsContent.push(`DTSTAMP:${formatICSDate(new Date(), 12, 0)}Z`);
+        icsContent.push(`DTSTART;TZID=UTC:${dtStart}`);
+        icsContent.push(`DTEND;TZID=UTC:${dtEnd}`);
+        icsContent.push(`SUMMARY:${escapeText(act.activity)}`);
+        if (act.location) {
+          icsContent.push(`LOCATION:${escapeText(act.location)}`);
+        }
+        icsContent.push(`DESCRIPTION:Day ${dayNum} - ${escapeText(act.activity)}${act.estimatedCost ? ` (Estimated Cost: ${act.estimatedCost})` : ''}`);
+        icsContent.push('END:VEVENT');
+      });
+
+      icsContent.push('END:VCALENDAR');
+      
+      const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${trip.destination.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_itinerary.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Calendar export (.ics) downloaded!', 'success');
+    } catch (err) {
+      console.error('Failed to export calendar', err);
+      showToast('Failed to export calendar', 'error');
+    }
+  };
+
+  const shareTripLink = (trip) => {
+    const shareUrl = `${window.location.origin}/shared-trip/${trip.id}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      showToast('Shareable link copied to clipboard!', 'success');
+    }).catch(err => {
+      console.error('Could not copy link', err);
+      alert(`Here is your shareable link:\n${shareUrl}`);
+    });
+  };
+
+
   const getTripDaysCount = (start, end) => {
     const diff = Math.abs(new Date(end) - new Date(start));
     return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
@@ -1702,6 +1911,24 @@ export default function DashboardStub() {
                 <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
                   <button
                     disabled={isSavingTrip || isExporting}
+                    onClick={() => shareTripLink(selectedTrip)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
+                    title="Copy shareable link"
+                  >
+                    <Share2 className="h-3.5 w-3.5 text-rose-500" />
+                    <span>Share Link</span>
+                  </button>
+                  <button
+                    disabled={isSavingTrip || isExporting}
+                    onClick={() => exportTripToICS(selectedTrip)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
+                    title="Export calendar file (.ics)"
+                  >
+                    <Calendar className="h-3.5 w-3.5 text-rose-500" />
+                    <span>Export Calendar</span>
+                  </button>
+                  <button
+                    disabled={isSavingTrip || isExporting}
                     onClick={() => exportTripToPDF(selectedTrip)}
                     className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-355 hover:bg-slate-55 text-slate-705 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer bg-white shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed h-[36px]"
                   >
@@ -1760,6 +1987,34 @@ export default function DashboardStub() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
+                    {/* Real-time Collaboration Active Avatars */}
+                    {!selectedTrip.isPrePlanned && (
+                      <div className="flex items-center space-x-2 mr-2 bg-indigo-50/50 border border-indigo-100/50 px-3 py-1.5 rounded-full shadow-sm">
+                        <div className="flex -space-x-2 overflow-hidden">
+                          <div
+                            className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-indigo-650 text-white text-[10px] font-black flex items-center justify-center select-none shadow-sm cursor-help"
+                            title={`You (${user.name}) - Active`}
+                          >
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                          {collaborators.map((name, idx) => (
+                            <div
+                              key={idx}
+                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-rose-500 text-white text-[10px] font-black flex items-center justify-center select-none shadow-sm cursor-help animate-pulse"
+                              title={`${name} - Editing (Tab: ${presenceList[name] || 'Itinerary'})`}
+                            >
+                              {name.charAt(0).toUpperCase()}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex flex-col text-left shrink-0">
+                          <span className="text-[9px] font-black text-indigo-755 uppercase tracking-wider leading-none">Collaboration</span>
+                          <span className="text-[8px] font-bold text-slate-500 mt-0.5 leading-none">
+                            {collaborators.length > 0 ? `${collaborators.length + 1} online` : 'Only you'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     {selectedTrip.isPrePlanned && (
                       <>
                         <button
@@ -1856,12 +2111,19 @@ export default function DashboardStub() {
                     <CheckSquare className="h-3.5 w-3.5" />
                     <span>Packing List</span>
                   </button>
-                  <button
+                   <button
                     onClick={() => setActiveDayTab('favorites')}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'favorites' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-rose-200 bg-white'}`}
                   >
                     <Heart className="h-3.5 w-3.5" />
                     <span>Favorites</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveDayTab('events')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 ${activeDayTab === 'events' ? 'bg-indigo-650 text-white shadow-sm' : 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 border border-indigo-200 bg-white'}`}
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>Local Events</span>
                   </button>
                 </div>
 
@@ -2099,13 +2361,85 @@ export default function DashboardStub() {
                           </div>
                         )}
                       </div>
+                    ) : activeDayTab === 'events' ? (
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                            <Calendar className="h-4 w-4 mr-1 text-indigo-500" />
+                            <span>Local Events Calendar ({localEvents.length})</span>
+                          </span>
+                          {localEvents.length > 0 && (
+                            <span className="bg-indigo-50 text-indigo-605 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              {localEvents.length}
+                            </span>
+                          )}
+                        </div>
+                        {localEventsLoading ? (
+                          <div className="flex flex-col items-center justify-center py-12 space-y-2">
+                            <div className="h-6 w-6 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+                            <span className="text-[10px] font-bold text-slate-400">Discovering events...</span>
+                          </div>
+                        ) : localEvents.length === 0 ? (
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-8 text-center">
+                            <Calendar className="h-8 w-8 text-indigo-300 mx-auto mb-3 animate-bounce" />
+                            <p className="text-sm text-slate-505">No events found for these dates</p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {localEvents.map((event, idx) => {
+                              const isFav = favorites.some(fav => fav.name.toLowerCase().trim() === event.title.toLowerCase().trim());
+                              return (
+                                <div key={idx} className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between relative group">
+                                  <div>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h4 className="text-xs font-bold text-slate-800 mb-1">{event.title}</h4>
+                                      <button
+                                        onClick={() => handleToggleFavorite({
+                                          name: event.title,
+                                          type: 'event',
+                                          description: event.description,
+                                          location: event.location,
+                                          category: event.category
+                                        })}
+                                        className="p-1 rounded-full hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0"
+                                        title="Toggle Favorite"
+                                      >
+                                        <Heart className={`h-3.5 w-3.5 transition-colors ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
+                                      </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 mb-2">
+                                      <span className="inline-flex items-center text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                        <Calendar className="h-2.5 w-2.5 mr-0.5 text-slate-400" />
+                                        {event.date}
+                                      </span>
+                                      <span className="inline-flex items-center text-[9px] font-medium text-indigo-650 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                        {event.category}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 leading-relaxed line-clamp-3">{event.description}</p>
+                                  </div>
+                                  {event.location && (
+                                    <div className="flex items-center space-x-1 mt-3 pt-2.5 border-t border-slate-50 text-[9px] text-slate-400">
+                                      <MapPin className="h-3 w-3 text-slate-400" />
+                                      <span className="truncate">{event.location}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       getDayItineraries(selectedTrip).length === 0 ? (
                         <p className="text-slate-400 text-sm text-center py-8">No activities scheduled for this day.</p>
                       ) : (
                         <div className="space-y-6">
                           {getDayItineraries(selectedTrip).map((item, idx) => {
-                            const isFav = favorites.some(fav => fav.name.toLowerCase().trim() === item.location.toLowerCase().trim());
+                            const isFav = favorites.some(fav => 
+                              fav.name.toLowerCase().trim() === (item.location || '').toLowerCase().trim() ||
+                              fav.name.toLowerCase().trim() === (item.activity || '').toLowerCase().trim()
+                            );
                             return (
                               <ActivityCard 
                                 key={item.id || idx} 
@@ -2124,7 +2458,7 @@ export default function DashboardStub() {
                   <div className="w-full md:w-5/12 bg-slate-50/50 p-4 flex flex-col h-[280px] md:h-auto border-t md:border-t-0 border-slate-100">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center">
                       <MapPin className="h-3.5 w-3.5 mr-1 text-rose-500" />
-                      <span>{activeDayTab === 'nearby' ? 'Nearby Attractions (100 km)' : `Day ${activeDayTab} Landmark Route`}</span>
+                      <span>{activeDayTab === 'nearby' ? 'Nearby Attractions (100 km)' : activeDayTab === 'events' ? 'Local Events Route Map' : activeDayTab === 'budget' ? 'Budget Area Map' : activeDayTab === 'packing' ? 'Packing Area Map' : activeDayTab === 'favorites' ? 'Saved Favorites Map' : `Day ${activeDayTab} Landmark Route`}</span>
                     </span>
                     <div className="flex-1 bg-slate-200 rounded-2xl overflow-hidden relative border border-slate-200 shadow-sm">
                       {isLeafletLoaded ? (

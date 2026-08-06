@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< Updated upstream
 import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, ChevronDown, FolderLock, Users } from 'lucide-react';
+=======
+import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell } from 'lucide-react';
+>>>>>>> Stashed changes
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '../services/api';
 
 export default function Navbar({ activeTab }) {
   const { user, logout } = useAuth();
@@ -14,23 +19,69 @@ export default function Navbar({ activeTab }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [emailingTripId, setEmailingTripId] = useState(null);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  useEffect(() => {
+    if (!user) return;
+    const fetchNotifications = async () => {
+      try {
+        const data = await api.get('/notifications');
+        setNotifications(data);
+        const readIds = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+        const unread = data.filter(n => !readIds.includes(n.id)).length;
+        setUnreadCount(unread);
+      } catch (err) {
+        console.error('Failed to fetch notifications', err);
+      }
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 45000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const handleNotificationsClick = () => {
+    setIsNotificationsOpen(!isNotificationsOpen);
+    setIsDropdownOpen(false);
+    if (!isNotificationsOpen) {
+      const readIds = notifications.map(n => n.id);
+      localStorage.setItem('readNotifications', JSON.stringify(readIds));
+      setUnreadCount(0);
+    }
+  };
+
+  const handleEmailReminder = async (tripId) => {
+    setEmailingTripId(tripId);
+    try {
+      await api.post('/notifications/email-reminder', { tripId });
+      alert('Trip reminder details sent to your email!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to send email reminders.');
+    } finally {
+      setEmailingTripId(null);
+    }
+  };
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (!e.target.closest('.profile-container')) {
+      if (!e.target.closest('.profile-container') && !e.target.closest('.notifications-container')) {
         setIsDropdownOpen(false);
         setIsLangOpen(false);
+        setIsNotificationsOpen(false);
       }
     };
     document.addEventListener('click', handleOutsideClick);
     return () => document.removeEventListener('click', handleOutsideClick);
-  }, []);
+  }, [notifications]);
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'T';
 
@@ -175,6 +226,73 @@ export default function Navbar({ activeTab }) {
               {t('community')}
             </button>
           </div>
+
+          {/* Notifications Dropdown Container */}
+          {user && (
+            <div className="relative notifications-container mr-2">
+              <button
+                onClick={handleNotificationsClick}
+                className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition relative cursor-pointer"
+                style={{ color: 'var(--text-secondary)' }}
+                title="Notifications"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-4 w-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {isNotificationsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-3 w-80 rounded-2xl shadow-xl p-4 z-50 border max-h-[400px] overflow-y-auto"
+                    style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+                  >
+                    <div className="flex items-center justify-between border-b pb-3 mb-3" style={{ borderColor: 'var(--border-secondary)' }}>
+                      <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>Alerts & Reminders</span>
+                      <span className="text-[9px] font-bold uppercase" style={{ color: 'var(--text-tertiary)' }}>Real-time alerts</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {notifications.length > 0 ? (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            className="p-3 rounded-xl border space-y-2 transition duration-200"
+                            style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm">
+                                {n.type === 'trip' ? '✈️' : n.type === 'packing' ? '🎒' : '🌤️'}
+                              </span>
+                              <span className="text-xs font-bold text-slate-300" style={{ color: 'var(--text-primary)' }}>{n.title}</span>
+                            </div>
+                            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{n.message}</p>
+                            <button
+                              disabled={emailingTripId === n.tripId}
+                              onClick={() => handleEmailReminder(n.tripId)}
+                              className="text-[10px] text-rose-500 hover:text-rose-600 font-bold transition flex items-center space-x-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <span>{emailingTripId === n.tripId ? 'Sending...' : '📧 Email Me Reminders'}</span>
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-6 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                          No active alerts or reminders!
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Profile Dropdown Container */}
           <div className="relative profile-container">

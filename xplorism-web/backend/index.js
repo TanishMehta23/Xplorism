@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -11,7 +13,12 @@ import budgetRoutes from './routes/budgetRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+<<<<<<< Updated upstream
 import { getNearbyPlacesFromGemini, getHotelsFromGemini, getFlightDetailsFromGemini } from './services/geminiService.js';
+=======
+import notificationRoutes from './routes/notificationRoutes.js';
+import { getNearbyPlacesFromGemini, getHotelsFromGemini } from './services/geminiService.js';
+>>>>>>> Stashed changes
 
 dotenv.config();
 
@@ -36,6 +43,7 @@ app.use('/trips', budgetRoutes);
 app.use('/favorites', favoriteRoutes);
 app.use('/documents', documentRoutes);
 app.use('/posts', postRoutes);
+app.use('/notifications', notificationRoutes);
 
 // Nearby Places Route using Gemini
 app.get('/nearby', async (req, res) => {
@@ -456,6 +464,7 @@ function getDeterministicIndex(str, max) {
   return Math.abs(hash) % max;
 }
 
+<<<<<<< Updated upstream
 const CUSTOM_RESOLVED_FLIGHTS = new Map([
   ['IGO6179', {
     airlineName: 'IndiGo',
@@ -542,11 +551,70 @@ const CUSTOM_RESOLVED_FLIGHTS = new Map([
     }
   }]
 ]);
+=======
+function getRealisticAirports(lat, lon, heading, icao24) {
+  // Convert heading to radians (0 is North, clockwise)
+  const rad = (heading * Math.PI) / 180;
+  const dx = Math.sin(rad); // East-West component
+  const dy = Math.cos(rad); // North-South component
+
+  const behindAirports = [];
+  const aheadAirports = [];
+
+  AIRPORTS.forEach(airport => {
+    const latDiff = airport.lat - lat;
+    const lonDiff = airport.lon - lon;
+    
+    // Dot product with heading vector
+    const dotProduct = (lonDiff * dx) + (latDiff * dy);
+    
+    // Distance approximation
+    const distSq = latDiff * latDiff + lonDiff * lonDiff;
+
+    const airportWithDist = { ...airport, distSq };
+
+    if (dotProduct >= 0) {
+      aheadAirports.push(airportWithDist);
+    } else {
+      behindAirports.push(airportWithDist);
+    }
+  });
+
+  // Sort by distance
+  aheadAirports.sort((a, b) => a.distSq - b.distSq);
+  behindAirports.sort((a, b) => a.distSq - b.distSq);
+
+  // Pick departure (from behind)
+  let departure = null;
+  if (behindAirports.length > 0) {
+    const idx = getDeterministicIndex(icao24 + '-dep', Math.min(3, behindAirports.length));
+    departure = behindAirports[idx];
+  } else {
+    departure = AIRPORTS[getDeterministicIndex(icao24, AIRPORTS.length)];
+  }
+
+  // Pick destination (from ahead)
+  let destination = null;
+  if (aheadAirports.length > 0) {
+    const idx = getDeterministicIndex(icao24 + '-arr', Math.min(3, aheadAirports.length));
+    destination = aheadAirports[idx];
+  } else {
+    let destIdx = getDeterministicIndex(icao24 + '-dest', AIRPORTS.length);
+    if (AIRPORTS[destIdx].code === departure.code) {
+      destIdx = (destIdx + 1) % AIRPORTS.length;
+    }
+    destination = AIRPORTS[destIdx];
+  }
+
+  return { departure, destination };
+}
+>>>>>>> Stashed changes
 
 function enrichFlight(state) {
   const icao24 = state[0];
   const callsign = (state[1] || '').trim();
   const originCountry = state[2] || 'Unknown';
+<<<<<<< Updated upstream
 
   const customKey = callsign.toUpperCase();
   if (CUSTOM_RESOLVED_FLIGHTS.has(customKey)) {
@@ -570,6 +638,11 @@ function enrichFlight(state) {
       destination: details.destination
     };
   }
+=======
+  const longitude = state[5];
+  const latitude = state[6];
+  const heading = state[10] || 0;
+>>>>>>> Stashed changes
   
   // Resolve Airline
   let airlineName = 'Private Flight';
@@ -589,14 +662,8 @@ function enrichFlight(state) {
   const aircraftIdx = getDeterministicIndex(icao24 + '-air', AIRCRAFT_TYPES.length);
   const aircraftType = AIRCRAFT_TYPES[aircraftIdx];
 
-  // Determine Airports
-  const originIdx = getDeterministicIndex(icao24, AIRPORTS.length);
-  let destIdx = getDeterministicIndex(icao24 + '-dest', AIRPORTS.length);
-  if (destIdx === originIdx) {
-    destIdx = (destIdx + 1) % AIRPORTS.length;
-  }
-  const departure = AIRPORTS[originIdx];
-  const destination = AIRPORTS[destIdx];
+  // Determine Airports Realistically
+  const { departure, destination } = getRealisticAirports(latitude, longitude, heading, icao24);
 
   return {
     icao24,
@@ -604,12 +671,12 @@ function enrichFlight(state) {
     originCountry,
     timePosition: state[3],
     lastContact: state[4],
-    longitude: state[5],
-    latitude: state[6],
+    longitude,
+    latitude,
     altitude: state[7], // raw meters
     onGround: state[8],
     velocity: state[9], // raw m/s
-    heading: state[10] || 0,
+    heading,
     verticalRate: state[11], // raw m/s
     airlineName,
     aircraftType,
@@ -876,9 +943,76 @@ async function fetchAmadeusHotels(lat, lon) {
 
 
 
+// Wrap Express app in HTTP server
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"]
+  }
+});
+
+// Real-time Collaboration WebSockets
+const activeRooms = {}; // tripId -> Set of active users [name]
+
+io.on('connection', (socket) => {
+  console.log(`Socket connected: ${socket.id}`);
+
+  // A user joins a trip room
+  socket.on('join-trip-room', ({ tripId, userName }) => {
+    socket.join(tripId);
+    socket.tripId = tripId;
+    socket.userName = userName;
+
+    if (!activeRooms[tripId]) {
+      activeRooms[tripId] = new Set();
+    }
+    activeRooms[tripId].add(userName);
+
+    console.log(`${userName} joined trip room: ${tripId}`);
+
+    // Notify room about updated active collaborators list
+    io.to(tripId).emit('collaborators-list', Array.from(activeRooms[tripId]));
+    socket.to(tripId).emit('collaborator-joined', userName);
+  });
+
+  // Forward edits to other room members
+  socket.on('itinerary-changed', ({ tripId, action, data }) => {
+    socket.to(tripId).emit('itinerary-updated', { action, data });
+  });
+
+  socket.on('budget-changed', ({ tripId, action, data }) => {
+    socket.to(tripId).emit('budget-updated', { action, data });
+  });
+
+  socket.on('packing-changed', ({ tripId, action, data }) => {
+    socket.to(tripId).emit('packing-updated', { action, data });
+  });
+
+  // Forward cursor presence / active changes
+  socket.on('presence-changed', ({ tripId, userName, activeTab }) => {
+    socket.to(tripId).emit('presence-updated', { userName, activeTab });
+  });
+
+  socket.on('disconnect', () => {
+    const { tripId, userName } = socket;
+    if (tripId && userName) {
+      if (activeRooms[tripId]) {
+        activeRooms[tripId].delete(userName);
+        if (activeRooms[tripId].size === 0) {
+          delete activeRooms[tripId];
+        }
+      }
+      io.to(tripId).emit('collaborators-list', activeRooms[tripId] ? Array.from(activeRooms[tripId]) : []);
+      socket.to(tripId).emit('collaborator-left', userName);
+    }
+    console.log(`Socket disconnected: ${socket.id}`);
+  });
+});
+
 // Initialize database and start server
 initDatabase().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
   });
 }).catch(err => {

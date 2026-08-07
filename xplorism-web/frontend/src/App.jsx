@@ -17,6 +17,8 @@ import DocumentVaultPage from './pages/DocumentVaultPage';
 import CommunityFeedPage from './pages/CommunityFeedPage';
 import NotFoundPage from './pages/NotFoundPage';
 import SharedTripPage from './pages/SharedTripPage';
+import SharedTripsWorkspace from './pages/SharedTripsWorkspace';
+import CollaborativeTripPage from './pages/CollaborativeTripPage';
 
 
 // Protected Route component
@@ -151,6 +153,24 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <CommunityFeedPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/shared-trips"
+        element={
+          <ProtectedRoute>
+            <SharedTripsWorkspace />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/trips/:id/collaborate"
+        element={
+          <ProtectedRoute>
+            <CollaborativeTripPage />
           </ProtectedRoute>
         }
       />

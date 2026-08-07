@@ -7,7 +7,8 @@ import {
   LogOut, Plus, Calendar, Compass as TripIcon,
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
-  Maximize2, Minimize2, CheckSquare, Share2, CloudSun, ChevronUp, ChevronDown
+  Maximize2, Minimize2, CheckSquare, Share2, CloudSun, ChevronUp, ChevronDown,
+  UserPlus
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
@@ -475,6 +476,26 @@ export default function DashboardStub() {
   const socketRef = useRef(null);
   const [collaborators, setCollaborators] = useState([]);
   const [presenceList, setPresenceList] = useState({});
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+
+  const handleAddCollaborator = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim() || !selectedTrip) return;
+    try {
+      setInviteLoading(true);
+      await api.post(`/trips/${selectedTrip.id}/collaborators`, { email: inviteEmail });
+      showToast('Collaborator added successfully!', 'success');
+      setInviteEmail('');
+      setShowInviteModal(false);
+    } catch (err) {
+      console.error(err);
+      showToast(err.response?.data?.message || 'Failed to add collaborator.', 'error');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
 
   const handleCarouselScroll = (e) => {
     const el = e.target;
@@ -2178,12 +2199,27 @@ export default function DashboardStub() {
                             </div>
                           ))}
                         </div>
-                        <div className="flex flex-col text-left shrink-0">
-                          <span className="text-[9px] font-black text-indigo-755 uppercase tracking-wider leading-none">Collaboration</span>
-                          <span className="text-[8px] font-bold text-slate-500 mt-0.5 leading-none">
-                            {collaborators.length > 0 ? `${collaborators.length + 1} online` : 'Only you'}
-                          </span>
-                        </div>
+                        {selectedTrip.userId === user.id ? (
+                          <button
+                            onClick={() => setShowInviteModal(true)}
+                            className="flex flex-col text-left shrink-0 hover:text-rose-500 transition cursor-pointer group/add-collab border-none bg-transparent p-0 outline-none"
+                          >
+                            <span className="text-[9px] font-black text-rose-500 uppercase tracking-wider leading-none flex items-center">
+                              <UserPlus className="h-2.5 w-2.5 mr-0.5 shrink-0" />
+                              <span>Add to Collaboration</span>
+                            </span>
+                            <span className="text-[8px] font-bold text-slate-500 mt-0.5 leading-none">
+                              {collaborators.length > 0 ? `${collaborators.length + 1} online` : 'Only you'}
+                            </span>
+                          </button>
+                        ) : (
+                          <div className="flex flex-col text-left shrink-0">
+                            <span className="text-[9px] font-black text-indigo-755 uppercase tracking-wider leading-none">Collaboration</span>
+                            <span className="text-[8px] font-bold text-slate-500 mt-0.5 leading-none">
+                              {collaborators.length > 0 ? `${collaborators.length + 1} online` : 'Only you'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                     {selectedTrip.isPrePlanned && (
@@ -2872,6 +2908,70 @@ export default function DashboardStub() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showInviteModal && selectedTrip && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm rounded-3xl border shadow-2xl p-6 relative flex flex-col text-left"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+            >
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-[var(--text-primary)] transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="flex items-center space-x-3 mb-4 text-rose-505">
+                <UserPlus className="h-6 w-6" />
+                <h3 className="text-lg font-black text-[var(--text-primary)] font-sans">Invite Collaborator</h3>
+              </div>
+
+              <p className="text-[var(--text-secondary)] text-xs mb-6 leading-relaxed">
+                Enter the registered email address of the person you want to invite to this trip.
+              </p>
+
+              <form onSubmit={handleAddCollaborator} className="space-y-4 font-sans">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">User Email</label>
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="e.g. companion@example.com"
+                    required
+                    disabled={inviteLoading}
+                    className="w-full px-3.5 py-3 rounded-xl text-sm border focus:outline-none focus:border-rose-500/40"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowInviteModal(false)}
+                    className="flex-1 py-3 rounded-xl border hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] text-xs font-bold transition cursor-pointer"
+                    style={{ borderColor: 'var(--border-primary)' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={inviteLoading || !inviteEmail.trim()}
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
+                  >
+                    {inviteLoading ? 'Adding...' : 'Add Member'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

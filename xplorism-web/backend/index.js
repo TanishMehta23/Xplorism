@@ -18,6 +18,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import { getNearbyPlacesFromGemini, getHotelsFromGemini, getFlightDetailsFromGemini } from './services/geminiService.js';
 import { globalLimiter, authLimiter } from './middleware/rateLimiter.js';
 import { sqlInjectionSanitizer } from './middleware/sqlInjectionSanitizer.js';
+import { initKafka, subscribeToTopic } from './services/kafkaService.js';
 
 dotenv.config();
 
@@ -1022,11 +1023,27 @@ io.on('connection', (socket) => {
   });
 });
 
-// Initialize database and start server
-initDatabase().then(() => {
-  httpServer.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}).catch(err => {
-  console.error('Failed to start server due to database init error:', err);
-});
+// Initialize database, Kafka, and start server
+async function startServer() {
+  try {
+    await initDatabase();
+    
+    // Initialize Kafka
+    await initKafka();
+
+    // Subscribe to chat topic to broadcast real-time messages via Socket.io
+    subscribeToTopic('trip-chat', 'trip-chat-group', ({ key: tripId, value: message }) => {
+      if (tripId && message) {
+        io.to(tripId).emit('chat-message', message);
+      }
+    });
+
+    httpServer.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+  }
+}
+
+startServer();

@@ -4,27 +4,50 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, Compass as TripIcon, DollarSign, Users, Sparkles, Clock, 
   MapPin, Download, Share2, ArrowRight, ArrowLeft, Sun, Cloud, 
-  CloudRain, Snowflake, Wind
+  CloudRain, Snowflake, Wind, UserPlus
 } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import Footer from '../components/Footer';
 import { CURRENCIES } from './DashboardStub';
 
 export default function SharedTripPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeDayTab, setActiveDayTab] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [joining, setJoining] = useState(false);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
       setToast((prev) => ({ ...prev, show: false }));
     }, 4000);
+  };
+
+  const handleJoinTrip = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setJoining(true);
+      await api.post(`/trips/${id}/join`);
+      showToast('Successfully joined trip workspace!', 'success');
+      navigate(`/trips/${id}/collaborate`);
+    } catch (err) {
+      console.error('Error joining trip:', err);
+      showToast(err.response?.data?.message || 'Failed to join trip.', 'error');
+    } finally {
+      setJoining(false);
+    }
   };
 
   useEffect(() => {
@@ -47,10 +70,10 @@ export default function SharedTripPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6">
         <div className="flex flex-col items-center space-y-4">
           <div className="h-12 w-12 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm font-medium animate-pulse">Loading shared itinerary...</p>
+          <p className="text-slate-505 text-sm font-medium animate-pulse">Loading shared itinerary...</p>
         </div>
       </div>
     );
@@ -58,17 +81,17 @@ export default function SharedTripPage() {
 
   if (error || !trip) {
     return (
-      <div className="min-h-screen bg-slate-950 bg-grid-pattern text-slate-100 flex items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6 text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-xl"
+          className="max-w-md bg-white border border-slate-100 p-8 rounded-3xl shadow-xl"
         >
           <div className="h-16 w-16 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <TripIcon className="h-8 w-8" />
           </div>
           <h2 className="text-2xl font-black mb-3">Itinerary Not Found</h2>
-          <p className="text-slate-400 text-sm mb-6">
+          <p className="text-slate-505 text-sm mb-6">
             {error || "We couldn't find the shared trip. The link might be broken or the trip was deleted."}
           </p>
           <button
@@ -444,24 +467,36 @@ export default function SharedTripPage() {
   const activeDayItineraries = getDayItineraries();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans pb-16">
       {/* Brand Header */}
-      <header className="border-b border-slate-900 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-slate-100 bg-white/60 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => navigate('/')}>
           <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-rose-500/20">
             X
           </div>
-          <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white to-slate-350 bg-clip-text text-transparent">
+          <span className="font-extrabold text-xl tracking-tight text-slate-900">
             Xplorism
           </span>
         </div>
-        <button
-          onClick={() => navigate('/')}
-          className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-bold transition flex items-center space-x-1.5 shadow-sm"
-        >
-          <span>Plan Your Own Trip</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
+        
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleJoinTrip}
+            disabled={joining}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 disabled:opacity-50 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-md shadow-rose-500/10 cursor-pointer"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            <span>{joining ? 'Joining...' : 'Add to Collaborative Trip'}</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/')}
+            className="px-4 py-2 rounded-xl bg-white hover:bg-slate-55 border border-slate-150 text-slate-700 text-xs font-bold transition flex items-center space-x-1.5 shadow-sm"
+          >
+            <span>Plan Your Own Trip</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </header>
 
       {/* Main Container */}
@@ -470,37 +505,37 @@ export default function SharedTripPage() {
         {/* Left Column: Trip Summary & Info */}
         <div className="lg:col-span-1 space-y-6">
           {/* Card Wrapper */}
-          <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl relative overflow-hidden">
             {/* Ambient Background Glow */}
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-rose-500/5 blur-[50px]" />
             
-            <div className="flex items-center space-x-2 text-rose-400 mb-2">
+            <div className="flex items-center space-x-2 text-rose-505 mb-2">
               <Sparkles className="h-4 w-4" />
               <span className="text-xs font-bold uppercase tracking-wider">{style} Mode</span>
             </div>
             
-            <h1 className="text-2xl font-black text-white leading-tight mb-2">
+            <h1 className="text-2xl font-black text-slate-900 leading-tight mb-2">
               {trip.destination}
             </h1>
-            <p className="text-slate-400 text-xs font-semibold">
+            <p className="text-slate-500 text-xs font-semibold">
               {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
             </p>
 
-            <hr className="border-slate-800 my-6" />
+            <hr className="border-slate-100 my-6" />
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-950 border border-slate-850 rounded-2xl">
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                 <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Duration</span>
-                <span className="text-sm font-extrabold text-slate-200">{daysCount} Days</span>
+                <span className="text-sm font-extrabold text-slate-800">{daysCount} Days</span>
               </div>
-              <div className="p-4 bg-slate-950 border border-slate-850 rounded-2xl">
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                 <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Travelers</span>
-                <span className="text-sm font-extrabold text-slate-200">{trip.travelers} {trip.travelers === 1 ? 'Person' : 'People'}</span>
+                <span className="text-sm font-extrabold text-slate-800">{trip.travelers} {trip.travelers === 1 ? 'Person' : 'People'}</span>
               </div>
-              <div className="p-4 bg-slate-950 border border-slate-850 rounded-2xl col-span-2">
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl col-span-2">
                 <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Budget Allocation</span>
-                <span className="text-sm font-extrabold text-slate-200">
+                <span className="text-sm font-extrabold text-slate-800">
                   {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}
                 </span>
               </div>
@@ -509,12 +544,12 @@ export default function SharedTripPage() {
             {/* Interests Section */}
             {trip.interests && trip.interests.length > 0 && (
               <div className="mt-6">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block mb-3">Trip Focus & Interests</span>
+                <span className="text-[10px] uppercase font-bold text-slate-505 block mb-3">Trip Focus & Interests</span>
                 <div className="flex flex-wrap gap-2">
                   {trip.interests.map((interest, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold"
+                      className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-semibold"
                     >
                       {interest}
                     </span>
@@ -525,18 +560,18 @@ export default function SharedTripPage() {
           </div>
 
           {/* Quick Actions Card */}
-          <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl space-y-3">
-            <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Trip Tools</span>
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl space-y-3">
+            <span className="text-[10px] uppercase font-bold text-slate-505 block mb-1">Trip Tools</span>
             <button
               onClick={shareTripLink}
-              className="w-full py-3 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-900 hover:border-slate-700 text-slate-200 font-bold transition flex items-center justify-center space-x-2 text-sm shadow-sm"
+              className="w-full py-3 rounded-xl border border-slate-150 bg-slate-55 hover:bg-slate-100 text-slate-700 font-bold transition flex items-center justify-center space-x-2 text-sm shadow-sm"
             >
               <Share2 className="h-4 w-4 text-rose-500" />
               <span>Copy Shareable Link</span>
             </button>
             <button
               onClick={exportTripToICS}
-              className="w-full py-3 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-900 hover:border-slate-700 text-slate-200 font-bold transition flex items-center justify-center space-x-2 text-sm shadow-sm"
+              className="w-full py-3 rounded-xl border border-slate-150 bg-slate-55 hover:bg-slate-100 text-slate-700 font-bold transition flex items-center justify-center space-x-2 text-sm shadow-sm"
             >
               <Calendar className="h-4 w-4 text-rose-500" />
               <span>Export Calendar (.ics)</span>
@@ -544,7 +579,7 @@ export default function SharedTripPage() {
             <button
               disabled={isExporting}
               onClick={exportTripToPDF}
-              className="w-full py-3 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-900 hover:border-slate-700 text-slate-200 font-bold transition flex items-center justify-center space-x-2 text-sm shadow-sm disabled:opacity-50"
+              className="w-full py-3 rounded-xl border border-slate-150 bg-slate-55 hover:bg-slate-100 text-slate-700 font-bold transition flex items-center justify-center space-x-2 text-sm shadow-sm disabled:opacity-50"
             >
               <Download className="h-4 w-4 text-rose-500" />
               <span>{isExporting ? 'Exporting PDF...' : 'Export PDF'}</span>
@@ -554,10 +589,10 @@ export default function SharedTripPage() {
 
         {/* Right Column: Timelines & Itineraries */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl flex flex-col h-full min-h-[500px]">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex flex-col h-full min-h-[500px]">
              {/* Tabs Header */}
-             <div className="flex items-center justify-between border-b border-slate-800/60 pb-4 mb-6">
-               <h2 className="text-lg font-black text-white">Daily Itinerary</h2>
+             <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+               <h2 className="text-lg font-black text-slate-900">Daily Itinerary</h2>
                <div className="flex space-x-1.5 overflow-x-auto max-w-[60%] no-scrollbar py-1">
                  {dayTabs.map((dayNum) => (
                    <button
@@ -566,7 +601,7 @@ export default function SharedTripPage() {
                      className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer shrink-0 active:scale-95 ${
                        activeDayTab === dayNum
                          ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
-                         : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-850'
+                         : 'bg-slate-50 text-slate-500 hover:text-slate-800 border border-slate-150'
                      }`}
                    >
                      Day {dayNum}
@@ -578,7 +613,7 @@ export default function SharedTripPage() {
              {/* Timelines content */}
              <div className="flex-1 relative">
                {activeDayItineraries.length > 0 ? (
-                 <div className="relative pl-7 border-l border-slate-800/80 space-y-6 ml-2.5">
+                 <div className="relative pl-7 border-l border-slate-100 space-y-6 ml-2.5">
                    <AnimatePresence mode="popLayout">
                      {activeDayItineraries.map((act, index) => (
                        <motion.div
@@ -590,19 +625,19 @@ export default function SharedTripPage() {
                          className="relative group"
                        >
                          {/* Timeline Point */}
-                         <div className="absolute -left-[36px] top-1.5 h-4 w-4 rounded-full bg-slate-950 border-[3px] border-rose-500 shadow-md group-hover:scale-110 transition-transform duration-300" />
+                         <div className="absolute -left-[36px] top-1.5 h-4 w-4 rounded-full bg-slate-50 border-[3px] border-rose-500 shadow-md group-hover:scale-110 transition-transform duration-300" />
                          
-                         <div className="bg-slate-950 border border-slate-850 hover:border-rose-900/50 rounded-2xl p-5 hover:shadow-lg transition-all duration-300">
-                           <div className="flex items-center space-x-2 text-rose-455 font-bold text-xs mb-2">
+                         <div className="bg-slate-50 border border-slate-100 hover:border-rose-500/30 rounded-2xl p-5 hover:shadow-lg transition-all duration-300">
+                           <div className="flex items-center space-x-2 text-rose-500 font-bold text-xs mb-2">
                              <Clock className="h-3.5 w-3.5" />
                              <span>{act.time || 'All Day'}</span>
                            </div>
  
-                           <p className="text-slate-200 font-medium text-sm leading-relaxed mb-3">
+                           <p className="text-slate-800 font-medium text-sm leading-relaxed mb-3">
                              {act.activity}
                            </p>
  
-                           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-550">
                              {act.location && (
                                <span className="flex items-center space-x-1">
                                  <MapPin className="h-3.5 w-3.5 text-rose-500" />
@@ -610,7 +645,7 @@ export default function SharedTripPage() {
                                </span>
                              )}
                              {act.estimatedCost !== undefined && (
-                               <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-black text-emerald-400">
+                               <span className="px-2.5 py-1 rounded bg-slate-100 border border-slate-150 text-[11px] font-black text-emerald-600">
                                  Est: {tripCurrency.symbol}{Number(act.estimatedCost).toLocaleString(tripCurrency.locale)}
                                </span>
                              )}
@@ -622,7 +657,7 @@ export default function SharedTripPage() {
                  </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
-                  <TripIcon className="h-10 w-10 text-slate-600 mb-4 animate-bounce" />
+                  <TripIcon className="h-10 w-10 text-slate-400 mb-4 animate-bounce" />
                   <p className="text-sm font-semibold">No activities planned for Day {activeDayTab}</p>
                 </div>
               )}
@@ -640,8 +675,8 @@ export default function SharedTripPage() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-2.5 border text-sm font-bold ${
               toast.type === 'success'
-                ? 'bg-slate-900 border-emerald-500/20 text-emerald-400'
-                : 'bg-slate-900 border-rose-500/20 text-rose-455'
+                ? 'bg-white border-emerald-100 text-emerald-600'
+                : 'bg-white border-rose-100 text-rose-500'
             }`}
           >
             <Sparkles className="h-4.5 w-4.5" />

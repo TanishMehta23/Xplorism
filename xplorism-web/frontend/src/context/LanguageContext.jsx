@@ -6,6 +6,7 @@ const translations = {
   en: {
     // Navbar
     trips: 'Trips',
+    shared_trips: 'Shared Trips',
     weather: 'Weather',
     tracker: 'Tracker',
     hotels: 'Hotels',
@@ -279,6 +280,7 @@ const translations = {
   es: {
     // Navbar
     trips: 'Viajes',
+    shared_trips: 'Viajes Compartidos',
     weather: 'Clima',
     tracker: 'Rastreador',
     hotels: 'Hoteles',
@@ -552,6 +554,7 @@ const translations = {
   fr: {
     // Navbar
     trips: 'Voyages',
+    shared_trips: 'Voyages Partagés',
     weather: 'Météo',
     tracker: 'Radar',
     hotels: 'Hôtels',
@@ -825,6 +828,7 @@ const translations = {
   de: {
     // Navbar
     trips: 'Reisen',
+    shared_trips: 'Gemeinsame Reisen',
     weather: 'Wetter',
     tracker: 'Flugradar',
     hotels: 'Hotels',
@@ -1098,6 +1102,7 @@ const translations = {
   hi: {
     // Navbar
     trips: 'यात्राएं',
+    shared_trips: 'साझा यात्राएं',
     weather: 'मौसम',
     tracker: 'ट्रैकर',
     hotels: 'होटल',
@@ -1371,6 +1376,7 @@ const translations = {
   ar: {
     // Navbar
     trips: 'رحلاتي',
+    shared_trips: 'الرحلات المشتركة',
     weather: 'الطقس',
     tracker: 'الرادار',
     hotels: 'الفنادق',
@@ -1644,6 +1650,7 @@ const translations = {
   pt: {
     // Navbar
     trips: 'Viagens',
+    shared_trips: 'Viagens Partilhadas',
     weather: 'Clima',
     tracker: 'Rastreador',
     hotels: 'Hotéis',

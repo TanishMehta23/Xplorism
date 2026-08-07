@@ -127,3 +127,13 @@ CREATE TABLE IF NOT EXISTS trip_collaborators (
     UNIQUE(trip_id, user_id)
 );
 
+-- Table for Trip Chat Messages (distributed via Kafka)
+CREATE TABLE IF NOT EXISTS trip_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    sender_name VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+

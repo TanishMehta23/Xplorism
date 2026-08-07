@@ -138,6 +138,13 @@ export default function Navbar({ activeTab }) {
               <span className="nav-link">{t('trips')}</span>
             </button>
             <button 
+              onClick={() => navigate('/shared-trips')}
+              className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'shared-trips' ? 'text-rose-500 font-bold' : ''}`}
+            >
+              <Users className="h-4 w-4" />
+              <span className="nav-link">{t('shared_trips')}</span>
+            </button>
+            <button 
               onClick={() => navigate('/weather')}
               className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'weather' ? 'text-rose-500 font-bold' : ''}`}
             >
@@ -426,6 +433,14 @@ export default function Navbar({ activeTab }) {
               >
                 <Compass className="h-4 w-4" />
                 <span>{t('trips')}</span>
+              </button>
+              <button 
+                onClick={() => { navigate('/shared-trips'); setIsMobileMenuOpen(false); }} 
+                className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'shared-trips' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
+                style={{ color: activeTab === 'shared-trips' ? '' : 'var(--text-secondary)' }}
+              >
+                <Users className="h-4 w-4" />
+                <span>{t('shared_trips')}</span>
               </button>
               <button 
                 onClick={() => { navigate('/weather'); setIsMobileMenuOpen(false); }} 

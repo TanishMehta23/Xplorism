@@ -254,8 +254,27 @@ const translations = {
     confirm_delete_post: 'Are you sure you want to delete this post?',
     likes: 'Likes',
     toast_post_deleted: 'Post deleted successfully',
-    toast_delete_post_fail: 'Failed to delete post.',
-    deleting: 'Deleting...'
+    deleting: 'Deleting...',
+    // Footer
+    footer_slogan: 'Plan simpler, travel better. Experience the world with personalized itineraries, real-time updates, and collaborative planning tools.',
+    features_title: 'Features',
+    resources_title: 'Resources',
+    stay_updated: 'Stay Updated',
+    itinerary_builder: 'Itinerary Builder',
+    interactive_map: 'Interactive Map',
+    weather_forecast: 'Weather Forecast',
+    budget_manager: 'Budget Manager',
+    document_vault: 'Document Vault',
+    travel_guides: 'Travel Guides',
+    help_center: 'Help Center',
+    community_feed_footer: 'Community Feed',
+    terms_of_service: 'Terms of Service',
+    privacy_policy: 'Privacy Policy',
+    cookie_settings: 'Cookie Settings',
+    newsletter_desc: 'Subscribe to our newsletter for the latest travel guides, tips, and feature updates.',
+    email_placeholder: 'Enter your email',
+    subscribe: 'Subscribe',
+    all_rights_reserved: 'All rights reserved.'
   },
   es: {
     // Navbar
@@ -508,8 +527,27 @@ const translations = {
     confirm_delete_post: '¿Estás seguro de que deseas eliminar esta publicación?',
     likes: 'Me gusta',
     toast_post_deleted: 'Publicación eliminada correctamente',
-    toast_delete_post_fail: 'Error al eliminar la publicación.',
-    deleting: 'Eliminando...'
+    deleting: 'Eliminando...',
+    // Footer
+    footer_slogan: 'Planifica más simple, viaja mejor. Experimenta el mundo con itinerarios personalizados, actualizaciones en tiempo real y herramientas de planificación colaborativa.',
+    features_title: 'Funcionalidades',
+    resources_title: 'Recursos',
+    stay_updated: 'Mantente Actualizado',
+    itinerary_builder: 'Creador de Itinerarios',
+    interactive_map: 'Mapa Interactivo',
+    weather_forecast: 'Pronóstico del Clima',
+    budget_manager: 'Gestor de Presupuesto',
+    document_vault: 'Bóveda de Documentos',
+    travel_guides: 'Guías de Viaje',
+    help_center: 'Centro de Ayuda',
+    community_feed_footer: 'Feed de la Comunidad',
+    terms_of_service: 'Condiciones de Servicio',
+    privacy_policy: 'Política de Privacidad',
+    cookie_settings: 'Configuración de Cookies',
+    newsletter_desc: 'Suscríbete a nuestro boletín para recibir las últimas guías de viaje, consejos y actualizaciones de funciones.',
+    email_placeholder: 'Introduce tu correo',
+    subscribe: 'Suscribirse',
+    all_rights_reserved: 'Todos los derechos reservados.'
   },
   fr: {
     // Navbar
@@ -762,8 +800,27 @@ const translations = {
     confirm_delete_post: 'Êtes-vous sûr de vouloir supprimer cette publication ?',
     likes: 'J\'aime',
     toast_post_deleted: 'Publication supprimée avec succès',
-    toast_delete_post_fail: 'Échec de la suppression de la publication.',
-    deleting: 'Suppression...'
+    deleting: 'Suppression...',
+    // Footer
+    footer_slogan: 'Planifiez plus simplement, voyagez mieux. Découvrez le monde grâce à des itinéraires personnalisés, des mises à jour en temps réel et des outils de planification collaborative.',
+    features_title: 'Fonctionnalités',
+    resources_title: 'Ressources',
+    stay_updated: 'Restez Informé',
+    itinerary_builder: 'Générateur d\'Itinéraires',
+    interactive_map: 'Carte Interactive',
+    weather_forecast: 'Prévisions Météo',
+    budget_manager: 'Gestionnaire de Budget',
+    document_vault: 'Coffre-fort de Documents',
+    travel_guides: 'Guides de Voyage',
+    help_center: 'Centre d\'Aide',
+    community_feed_footer: 'Flux Communautaire',
+    terms_of_service: 'Conditions d\'Utilisation',
+    privacy_policy: 'Politique de Confidentialité',
+    cookie_settings: 'Paramètres des Cookies',
+    newsletter_desc: 'Abonnez-vous à notre newsletter pour obtenir les derniers guides de voyage, conseils et nouveautés.',
+    email_placeholder: 'Entrez votre e-mail',
+    subscribe: 'S\'abonner',
+    all_rights_reserved: 'Tous droits réservés.'
   },
   de: {
     // Navbar
@@ -1016,8 +1073,27 @@ const translations = {
     confirm_delete_post: 'Sind Sie sicher, dass Sie diesen Beitrag löschen möchten?',
     likes: 'Gefällt mir',
     toast_post_deleted: 'Beitrag erfolgreich gelöscht',
-    toast_delete_post_fail: 'Beitrag konnte nicht gelöscht werden.',
-    deleting: 'Löschen...'
+    deleting: 'Löschen...',
+    // Footer
+    footer_slogan: 'Einfacher planen, besser reisen. Erleben Sie die Welt mit personalisierten Reiserouten, Echtzeit-Updates und Tools zur gemeinsamen Planung.',
+    features_title: 'Funktionen',
+    resources_title: 'Ressourcen',
+    stay_updated: 'Auf dem Laufenden bleiben',
+    itinerary_builder: 'Routenplaner',
+    interactive_map: 'Interaktive Karte',
+    weather_forecast: 'Wettervorhersage',
+    budget_manager: 'Budget-Manager',
+    document_vault: 'Dokumententresor',
+    travel_guides: 'Reiseführer',
+    help_center: 'Hilfezentrum',
+    community_feed_footer: 'Community-Feed',
+    terms_of_service: 'Nutzungsbedingungen',
+    privacy_policy: 'Datenschutzerklärung',
+    cookie_settings: 'Cookie-Einstellungen',
+    newsletter_desc: 'Abonnieren Sie unseren Newsletter für die neuesten Reiseführer, Tipps und Feature-Updates.',
+    email_placeholder: 'E-Mail-Adresse eingeben',
+    subscribe: 'Abonnieren',
+    all_rights_reserved: 'Alle Rechte vorbehalten.'
   },
   hi: {
     // Navbar
@@ -1270,8 +1346,27 @@ const translations = {
     confirm_delete_post: 'क्या आप वाकई इस पोस्ट को हटाना चाहते हैं?',
     likes: 'पसंद',
     toast_post_deleted: 'पोस्ट सफलतापूर्वक हटा दिया गया',
-    toast_delete_post_fail: 'पोस्ट हटाने में विफल।',
-    deleting: 'हटाया जा रहा है...'
+    deleting: 'हटाया जा रहा है...',
+    // Footer
+    footer_slogan: 'आसान योजना बनाएं, बेहतर यात्रा करें। व्यक्तिगत यात्रा कार्यक्रमों, वास्तविक समय के अपडेट और सहयोगी नियोजन टूल के साथ दुनिया का अनुभव करें।',
+    features_title: 'विशेषताएं',
+    resources_title: 'संसाधन',
+    stay_updated: 'अपडेट रहें',
+    itinerary_builder: 'यात्रा कार्यक्रम निर्माता',
+    interactive_map: 'इंटरैक्टिव मानचित्र',
+    weather_forecast: 'मौसम का पूर्वानुमान',
+    budget_manager: 'बजट प्रबंधक',
+    document_vault: 'दस्तावेज़ तिजोरी',
+    travel_guides: 'यात्रा गाइड',
+    help_center: 'सहायता केंद्र',
+    community_feed_footer: 'कम्युनिटी फीड',
+    terms_of_service: 'सेवा की शर्तें',
+    privacy_policy: 'गोपनीयता नीति',
+    cookie_settings: 'कुकी सेटिंग्स',
+    newsletter_desc: 'नवीनतम यात्रा गाइड, टिप्स और फीचर अपडेट के लिए हमारे न्यूज़लेटर को सब्सक्राइब करें।',
+    email_placeholder: 'अपना ईमेल दर्ज करें',
+    subscribe: 'सब्सक्राइब',
+    all_rights_reserved: 'सर्वाधिकार सुरक्षित।'
   },
   ar: {
     // Navbar
@@ -1524,8 +1619,27 @@ const translations = {
     confirm_delete_post: 'هل أنت متأكد أنك تريد حذف هذا المنشور؟',
     likes: 'إعجابات',
     toast_post_deleted: 'تم حذف المنشور بنجاح',
-    toast_delete_post_fail: 'فشل في حذف المنشور.',
-    deleting: 'جاري الحذف...'
+    deleting: 'جاري الحذف...',
+    // Footer
+    footer_slogan: 'خطط بشكل أبسط، وسافر بشكل أفضل. اختبر العالم بمسارات مخصصة، وتحديثات في الوقت الفعلي، وأدوات تخطيط تعاونية.',
+    features_title: 'الميزات',
+    resources_title: 'الموارد',
+    stay_updated: 'ابق على اطلاع',
+    itinerary_builder: 'مخطط الرحلة',
+    interactive_map: 'الخريطة التفاعلية',
+    weather_forecast: 'توقعات الطقس',
+    budget_manager: 'مدير الميزانية',
+    document_vault: 'خزنة المستندات',
+    travel_guides: 'أدلة السفر',
+    help_center: 'مركز المساعدة',
+    community_feed_footer: 'خلاصة المجتمع',
+    terms_of_service: 'شروط الخدمة',
+    privacy_policy: 'سياسة الخصوصية',
+    cookie_settings: 'إعدادات ملفات تعريف الارتباط',
+    newsletter_desc: 'اشترك في نشرتنا الإخبارية للحصول على أحدث أدلة السفر والنصائح وتحديثات الميزات.',
+    email_placeholder: 'أدخل بريدك الإلكتروني',
+    subscribe: 'اشتراك',
+    all_rights_reserved: 'جميع الحقوق محفوظة.'
   },
   pt: {
     // Navbar
@@ -1779,8 +1893,27 @@ const translations = {
     confirm_delete_post: 'Tem a certeza de que deseja eliminar esta publicação?',
     likes: 'Gostos',
     toast_post_deleted: 'Publicação eliminada com sucesso',
-    toast_delete_post_fail: 'Falha ao eliminar publicação.',
-    deleting: 'A eliminar...'
+    deleting: 'A eliminar...',
+    // Footer
+    footer_slogan: 'Planeje de forma mais simples, viaje melhor. Experimente o mundo com itinerários personalizados, atualizações em tempo real e ferramentas de planejamento colaborativo.',
+    features_title: 'Recursos',
+    resources_title: 'Recursos Úteis',
+    stay_updated: 'Fique Atualizado',
+    itinerary_builder: 'Criador de Roteiros',
+    interactive_map: 'Mapa Interativo',
+    weather_forecast: 'Previsão do Tempo',
+    budget_manager: 'Gerenciador de Orçamento',
+    document_vault: 'Cofre de Documentos',
+    travel_guides: 'Guias de Viagem',
+    help_center: 'Central de Ajuda',
+    community_feed_footer: 'Feed da Comunidade',
+    terms_of_service: 'Termos de Serviço',
+    privacy_policy: 'Política de Privacidade',
+    cookie_settings: 'Configurações de Cookies',
+    newsletter_desc: 'Assine nossa newsletter para receber os últimos guias de viagem, dicas e atualizações.',
+    email_placeholder: 'Digite seu e-mail',
+    subscribe: 'Inscrever-se',
+    all_rights_reserved: 'Todos os direitos reservados.'
   }
 };
 

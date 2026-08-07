@@ -2,9 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Send, Mail } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Footer() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const isDark = theme === 'dark';
 
   return (
@@ -30,7 +32,7 @@ export default function Footer() {
             <p className={`text-xs sm:text-sm leading-relaxed max-w-sm transition-colors duration-200 ${
               isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
             }`}>
-              Plan simpler, travel better. Experience the world with personalized itineraries, real-time updates, and collaborative planning tools.
+              {t('footer_slogan')}
             </p>
             <div className="flex items-center space-x-4">
               <a
@@ -81,13 +83,13 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2 space-y-4">
             <h4 className={`text-xs font-bold uppercase tracking-wider ${
               isDark ? 'text-slate-200' : 'text-slate-800'
-            }`}>Features</h4>
+            }`}>{t('features_title')}</h4>
             <ul className="space-y-2.5">
-              <li><Link to="/dashboard" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Itinerary Builder</Link></li>
-              <li><Link to="/tracker" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Interactive Map</Link></li>
-              <li><Link to="/weather" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Weather Forecast</Link></li>
-              <li><Link to="/budgets" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Budget Manager</Link></li>
-              <li><Link to="/vault" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Document Vault</Link></li>
+              <li><Link to="/dashboard" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('itinerary_builder')}</Link></li>
+              <li><Link to="/tracker" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('interactive_map')}</Link></li>
+              <li><Link to="/weather" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('weather_forecast')}</Link></li>
+              <li><Link to="/budgets" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('budget_manager')}</Link></li>
+              <li><Link to="/vault" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('document_vault')}</Link></li>
             </ul>
           </div>
 
@@ -95,13 +97,13 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2 space-y-4">
             <h4 className={`text-xs font-bold uppercase tracking-wider ${
               isDark ? 'text-slate-200' : 'text-slate-800'
-            }`}>Resources</h4>
+            }`}>{t('resources_title')}</h4>
             <ul className="space-y-2.5">
-              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Travel Guides</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Help Center</Link></li>
-              <li><Link to="/community" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Community Feed</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Terms of Service</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>Privacy Policy</Link></li>
+              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('travel_guides')}</Link></li>
+              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('help_center')}</Link></li>
+              <li><Link to="/community" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('community_feed_footer')}</Link></li>
+              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('terms_of_service')}</Link></li>
+              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('privacy_policy')}</Link></li>
             </ul>
           </div>
 
@@ -109,18 +111,18 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-4 space-y-4">
             <h4 className={`text-xs font-bold uppercase tracking-wider ${
               isDark ? 'text-slate-200' : 'text-slate-800'
-            }`}>Stay Updated</h4>
+            }`}>{t('stay_updated')}</h4>
             <p className={`text-xs sm:text-sm leading-relaxed transition-colors duration-200 ${
               isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
             }`}>
-              Subscribe to our newsletter for the latest travel guides, tips, and feature updates.
+              {t('newsletter_desc')}
             </p>
             <form onSubmit={(e) => e.preventDefault()} className="flex items-center space-x-2">
               <div className="relative flex-1">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('email_placeholder')}
                   className={`w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl focus:outline-none focus:ring-1 transition ${
                     isDark
                       ? 'bg-slate-900 border border-slate-800 text-white placeholder-slate-550 focus:border-slate-700 focus:ring-slate-700'
@@ -137,7 +139,7 @@ export default function Footer() {
                     : 'bg-slate-900 hover:bg-slate-800 text-white'
                 }`}
               >
-                <span className="hidden sm:inline">Subscribe</span>
+                <span className="hidden sm:inline">{t('subscribe')}</span>
                 <Send className="h-3.5 w-3.5" />
               </button>
             </form>
@@ -148,11 +150,11 @@ export default function Footer() {
         <div className={`flex flex-col sm:flex-row items-center justify-between pt-8 text-xs transition-colors duration-200 ${
           isDark ? 'text-slate-500' : 'text-slate-400'
         }`}>
-          <p className={`transition-colors duration-200 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>&copy; {new Date().getFullYear()} Xplorism. All rights reserved.</p>
+          <p className={`transition-colors duration-200 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>&copy; {new Date().getFullYear()} Xplorism. {t('all_rights_reserved')}</p>
           <div className="flex items-center space-x-6 mt-4 sm:mt-0">
-            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>Privacy Policy</a>
-            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>Terms of Service</a>
-            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>Cookie Settings</a>
+            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('privacy_policy')}</a>
+            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('terms_of_service')}</a>
+            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('cookie_settings')}</a>
           </div>
         </div>
       </div>

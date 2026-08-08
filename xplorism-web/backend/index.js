@@ -964,6 +964,7 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
+global.io = io;
 
 // Real-time Collaboration WebSockets
 const activeRooms = {}; // tripId -> Set of active users [name]
@@ -971,6 +972,14 @@ global.activeRooms = activeRooms;
 
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
+
+  // A user joins their own notification room
+  socket.on('join-user-room', ({ userId }) => {
+    if (userId) {
+      socket.join(`user-${userId}`);
+      console.log(`User socket joined room user-${userId}`);
+    }
+  });
 
   // A user joins a trip room
   socket.on('join-trip-room', ({ tripId, userName }) => {

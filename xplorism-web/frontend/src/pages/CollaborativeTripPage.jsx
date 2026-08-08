@@ -251,7 +251,7 @@ export default function CollaborativeTripPage() {
 
   // Socket.io Real-time connection for Kafka messages and active users presence
   useEffect(() => {
-    if (!id || !user || !trip) return;
+    if (!id || !user) return;
 
     // Connect to backend Socket.io
     const socket = io(SOCKET_URL);
@@ -325,7 +325,7 @@ export default function CollaborativeTripPage() {
         socketRef.current = null;
       }
     };
-  }, [id, user, trip]);
+  }, [id, user]);
 
   // Scroll to bottom of chat container only (prevents page body viewport scrolling)
   useEffect(() => {

@@ -189,11 +189,23 @@ export const createTripNotification = async (tripId, senderId, senderName, title
     for (const target of targetUsers) {
       const isOnline = global.activeRooms?.[tripId]?.has(target.name);
       if (!isOnline) {
-        await query(
+        const insertRes = await query(
           `INSERT INTO workspace_notifications (trip_id, user_id, sender_name, title, message)
-           VALUES ($1, $2, $3, $4, $5)`,
+           VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at`,
           [tripId, target.id, senderName, title, message]
         );
+        
+        if (insertRes.rows.length > 0 && global.io) {
+          const { id: notifId, created_at: createdAt } = insertRes.rows[0];
+          global.io.to(`user-${target.id}`).emit('new-notification', {
+            id: `collab-${notifId}`,
+            type: 'collaborative',
+            title,
+            message: `${senderName} ${message} (in trip to ${trip.destination})`,
+            tripId,
+            date: createdAt
+          });
+        }
       }
     }
   } catch (err) {

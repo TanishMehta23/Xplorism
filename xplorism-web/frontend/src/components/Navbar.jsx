@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../services/api';
+import { api, SOCKET_URL } from '../services/api';
+import { io } from 'socket.io-client';
 
 export default function Navbar({ activeTab }) {
   const { user, logout } = useAuth();
@@ -41,7 +42,23 @@ export default function Navbar({ activeTab }) {
     };
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 45000);
-    return () => clearInterval(interval);
+
+    // Global real-time socket connection for user-specific notifications
+    const socket = io(SOCKET_URL);
+    socket.emit('join-user-room', { userId: user.id });
+
+    socket.on('new-notification', (notif) => {
+      setNotifications((prev) => {
+        if (prev.some(n => n.id === notif.id)) return prev;
+        return [notif, ...prev];
+      });
+      setUnreadCount(prev => prev + 1);
+    });
+
+    return () => {
+      clearInterval(interval);
+      socket.disconnect();
+    };
   }, [user]);
 
   const handleNotificationsClick = () => {

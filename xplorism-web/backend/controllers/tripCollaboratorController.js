@@ -188,6 +188,18 @@ export const addCollaborator = async (req, res) => {
       console.error('Error sending invitation email:', err);
     });
 
+    // 7. Emit real-time notification to the invited user's socket room
+    if (global.io) {
+      global.io.to(`user-${targetUser.id}`).emit('new-notification', {
+        id: `invite-${activeTripId}`,
+        type: 'invitation',
+        title: 'Trip Invitation',
+        message: `${hostName} invited you to join a trip to ${trip.destination}!`,
+        tripId: activeTripId,
+        date: new Date()
+      });
+    }
+
     res.status(201).json({
       message: 'Collaborator invited successfully. An invitation email has been sent.',
       tripId: activeTripId,

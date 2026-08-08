@@ -395,13 +395,16 @@ export default function CollaborativeTripPage() {
                         <span className="text-[10px] text-slate-550 block truncate max-w-[150px]">{c.email}</span>
                       </div>
                     </div>
-
                   <div className="flex items-center space-x-2">
                     {c.role === 'owner' ? (
                       <span className="text-[9px] uppercase font-black text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded">Host</span>
                     ) : (
                       <>
-                        <span className="text-[9px] uppercase font-bold text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded">Member</span>
+                        {c.status === 'pending' ? (
+                          <span className="text-[9px] uppercase font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded animate-pulse">Pending</span>
+                        ) : (
+                          <span className="text-[9px] uppercase font-bold text-slate-500 bg-slate-50 border border-slate-150 px-2 py-0.5 rounded">Member</span>
+                        )}
                         {isOwner && (
                           <button
                             onClick={() => handleRemoveCollaborator(c.id)}

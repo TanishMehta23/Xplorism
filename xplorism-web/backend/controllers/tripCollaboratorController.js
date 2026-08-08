@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import { sendMessage } from '../services/kafkaService.js';
+import { sendTripInvitationEmail } from '../services/emailService.js';
 
 // Get shared trips (trips where user is a collaborator)
 export const getSharedTrips = async (req, res) => {
@@ -11,7 +12,7 @@ export const getSharedTrips = async (req, res) => {
       `SELECT DISTINCT t.*, u.name as owner_name FROM trips t 
        JOIN users u ON t.user_id = u.id
        LEFT JOIN trip_collaborators tc ON t.id = tc.trip_id 
-       WHERE tc.user_id = $1 
+       WHERE (tc.user_id = $1 AND tc.status = 'approved') 
           OR (t.user_id = $1 AND EXISTS (SELECT 1 FROM trip_collaborators tc2 WHERE tc2.trip_id = t.id))
        ORDER BY t.created_at DESC`,
       [userId]
@@ -72,7 +73,7 @@ export const addCollaborator = async (req, res) => {
 
     // 1. Verify that current user is the owner or already a collaborator of the trip
     const tripCheck = await query(
-      `SELECT user_id FROM trips WHERE id = $1`,
+      `SELECT user_id, destination, start_date as "startDate", end_date as "endDate" FROM trips WHERE id = $1`,
       [tripId]
     );
 
@@ -80,7 +81,8 @@ export const addCollaborator = async (req, res) => {
       return res.status(404).json({ message: 'Trip not found' });
     }
 
-    const tripOwnerId = tripCheck.rows[0].user_id;
+    const trip = tripCheck.rows[0];
+    const tripOwnerId = trip.user_id;
     
     if (tripOwnerId !== currentUserId) {
       // Check if they are a collaborator
@@ -110,20 +112,32 @@ export const addCollaborator = async (req, res) => {
       return res.status(400).json({ message: 'Trip owner is already collaborator' });
     }
 
-    // 4. Insert into trip_collaborators
+    // 4. Insert into trip_collaborators with pending status
     await query(
-      `INSERT INTO trip_collaborators (trip_id, user_id) 
-       VALUES ($1, $2) 
+      `INSERT INTO trip_collaborators (trip_id, user_id, status) 
+       VALUES ($1, $2, 'pending') 
        ON CONFLICT (trip_id, user_id) DO NOTHING`,
       [tripId, targetUser.id]
     );
 
+    // 5. Send invitation email
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const hostName = req.user.name || 'A fellow traveler';
+    const approveUrl = `${clientUrl}/trip-invite/respond?tripId=${tripId}&status=approved`;
+    const declineUrl = `${clientUrl}/trip-invite/respond?tripId=${tripId}&status=declined`;
+
+    // Trigger async email send
+    sendTripInvitationEmail(targetUser.email, trip, hostName, approveUrl, declineUrl).catch(err => {
+      console.error('Error sending invitation email:', err);
+    });
+
     res.status(201).json({
-      message: 'Collaborator added successfully',
+      message: 'Collaborator invited successfully. An invitation email has been sent.',
       user: {
         id: targetUser.id,
         name: targetUser.name,
-        email: targetUser.email
+        email: targetUser.email,
+        status: 'pending'
       }
     });
   } catch (error) {
@@ -156,7 +170,7 @@ export const getCollaborators = async (req, res) => {
 
     // Get collaborators
     const collaboratorsResult = await query(
-      `SELECT u.id, u.name, u.email FROM users u
+      `SELECT u.id, u.name, u.email, tc.status FROM users u
        JOIN trip_collaborators tc ON tc.user_id = u.id
        WHERE tc.trip_id = $1`,
       [tripId]
@@ -278,15 +292,55 @@ export const joinTrip = async (req, res) => {
 
     // Add as collaborator
     await query(
-      `INSERT INTO trip_collaborators (trip_id, user_id) 
-       VALUES ($1, $2) 
-       ON CONFLICT (trip_id, user_id) DO NOTHING`,
+      `INSERT INTO trip_collaborators (trip_id, user_id, status) 
+       VALUES ($1, $2, 'approved') 
+       ON CONFLICT (trip_id, user_id) DO UPDATE SET status = 'approved'`,
       [tripId, userId]
     );
 
     res.status(200).json({ message: 'Joined trip successfully', role: 'collaborator' });
   } catch (error) {
     console.error('Join trip error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Respond to trip invitation (approve/decline)
+export const respondToInvitation = async (req, res) => {
+  try {
+    const { id: tripId } = req.params;
+    const { status } = req.body; // 'approved' or 'declined'
+    const userId = req.user.id;
+
+    if (!['approved', 'declined'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Must be approved or declined.' });
+    }
+
+    // Verify collaborator entry exists for this user
+    const collabCheck = await query(
+      `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2`,
+      [tripId, userId]
+    );
+
+    if (collabCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Invitation not found or unauthorized.' });
+    }
+
+    if (status === 'approved') {
+      await query(
+        `UPDATE trip_collaborators SET status = 'approved' WHERE trip_id = $1 AND user_id = $2`,
+        [tripId, userId]
+      );
+      res.json({ message: 'Invitation approved successfully' });
+    } else {
+      await query(
+        `DELETE FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2`,
+        [tripId, userId]
+      );
+      res.json({ message: 'Invitation declined successfully' });
+    }
+  } catch (error) {
+    console.error('Respond to invitation error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

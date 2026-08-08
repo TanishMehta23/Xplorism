@@ -67,6 +67,23 @@ export default function Navbar({ activeTab }) {
     }
   };
 
+  const handleRespondToInvitation = async (tripId, status) => {
+    try {
+      await api.post(`/trips/${tripId}/collaborators/respond`, { status });
+      const data = await api.get('/notifications');
+      setNotifications(data);
+      const readIds = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+      const unread = data.filter(n => !readIds.includes(n.id)).length;
+      setUnreadCount(unread);
+      if (status === 'approved') {
+        navigate(`/trips/${tripId}/collaborate`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to respond to invitation.');
+    }
+  };
+
   // Close dropdown and mobile menu on click outside
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -229,20 +246,37 @@ export default function Navbar({ activeTab }) {
                             className="p-3 rounded-xl border space-y-2 transition duration-200"
                             style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}
                           >
-                            <div className="flex items-center space-x-2">
+                             <div className="flex items-center space-x-2">
                               <span className="text-sm">
-                                {n.type === 'trip' ? '✈️' : n.type === 'packing' ? '🎒' : '🌤️'}
+                                {n.type === 'trip' ? '✈️' : n.type === 'packing' ? '🎒' : n.type === 'invitation' ? '✉️' : '🌤️'}
                               </span>
-                              <span className="text-xs font-bold text-slate-300" style={{ color: 'var(--text-primary)' }}>{n.title}</span>
+                              <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{n.title}</span>
                             </div>
                             <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{n.message}</p>
-                            <button
-                              disabled={emailingTripId === n.tripId}
-                              onClick={() => handleEmailReminder(n.tripId)}
-                              className="text-[10px] text-rose-500 hover:text-rose-600 font-bold transition flex items-center space-x-1 cursor-pointer disabled:opacity-50"
-                            >
-                              <span>{emailingTripId === n.tripId ? 'Sending...' : '📧 Email Me Reminders'}</span>
-                            </button>
+                            {n.type === 'invitation' ? (
+                              <div className="flex items-center space-x-2 mt-2">
+                                <button
+                                  onClick={() => handleRespondToInvitation(n.tripId, 'approved')}
+                                  className="text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1 px-2.5 rounded-lg transition cursor-pointer shadow-sm"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRespondToInvitation(n.tripId, 'declined')}
+                                  className="text-[10px] bg-rose-500 hover:bg-rose-600 text-white font-bold py-1 px-2.5 rounded-lg transition cursor-pointer shadow-sm"
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                disabled={emailingTripId === n.tripId}
+                                onClick={() => handleEmailReminder(n.tripId)}
+                                className="text-[10px] text-rose-500 hover:text-rose-600 font-bold transition flex items-center space-x-1 cursor-pointer disabled:opacity-50"
+                              >
+                                <span>{emailingTripId === n.tripId ? 'Sending...' : '📧 Email Me Reminders'}</span>
+                              </button>
+                            )}
                           </div>
                         ))
                       ) : (

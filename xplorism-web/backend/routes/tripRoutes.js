@@ -17,7 +17,8 @@ import {
   removeCollaborator,
   getTripMessages,
   postTripMessage,
-  joinTrip
+  joinTrip,
+  respondToInvitation
 } from '../controllers/tripCollaboratorController.js';
 import authMiddleware from '../middleware/auth.js';
 
@@ -35,6 +36,7 @@ router.get('/:id/collaborators', getCollaborators);
 router.post('/:id/collaborators', addCollaborator);
 router.delete('/:id/collaborators/:userId', removeCollaborator);
 router.post('/:id/join', joinTrip);
+router.post('/:id/collaborators/respond', respondToInvitation);
 
 // Trip Chat routes
 router.get('/:id/messages', getTripMessages);

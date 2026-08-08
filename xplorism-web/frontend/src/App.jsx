@@ -19,6 +19,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import SharedTripPage from './pages/SharedTripPage';
 import SharedTripsWorkspace from './pages/SharedTripsWorkspace';
 import CollaborativeTripPage from './pages/CollaborativeTripPage';
+import TripInviteRespondPage from './pages/TripInviteRespondPage';
 
 
 // Protected Route component
@@ -178,6 +179,11 @@ function AppRoutes() {
       <Route
         path="/shared-trip/:id"
         element={<SharedTripPage />}
+      />
+
+      <Route
+        path="/trip-invite/respond"
+        element={<TripInviteRespondPage />}
       />
 
       <Route path="*" element={<NotFoundPage />} />

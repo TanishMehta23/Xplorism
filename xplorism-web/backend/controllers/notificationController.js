@@ -12,8 +12,30 @@ export const getNotifications = async (req, res) => {
       [userId]
     );
 
+    // Fetch pending trip invitations
+    const pendingInvitesResult = await query(
+      `SELECT tc.trip_id, t.destination, u.name as host_name 
+       FROM trip_collaborators tc
+       JOIN trips t ON tc.trip_id = t.id
+       JOIN users u ON t.user_id = u.id
+       WHERE tc.user_id = $1 AND tc.status = 'pending'`,
+      [userId]
+    );
+
     const trips = tripsResult.rows;
     const notifications = [];
+
+    // Push invitations to notifications
+    pendingInvitesResult.rows.forEach((invite) => {
+      notifications.push({
+        id: `invite-${invite.trip_id}`,
+        type: 'invitation',
+        title: 'Trip Invitation',
+        message: `${invite.host_name} invited you to join a trip to ${invite.destination}!`,
+        tripId: invite.trip_id,
+        date: new Date()
+      });
+    });
 
     const now = new Date();
     now.setHours(0, 0, 0, 0);

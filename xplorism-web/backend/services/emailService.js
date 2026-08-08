@@ -179,3 +179,79 @@ const logSimulationReminder = (email, destination) => {
   console.log('====================================');
 };
 
+export const sendTripInvitationEmail = async (email, trip, hostName, inviteLinkApprove, inviteLinkDecline) => {
+  const subject = `✈️ You're Invited to Join a Trip to ${trip.destination}!`;
+  
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <h2 style="color: #ef4444; text-align: center;">🎒 Xplorism Trip Invitation</h2>
+      <p>Hello,</p>
+      <p><strong>${hostName}</strong> has invited you to collaborate on their upcoming trip to <strong>${trip.destination}</strong>!</p>
+      
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0f172a;">Trip details:</h4>
+        <p style="margin: 5px 0;">🗺️ <strong>Destination:</strong> ${trip.destination}</p>
+        <p style="margin: 5px 0;">📅 <strong>Dates:</strong> ${new Date(trip.startDate).toLocaleDateString()} to ${new Date(trip.endDate).toLocaleDateString()}</p>
+      </div>
+
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${inviteLinkApprove}" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-right: 10px;">Approve Request</a>
+        <a href="${inviteLinkDecline}" style="background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Decline Request</a>
+      </p>
+
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
+      <p style="font-size: 11px; color: #94a3b8; text-align: center;">Xplorism — Premium AI Trip Planner</p>
+    </div>
+  `;
+
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+          from: 'Xplorism <onboarding@resend.dev>',
+          to: email,
+          subject: subject,
+          html: htmlContent
+        })
+      });
+      if (response.ok) {
+        console.log(`✅ Real Invitation email sent successfully via Resend to ${email}`);
+        return;
+      }
+    } catch (err) {
+      console.warn(`Resend HTTP API failed: ${err.message}`);
+    }
+  }
+
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const mailOptions = {
+      from: `"Xplorism Team" <${process.env.SMTP_FROM || 'noreply@xplorism.com'}>`,
+      to: email,
+      subject: subject,
+      html: htmlContent
+    };
+    transporter.sendMail(mailOptions)
+      .then(() => console.log(`✅ Invitation email sent successfully via SMTP to ${email}`))
+      .catch((error) => {
+        console.error('❌ Failed to send SMTP invitation email:', error.message);
+        logSimulationInvitation(email, trip.destination, hostName);
+      });
+  } else {
+    logSimulationInvitation(email, trip.destination, hostName);
+  }
+};
+
+const logSimulationInvitation = (email, destination, hostName) => {
+  console.log('====================================');
+  console.log(`✉️  EMAIL INVITATION SIMULATION FOR: ${email}`);
+  console.log(`👤  HOST: ${hostName}`);
+  console.log(`🗺️  DESTINATION: ${destination}`);
+  console.log('====================================');
+};
+
+

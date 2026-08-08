@@ -8,7 +8,11 @@ import {
   getPackingList, 
   updatePackingList,
   getSharedTrip,
-  getTripLocalEvents
+  getTripLocalEvents,
+  getTripPolls,
+  createTripPoll,
+  voteTripPoll,
+  deleteTripPoll
 } from '../controllers/tripController.js';
 import {
   getSharedTrips,
@@ -54,6 +58,12 @@ router.put('/:id/packing', updatePackingList);
 
 // Local events route
 router.get('/:id/events', getTripLocalEvents);
+
+// Poll routes
+router.get('/:id/polls', getTripPolls);
+router.post('/:id/polls', createTripPoll);
+router.post('/:id/polls/:pollId/vote', voteTripPoll);
+router.delete('/:id/polls/:pollId', deleteTripPoll);
 
 export default router;
 

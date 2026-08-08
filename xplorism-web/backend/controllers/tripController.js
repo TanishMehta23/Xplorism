@@ -1,14 +1,15 @@
 import { query } from '../config/db.js';
 import { askGeminiForItinerary, askGeminiForPackingList, getLocalEventsFromGemini } from '../services/geminiService.js';
+import { createTripNotification } from './notificationController.js';
 
 // Get all trips for the authenticated user
 export const getTrips = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Fetch all trips for user
+    // Fetch all trips for user (excluding collaborative ones to keep personal space separate)
     const tripsResult = await query(
-      'SELECT * FROM trips WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT * FROM trips WHERE user_id = $1 AND is_collaborative = FALSE ORDER BY created_at DESC',
       [userId]
     );
 
@@ -35,6 +36,7 @@ export const getTrips = async (req, res) => {
           interests: trip.interests,
           createdAt: trip.created_at,
           packingList: trip.packing_list,
+          notes: trip.notes,
           itineraries: itineraryResult.rows.map(item => ({
             id: item.id,
             tripId: item.trip_id,
@@ -155,6 +157,7 @@ export const updateTrip = async (req, res) => {
       travelStyle,
       interests,
       itinerary,
+      notes
     } = req.body;
 
     // Check if trip exists and belongs to user
@@ -183,13 +186,14 @@ export const updateTrip = async (req, res) => {
     const newTravelers = travelers !== undefined ? parseInt(travelers) : trip.travelers;
     const newTravelStyle = travelStyle !== undefined ? travelStyle : trip.travel_style;
     const newInterests = interests !== undefined ? interests : trip.interests;
+    const newNotes = notes !== undefined ? notes : trip.notes;
 
     // Perform trip update
     const updatedResult = await query(
       `UPDATE trips 
-       SET destination = $1, start_date = $2, end_date = $3, budget = $4, travelers = $5, travel_style = $6, interests = $7
-       WHERE id = $8 RETURNING *`,
-      [newDestination, newStartDate, newEndDate, newBudget, newTravelers, newTravelStyle, newInterests, id]
+       SET destination = $1, start_date = $2, end_date = $3, budget = $4, travelers = $5, travel_style = $6, interests = $7, notes = $8
+       WHERE id = $9 RETURNING *`,
+      [newDestination, newStartDate, newEndDate, newBudget, newTravelers, newTravelStyle, newInterests, newNotes, id]
     );
 
     const updatedTrip = updatedResult.rows[0];
@@ -220,6 +224,33 @@ export const updateTrip = async (req, res) => {
       insertedItineraries = existingItin.rows;
     }
 
+    // Trigger offline notification for collaborators
+    try {
+      let notifTitle = '';
+      let notifMsg = '';
+      if (notes !== undefined) {
+        notifTitle = 'Notes Saved';
+        notifMsg = 'updated the shared scratchpad notes';
+      } else if (itinerary) {
+        notifTitle = 'Itinerary Updated';
+        notifMsg = 'updated the trip itinerary';
+      } else if (req.body.startDate || req.body.endDate) {
+        notifTitle = 'Trip Dates Updated';
+        notifMsg = 'updated the trip dates';
+      } else if (req.body.budget !== undefined) {
+        notifTitle = 'Trip Budget Updated';
+        notifMsg = 'updated the trip budget';
+      }
+
+      if (notifTitle) {
+        const userRes = await query('SELECT name FROM users WHERE id = $1', [userId]);
+        const senderName = userRes.rows[0]?.name || 'Co-traveler';
+        await createTripNotification(id, userId, senderName, notifTitle, notifMsg);
+      }
+    } catch (notifErr) {
+      console.error('Failed to trigger updateTrip notification:', notifErr);
+    }
+
     res.json({
       id: updatedTrip.id,
       userId: updatedTrip.user_id,
@@ -230,6 +261,7 @@ export const updateTrip = async (req, res) => {
       travelers: updatedTrip.travelers,
       travelStyle: updatedTrip.travel_style,
       interests: updatedTrip.interests,
+      notes: updatedTrip.notes,
       createdAt: updatedTrip.created_at,
       packingList: updatedTrip.packing_list,
       itineraries: insertedItineraries.map(item => ({
@@ -401,6 +433,14 @@ export const updatePackingList = async (req, res) => {
 
     await query('UPDATE trips SET packing_list = $1 WHERE id = $2', [JSON.stringify(packingList), id]);
 
+    try {
+      const userRes = await query('SELECT name FROM users WHERE id = $1', [userId]);
+      const senderName = userRes.rows[0]?.name || 'Co-traveler';
+      await createTripNotification(id, userId, senderName, 'Checklist Updated', 'updated the packing checklist');
+    } catch (notifErr) {
+      console.error('Failed to trigger updatePackingList notification:', notifErr);
+    }
+
     res.json({ success: true, packingList });
   } catch (error) {
     console.error('Update packing list error:', error);
@@ -436,6 +476,7 @@ export const getSharedTrip = async (req, res) => {
       interests: trip.interests,
       createdAt: trip.created_at,
       packingList: trip.packing_list,
+      notes: trip.notes,
       itineraries: itineraryResult.rows.map(item => ({
         id: item.id,
         tripId: item.trip_id,
@@ -473,6 +514,172 @@ export const getTripLocalEvents = async (req, res) => {
     res.json(events);
   } catch (error) {
     console.error('Get trip local events error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getTripPolls = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const checkTrip = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (checkTrip.rows.length === 0) return res.status(404).json({ message: 'Trip not found' });
+    const trip = checkTrip.rows[0];
+    if (trip.user_id !== userId) {
+      const collab = await query("SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'", [id, userId]);
+      if (collab.rows.length === 0) return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const pollsRes = await query('SELECT * FROM trip_polls WHERE trip_id = $1 ORDER BY created_at DESC', [id]);
+    const polls = pollsRes.rows;
+
+    const pollsWithVotes = await Promise.all(polls.map(async (poll) => {
+      const votesRes = await query(
+        'SELECT user_id, option_index, u.name as user_name FROM trip_poll_votes pv JOIN users u ON pv.user_id = u.id WHERE poll_id = $1',
+        [poll.id]
+      );
+      return {
+        id: poll.id,
+        question: poll.question,
+        options: typeof poll.options === 'string' ? JSON.parse(poll.options) : poll.options,
+        createdAt: poll.created_at,
+        votes: votesRes.rows.map(v => ({
+          userId: v.user_id,
+          userName: v.user_name,
+          optionIndex: v.option_index
+        }))
+      };
+    }));
+
+    res.json(pollsWithVotes);
+  } catch (err) {
+    console.error('Get polls error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const createTripPoll = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { question, options } = req.body;
+
+    if (!question || !options || !Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({ message: 'Question and at least 2 options are required' });
+    }
+
+    const checkTrip = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (checkTrip.rows.length === 0) return res.status(404).json({ message: 'Trip not found' });
+    const trip = checkTrip.rows[0];
+    if (trip.user_id !== userId) {
+      const collab = await query("SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'", [id, userId]);
+      if (collab.rows.length === 0) return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const pollResult = await query(
+      'INSERT INTO trip_polls (trip_id, question, options) VALUES ($1, $2, $3) RETURNING *',
+      [id, question, JSON.stringify(options)]
+    );
+
+    const poll = pollResult.rows[0];
+
+    try {
+      const userRes = await query('SELECT name FROM users WHERE id = $1', [userId]);
+      const senderName = userRes.rows[0]?.name || 'Co-traveler';
+      await createTripNotification(id, userId, senderName, 'Poll Created', `created a new group poll: "${question}"`);
+    } catch (notifErr) {
+      console.error('Failed to trigger createTripPoll notification:', notifErr);
+    }
+
+    res.status(201).json({
+      id: poll.id,
+      question: poll.question,
+      options: typeof poll.options === 'string' ? JSON.parse(poll.options) : poll.options,
+      createdAt: poll.created_at,
+      votes: []
+    });
+  } catch (err) {
+    console.error('Create poll error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const voteTripPoll = async (req, res) => {
+  try {
+    const { id, pollId } = req.params;
+    const userId = req.user.id;
+    const { optionIndex } = req.body;
+
+    if (optionIndex === undefined || typeof optionIndex !== 'number') {
+      return res.status(400).json({ message: 'optionIndex must be a number' });
+    }
+
+    const checkTrip = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (checkTrip.rows.length === 0) return res.status(404).json({ message: 'Trip not found' });
+    const trip = checkTrip.rows[0];
+    if (trip.user_id !== userId) {
+      const collab = await query("SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'", [id, userId]);
+      if (collab.rows.length === 0) return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    await query(
+      `INSERT INTO trip_poll_votes (poll_id, user_id, option_index)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (poll_id, user_id)
+       DO UPDATE SET option_index = EXCLUDED.option_index`,
+      [pollId, userId, optionIndex]
+    );
+
+    const votesRes = await query(
+      'SELECT user_id, option_index, u.name as user_name FROM trip_poll_votes pv JOIN users u ON pv.user_id = u.id WHERE poll_id = $1',
+      [pollId]
+    );
+    
+    res.json({
+      pollId,
+      votes: votesRes.rows.map(v => ({
+        userId: v.user_id,
+        userName: v.user_name,
+        optionIndex: v.option_index
+      }))
+    });
+  } catch (err) {
+    console.error('Vote poll error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deleteTripPoll = async (req, res) => {
+  try {
+    const { id, pollId } = req.params;
+    const userId = req.user.id;
+
+    const checkTrip = await query('SELECT * FROM trips WHERE id = $1', [id]);
+    if (checkTrip.rows.length === 0) return res.status(404).json({ message: 'Trip not found' });
+    const trip = checkTrip.rows[0];
+    
+    if (trip.user_id !== userId) {
+      const collab = await query("SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'", [id, userId]);
+      if (collab.rows.length === 0) return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const pollCheck = await query('SELECT question FROM trip_polls WHERE id = $1 AND trip_id = $2', [pollId, id]);
+    const question = pollCheck.rows[0]?.question || '';
+
+    await query('DELETE FROM trip_polls WHERE id = $1 AND trip_id = $2', [pollId, id]);
+
+    try {
+      const userRes = await query('SELECT name FROM users WHERE id = $1', [userId]);
+      const senderName = userRes.rows[0]?.name || 'Co-traveler';
+      await createTripNotification(id, userId, senderName, 'Poll Deleted', `deleted the group poll: "${question}"`);
+    } catch (notifErr) {
+      console.error('Failed to trigger deleteTripPoll notification:', notifErr);
+    }
+
+    res.json({ message: 'Poll deleted successfully', pollId });
+  } catch (err) {
+    console.error('Delete poll error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

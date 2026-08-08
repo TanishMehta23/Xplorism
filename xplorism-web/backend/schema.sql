@@ -139,3 +139,40 @@ CREATE TABLE IF NOT EXISTS trip_messages (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Support Workspace Notes
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
+
+-- Support Trip Polls
+CREATE TABLE IF NOT EXISTS trip_polls (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    question TEXT NOT NULL,
+    options JSONB NOT NULL, -- Array of string options, e.g. ["Option A", "Option B"]
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Support Trip Poll Votes
+CREATE TABLE IF NOT EXISTS trip_poll_votes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    poll_id UUID NOT NULL REFERENCES trip_polls(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    option_index INTEGER NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(poll_id, user_id)
+);
+
+-- Support separate Collaborative Trips
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS is_collaborative BOOLEAN DEFAULT FALSE;
+
+-- Collaborative Workspace Offline Notifications
+CREATE TABLE IF NOT EXISTS workspace_notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    sender_name VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE
+);
+

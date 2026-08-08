@@ -485,10 +485,16 @@ export default function DashboardStub() {
     if (!inviteEmail.trim() || !selectedTrip) return;
     try {
       setInviteLoading(true);
-      await api.post(`/trips/${selectedTrip.id}/collaborators`, { email: inviteEmail });
-      showToast('Collaborator added successfully!', 'success');
+      const res = await api.post(`/trips/${selectedTrip.id}/collaborators`, { email: inviteEmail });
+      showToast('Collaborator added! Redirecting to collaborative workspace...', 'success');
       setInviteEmail('');
       setShowInviteModal(false);
+      
+      // If a separate cloned trip was created for collaboration, redirect there
+      if (res && res.tripId) {
+        setSelectedTrip(null);
+        navigate(`/trips/${res.tripId}/collaborate`);
+      }
     } catch (err) {
       console.error(err);
       showToast(err.response?.data?.message || 'Failed to add collaborator.', 'error');

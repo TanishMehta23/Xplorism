@@ -967,6 +967,7 @@ const io = new Server(httpServer, {
 
 // Real-time Collaboration WebSockets
 const activeRooms = {}; // tripId -> Set of active users [name]
+global.activeRooms = activeRooms;
 
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
@@ -1000,6 +1001,14 @@ io.on('connection', (socket) => {
 
   socket.on('packing-changed', ({ tripId, action, data }) => {
     socket.to(tripId).emit('packing-updated', { action, data });
+  });
+
+  socket.on('poll-changed', ({ tripId, action, data }) => {
+    socket.to(tripId).emit('poll-updated', { action, data });
+  });
+
+  socket.on('notes-changed', ({ tripId, data }) => {
+    socket.to(tripId).emit('notes-updated', { data });
   });
 
   // Forward cursor presence / active changes

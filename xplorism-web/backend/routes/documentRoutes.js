@@ -4,6 +4,7 @@ import authMiddleware from '../middleware/auth.js';
 import { encryptFile, decryptFile } from '../services/encryptionService.js';
 import { saveEncryptedFile, getEncryptedFile, deleteEncryptedFile } from '../services/storageService.js';
 import crypto from 'crypto';
+import { createTripNotification } from '../controllers/notificationController.js';
 
 const router = express.Router();
 
@@ -50,7 +51,11 @@ router.get('/trip/:tripId', authMiddleware, async (req, res) => {
     }
 
     const result = await pool.query(
-      'SELECT id, title, type, file_name, created_at, user_id FROM documents WHERE trip_id = $1 ORDER BY created_at DESC',
+      `SELECT d.id, d.title, d.type, d.file_name, d.created_at, d.user_id, u.name as uploaded_by
+       FROM documents d
+       LEFT JOIN users u ON d.user_id = u.id
+       WHERE d.trip_id = $1
+       ORDER BY d.created_at DESC`,
       [tripId]
     );
     res.json(result.rows);
@@ -185,7 +190,21 @@ router.post('/', authMiddleware, async (req, res) => {
       [docId, userId, trip_id || null, title, type, file_name, wrappedKey, iv, authTag]
     );
 
-    res.status(201).json(result.rows[0]);
+    const userResult = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+    const userName = userResult.rows[0]?.name || 'Unknown';
+
+    if (trip_id) {
+      try {
+        await createTripNotification(trip_id, userId, userName, 'Document Added', `uploaded a document: "${title}"`);
+      } catch (notifErr) {
+        console.error('Failed to trigger uploadDocument notification:', notifErr);
+      }
+    }
+
+    res.status(201).json({
+      ...result.rows[0],
+      uploaded_by: userName
+    });
   } catch (err) {
     console.error('Error creating document:', err.message);
     res.status(500).json({ message: 'DB Error: ' + err.message });
@@ -258,20 +277,33 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     const userId = req.user.id;
-    // Verify ownership
+    // Verify ownership and get trip info
     const checkOwnership = await pool.query(
-      'SELECT id FROM documents WHERE id = $1 AND user_id = $2',
+      'SELECT id, title, trip_id FROM documents WHERE id = $1 AND user_id = $2',
       [id, userId]
     );
     if (checkOwnership.rows.length === 0) {
       return res.status(404).json({ message: 'Document not found or unauthorized' });
     }
     
+    const doc = checkOwnership.rows[0];
+
     // Delete encrypted file from storage
     deleteEncryptedFile(id);
 
     // Delete metadata from database
     await pool.query('DELETE FROM documents WHERE id = $1 AND user_id = $2', [id, userId]);
+
+    if (doc.trip_id) {
+      try {
+        const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+        const senderName = userRes.rows[0]?.name || 'Co-traveler';
+        await createTripNotification(doc.trip_id, userId, senderName, 'Document Deleted', `deleted a document: "${doc.title}"`);
+      } catch (notifErr) {
+        console.error('Failed to trigger deleteDocument notification:', notifErr);
+      }
+    }
+
     res.json({ message: 'Document deleted successfully' });
   } catch (err) {
     console.error('Error deleting document:', err.message);

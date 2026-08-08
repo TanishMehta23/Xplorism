@@ -115,10 +115,89 @@ export const getNotifications = async (req, res) => {
       }
     });
 
+    // Fetch collaborative offline notifications
+    const dbCollabNotifs = await query(
+      `SELECT wn.*, t.destination 
+       FROM workspace_notifications wn
+       JOIN trips t ON wn.trip_id = t.id
+       WHERE wn.user_id = $1 AND wn.is_read = FALSE
+       ORDER BY wn.created_at DESC`,
+      [userId]
+    );
+
+    dbCollabNotifs.rows.forEach((n) => {
+      notifications.push({
+        id: `collab-${n.id}`,
+        type: 'collaborative',
+        title: n.title,
+        message: `${n.sender_name} ${n.message} (in trip to ${n.destination})`,
+        tripId: n.trip_id,
+        date: n.created_at
+      });
+    });
+
+    // Mark these notifications as read so they don't repeat on next API call
+    if (dbCollabNotifs.rows.length > 0) {
+      await query(
+        `UPDATE workspace_notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE`,
+        [userId]
+      );
+    }
+
     res.json(notifications);
   } catch (error) {
     console.error('Get notifications error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const createTripNotification = async (tripId, senderId, senderName, title, message) => {
+  try {
+    // 1. Get the trip owner
+    const tripCheck = await query('SELECT user_id, destination FROM trips WHERE id = $1', [tripId]);
+    if (tripCheck.rows.length === 0) return;
+    const trip = tripCheck.rows[0];
+    const ownerId = trip.user_id;
+
+    // 2. Get all other collaborators
+    const collabsResult = await query(
+      `SELECT tc.user_id, u.name 
+       FROM trip_collaborators tc 
+       JOIN users u ON tc.user_id = u.id 
+       WHERE tc.trip_id = $1 AND tc.status = 'approved'`,
+      [tripId]
+    );
+
+    const targetUsers = [];
+    
+    // Add owner if owner is not sender
+    if (ownerId !== senderId) {
+      const ownerRes = await query('SELECT name FROM users WHERE id = $1', [ownerId]);
+      if (ownerRes.rows.length > 0) {
+        targetUsers.push({ id: ownerId, name: ownerRes.rows[0].name });
+      }
+    }
+
+    // Add collaborators who are not the sender
+    collabsResult.rows.forEach(c => {
+      if (c.user_id !== senderId) {
+        targetUsers.push({ id: c.user_id, name: c.name });
+      }
+    });
+
+    // 3. Insert notification for target users who are NOT online in the socket room
+    for (const target of targetUsers) {
+      const isOnline = global.activeRooms?.[tripId]?.has(target.name);
+      if (!isOnline) {
+        await query(
+          `INSERT INTO workspace_notifications (trip_id, user_id, sender_name, title, message)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [tripId, target.id, senderName, title, message]
+        );
+      }
+    }
+  } catch (err) {
+    console.error('Error creating trip notification:', err);
   }
 };
 

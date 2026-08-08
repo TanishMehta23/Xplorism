@@ -5,7 +5,7 @@ import { io } from 'socket.io-client';
 import {
   Calendar, Compass as TripIcon, DollarSign, Users, Sparkles, Clock, 
   MapPin, ArrowLeft, Send, UserPlus, X, Trash2, Shield, LogOut, Pencil,
-  MessageCircle, Info
+  MessageCircle, Info, MessageSquare
 } from 'lucide-react';
 import { api, SOCKET_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -59,6 +59,7 @@ export default function CollaborativeTripPage() {
   const [expenses, setExpenses] = useState([]);
   const [expensesLoading, setExpensesLoading] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+  const [showDetailedSplitModal, setShowDetailedSplitModal] = useState(false);
   const [newExpense, setNewExpense] = useState({
     category: 'Food & Dining',
     itemName: '',
@@ -71,6 +72,16 @@ export default function CollaborativeTripPage() {
   const [tripDocuments, setTripDocuments] = useState([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [showUploadDocModal, setShowUploadDocModal] = useState(false);
+  const [activeViewerDoc, setActiveViewerDoc] = useState(null);
+  const [editDocModal, setEditDocModal] = useState({ show: false, docId: null, title: '', type: 'ticket' });
+  const [packingModal, setPackingModal] = useState({
+    show: false,
+    type: 'add-item',
+    title: '',
+    inputValue: '',
+    categoryIndex: null,
+    itemIndex: null
+  });
   const [newDoc, setNewDoc] = useState({
     title: '',
     type: 'ticket',
@@ -83,6 +94,21 @@ export default function CollaborativeTripPage() {
   const [newMessage, setNewMessage] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
 
+  // Polls & Notes State
+  const [polls, setPolls] = useState([]);
+  const [showCreatePollModal, setShowCreatePollModal] = useState(false);
+  const [newPoll, setNewPoll] = useState({ question: '', options: ['', ''] });
+  const [notes, setNotes] = useState('');
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [isCreatingPoll, setIsCreatingPoll] = useState(false);
+  const [deletingPollId, setDeletingPollId] = useState(null);
+  const [showEditDatesModal, setShowEditDatesModal] = useState(false);
+  const [editDates, setEditDates] = useState({ startDate: '', endDate: '' });
+  const [showEditBudgetModal, setShowEditBudgetModal] = useState(false);
+  const [editBudget, setEditBudget] = useState('');
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+
   const socketRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -90,6 +116,50 @@ export default function CollaborativeTripPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Fetch Live Weather for Destination
+  useEffect(() => {
+    if (!trip || !trip.destination) return;
+    
+    const fetchWeather = async () => {
+      try {
+        setWeatherLoading(true);
+        // Step 1: Geocode the destination (Open-Meteo Keyless API)
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trip.destination)}&count=1&language=en&format=json`);
+        const geoData = await geoRes.json();
+        if (geoData.results && geoData.results.length > 0) {
+          const { latitude, longitude } = geoData.results[0];
+          // Step 2: Fetch current weather details
+          const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+          const weatherJson = await weatherRes.json();
+          if (weatherJson.current_weather) {
+            const temp = Math.round(weatherJson.current_weather.temperature);
+            const code = weatherJson.current_weather.weathercode;
+            
+            // Map WMO codes to pretty icons and conditions
+            let icon = '☀️';
+            let cond = 'Clear Sky';
+            if (code === 0) { icon = '☀️'; cond = 'Clear Sky'; }
+            else if ([1, 2, 3].includes(code)) { icon = '⛅'; cond = 'Partly Cloudy'; }
+            else if ([45, 48].includes(code)) { icon = '🌫️'; cond = 'Foggy'; }
+            else if ([51, 53, 55, 56, 57].includes(code)) { icon = '🌧️'; cond = 'Drizzle'; }
+            else if ([61, 63, 65, 66, 67].includes(code)) { icon = '🌧️'; cond = 'Rainy'; }
+            else if ([71, 73, 75, 77].includes(code)) { icon = '❄️'; cond = 'Snowy'; }
+            else if ([80, 81, 82].includes(code)) { icon = '🌧️'; cond = 'Showers'; }
+            else if ([95, 96, 99].includes(code)) { icon = '⛈️'; cond = 'Thunderstorm'; }
+            
+            setWeatherData({ temp: `${temp}°C`, icon, cond });
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch real-time weather', err);
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+
+    fetchWeather();
+  }, [trip?.destination]);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -153,6 +223,16 @@ export default function CollaborativeTripPage() {
         setTripDocuments(docsData || []);
       } catch (err) {
         console.warn('Failed to load documents', err);
+      }
+
+      setNotes(tripData.notes || '');
+
+      // Fetch polls
+      try {
+        const pollsData = await api.get(`/trips/${id}/polls`);
+        setPolls(pollsData || []);
+      } catch (err) {
+        console.warn('Failed to load polls', err);
       }
 
       setLoading(false);
@@ -222,6 +302,23 @@ export default function CollaborativeTripPage() {
       }
     });
 
+    socket.on('poll-updated', ({ action, data }) => {
+      if (action === 'vote') {
+        setPolls(prev => prev.map(p => p.id === data.pollId ? { ...p, votes: data.votes } : p));
+        showToast('New vote cast in a group poll!', 'info');
+      } else if (action === 'create') {
+        setPolls(prev => [data, ...prev]);
+        showToast('New group poll created!', 'info');
+      } else if (action === 'delete') {
+        setPolls(prev => prev.filter(p => p.id !== data.pollId));
+        showToast('A group poll was deleted.', 'info');
+      }
+    });
+
+    socket.on('notes-updated', ({ data }) => {
+      setNotes(data);
+    });
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -232,10 +329,15 @@ export default function CollaborativeTripPage() {
 
   // Scroll to bottom of chat container only (prevents page body viewport scrolling)
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
+    const scrollToBottom = () => {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
+    };
+    scrollToBottom();
+    const timer = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timer);
+  }, [messages, loading]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -424,6 +526,87 @@ export default function CollaborativeTripPage() {
     }
   };
 
+  const handleAddDayClick = async () => {
+    try {
+      const currentEndDate = new Date(trip.endDate);
+      const newEndDate = new Date(currentEndDate.getTime() + 24 * 60 * 60 * 1000);
+      
+      const updatedTrip = await api.put(`/trips/${id}`, {
+        endDate: newEndDate.toISOString()
+      });
+      
+      setTrip(prev => ({
+        ...prev,
+        endDate: updatedTrip.endDate
+      }));
+
+      if (socketRef.current) {
+        socketRef.current.emit('itinerary-updated', {
+          tripId: id,
+          action: 'update',
+          data: { ...trip, endDate: updatedTrip.endDate }
+        });
+      }
+      
+      showToast(`Added Day ${daysCount + 1} to your itinerary!`, 'success');
+    } catch (err) {
+      console.error('Failed to add day:', err);
+      showToast('Failed to add day.', 'error');
+    }
+  };
+
+  const handleDeleteActiveDay = async () => {
+    if (daysCount <= 1) {
+      showToast('Your trip must have at least 1 day.', 'error');
+      return;
+    }
+
+    setConfirmModal({
+      show: true,
+      title: 'Delete Day',
+      message: `Are you sure you want to delete Day ${activeDayTab}? This will delete all activities on this day and shorten the trip.`,
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        try {
+          const currentEndDate = new Date(trip.endDate);
+          const newEndDate = new Date(currentEndDate.getTime() - 24 * 60 * 60 * 1000);
+
+          const currentItineraries = trip.itineraries || [];
+          const updatedItineraries = currentItineraries
+            .filter(item => item.day !== activeDayTab)
+            .map(item => {
+              if (item.day > activeDayTab) {
+                return { ...item, day: item.day - 1 };
+              }
+              return item;
+            });
+
+          const updatedTrip = await api.put(`/trips/${id}`, {
+            endDate: newEndDate.toISOString(),
+            itinerary: updatedItineraries
+          });
+
+          setTrip(updatedTrip);
+          
+          setActiveDayTab(prev => Math.max(1, prev - 1));
+          setConfirmModal(prev => ({ ...prev, show: false }));
+          showToast(`Day deleted successfully.`, 'success');
+
+          if (socketRef.current) {
+            socketRef.current.emit('itinerary-updated', {
+              tripId: id,
+              action: 'update',
+              data: updatedTrip
+            });
+          }
+        } catch (err) {
+          console.error('Failed to delete day:', err);
+          showToast('Failed to delete day.', 'error');
+        }
+      }
+    });
+  };
+
   const handleAddActivityClick = async () => {
     setEditActivityModal({
       show: true,
@@ -463,6 +646,292 @@ export default function CollaborativeTripPage() {
     } catch (err) {
       console.error('Failed to toggle packing item:', err);
       showToast('Failed to update packing list.', 'error');
+    }
+  };
+
+  const handleAddItemToPacking = (categoryIndex) => {
+    setPackingModal({
+      show: true,
+      type: 'add-item',
+      title: `Add Item to ${packingList[categoryIndex].category}`,
+      inputValue: '',
+      categoryIndex,
+      itemIndex: null
+    });
+  };
+
+  const handleEditPackingItem = (categoryIndex, itemIndex) => {
+    setPackingModal({
+      show: true,
+      type: 'edit-item',
+      title: 'Rename Checklist Item',
+      inputValue: packingList[categoryIndex].items[itemIndex].name,
+      categoryIndex,
+      itemIndex
+    });
+  };
+
+  const handleDeletePackingItem = (categoryIndex, itemIndex) => {
+    const itemName = packingList[categoryIndex].items[itemIndex].name;
+    setConfirmModal({
+      show: true,
+      title: 'Delete Checklist Item',
+      message: `Are you sure you want to delete "${itemName}"?`,
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        try {
+          const updated = [...packingList];
+          updated[categoryIndex].items.splice(itemIndex, 1);
+          setPackingList(updated);
+          await api.put(`/trips/${id}/packing`, { packingList: updated });
+          if (socketRef.current) {
+            socketRef.current.emit('packing-changed', { tripId: id, action: 'update', data: updated });
+          }
+          showToast('Item removed from list.', 'success');
+          setConfirmModal(prev => ({ ...prev, show: false }));
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to delete item.', 'error');
+        }
+      }
+    });
+  };
+
+  const handleAddPackingCategory = () => {
+    setPackingModal({
+      show: true,
+      type: 'add-category',
+      title: 'Create Packing Category',
+      inputValue: '',
+      categoryIndex: null,
+      itemIndex: null
+    });
+  };
+
+  const handleDeletePackingCategory = (categoryIndex) => {
+    const catName = packingList[categoryIndex].category;
+    setConfirmModal({
+      show: true,
+      title: 'Delete Category',
+      message: `Are you sure you want to delete category "${catName}" and all its items?`,
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        try {
+          const updated = [...packingList];
+          updated.splice(categoryIndex, 1);
+          setPackingList(updated);
+          await api.put(`/trips/${id}/packing`, { packingList: updated });
+          if (socketRef.current) {
+            socketRef.current.emit('packing-changed', { tripId: id, action: 'update', data: updated });
+          }
+          showToast('Category deleted.', 'success');
+          setConfirmModal(prev => ({ ...prev, show: false }));
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to delete category.', 'error');
+        }
+      }
+    });
+  };
+
+  const handlePackingModalSubmit = async (e) => {
+    e.preventDefault();
+    const val = packingModal.inputValue.trim();
+    if (!val) return;
+
+    try {
+      const updated = [...packingList];
+      if (packingModal.type === 'add-item') {
+        updated[packingModal.categoryIndex].items.push({ name: val, checked: false });
+        showToast('Item added.', 'success');
+      } else if (packingModal.type === 'edit-item') {
+        updated[packingModal.categoryIndex].items[packingModal.itemIndex].name = val;
+        showToast('Item updated.', 'success');
+      } else if (packingModal.type === 'add-category') {
+        if (updated.some(c => c.category.toLowerCase() === val.toLowerCase())) {
+          showToast('Category already exists!', 'error');
+          return;
+        }
+        updated.push({ category: val, items: [] });
+        showToast('Category created.', 'success');
+      }
+
+      setPackingList(updated);
+      await api.put(`/trips/${id}/packing`, { packingList: updated });
+      if (socketRef.current) {
+        socketRef.current.emit('packing-changed', { tripId: id, action: 'update', data: updated });
+      }
+      setPackingModal(prev => ({ ...prev, show: false, inputValue: '' }));
+    } catch (err) {
+      console.error(err);
+      showToast('Action failed.', 'error');
+    }
+  };
+
+  const handleCreatePoll = async (e) => {
+    e.preventDefault();
+    if (!newPoll.question.trim() || newPoll.options.filter(o => o.trim()).length < 2) {
+      showToast('Please enter a question and at least 2 options.', 'error');
+      return;
+    }
+
+    try {
+      setIsCreatingPoll(true);
+      const filteredOptions = newPoll.options.filter(o => o.trim());
+      const poll = await api.post(`/trips/${id}/polls`, {
+        question: newPoll.question.trim(),
+        options: filteredOptions
+      });
+
+      setPolls(prev => [poll, ...prev]);
+      setShowCreatePollModal(false);
+      setNewPoll({ question: '', options: ['', ''] });
+      showToast('Poll created successfully!', 'success');
+
+      if (socketRef.current) {
+        socketRef.current.emit('poll-changed', {
+          tripId: id,
+          action: 'create',
+          data: poll
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to create poll.', 'error');
+    } finally {
+      setIsCreatingPoll(false);
+    }
+  };
+
+  const handleVotePoll = async (pollId, optionIndex) => {
+    try {
+      const res = await api.post(`/trips/${id}/polls/${pollId}/vote`, { optionIndex });
+      setPolls(prev => prev.map(p => p.id === pollId ? { ...p, votes: res.votes } : p));
+      showToast('Vote registered.', 'success');
+
+      if (socketRef.current) {
+        socketRef.current.emit('poll-changed', {
+          tripId: id,
+          action: 'vote',
+          data: { pollId, votes: res.votes }
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to register vote.', 'error');
+    }
+  };
+
+  const handleDeletePoll = async (pollId) => {
+    setConfirmModal({
+      show: true,
+      title: 'Delete Poll',
+      message: 'Are you sure you want to delete this poll? This action cannot be undone.',
+      confirmText: 'Delete',
+      loading: false,
+      onConfirm: async () => {
+        try {
+          setConfirmModal(prev => ({ ...prev, loading: true, confirmText: 'Deleting...' }));
+          await api.delete(`/trips/${id}/polls/${pollId}`);
+          setPolls(prev => prev.filter(p => p.id !== pollId));
+          showToast('Poll deleted successfully.', 'success');
+
+          if (socketRef.current) {
+            socketRef.current.emit('poll-changed', {
+              tripId: id,
+              action: 'delete',
+              data: { pollId }
+            });
+          }
+          setConfirmModal(prev => ({ ...prev, show: false, loading: false }));
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to delete poll.', 'error');
+          setConfirmModal(prev => ({ ...prev, loading: false, confirmText: 'Delete' }));
+        }
+      }
+    });
+  };
+
+  const handleNotesChange = async (val) => {
+    setNotes(val);
+    if (socketRef.current) {
+      socketRef.current.emit('notes-changed', { tripId: id, data: val });
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    try {
+      setIsSavingNotes(true);
+      await api.put(`/trips/${id}`, { notes });
+      showToast('Notes saved successfully.', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save notes.', 'error');
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
+
+  const handleOpenEditDates = () => {
+    setEditDates({
+      startDate: trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : '',
+      endDate: trip.endDate ? new Date(trip.endDate).toISOString().split('T')[0] : ''
+    });
+    setShowEditDatesModal(true);
+  };
+
+  const handleSaveDates = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedTrip = await api.put(`/trips/${id}`, {
+        startDate: editDates.startDate,
+        endDate: editDates.endDate
+      });
+      setTrip(updatedTrip);
+      setShowEditDatesModal(false);
+      showToast('Trip dates updated successfully!', 'success');
+      if (socketRef.current) {
+        socketRef.current.emit('itinerary-changed', {
+          tripId: id,
+          action: 'update',
+          data: updatedTrip
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to update trip dates.', 'error');
+    }
+  };
+
+  const handleOpenEditBudget = () => {
+    setEditBudget(trip.budget || '');
+    setShowEditBudgetModal(true);
+  };
+
+  const handleSaveBudget = async (e) => {
+    e.preventDefault();
+    if (!editBudget || isNaN(Number(editBudget))) {
+      showToast('Please enter a valid budget amount.', 'error');
+      return;
+    }
+    try {
+      const updatedTrip = await api.put(`/trips/${id}`, {
+        budget: parseFloat(editBudget)
+      });
+      setTrip(updatedTrip);
+      setShowEditBudgetModal(false);
+      showToast('Trip budget updated successfully!', 'success');
+      if (socketRef.current) {
+        socketRef.current.emit('itinerary-changed', {
+          tripId: id,
+          action: 'update',
+          data: updatedTrip
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to update trip budget.', 'error');
     }
   };
 
@@ -511,26 +980,37 @@ export default function CollaborativeTripPage() {
   };
 
   const handleDeleteExpense = async (expId) => {
-    try {
-      setExpensesLoading(true);
-      await api.delete(`/trips/${id}/expenses/${expId}`);
-      const updatedExpenses = expenses.filter(e => e.id !== expId);
-      setExpenses(updatedExpenses);
+    const expenseItem = expenses.find(e => e.id === expId);
+    const itemName = expenseItem ? expenseItem.itemName : 'this expense';
+    setConfirmModal({
+      show: true,
+      title: 'Delete Expense',
+      message: `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        try {
+          setExpensesLoading(true);
+          await api.delete(`/trips/${id}/expenses/${expId}`);
+          const updatedExpenses = expenses.filter(e => e.id !== expId);
+          setExpenses(updatedExpenses);
 
-      if (socketRef.current) {
-        socketRef.current.emit('budget-changed', {
-          tripId: id,
-          action: 'update',
-          data: updatedExpenses
-        });
+          if (socketRef.current) {
+            socketRef.current.emit('budget-changed', {
+              tripId: id,
+              action: 'update',
+              data: updatedExpenses
+            });
+          }
+          showToast('Expense deleted.', 'success');
+          setConfirmModal(prev => ({ ...prev, show: false }));
+        } catch (err) {
+          console.error('Failed to delete expense:', err);
+          showToast('Failed to delete expense.', 'error');
+        } finally {
+          setExpensesLoading(false);
+        }
       }
-      showToast('Expense deleted.', 'success');
-    } catch (err) {
-      console.error('Failed to delete expense:', err);
-      showToast('Failed to delete expense.', 'error');
-    } finally {
-      setExpensesLoading(false);
-    }
+    });
   };
 
   const handleDocFileChange = (e) => {
@@ -601,6 +1081,160 @@ export default function CollaborativeTripPage() {
     }
   };
 
+  const handleViewDocument = async (docId, docTitle, fileName) => {
+    try {
+      showToast(`Decrypting ${docTitle} for viewing...`, 'info');
+      const res = await api.get(`/documents/${docId}/download`);
+      
+      const content = res.file_content;
+      const isImg = fileName.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+      const isPdf = fileName.match(/\.pdf$/i);
+      
+      setActiveViewerDoc({
+        title: docTitle,
+        content: content,
+        fileName: fileName,
+        isImage: !!isImg,
+        isPdf: !!isPdf
+      });
+    } catch (err) {
+      console.error('Failed to view document:', err);
+      showToast('Failed to retrieve document.', 'error');
+    }
+  };
+
+  const handleDeleteDocument = (doc) => {
+    setConfirmModal({
+      show: true,
+      title: 'Delete Document',
+      message: `Are you sure you want to delete "${doc.title}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        try {
+          setDocsLoading(true);
+          await api.delete(`/documents/${doc.id}`);
+          setTripDocuments(prev => prev.filter(d => d.id !== doc.id));
+          showToast('Document deleted.', 'success');
+          setConfirmModal(prev => ({ ...prev, show: false }));
+        } catch (err) {
+          console.error('Failed to delete document:', err);
+          showToast('Failed to delete document.', 'error');
+        } finally {
+          setDocsLoading(false);
+        }
+      }
+    });
+  };
+
+  const handleEditDocumentClick = (doc) => {
+    setEditDocModal({
+      show: true,
+      docId: doc.id,
+      title: doc.title,
+      type: doc.type
+    });
+  };
+
+  const handleUpdateDocument = async (e) => {
+    e.preventDefault();
+    try {
+      setDocsLoading(true);
+      const updated = await api.put(`/documents/${editDocModal.docId}`, {
+        title: editDocModal.title,
+        type: editDocModal.type
+      });
+      setTripDocuments(prev => prev.map(d => d.id === editDocModal.docId ? { ...d, title: updated.title, type: updated.type } : d));
+      setEditDocModal({ show: false, docId: null, title: '', type: 'ticket' });
+      showToast('Document updated successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to update document:', err);
+      showToast('Failed to update document.', 'error');
+    } finally {
+      setDocsLoading(false);
+    }
+  };
+
+  const calculateDetailedSplits = () => {
+    const activeCollabs = collaborators.filter(c => c.status !== 'pending');
+    if (activeCollabs.length === 0) return { balances: [], transactions: [], share: 0 };
+    
+    const N = activeCollabs.length;
+    const totalSpent = expenses.reduce((sum, e) => sum + parseFloat(e.actualAmount || 0), 0);
+    const share = totalSpent / N;
+    
+    const paidMap = {};
+    activeCollabs.forEach(c => {
+      paidMap[c.name] = 0;
+    });
+    
+    expenses.forEach(e => {
+      const payer = e.paidBy;
+      if (payer) {
+        const matchedCollab = activeCollabs.find(c => c.name.toLowerCase() === payer.toLowerCase());
+        if (matchedCollab) {
+          paidMap[matchedCollab.name] = (paidMap[matchedCollab.name] || 0) + parseFloat(e.actualAmount || 0);
+        } else {
+          paidMap[payer] = (paidMap[payer] || 0) + parseFloat(e.actualAmount || 0);
+        }
+      }
+    });
+
+    const balances = [];
+    activeCollabs.forEach(c => {
+      const paid = paidMap[c.name] || 0;
+      balances.push({
+        name: c.name,
+        paid: paid,
+        balance: paid - share
+      });
+    });
+
+    const debtors = balances.filter(b => b.balance < -0.01).map(b => ({ ...b })).sort((a, b) => a.balance - b.balance);
+    const creditors = balances.filter(b => b.balance > 0.01).map(b => ({ ...b })).sort((a, b) => b.balance - a.balance);
+
+    const transactions = [];
+    let i = 0;
+    let j = 0;
+
+    while (i < debtors.length && j < creditors.length) {
+      const debtor = debtors[i];
+      const creditor = creditors[j];
+
+      const oweAmount = Math.min(-debtor.balance, creditor.balance);
+      transactions.push({
+        from: debtor.name,
+        to: creditor.name,
+        amount: oweAmount
+      });
+
+      debtor.balance += oweAmount;
+      creditor.balance -= oweAmount;
+
+      if (Math.abs(debtor.balance) < 0.01) {
+        i++;
+      }
+      if (Math.abs(creditor.balance) < 0.01) {
+        j++;
+      }
+    }
+
+    return {
+      balances,
+      transactions,
+      share
+    };
+  };
+
+  const getCategoryTotals = () => {
+    const totals = {};
+    expenses.forEach(e => {
+      const cat = e.category || 'Other';
+      const amt = Number(e.actualAmount || e.actual_amount || 0);
+      totals[cat] = (totals[cat] || 0) + amt;
+    });
+    return Object.entries(totals).map(([name, value]) => ({ name, value }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6">
@@ -633,6 +1267,37 @@ export default function CollaborativeTripPage() {
   const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
   const daysCount = Math.max(1, Math.ceil(Math.abs(new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24)) + 1);
 
+  const getTripCountdown = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(trip.startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(trip.endDate);
+    end.setHours(0, 0, 0, 0);
+
+    if (today < start) {
+      const diffTime = start - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return `Starts in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
+    } else if (today >= start && today <= end) {
+      return 'Happening Now ✈️';
+    } else {
+      return 'Past Trip';
+    }
+  };
+
+  const getWeatherMock = () => {
+    const dest = (trip.destination || '').toLowerCase();
+    if (dest.includes('london')) return { temp: '18°C', icon: '🌧️', cond: 'Light Rain' };
+    if (dest.includes('paris')) return { temp: '22°C', icon: '⛅', cond: 'Partly Cloudy' };
+    if (dest.includes('frankfurt')) return { temp: '21°C', icon: '⛅', cond: 'Mostly Cloudy' };
+    if (dest.includes('tokyo')) return { temp: '26°C', icon: '☀️', cond: 'Sunny' };
+    if (dest.includes('bali') || dest.includes('beach')) return { temp: '30°C', icon: '🏖️', cond: 'Tropical Sunny' };
+    return { temp: '24°C', icon: '☀️', cond: 'Clear Sky' };
+  };
+
+  const weather = getWeatherMock();
+
   const getDayItineraries = () => {
     if (!trip.itineraries) return [];
     return trip.itineraries
@@ -663,24 +1328,69 @@ export default function CollaborativeTripPage() {
               <span>Back to Workspace</span>
             </button>
 
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">{trip.destination}</h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 flex items-center space-x-1">
-              <Calendar className="h-3.5 w-3.5 text-rose-500" />
-              <span>{new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()} ({daysCount} days)</span>
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center space-x-3">
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900">{trip.destination}</h1>
+                  <span className="text-[10px] font-extrabold uppercase bg-rose-500/10 text-rose-500 px-2.5 py-0.5 rounded-full tracking-wider">
+                    {getTripCountdown()}
+                  </span>
+                </div>
+                <button
+                  onClick={handleOpenEditDates}
+                  className="text-xs sm:text-sm text-slate-555 hover:text-rose-500 mt-1 flex items-center space-x-1 cursor-pointer transition group"
+                  title="Edit Trip Dates"
+                >
+                  <Calendar className="h-3.5 w-3.5 text-rose-500 group-hover:scale-110 transition" />
+                  <span className="font-semibold underline decoration-dotted decoration-slate-300 group-hover:decoration-rose-500">
+                    {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()} ({daysCount} days)
+                  </span>
+                  <span className="text-[10px] text-slate-400 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all ml-1 font-bold">
+                    (Edit)
+                  </span>
+                </button>
+              </div>
+
+              {/* Weather Forecast Pill */}
+              <div className="bg-slate-50 border border-slate-100 px-4 py-2.5 rounded-2xl flex items-center space-x-3 shrink-0 self-start sm:self-auto shadow-sm min-w-[150px]">
+                {weatherLoading ? (
+                  <div className="h-5 w-5 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin mx-auto" />
+                ) : weatherData ? (
+                  <>
+                    <span className="text-2xl">{weatherData.icon}</span>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Live Weather</span>
+                      <span className="text-xs font-black text-slate-800">{weatherData.temp} · {weatherData.cond}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-2xl">{weather.icon}</span>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Forecast</span>
+                      <span className="text-xs font-black text-slate-800">{weather.temp} · {weather.cond}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
 
             <div className="grid grid-cols-3 gap-4 mt-6">
-              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                <span className="text-[10px] text-slate-450 font-bold uppercase block">Budget</span>
-                <span className="text-sm font-extrabold text-slate-850">{tripCurrency.symbol}{Number(trip.budget).toLocaleString()}</span>
-              </div>
+              <button
+                onClick={handleOpenEditBudget}
+                className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-left hover:border-rose-500/35 transition cursor-pointer group"
+                title="Edit Budget"
+              >
+                <span className="text-[10px] text-slate-450 font-bold uppercase block group-hover:text-rose-500 transition">Budget</span>
+                <span className="text-sm font-extrabold text-slate-850 block">{tripCurrency.symbol}{Number(trip.budget).toLocaleString()} <span className="text-[9px] text-slate-400 font-bold group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">(Edit)</span></span>
+              </button>
               <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
                 <span className="text-[10px] text-slate-450 font-bold uppercase block">Travel Style</span>
                 <span className="text-sm font-extrabold text-slate-850 capitalize">{style}</span>
               </div>
               <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                <span className="text-[10px] text-slate-450 font-bold uppercase block">Co-travelers</span>
-                <span className="text-sm font-extrabold text-slate-850">{trip.travelers} Persons</span>
+                <span className="text-[10px] text-slate-450 font-bold uppercase block">Travelers</span>
+                <span className="text-sm font-extrabold text-slate-850">{collaborators.filter(c => c.status !== 'pending').length} Persons</span>
               </div>
             </div>
           </div>
@@ -721,6 +1431,22 @@ export default function CollaborativeTripPage() {
               >
                 Shared Documents
               </button>
+              <button
+                onClick={() => setActiveMainTab('notes')}
+                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer ${
+                  activeMainTab === 'notes' ? 'border-rose-500 text-rose-500' : 'border-transparent text-slate-500 hover:text-slate-850'
+                }`}
+              >
+                Workspace Notes
+              </button>
+              <button
+                onClick={() => setActiveMainTab('polls')}
+                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer ${
+                  activeMainTab === 'polls' ? 'border-rose-500 text-rose-500' : 'border-transparent text-slate-500 hover:text-slate-850'
+                }`}
+              >
+                Polls & Voting
+              </button>
             </div>
 
             {/* Dynamic Content Panel */}
@@ -731,7 +1457,7 @@ export default function CollaborativeTripPage() {
                 <div className="flex-1 flex flex-col">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 mb-6 gap-3 shrink-0">
                     <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Workspace Itinerary</h2>
-                    <div className="flex space-x-1.5 overflow-x-auto max-w-full no-scrollbar pb-1">
+                    <div className="flex items-center space-x-1.5 overflow-x-auto max-w-full no-scrollbar pb-1">
                       {Array.from({ length: daysCount }).map((_, i) => {
                         const dayNum = i + 1;
                         return (
@@ -748,6 +1474,24 @@ export default function CollaborativeTripPage() {
                           </button>
                         );
                       })}
+                      <button
+                        onClick={handleAddDayClick}
+                        className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-500 border border-dashed border-slate-350 hover:text-slate-800 hover:border-slate-400 transition-all duration-200 shrink-0 cursor-pointer flex items-center space-x-1"
+                        title="Add Day to Itinerary"
+                      >
+                        <span>➕</span>
+                        <span>Add Day</span>
+                      </button>
+                      {daysCount > 1 && (
+                        <button
+                          onClick={handleDeleteActiveDay}
+                          className="px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-500 border border-dashed border-rose-200 hover:text-rose-700 hover:border-rose-350 transition-all duration-200 shrink-0 cursor-pointer flex items-center space-x-1"
+                          title={`Delete Day ${activeDayTab}`}
+                        >
+                          <span>🗑️</span>
+                          <span>Delete Day {activeDayTab}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -805,33 +1549,79 @@ export default function CollaborativeTripPage() {
 
               {/* PACKING LIST TAB */}
               {activeMainTab === 'packing' && (
-                <div className="flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col font-sans">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
                     <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Cooperative Packing List</h2>
-                    <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full animate-pulse">Syncing Real-time</span>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={handleAddPackingCategory}
+                        className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        <span>Add Category</span>
+                      </button>
+                    </div>
                   </div>
 
                   {packingList.length > 0 ? (
                     <div className="flex-1 overflow-y-auto pr-1 space-y-5 scrollbar-thin">
                       {packingList.map((cat, catIdx) => (
                         <div key={catIdx} className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
-                          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">{cat.category}</h4>
+                          <div className="flex items-center justify-between mb-3 border-b border-slate-200/60 pb-1.5">
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">{cat.category}</h4>
+                            <div className="flex items-center space-x-1">
+                              <button
+                                onClick={() => handleAddItemToPacking(catIdx)}
+                                className="px-2 py-1 rounded hover:bg-rose-500/10 text-[10px] text-rose-500 font-extrabold transition cursor-pointer flex items-center space-x-0.5"
+                                title="Add Item"
+                              >
+                                <span>➕</span>
+                                <span>Add Item</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeletePackingCategory(catIdx)}
+                                className="p-1 rounded hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                                title="Delete Category"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {cat.items.map((item, itemIdx) => (
-                              <label
+                              <div
                                 key={itemIdx}
-                                className="flex items-center space-x-2.5 p-2 bg-white rounded-xl border border-slate-150 hover:border-rose-500/10 cursor-pointer select-none transition"
+                                className="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-150 hover:border-rose-500/10 transition group"
                               >
-                                <input
-                                  type="checkbox"
-                                  checked={item.checked}
-                                  onChange={() => handleTogglePackingItem(catIdx, itemIdx)}
-                                  className="h-4 w-4 rounded border-slate-300 text-rose-500 focus:ring-rose-500 accent-rose-500"
-                                />
-                                <span className={`text-xs font-medium text-slate-800 ${item.checked ? 'line-through text-slate-400' : ''}`}>
-                                  {item.name}
-                                </span>
-                              </label>
+                                <label className="flex items-center space-x-2.5 cursor-pointer select-none flex-1 overflow-hidden">
+                                  <input
+                                    type="checkbox"
+                                    checked={item.checked}
+                                    onChange={() => handleTogglePackingItem(catIdx, itemIdx)}
+                                    className="h-4 w-4 rounded border-slate-300 text-rose-500 focus:ring-rose-500 accent-rose-500"
+                                  />
+                                  <span className={`text-xs font-medium text-slate-800 truncate ${item.checked ? 'line-through text-slate-400' : ''}`}>
+                                    {item.name}
+                                  </span>
+                                </label>
+                                <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition shrink-0 ml-2">
+                                  <button
+                                    onClick={() => handleEditPackingItem(catIdx, itemIdx)}
+                                    className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+                                    title="Edit Item"
+                                  >
+                                    <Pencil className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeletePackingItem(catIdx, itemIdx)}
+                                    className="p-1 rounded hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                                    title="Delete Item"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -851,13 +1641,22 @@ export default function CollaborativeTripPage() {
                 <div className="flex-1 flex flex-col">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
                     <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Shared Expenses Tracker</h2>
-                    <button
-                      onClick={() => setShowAddExpenseModal(true)}
-                      className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
-                    >
-                      <DollarSign className="h-3.5 w-3.5" />
-                      <span>Log Bill</span>
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setShowDetailedSplitModal(true)}
+                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer border border-slate-200"
+                      >
+                        <Users className="h-3.5 w-3.5 text-slate-550" />
+                        <span>View Detailed Split</span>
+                      </button>
+                      <button
+                        onClick={() => setShowAddExpenseModal(true)}
+                        className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
+                      >
+                        <DollarSign className="h-3.5 w-3.5" />
+                        <span>Log Bill</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Summary Card */}
@@ -867,43 +1666,111 @@ export default function CollaborativeTripPage() {
                         <DollarSign className="h-20 w-20" />
                       </div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Total Spent</span>
-                      <span className="text-xl font-black">{tripCurrency.symbol}{expenses.reduce((sum, e) => sum + parseFloat(e.actualAmount || 0), 0).toLocaleString()}</span>
+                      <span className="text-xl font-black">{tripCurrency.symbol}{expenses.reduce((sum, e) => sum + parseFloat(e.actualAmount || e.actual_amount || 0), 0).toLocaleString()}</span>
                     </div>
                     <div className="p-4 bg-rose-50/50 border border-rose-500/10 rounded-2xl relative overflow-hidden">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Per Person Split</span>
                       <span className="text-xl font-black text-rose-500">
-                        {tripCurrency.symbol}{((expenses.reduce((sum, e) => sum + parseFloat(e.actualAmount || 0), 0)) / (collaborators.length || 1)).toFixed(2)}
+                        {tripCurrency.symbol}{((expenses.reduce((sum, e) => sum + parseFloat(e.actualAmount || e.actual_amount || 0), 0)) / (collaborators.filter(c => c.status !== 'pending').length || 1)).toFixed(2)}
                       </span>
-                      <span className="text-[9px] text-slate-500 block font-semibold mt-1">Split among {collaborators.length} co-travelers</span>
+                      <span className="text-[9px] text-slate-500 block font-semibold mt-1">Split among {collaborators.filter(c => c.status !== 'pending').length} travelers</span>
                     </div>
                   </div>
 
-                  {/* Expenses List */}
+                   {/* Expenses List & Category Chart */}
                   {expenses.length > 0 ? (
-                    <div className="flex-1 overflow-y-auto pr-1 space-y-2 scrollbar-thin">
-                      {expenses.map((e) => (
-                        <div key={e.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                          <div className="flex items-center space-x-3">
-                            <div className="h-8 w-8 rounded-xl bg-slate-200 flex items-center justify-center text-xs font-black uppercase text-slate-600 shrink-0">
-                              {e.category ? e.category.charAt(0) : '$'}
+                    <div className="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden min-h-0">
+                      {/* Left: Expenses List */}
+                      <div className="flex-1 overflow-y-auto pr-1 space-y-2 scrollbar-thin">
+                        {expenses.map((e) => (
+                          <div key={e.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                            <div className="flex items-center space-x-3">
+                              <div className="h-8 w-8 rounded-xl bg-slate-200 flex items-center justify-center text-xs font-black uppercase text-slate-600 shrink-0">
+                                {e.category ? e.category.charAt(0) : '$'}
+                              </div>
+                              <div>
+                                <span className="text-xs font-extrabold text-slate-800 block">{e.itemName || e.item_name}</span>
+                                <span className="text-[9px] text-slate-500 font-semibold block">Paid by <strong className="text-rose-500">{e.paidBy || e.paid_by || 'Me'}</strong></span>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-xs font-extrabold text-slate-800 block">{e.itemName}</span>
-                              <span className="text-[9px] text-slate-500 font-semibold block">Paid by <strong className="text-rose-500">{e.paidBy || 'Me'}</strong></span>
+                            <div className="flex items-center space-x-3">
+                              <span className="text-xs font-black text-slate-850">{tripCurrency.symbol}{Number(e.actualAmount || e.actual_amount).toLocaleString()}</span>
+                              <button
+                                onClick={() => handleDeleteExpense(e.id)}
+                                className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                                title="Delete Expense"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-3">
-                            <span className="text-xs font-black text-slate-850">{tripCurrency.symbol}{Number(e.actualAmount).toLocaleString()}</span>
-                            <button
-                              onClick={() => handleDeleteExpense(e.id)}
-                              className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
-                              title="Delete Expense"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+
+                      {/* Right: Category Donut Chart Visualizer */}
+                      <div className="w-full md:w-56 bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center shrink-0">
+                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-3 text-center self-stretch border-b border-slate-200 pb-1.5">Category Spend</span>
+                        {(() => {
+                          const catTotals = getCategoryTotals();
+                          const grandTotal = catTotals.reduce((sum, c) => sum + c.value, 0) || 1;
+                          
+                          let accumulatedPercent = 0;
+                          return (
+                            <div className="flex flex-col items-center w-full">
+                              <div className="relative w-24 h-24 flex items-center justify-center mb-3">
+                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                                  {catTotals.map((cat, idx) => {
+                                    const percent = (cat.value / grandTotal) * 100;
+                                    const strokeDash = `${percent} ${100 - percent}`;
+                                    const strokeOffset = 100 - accumulatedPercent;
+                                    accumulatedPercent += percent;
+                                    
+                                    const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'];
+                                    const color = colors[idx % colors.length];
+
+                                    return (
+                                      <circle
+                                        key={idx}
+                                        cx="18"
+                                        cy="18"
+                                        r="15.915"
+                                        fill="none"
+                                        stroke={color}
+                                        strokeWidth="4.2"
+                                        strokeDasharray={strokeDash}
+                                        strokeDashoffset={strokeOffset}
+                                        className="transition-all duration-300"
+                                      />
+                                    );
+                                  })}
+                                </svg>
+                                <div className="absolute flex flex-col items-center justify-center text-center">
+                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total</span>
+                                  <span className="text-[11px] font-black text-slate-800 leading-normal mt-0.5">{tripCurrency.symbol}{Math.round(grandTotal).toLocaleString()}</span>
+                                </div>
+                              </div>
+                              
+                              <div className="w-full space-y-1 max-h-[110px] overflow-y-auto scrollbar-thin pr-1">
+                                {catTotals.map((cat, idx) => {
+                                  const colors = ['bg-rose-500', 'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-cyan-500'];
+                                  const colorClass = colors[idx % colors.length];
+                                  const percent = Math.round((cat.value / grandTotal) * 100);
+                                  return (
+                                    <div key={idx} className="flex items-center justify-between text-[9px] font-bold text-slate-700">
+                                      <div className="flex items-center space-x-1 truncate">
+                                        <span className={`h-1.5 w-1.5 rounded-full ${colorClass} shrink-0`} />
+                                        <span className="truncate">{cat.name}</span>
+                                      </div>
+                                      <span className="shrink-0 text-slate-500 ml-1">{percent}%</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
                   ) : (
                     <div className="flex-1 flex flex-col items-center justify-center py-10 text-slate-450 border border-dashed border-slate-200 rounded-2xl">
@@ -929,24 +1796,76 @@ export default function CollaborativeTripPage() {
                   </div>
 
                   {tripDocuments.length > 0 ? (
-                    <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 scrollbar-thin">
+                    <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start scrollbar-thin">
                       {tripDocuments.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:shadow-md transition">
-                          <div className="flex items-center space-x-3 overflow-hidden">
-                            <div className="h-9 w-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-xs font-black uppercase shrink-0">
-                              {doc.type ? doc.type.substring(0, 3) : 'DOC'}
-                            </div>
-                            <div className="overflow-hidden">
-                              <span className="text-xs font-extrabold text-slate-800 block truncate max-w-[200px]" title={doc.title}>{doc.title}</span>
-                              <span className="text-[9px] text-slate-450 font-bold block truncate max-w-[180px]">{doc.file_name}</span>
+                        <div key={doc.id} className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                          <div>
+                            {/* Header Section: Icon + Title & Type + Action Button */}
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-center space-x-3 overflow-hidden">
+                                <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                  <Shield className="h-5 w-5" />
+                                </div>
+                                <div className="overflow-hidden">
+                                  <h4 className="text-xs font-black text-slate-800 truncate" title={doc.title}>
+                                    {doc.title}
+                                  </h4>
+                                  <span className="text-[9px] uppercase font-black text-rose-500 block mt-0.5">
+                                    {doc.type || 'Document'}
+                                  </span>
+                                  <span className="text-[9px] text-slate-400 font-bold block mt-0.5">
+                                    Uploaded by: <span className="text-rose-500 font-extrabold">{doc.uploaded_by || 'Me'}</span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              {doc.user_id === user.id && (
+                                <div className="flex items-center space-x-1 shrink-0">
+                                  <button
+                                    onClick={() => handleEditDocumentClick(doc)}
+                                    className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                                    title="Edit Document"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteDocument(doc)}
+                                    className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                                    title="Delete Document"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDownloadDocument(doc.id, doc.title)}
-                            className="px-3 py-1.5 bg-slate-200 hover:bg-rose-500 text-slate-700 hover:text-white rounded-lg text-[10px] font-black transition cursor-pointer"
-                          >
-                            Retrieve Securely
-                          </button>
+
+                          {/* Attachment Box with File Name and Action Buttons (Horizontal layout) */}
+                          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-row items-center justify-between gap-4 mt-2">
+                            <div className="flex items-center space-x-2 overflow-hidden min-w-0">
+                              <span className="text-rose-500 font-bold shrink-0">📄</span>
+                              <span className="text-[10px] font-bold text-slate-700 truncate" title={doc.file_name}>
+                                {doc.file_name}
+                              </span>
+                            </div>
+
+                            <div className="flex space-x-1.5 shrink-0">
+                              <button
+                                onClick={() => handleViewDocument(doc.id, doc.title, doc.file_name)}
+                                className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9px] font-black transition cursor-pointer flex items-center justify-center space-x-1"
+                              >
+                                <span>👁</span>
+                                <span>View</span>
+                              </button>
+                              <button
+                                onClick={() => handleDownloadDocument(doc.id, doc.title)}
+                                className="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-[9px] font-black transition cursor-pointer flex items-center justify-center space-x-1 shadow-sm"
+                              >
+                                <span>↓</span>
+                                <span>Download</span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -960,6 +1879,119 @@ export default function CollaborativeTripPage() {
                 </div>
               )}
 
+              {/* WORKSPACE NOTES TAB */}
+              {activeMainTab === 'notes' && (
+                <div className="flex-1 flex flex-col font-sans">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Shared Scratchpad Notes</h2>
+                    <button
+                      onClick={handleSaveNotes}
+                      disabled={isSavingNotes}
+                      className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
+                    >
+                      <span>💾</span>
+                      <span>{isSavingNotes ? 'Saving...' : 'Save Notes'}</span>
+                    </button>
+                  </div>
+                  <div className="flex-1 flex flex-col relative">
+                    <textarea
+                      value={notes}
+                      onChange={(e) => handleNotesChange(e.target.value)}
+                      placeholder="Paste addresses, flight links, packing ideas, or scratch details here. Updates are synced in real-time to all co-travelers..."
+                      className="w-full flex-1 p-4 bg-slate-50 border border-slate-150 rounded-2xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-rose-500/30 resize-none font-mono leading-relaxed"
+                    />
+                    <div className="absolute bottom-3 right-3 bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded border border-emerald-500/20">
+                      Auto-saving enabled
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* POLLS & VOTING TAB */}
+              {activeMainTab === 'polls' && (
+                <div className="flex-1 flex flex-col font-sans">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Active Workspace Polls</h2>
+                    <button
+                      onClick={() => setShowCreatePollModal(true)}
+                      className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
+                    >
+                      <span>🗳️</span>
+                      <span>Create Poll</span>
+                    </button>
+                  </div>
+
+                  {polls.length > 0 ? (
+                    <div className="flex-1 overflow-y-auto pr-1 space-y-4 scrollbar-thin">
+                      {polls.map((poll) => {
+                        const totalVotes = poll.votes.length;
+                        const hasVoted = poll.votes.some(v => v.userId === user.id);
+                        const userVote = poll.votes.find(v => v.userId === user.id);
+
+                        return (
+                          <div key={poll.id} className="bg-slate-50 border border-slate-100 rounded-3xl p-5 shadow-sm relative group">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-xs font-black text-slate-900">{poll.question}</h4>
+                              <button
+                                onClick={() => handleDeletePoll(poll.id)}
+                                className="p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                                title="Delete Poll"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <div className="space-y-2">
+                              {poll.options.map((opt, idx) => {
+                                const optionVotesCount = poll.votes.filter(v => v.optionIndex === idx).length;
+                                const percent = totalVotes > 0 ? Math.round((optionVotesCount / totalVotes) * 100) : 0;
+                                const isUserChoice = userVote && userVote.optionIndex === idx;
+
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => handleVotePoll(poll.id, idx)}
+                                    className={`w-full p-3 rounded-2xl border text-left text-xs font-bold transition-all relative overflow-hidden flex items-center justify-between cursor-pointer ${
+                                      isUserChoice
+                                        ? 'bg-rose-50 border-rose-400 text-rose-500'
+                                        : 'bg-white border-slate-150 text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    <div 
+                                      className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ${
+                                        isUserChoice ? 'bg-rose-500/10' : 'bg-slate-200/50'
+                                      }`}
+                                      style={{ width: `${percent}%` }}
+                                    />
+                                    <span className="relative z-10">{opt}</span>
+                                    <span className="relative z-10 text-[10px] text-slate-500">
+                                      {optionVotesCount} votes ({percent}%)
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="mt-3 text-[9px] text-slate-450 font-semibold flex justify-between items-center px-1">
+                              <span>Total Votes: {totalVotes}</span>
+                              {hasVoted && (
+                                <span className="text-emerald-500 flex items-center space-x-0.5">
+                                  <span>✓</span>
+                                  <span>Your vote is registered</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center py-12 text-slate-450 border border-dashed border-slate-200 rounded-2xl">
+                      <MessageSquare className="h-9 w-9 text-slate-350 animate-pulse mb-2" />
+                      <p className="text-xs font-bold text-slate-500">No active polls found.</p>
+                      <p className="text-[10px] text-slate-400 mt-1 max-w-[250px] text-center leading-normal">Create polls to vote on flight times, hotel options, or dinner spots collaboratively.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -968,7 +2000,7 @@ export default function CollaborativeTripPage() {
         <div className="lg:col-span-4 flex flex-col space-y-6">
           
           {/* Members / Collaborators Card */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl h-[200px] flex flex-col">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl h-[300px] flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <Users className="h-4.5 w-4.5 text-rose-500" />
@@ -1194,10 +2226,12 @@ export default function CollaborativeTripPage() {
               </button>
               <button
                 type="button"
+                disabled={confirmModal.loading}
                 onClick={confirmModal.onConfirm}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-1.5"
               >
-                {confirmModal.confirmText}
+                {confirmModal.loading && <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                <span>{confirmModal.confirmText}</span>
               </button>
             </div>
           </div>
@@ -1431,6 +2465,111 @@ export default function CollaborativeTripPage() {
         </div>
       )}
 
+      {/* Detailed Split Breakdown Modal */}
+      {showDetailedSplitModal && (() => {
+        const { balances, transactions, share } = calculateDetailedSplits();
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm overflow-y-auto font-sans">
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative my-8">
+              <button
+                onClick={() => setShowDetailedSplitModal(false)}
+                className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-slate-850 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="flex items-center space-x-3 mb-5 text-rose-500">
+                <Users className="h-6 w-6 animate-pulse" />
+                <h3 className="text-lg font-black text-slate-900 font-sans">Detailed Bill Split</h3>
+              </div>
+
+              <div className="space-y-6">
+                {/* Info summary */}
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex justify-between items-center text-xs">
+                  <div>
+                    <span className="text-slate-500 block font-semibold">Total Expenses</span>
+                    <strong className="text-sm font-black text-slate-800">
+                      {tripCurrency.symbol}{expenses.reduce((sum, e) => sum + parseFloat(e.actualAmount || 0), 0).toLocaleString()}
+                    </strong>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-slate-500 block font-semibold">Individual Share</span>
+                    <strong className="text-sm font-black text-rose-500">
+                      {tripCurrency.symbol}{share.toFixed(2)}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Individual Balances */}
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2.5">Member Breakdown</h4>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin">
+                    {balances.map((b, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs">
+                        <div>
+                          <strong className="text-slate-800 block">{b.name}</strong>
+                          <span className="text-[10px] text-slate-500">Paid: {tripCurrency.symbol}{b.paid.toFixed(2)}</span>
+                        </div>
+                        <div className="text-right">
+                          {b.balance > 0.01 ? (
+                            <span className="font-extrabold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                              Gets back {tripCurrency.symbol}{b.balance.toFixed(2)}
+                            </span>
+                          ) : b.balance < -0.01 ? (
+                            <span className="font-extrabold text-rose-500 bg-rose-500/10 px-2.5 py-1 rounded-lg">
+                              Owes {tripCurrency.symbol}{Math.abs(b.balance).toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="font-extrabold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                              Settled
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Transfers/Settlements */}
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2.5">Settlement Plan (Simplest Transfers)</h4>
+                  {transactions.length > 0 ? (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin">
+                      {transactions.map((t, idx) => (
+                        <div key={idx} className="flex justify-between items-center p-3 bg-rose-50/50 border border-rose-500/10 rounded-xl text-xs">
+                          <div className="flex items-center space-x-2">
+                            <strong className="text-rose-500 font-extrabold">{t.from}</strong>
+                            <span className="text-slate-500 font-medium">gives</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <strong className="text-slate-900 font-extrabold">{tripCurrency.symbol}{t.amount.toFixed(2)}</strong>
+                            <span className="text-slate-500 font-medium">to</span>
+                            <strong className="text-emerald-600 font-extrabold">{t.to}</strong>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 border border-dashed border-slate-200 rounded-xl text-center text-slate-500 text-xs">
+                      🎉 Everyone is completely settled!
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 mt-4">
+                  <button
+                    onClick={() => setShowDetailedSplitModal(false)}
+                    className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-lg cursor-pointer"
+                  >
+                    Close Breakdown
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Upload Shared Document Modal */}
       {showUploadDocModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm overflow-y-auto font-sans">
@@ -1503,6 +2642,388 @@ export default function CollaborativeTripPage() {
                   className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
                 >
                   {docsLoading ? 'Encrypting...' : 'Upload Doc'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Document Viewer Modal */}
+      {activeViewerDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm overflow-y-auto font-sans">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl relative my-8">
+            <button
+              onClick={() => setActiveViewerDoc(null)}
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-slate-850 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-5 text-rose-500">
+              <Shield className="h-6 w-6 animate-pulse" />
+              <h3 className="text-lg font-black text-slate-900 font-sans">{activeViewerDoc.title}</h3>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center justify-center min-h-[300px]">
+              {activeViewerDoc.isImage ? (
+                <img 
+                  src={activeViewerDoc.content} 
+                  alt={activeViewerDoc.title}
+                  className="max-h-[60vh] max-w-full rounded-xl object-contain shadow-md"
+                />
+              ) : activeViewerDoc.isPdf ? (
+                <iframe 
+                  src={activeViewerDoc.content} 
+                  title={activeViewerDoc.title}
+                  className="w-full h-[60vh] rounded-xl border-0"
+                />
+              ) : (
+                <div className="text-center p-6 text-slate-500">
+                  <p className="text-sm font-semibold mb-3">Preview not available for this file type.</p>
+                  <span className="text-xs text-slate-400 font-bold block">{activeViewerDoc.fileName}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-3 pt-5 border-t border-slate-100 mt-5">
+              <button
+                onClick={() => setActiveViewerDoc(null)}
+                className="flex-1 py-3 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-500 text-xs font-bold transition cursor-pointer"
+              >
+                Close Preview
+              </button>
+              <button
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = activeViewerDoc.content;
+                  link.download = activeViewerDoc.fileName || activeViewerDoc.title;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                className="flex-1 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer text-center"
+              >
+                Download Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Document Modal */}
+      {editDocModal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm overflow-y-auto font-sans">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative my-8">
+            <button
+              onClick={() => setEditDocModal({ show: false, docId: null, title: '', type: 'ticket' })}
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-slate-850 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-5 text-rose-500">
+              <Pencil className="h-6 w-6 animate-pulse" />
+              <h3 className="text-lg font-black text-slate-900 font-sans">Edit Document Details</h3>
+            </div>
+
+            <form onSubmit={handleUpdateDocument} className="space-y-4 font-sans">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Document Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Passport"
+                  value={editDocModal.title}
+                  onChange={(e) => setEditDocModal(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-150 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-rose-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Type</label>
+                <select
+                  value={editDocModal.type}
+                  onChange={(e) => setEditDocModal(prev => ({ ...prev, type: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-150 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-rose-500/40"
+                >
+                  <option value="passport">Passport</option>
+                  <option value="visa">Visa</option>
+                  <option value="ticket">Ticket</option>
+                  <option value="hotel">Hotel Voucher</option>
+                  <option value="insurance">Insurance</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setEditDocModal({ show: false, docId: null, title: '', type: 'ticket' })}
+                  className="flex-1 py-3 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-500 text-xs font-bold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={docsLoading}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
+                >
+                  {docsLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Packing List Modal */}
+      {packingModal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm overflow-y-auto font-sans">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative my-8">
+            <button
+              onClick={() => setPackingModal(prev => ({ ...prev, show: false, inputValue: '' }))}
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-slate-850 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-5 text-rose-500">
+              <Sparkles className="h-6 w-6 animate-pulse" />
+              <h3 className="text-lg font-black text-slate-900 font-sans">{packingModal.title}</h3>
+            </div>
+
+            <form onSubmit={handlePackingModalSubmit} className="space-y-4 font-sans">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
+                  {packingModal.type === 'add-category' ? 'Category Name' : 'Item Name'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={packingModal.type === 'add-category' ? 'e.g. Toiletries' : 'e.g. Sunscreen'}
+                  value={packingModal.inputValue}
+                  onChange={(e) => setPackingModal(prev => ({ ...prev, inputValue: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-150 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-rose-500/40"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex items-center space-x-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setPackingModal(prev => ({ ...prev, show: false, inputValue: '' }))}
+                  className="flex-1 py-3 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-500 text-xs font-bold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
+                >
+                  Confirm
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Poll Modal */}
+      {showCreatePollModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm overflow-y-auto font-sans">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative my-8">
+            <button
+              onClick={() => setShowCreatePollModal(false)}
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-slate-850 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-5 text-rose-500">
+              <MessageSquare className="h-6 w-6 animate-pulse" />
+              <h3 className="text-lg font-black text-slate-900 font-sans">Create Group Poll</h3>
+            </div>
+
+            <form onSubmit={handleCreatePoll} className="space-y-4 font-sans">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5 font-sans">Poll Question</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Which hotel should we book?"
+                  value={newPoll.question}
+                  onChange={(e) => setNewPoll(prev => ({ ...prev, question: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-150 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-rose-500/40 font-sans"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1 font-sans">Options</label>
+                {newPoll.options.map((opt, idx) => (
+                  <div key={idx} className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder={`Option ${idx + 1}`}
+                      value={opt}
+                      onChange={(e) => {
+                        const updatedOpts = [...newPoll.options];
+                        updatedOpts[idx] = e.target.value;
+                        setNewPoll(prev => ({ ...prev, options: updatedOpts }));
+                      }}
+                      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-150 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-rose-500/40 font-sans"
+                    />
+                    {newPoll.options.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedOpts = newPoll.options.filter((_, oIdx) => oIdx !== idx);
+                          setNewPoll(prev => ({ ...prev, options: updatedOpts }));
+                        }}
+                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition"
+                        title="Remove Option"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={() => setNewPoll(prev => ({ ...prev, options: [...prev.options, ''] }))}
+                  className="text-[10px] text-rose-500 font-extrabold hover:underline transition flex items-center space-x-1"
+                >
+                  <span>➕</span>
+                  <span>Add Option</span>
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePollModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-500 text-xs font-bold transition cursor-pointer font-sans"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingPoll}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer font-sans disabled:opacity-50"
+                >
+                  {isCreatingPoll ? 'Launching...' : 'Launch Poll'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Trip Dates Modal */}
+      {showEditDatesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm overflow-y-auto font-sans">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative my-8">
+            <button
+              onClick={() => setShowEditDatesModal(false)}
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-slate-850 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-5 text-rose-500">
+              <Calendar className="h-6 w-6 animate-pulse" />
+              <h3 className="text-lg font-black text-slate-900 font-sans">Edit Trip Dates</h3>
+            </div>
+
+            <form onSubmit={handleSaveDates} className="space-y-4 font-sans">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5 font-sans">Start Date</label>
+                <input
+                  type="date"
+                  required
+                  value={editDates.startDate}
+                  onChange={(e) => setEditDates(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-150 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-rose-500/40 font-sans"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5 font-sans">End Date</label>
+                <input
+                  type="date"
+                  required
+                  value={editDates.endDate}
+                  onChange={(e) => setEditDates(prev => ({ ...prev, endDate: e.target.value }))}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-150 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-rose-500/40 font-sans"
+                />
+              </div>
+
+              <div className="flex items-center space-x-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditDatesModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-500 text-xs font-bold transition cursor-pointer font-sans"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer font-sans"
+                >
+                  Save Dates
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Trip Budget Modal */}
+      {showEditBudgetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm overflow-y-auto font-sans">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative my-8">
+            <button
+              onClick={() => setShowEditBudgetModal(false)}
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-slate-850 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-5 text-rose-500">
+              <DollarSign className="h-6 w-6 animate-pulse" />
+              <h3 className="text-lg font-black text-slate-900 font-sans">Edit Trip Budget</h3>
+            </div>
+
+            <form onSubmit={handleSaveBudget} className="space-y-4 font-sans">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5 font-sans">Total Budget ({tripCurrency.symbol})</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="any"
+                  placeholder="e.g. 1500"
+                  value={editBudget}
+                  onChange={(e) => setEditBudget(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-150 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-rose-500/40 font-sans"
+                />
+              </div>
+
+              <div className="flex items-center space-x-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditBudgetModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-505 text-xs font-bold transition cursor-pointer font-sans"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer font-sans"
+                >
+                  Save Budget
                 </button>
               </div>
             </form>

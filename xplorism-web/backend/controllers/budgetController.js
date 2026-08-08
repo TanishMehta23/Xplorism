@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import { getBudgetInsightsFromGemini, scanReceiptWithGemini } from '../services/geminiService.js';
+import { createTripNotification } from './notificationController.js';
 
 /**
  * GET /api/trips/:id/budget
@@ -233,6 +234,15 @@ export const createExpense = async (req, res) => {
     );
 
     const expense = result.rows[0];
+
+    try {
+      const userRes = await query('SELECT name FROM users WHERE id = $1', [userId]);
+      const senderName = userRes.rows[0]?.name || 'Co-traveler';
+      await createTripNotification(id, userId, senderName, 'Expense Logged', `logged a new bill/expense: "${expense.item_name}"`);
+    } catch (notifErr) {
+      console.error('Failed to trigger createExpense notification:', notifErr);
+    }
+
     res.status(201).json({
       id: expense.id,
       tripId: expense.trip_id,
@@ -305,6 +315,15 @@ export const updateExpense = async (req, res) => {
     );
 
     const expense = result.rows[0];
+
+    try {
+      const userRes = await query('SELECT name FROM users WHERE id = $1', [userId]);
+      const senderName = userRes.rows[0]?.name || 'Co-traveler';
+      await createTripNotification(id, userId, senderName, 'Expense Updated', `updated the bill/expense: "${expense.item_name}"`);
+    } catch (notifErr) {
+      console.error('Failed to trigger updateExpense notification:', notifErr);
+    }
+
     res.json({
       id: expense.id,
       tripId: expense.trip_id,
@@ -354,6 +373,15 @@ export const deleteExpense = async (req, res) => {
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    const expense = result.rows[0];
+    try {
+      const userRes = await query('SELECT name FROM users WHERE id = $1', [userId]);
+      const senderName = userRes.rows[0]?.name || 'Co-traveler';
+      await createTripNotification(id, userId, senderName, 'Expense Deleted', `deleted the bill/expense: "${expense.item_name}"`);
+    } catch (notifErr) {
+      console.error('Failed to trigger deleteExpense notification:', notifErr);
     }
 
     res.json({ message: 'Expense deleted successfully' });

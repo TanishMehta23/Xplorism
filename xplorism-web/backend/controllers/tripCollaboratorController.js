@@ -73,7 +73,7 @@ export const addCollaborator = async (req, res) => {
 
     // 1. Verify that current user is the owner or already a collaborator of the trip
     const tripCheck = await query(
-      `SELECT user_id, destination, start_date as "startDate", end_date as "endDate" FROM trips WHERE id = $1`,
+      `SELECT * FROM trips WHERE id = $1`,
       [tripId]
     );
 
@@ -81,10 +81,10 @@ export const addCollaborator = async (req, res) => {
       return res.status(404).json({ message: 'Trip not found' });
     }
 
-    const trip = tripCheck.rows[0];
-    const tripOwnerId = trip.user_id;
-    
-    if (tripOwnerId !== currentUserId) {
+    let trip = tripCheck.rows[0];
+    let activeTripId = tripId;
+
+    if (trip.user_id !== currentUserId) {
       // Check if they are a collaborator
       const collabCheck = await query(
         `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2`,
@@ -95,7 +95,65 @@ export const addCollaborator = async (req, res) => {
       }
     }
 
-    // 2. Find target user by email
+    // 2. Clone the trip to a separate collaborative trip if it is currently personal
+    if (!trip.is_collaborative) {
+      console.log(`Cloning personal trip ${tripId} into a separate collaborative workspace...`);
+      const clonedResult = await query(
+        `INSERT INTO trips (user_id, destination, start_date, end_date, budget, travelers, travel_style, interests, packing_list, notes, is_collaborative)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE) RETURNING *`,
+        [
+          trip.user_id,
+          trip.destination,
+          trip.start_date,
+          trip.end_date,
+          trip.budget,
+          trip.travelers,
+          trip.travel_style,
+          trip.interests,
+          trip.packing_list,
+          trip.notes || '',
+          true
+        ]
+      );
+      const clonedTrip = clonedResult.rows[0];
+      activeTripId = clonedTrip.id;
+      trip = clonedTrip;
+
+      // Copy itinerary items
+      const itineraries = await query('SELECT * FROM itinerary WHERE trip_id = $1', [tripId]);
+      for (const item of itineraries.rows) {
+        await query(
+          `INSERT INTO itinerary (trip_id, day, activity, time, location, estimated_cost)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [activeTripId, item.day, item.activity, item.time, item.location, item.estimated_cost]
+        );
+      }
+
+      // Copy expenses
+      const expenses = await query('SELECT * FROM expenses WHERE trip_id = $1', [tripId]);
+      for (const item of expenses.rows) {
+        await query(
+          `INSERT INTO expenses (trip_id, day, category, item_name, planned_amount, actual_amount, currency, date, notes, paid_by)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [
+            activeTripId,
+            item.day,
+            item.category,
+            item.item_name,
+            item.planned_amount,
+            item.actual_amount,
+            item.currency,
+            item.date,
+            item.notes,
+            item.paid_by
+          ]
+        );
+      }
+    }
+
+    const tripOwnerId = trip.user_id;
+
+    // 3. Find target user by email
     const userResult = await query(
       `SELECT id, name, email FROM users WHERE email = $1`,
       [email.toLowerCase().trim()]
@@ -107,32 +165,33 @@ export const addCollaborator = async (req, res) => {
 
     const targetUser = userResult.rows[0];
 
-    // 3. Prevent adding the owner
+    // 4. Prevent adding the owner
     if (targetUser.id === tripOwnerId) {
       return res.status(400).json({ message: 'Trip owner is already collaborator' });
     }
 
-    // 4. Insert into trip_collaborators with pending status
+    // 5. Insert into trip_collaborators with pending status
     await query(
       `INSERT INTO trip_collaborators (trip_id, user_id, status) 
        VALUES ($1, $2, 'pending') 
        ON CONFLICT (trip_id, user_id) DO NOTHING`,
-      [tripId, targetUser.id]
+      [activeTripId, targetUser.id]
     );
 
-    // 5. Send invitation email
+    // 6. Send invitation email
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const hostName = req.user.name || 'A fellow traveler';
-    const approveUrl = `${clientUrl}/trip-invite/respond?tripId=${tripId}&status=approved`;
-    const declineUrl = `${clientUrl}/trip-invite/respond?tripId=${tripId}&status=declined`;
+    const approveUrl = `${clientUrl}/trip-invite/respond?tripId=${activeTripId}&status=approved`;
+    const declineUrl = `${clientUrl}/trip-invite/respond?tripId=${activeTripId}&status=declined`;
 
-    // Trigger async email send
     sendTripInvitationEmail(targetUser.email, trip, hostName, approveUrl, declineUrl).catch(err => {
       console.error('Error sending invitation email:', err);
     });
 
     res.status(201).json({
       message: 'Collaborator invited successfully. An invitation email has been sent.',
+      tripId: activeTripId,
+      cloned: activeTripId !== tripId,
       user: {
         id: targetUser.id,
         name: targetUser.name,

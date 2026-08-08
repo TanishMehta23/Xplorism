@@ -551,14 +551,14 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
  * Calls Gemini API to get nearby places
  */
 export const getNearbyPlacesFromGemini = async (destination) => {
-  const prompt = `You are an expert travel assistant. For the travel destination "${destination}", list 8 famous nearby tourist places, cities, national parks, or historic sites located within a 100 km radius.
-Provide the approximate distance in kilometers and a short, engaging description for each.
+  const prompt = `You are an expert travel assistant. For the travel destination "${destination}", list 8 famous attractions, landmarks, and sights inside the city of "${destination}" itself, as well as nearby tourist cities, national parks, or historic sites located within a 100 km radius.
+For attractions within the city itself, specify the distance as "In City". Provide the approximate distance in kilometers (or "In City") and a short, engaging description for each.
 You must return a JSON array conforming exactly to this schema:
 [
   {
     "name": "Place Name",
-    "distance": "Distance (e.g. '25 km')",
-    "type": "Type of Place (e.g. 'Nature', 'Pilgrimage', 'Historical', 'Adventure')",
+    "distance": "Distance (e.g. 'In City' or '25 km')",
+    "type": "Type of Place (e.g. 'Nature', 'Landmark', 'Historical', 'Adventure')",
     "description": "Short description of what to see or do there."
   }
 ]

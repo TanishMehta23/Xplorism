@@ -83,6 +83,7 @@ ALTER TABLE users ALTER COLUMN password DROP NOT NULL;
 CREATE TABLE documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL, -- 'passport', 'visa', 'ticket', 'hotel', 'insurance', 'other'
     file_name VARCHAR(255),

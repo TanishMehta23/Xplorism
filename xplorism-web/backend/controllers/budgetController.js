@@ -17,7 +17,13 @@ export const getBudgetOverview = async (req, res) => {
     }
     const trip = tripResult.rows[0];
     if (trip.user_id !== userId) {
-      return res.status(403).json({ message: 'Not authorized' });
+      const collabCheck = await query(
+        `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'`,
+        [id, userId]
+      );
+      if (collabCheck.rows.length === 0) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
     }
 
     const totalBudget = parseFloat(trip.budget) || 0;
@@ -200,7 +206,13 @@ export const createExpense = async (req, res) => {
       return res.status(404).json({ message: 'Trip not found' });
     }
     if (tripResult.rows[0].user_id !== userId) {
-      return res.status(403).json({ message: 'Not authorized' });
+      const collabCheck = await query(
+        `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'`,
+        [id, userId]
+      );
+      if (collabCheck.rows.length === 0) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
     }
 
     const result = await query(
@@ -257,7 +269,13 @@ export const updateExpense = async (req, res) => {
       return res.status(404).json({ message: 'Trip not found' });
     }
     if (tripResult.rows[0].user_id !== userId) {
-      return res.status(403).json({ message: 'Not authorized' });
+      const collabCheck = await query(
+        `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'`,
+        [id, userId]
+      );
+      if (collabCheck.rows.length === 0) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
     }
 
     // Check expense exists
@@ -321,7 +339,13 @@ export const deleteExpense = async (req, res) => {
       return res.status(404).json({ message: 'Trip not found' });
     }
     if (tripResult.rows[0].user_id !== userId) {
-      return res.status(403).json({ message: 'Not authorized' });
+      const collabCheck = await query(
+        `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'`,
+        [id, userId]
+      );
+      if (collabCheck.rows.length === 0) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
     }
 
     const result = await query(

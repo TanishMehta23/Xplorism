@@ -165,7 +165,14 @@ export const updateTrip = async (req, res) => {
 
     const trip = checkTrip.rows[0];
     if (trip.user_id !== userId) {
-      return res.status(403).json({ message: 'Not authorized to update this trip' });
+      // Check if they are an approved collaborator
+      const collabCheck = await query(
+        `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'`,
+        [id, userId]
+      );
+      if (collabCheck.rows.length === 0) {
+        return res.status(403).json({ message: 'Not authorized to update this trip' });
+      }
     }
 
     // Prepare update parameters (falling back to current values if undefined)
@@ -314,7 +321,13 @@ export const getPackingList = async (req, res) => {
 
     const trip = checkTrip.rows[0];
     if (trip.user_id !== userId) {
-      return res.status(403).json({ message: 'Not authorized to view this trip' });
+      const collabCheck = await query(
+        `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'`,
+        [id, userId]
+      );
+      if (collabCheck.rows.length === 0) {
+        return res.status(403).json({ message: 'Not authorized to view this trip' });
+      }
     }
 
     // If packing list already exists in DB, return it
@@ -377,7 +390,13 @@ export const updatePackingList = async (req, res) => {
 
     const trip = checkTrip.rows[0];
     if (trip.user_id !== userId) {
-      return res.status(403).json({ message: 'Not authorized to update this trip' });
+      const collabCheck = await query(
+        `SELECT id FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2 AND status = 'approved'`,
+        [id, userId]
+      );
+      if (collabCheck.rows.length === 0) {
+        return res.status(403).json({ message: 'Not authorized to update this trip' });
+      }
     }
 
     await query('UPDATE trips SET packing_list = $1 WHERE id = $2', [JSON.stringify(packingList), id]);

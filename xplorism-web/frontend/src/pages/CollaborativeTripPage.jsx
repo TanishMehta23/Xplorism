@@ -7,7 +7,7 @@ import {
   MapPin, ArrowLeft, Send, UserPlus, X, Trash2, Shield,
   MessageCircle, Info
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, SOCKET_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -103,7 +103,7 @@ export default function CollaborativeTripPage() {
     if (!id || !user || !trip) return;
 
     // Connect to backend Socket.io
-    const socket = io('http://localhost:5000');
+    const socket = io(SOCKET_URL);
     socketRef.current = socket;
 
     // Join room
@@ -375,19 +375,26 @@ export default function CollaborativeTripPage() {
             )}
 
             <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
-              {collaborators.map((c) => (
-                <div key={c.id} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-xl">
-                  <div className="flex items-center space-x-2.5">
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-black uppercase text-white shadow-sm ${
-                      c.role === 'owner' ? 'bg-rose-600' : 'bg-slate-400'
-                    }`}>
-                      {c.name.charAt(0)}
+              {collaborators.map((c) => {
+                const isOnline = c.name === user.name || onlineCollaborators.includes(c.name);
+                return (
+                  <div key={c.id} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-xl">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="relative">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-black uppercase text-white shadow-sm ${
+                          c.role === 'owner' ? 'bg-rose-600' : 'bg-slate-400'
+                        }`}>
+                          {c.name.charAt(0)}
+                        </div>
+                        <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border border-white ${
+                          isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-350'
+                        }`} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 block">{c.name}</span>
+                        <span className="text-[10px] text-slate-550 block truncate max-w-[150px]">{c.email}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">{c.name}</span>
-                      <span className="text-[10px] text-slate-550 block truncate max-w-[150px]">{c.email}</span>
-                    </div>
-                  </div>
 
                   <div className="flex items-center space-x-2">
                     {c.role === 'owner' ? (
@@ -408,7 +415,8 @@ export default function CollaborativeTripPage() {
                     )}
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
           </div>
 

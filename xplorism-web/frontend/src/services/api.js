@@ -1,5 +1,15 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+export const SOCKET_URL = (() => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    return envUrl.endsWith('/api') ? envUrl.slice(0, -4) : envUrl;
+  }
+  // Fallback for local development
+  return 'http://localhost:5000';
+})();
+
+
 const request = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
   

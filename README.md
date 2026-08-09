@@ -36,7 +36,8 @@ Our goal is to deliver a smooth, visually arresting, and fully interactive tool 
 
 ### 🏛️ Attractions & Amenities Lookup (Overpass & Wikipedia)
 - **High-Fidelity Attraction Querying**: Fetches castles, temples, museums, parks, beaches, and historic monuments.
-- **Sequential Mirror Failovers**: Queries multiple public Overpass API mirror servers in a round-robin style if the primary server encounters timeouts or rate limits.
+- **Sequential Mirror Failovers**: Queries multiple public Overpass API mirror servers (including main, French, and LZ4 mirrors) in a round-robin style if the primary server encounters timeouts or rate limits.
+- **Increased Timeout Resilience**: Uses a 12-second timeout per server to handle heavy OpenStreetMap loads reliably before failing over.
 - **Wikipedia Geosearch Fallback**: Automatically queries Wikipedia's Geosearch API if all Overpass servers fail, ensuring points of interest are always populated.
 - **Nearby Amenities Locator**: Clicking on any tourist attraction displays cafes, restaurants, bars, and parks within a 1km radius on a detailed sidebar.
 
@@ -59,6 +60,37 @@ Our goal is to deliver a smooth, visually arresting, and fully interactive tool 
 - **Deep-Link Interceptions**: Requests to access `/login` or `/register` are intercepted, redirecting users to the home dashboard and launching the modal instantly.
 - **Router State Clearing**: Prevents persistent modal reopening loops on manual page reloads or browser history modifications.
 
+### 👥 Real-Time Collaborative Workspace
+- **Dynamic Collaboration Sync**: Multi-user editing of trips powered by WebSockets (Socket.io). Instantly syncs modifications to itineraries, budgets, packing lists, notes, documents, and polls across all online clients.
+- **Collaborator Presence Tracking**: Displays active co-travelers and identifies which tab (Itinerary, Budget, Docs, etc.) they are currently working on in real-time.
+- **Invitations & Approval Workflow**: Allows users to invite collaborators to their trip workspace. Collaborators receive dynamic notifications and can approve or decline invitations.
+- **Topic-Based Trip Chat**: Supports direct group chat inside the trip workspace, utilizing an underlying Apache Kafka message broker pipeline (with an in-memory event stream fallback) to broadcast real-time co-traveler messages.
+
+### 🛡️ Secure Document Vault
+- **AES-256-GCM Encryption**: Securely uploads and stores sensitive travel documents (e.g., Visas, Passports, Tickets, Insurance). File contents are fully encrypted in memory on the backend before being written to storage.
+- **Master Encryption Key**: Protects documents using a secure key wrap mechanism with unique initialization vectors (IVs) and auth tags stored in the database.
+- **Granular Access Control**: Decryption and download endpoints verify ownership or approved collaborator status before returning document files.
+
+### 📊 Expense Tracker & AI Budget Insights
+- **Actual vs Planned Budgeting**: Visualizes travel expenses by category, tracking planned costs directly against actual expenditures.
+- **AI-Powered Financial Insights**: Queries Gemini AI to analyze spending patterns and provide optimization recommendations or alerts.
+- **OCR Receipt Scanning**: Users can upload images of physical receipts; the backend scans and extracts payment items, categories, and totals automatically.
+- **Co-Traveler Bill Splitting**: Assigns expenses to specific co-travelers (`paid_by` attribute) for simplified group bill management.
+
+### 💬 Community Feed & Social Hub
+- **Global Trip Sharing**: Social feed where travelers publish itineraries, post photos, write reviews, and tag destination cities.
+- **Base64 Photo Uploads**: Supports attaching trip snapshots directly inside posts.
+- **Interactive Engagements**: Users can like, comment, and bookmark community travel ideas with real-time like tracking.
+
+### 🔗 Wishlists & Link Sharing
+- **Trip Favorites**: Bookmark attractions, locations, and hotel rooms with interactive cards mapped to specific itineraries.
+- **Public Shared Links**: Generates read-only public routes (e.g., `/shared-trip/:id`) so non-registered users can view the interactive map and travel itinerary details.
+
+### ⚙️ Enhanced User Profiles & Security Layers
+- **Custom Travel Preferences**: Stores profile configurations, avatar photos, and travel history metrics to tune future AI generations.
+- **Two-Factor OTP & Account Recovery**: Provides security verification flows including OTP email triggers, forgot password requests, and password reset forms.
+- **Multilingual UI Support**: Includes Language Context and providers to toggle translation keys across global elements such as the Footer and page headers.
+
 ---
 
 ## 🛠️ Technology Stack
@@ -71,10 +103,15 @@ Our goal is to deliver a smooth, visually arresting, and fully interactive tool 
 - **Router**: React Router DOM v7
 - **Mapping**: Leaflet React & Vanilla Leaflet
 - **Payments**: Razorpay Checkout SDK
+- **Real-Time Sync**: Socket.io Client
+- **State Management**: Context API (Auth, Theme, Language contexts)
 
 ### Backend
 - **Framework**: Node.js & Express.js (ES Modules import syntax)
-- **Database**: PostgreSQL (Prisma Client & native `pg` client integration)
+- **Database**: PostgreSQL (Native `pg` client integration)
+- **Real-Time WebSockets**: Socket.io Server
+- **Event Streaming / Messaging**: Apache Kafka (`kafkajs` integration with in-memory failover event stream)
+- **Security & Encryption**: Node.js built-in `crypto` library (AES-256-GCM encryption with dynamic IVs)
 - **Authentication**: JWT (JSON Web Tokens) & BcryptJS for password hashing
 - **Hosting / DB Cloud**: Compatible with Neon Database, PostgreSQL, or local instances
 
@@ -124,6 +161,21 @@ Xplorism uses PostgreSQL to store user accounts, itineraries, and trip configura
 erDiagram
     users ||--o{ trips : "creates"
     trips ||--o{ itinerary : "contains"
+    trips ||--o{ expenses : "logs"
+    users ||--o{ favorites : "marks"
+    trips ||--o{ favorites : "links"
+    users ||--o{ documents : "uploads"
+    trips ||--o{ documents : "associates"
+    users ||--o{ posts : "creates"
+    trips ||--o{ trip_collaborators : "has"
+    users ||--o{ trip_collaborators : "joins"
+    trips ||--o{ trip_messages : "contains"
+    users ||--o{ trip_messages : "sends"
+    trips ||--o{ trip_polls : "has"
+    trip_polls ||--o{ trip_poll_votes : "has"
+    users ||--o{ trip_poll_votes : "votes"
+    trips ||--o{ workspace_notifications : "has"
+    users ||--o{ workspace_notifications : "receives"
 
     users {
         UUID id PK
@@ -131,6 +183,9 @@ erDiagram
         VARCHAR email UK
         VARCHAR password
         VARCHAR google_id UK
+        TEXT profile_photo
+        JSONB preferences
+        JSONB travel_history
         TIMESTAMP created_at
     }
 
@@ -144,6 +199,9 @@ erDiagram
         INTEGER travelers
         VARCHAR travel_style
         TEXT_ARRAY interests
+        JSONB packing_list
+        TEXT notes
+        BOOLEAN is_collaborative
         TIMESTAMP created_at
     }
 
@@ -155,6 +213,107 @@ erDiagram
         VARCHAR time
         VARCHAR location
         DOUBLE_PRECISION estimated_cost
+    }
+
+    expenses {
+        UUID id PK
+        UUID trip_id FK
+        INTEGER day
+        VARCHAR category
+        VARCHAR item_name
+        DOUBLE_PRECISION planned_amount
+        DOUBLE_PRECISION actual_amount
+        VARCHAR currency
+        VARCHAR paid_by
+        DATE date
+        TEXT notes
+        TIMESTAMP created_at
+    }
+
+    favorites {
+        UUID id PK
+        UUID user_id FK
+        UUID trip_id FK
+        VARCHAR name
+        VARCHAR type
+        TEXT description
+        VARCHAR location
+        VARCHAR distance
+        VARCHAR category
+        TEXT image_url
+        VARCHAR destination
+        JSONB metadata
+        TIMESTAMP created_at
+    }
+
+    documents {
+        UUID id PK
+        UUID user_id FK
+        UUID trip_id FK
+        VARCHAR title
+        VARCHAR type
+        VARCHAR file_name
+        TEXT encrypted_file_key
+        TEXT iv
+        TEXT auth_tag
+        TIMESTAMP created_at
+    }
+
+    posts {
+        UUID id PK
+        UUID user_id FK
+        VARCHAR username
+        VARCHAR trip_destination
+        VARCHAR title
+        TEXT content
+        TEXT photo_content
+        INTEGER likes
+        TEXT_ARRAY liked_by
+        TIMESTAMP created_at
+    }
+
+    trip_collaborators {
+        UUID id PK
+        UUID trip_id FK
+        UUID user_id FK
+        VARCHAR status
+        TIMESTAMP created_at
+    }
+
+    trip_messages {
+        UUID id PK
+        UUID trip_id FK
+        UUID user_id FK
+        VARCHAR sender_name
+        TEXT message
+        TIMESTAMP created_at
+    }
+
+    trip_polls {
+        UUID id PK
+        UUID trip_id FK
+        TEXT question
+        JSONB options
+        TIMESTAMP created_at
+    }
+
+    trip_poll_votes {
+        UUID id PK
+        UUID poll_id FK
+        UUID user_id FK
+        INTEGER option_index
+        TIMESTAMP created_at
+    }
+
+    workspace_notifications {
+        UUID id PK
+        UUID trip_id FK
+        UUID user_id FK
+        VARCHAR sender_name
+        VARCHAR title
+        TEXT message
+        BOOLEAN is_read
+        TIMESTAMP created_at
     }
 ```
 
@@ -233,33 +392,98 @@ psql -U your_postgres_user -d xplorism -f xplorism-web/backend/schema.sql
 
 ## 📡 API Documentation & Endpoints
 
-### 🔐 Authentication Routes
+### 🔐 Authentication & Profile Routes
 | Method | Endpoint | Auth Required | Request Body | Description |
 | :--- | :--- | :---: | :--- | :--- |
 | **POST** | `/auth/register` | No | `{ "name", "email", "password" }` | Registers a new user account, returns JWT. |
 | **POST** | `/auth/login` | No | `{ "email", "password" }` | Authenticates user credentials, returns JWT. |
-| **POST** | `/auth/google` | No | `{ "token" }` | Authenticates Google Client credentials. |
+| **POST** | `/auth/google` | No | `{ "token" }` | Authenticates Google Sign-In credentials. |
+| **POST** | `/auth/verify-otp` | No | `{ "email", "otp" }` | Verifies a 2FA or registration OTP token. |
+| **POST** | `/auth/forgot-password` | No | `{ "email" }` | Sends password recovery instructions and OTP. |
+| **POST** | `/auth/reset-password` | No | `{ "email", "otp", "newPassword" }` | Resets password after OTP confirmation. |
+| **GET** | `/auth/profile` | **Yes (JWT)** | *None* | Fetches profile photo, history, and preferences. |
+| **PUT** | `/auth/profile` | **Yes (JWT)** | `{ "name", "profile_photo", "preferences" }` | Updates profile details and preference parameters. |
 
 ### ✈️ Trip & Itinerary Routes
 | Method | Endpoint | Auth Required | Request Body / Query Params | Description |
 | :--- | :--- | :---: | :--- | :--- |
-| **GET** | `/trips` | **Yes (JWT)** | *None* | Retrieves all saved trips and detailed itineraries for the authenticated user. |
-| **POST** | `/trips` | **Yes (JWT)** | `{ "destination", "startDate", "endDate", "budget", "travelers", "travelStyle", "interests", "itinerary" }` | Saves a new trip and its daily itineraries in the database. |
-| **PUT** | `/trips/:id` | **Yes (JWT)** | `{ "destination", "startDate", "endDate", "budget", "travelers", "travelStyle", "interests", "itinerary" }` | Updates details or overrides the itineraries of an existing trip. |
-| **DELETE**| `/trips/:id` | **Yes (JWT)** | *None* | Deletes the specified trip and cascades deletions to related itineraries. |
-| **POST** | `/trips/generate`| No | `{ "destination", "startDate", "endDate", "budget", "travelers", "travelStyle", "interests" }` | Direct AI model call. Returns structured JSON containing a customized itinerary. |
+| **GET** | `/trips` | **Yes (JWT)** | *None* | Retrieves all saved trips and itineraries. |
+| **POST** | `/trips` | **Yes (JWT)** | `{ destination, startDate, endDate, budget, travelers, travelStyle, interests, itinerary }` | Saves a new trip to the database. |
+| **PUT** | `/trips/:id` | **Yes (JWT)** | `{ destination, startDate, endDate, budget, travelers, travelStyle, interests, itinerary, packingList }` | Updates details or pack lists of a trip. |
+| **DELETE**| `/trips/:id` | **Yes (JWT)** | *None* | Deletes trip and cascades to itineraries. |
+| **POST** | `/trips/generate`| No | `{ destination, startDate, endDate, budget, travelers, travelStyle, interests }` | Requests Gemini/Ollama to generate custom itinerary JSON. |
+| **GET** | `/trips/share/:id`| No | *None* | Public shared link reader for read-only view. |
+| **GET** | `/trips/:id/packing` | **Yes (JWT)** | *None* | Fetches the trip's packing checklist items. |
+| **PUT** | `/trips/:id/packing` | **Yes (JWT)** | `{ "packingList" }` | Updates/toggles checklist items. |
+| **GET** | `/trips/:id/events` | **Yes (JWT)** | *None* | Fetches real local events for the trip area. |
+
+### 👥 Collaborative Workspace & Chat Routes
+| Method | Endpoint | Auth Required | Request Body / Query Params | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| **GET** | `/trips/shared-workspace` | **Yes (JWT)** | *None* | Lists all collaborative workspaces user is part of. |
+| **GET** | `/trips/:id/collaborators` | **Yes (JWT)** | *None* | Retrieves collaborator list and status for a trip. |
+| **POST** | `/trips/:id/collaborators` | **Yes (JWT)** | `{ "email" }` | Invites a co-traveler to collaborate on a trip. |
+| **DELETE**| `/trips/:id/collaborators/:userId` | **Yes (JWT)** | *None* | Removes a co-traveler from the trip workspace. |
+| **POST** | `/trips/:id/join` | **Yes (JWT)** | *None* | Joins workspace via active invite token. |
+| **POST** | `/trips/:id/collaborators/respond`| **Yes (JWT)** | `{ "status" }` | Approves or declines a workspace invitation. |
+| **GET** | `/trips/:id/messages` | **Yes (JWT)** | *None* | Fetches historical trip workspace chat messages. |
+| **POST** | `/trips/:id/messages` | **Yes (JWT)** | `{ "message" }` | Broadcasts group messages via Kafka brokers. |
+
+### 🗳️ Trip Poll Routes
+| Method | Endpoint | Auth Required | Request Body | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| **GET** | `/trips/:id/polls` | **Yes (JWT)** | *None* | Fetches all active voting polls in the workspace. |
+| **POST** | `/trips/:id/polls` | **Yes (JWT)** | `{ "question", "options" }` | Creates a new voting poll for co-travelers. |
+| **POST** | `/trips/:id/polls/:pollId/vote` | **Yes (JWT)** | `{ "optionIndex" }` | Casts or updates a vote on a specific poll. |
+| **DELETE**| `/trips/:id/polls/:pollId` | **Yes (JWT)** | *None* | Deletes a poll from the workspace. |
+
+### 🛡️ Document Vault Routes
+| Method | Endpoint | Auth Required | Request Body | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| **GET** | `/documents` | **Yes (JWT)** | *None* | Fetches general/unlinked document metadata list. |
+| **GET** | `/documents/trip/:tripId`| **Yes (JWT)** | *None* | Fetches metadata of documents associated with a trip. |
+| **GET** | `/documents/:id/download` | **Yes (JWT)** | *None* | Decrypts document content dynamically in memory. |
+| **POST** | `/documents` | **Yes (JWT)** | `{ title, type, file_name, file_content, trip_id }` | Encrypts (AES-256-GCM) and uploads a new document. |
+| **PUT** | `/documents/:id` | **Yes (JWT)** | `{ title, type, file_name, file_content }` | Updates metadata or file content in the vault. |
+| **DELETE**| `/documents/:id` | **Yes (JWT)** | *None* | Permanently removes document and its encrypted files. |
+
+### 📊 Budget & Expense Routes
+| Method | Endpoint | Auth Required | Request Body / Query Params | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| **GET** | `/budget/:id/budget` | **Yes (JWT)** | *None* | Aggregates actual vs planned spending categories. |
+| **POST** | `/budget/:id/budget/insights` | **Yes (JWT)** | *None* | Calls Gemini to analyze category expenses. |
+| **POST** | `/budget/:id/budget/scan-receipt` | **Yes (JWT)** | `{ "fileContent" }` | OCR receipt processing via Gemini. |
+| **POST** | `/budget/:id/expenses` | **Yes (JWT)** | `{ category, item_name, planned_amount, actual_amount, currency, paid_by, date, notes }` | Logs a new expense item inside the trip. |
+| **PUT** | `/budget/:id/expenses/:expenseId` | **Yes (JWT)** | `{ category, item_name, planned_amount, actual_amount, currency, paid_by, date, notes }` | Updates an logged expense record. |
+| **DELETE**| `/budget/:id/expenses/:expenseId` | **Yes (JWT)** | *None* | Deletes an expense item. |
 
 ### 🏨 Hotel & Payment Routes
 | Method | Endpoint | Auth Required | Query Parameters | Description |
 | :--- | :--- | :---: | :--- | :--- |
 | **GET** | `/hotels/search` | No | `destination=CityName` | Fetches 20 real-world hotels dynamically with coordinates and pricing. |
 
+### 💬 Community Post Routes
+| Method | Endpoint | Auth Required | Request Body | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| **GET** | `/posts` | **Yes (JWT)** | *None* | Retrieves list of global community travel posts. |
+| **POST** | `/posts` | **Yes (JWT)** | `{ title, content, trip_destination, photo_content }` | Creates a global feed post with base64 image support. |
+| **POST** | `/posts/:id/like` | **Yes (JWT)** | *None* | Likes or un-likes a post dynamically. |
+| **PUT** | `/posts/:id` | **Yes (JWT)** | `{ title, content, trip_destination, photo_content }` | Edits an existing post. |
+| **DELETE**| `/posts/:id` | **Yes (JWT)** | *None* | Deletes a community post. |
+
 ### 📍 Geocoding & Discovery Routes
 | Method | Endpoint | Auth Required | Query Parameters | Description |
 | :--- | :--- | :---: | :--- | :--- |
 | **GET** | `/geocode` | No | `q=CityName` | Proxies searches to Nominatim with cache lookups and fallback keywords. |
+| **GET** | `/overpass` | No | `data=QueryString` | Proxies searches to public Overpass API mirrors with round-robin failover and 12-second timeouts to avoid CORS. |
 | **GET** | `/nearby` | No | `destination=CityName` | Prompts Gemini/Ollama to recommend 8 nearby sites within 100km. |
 | **GET** | `/health` | No | *None* | Simple API heartbeat indicator. |
+
+### 🔔 Notification Routes
+| Method | Endpoint | Auth Required | Request Body | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| **GET** | `/notifications` | **Yes (JWT)** | *None* | Fetches read/unread collaborator invitations/updates. |
+| **POST** | `/notifications/email-reminder` | **Yes (JWT)** | `{ "tripId", "email" }` | Emails the complete itinerary/budget summary. |
 
 ---
 

@@ -87,13 +87,15 @@ app.get('/overpass', async (req, res) => {
 
   const endpoints = [
     'https://overpass-api.de/api/interpreter',
+    'https://overpass.openstreetmap.fr/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
     'https://overpass.openstreetmap.ru/cgi/interpreter'
   ];
 
   for (const endpoint of endpoints) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000); // Increased timeout to 12s for heavy OSM loads
 
     try {
       const url = `${endpoint}?data=${encodeURIComponent(data)}`;

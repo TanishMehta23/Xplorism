@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Send, Mail } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Footer() {
+  const [activeModal, setActiveModal] = useState(null);
   const { theme } = useTheme();
   const { t } = useLanguage();
   const isDark = theme === 'dark';
@@ -152,12 +153,56 @@ export default function Footer() {
         }`}>
           <p className={`transition-colors duration-200 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>&copy; {new Date().getFullYear()} Xplorism. {t('all_rights_reserved')}</p>
           <div className="flex items-center space-x-6 mt-4 sm:mt-0">
-            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('privacy_policy')}</a>
-            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('terms_of_service')}</a>
-            <a href="#" className={`transition-all duration-200 hover:scale-105 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('cookie_settings')}</a>
+            <button onClick={() => setActiveModal('privacy')} className={`transition-all duration-200 hover:scale-105 cursor-pointer bg-transparent border-none p-0 outline-none ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('privacy_policy')}</button>
+            <button onClick={() => setActiveModal('terms')} className={`transition-all duration-200 hover:scale-105 cursor-pointer bg-transparent border-none p-0 outline-none ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('terms_of_service')}</button>
+            <button onClick={() => setActiveModal('cookies')} className={`transition-all duration-200 hover:scale-105 cursor-pointer bg-transparent border-none p-0 outline-none ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('cookie_settings')}</button>
           </div>
         </div>
       </div>
+
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+          <div className={`border rounded-3xl p-6 max-w-md w-full shadow-2xl relative transition-all duration-200 ${
+            isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-800'
+          }`}>
+            <button
+              onClick={() => setActiveModal(null)}
+              className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-rose-500 transition cursor-pointer text-sm font-bold border-none bg-transparent"
+            >
+              ✕
+            </button>
+            {activeModal === 'privacy' && (
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wider mb-3 text-rose-500">Privacy Policy</h3>
+                <div className="text-xs space-y-2.5 max-h-[300px] overflow-y-auto pr-1 leading-relaxed text-slate-500">
+                  <p>Welcome to Xplorism! We take your privacy seriously. All documents uploaded to our Document Vault are fully encrypted in memory and stored securely using AES-256-GCM encryption.</p>
+                  <p>We only collect information necessary to facilitate collaborative trip planning, including your name, email address, trip destinations, itineraries, and shared expenses.</p>
+                  <p>Your personal data is never sold or shared with unauthorized third parties. By using our services, you consent to our collection and storage of your trip metadata and encrypted files.</p>
+                </div>
+              </div>
+            )}
+            {activeModal === 'terms' && (
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wider mb-3 text-rose-500">Terms of Service</h3>
+                <div className="text-xs space-y-2.5 max-h-[300px] overflow-y-auto pr-1 leading-relaxed text-slate-500">
+                  <p>By registering and using Xplorism, you agree to comply with and be bound by the following terms of service.</p>
+                  <p>You agree not to upload any malicious code, unauthorized materials, or illegal documents to the shared vaults or trip workspace scratchpads.</p>
+                  <p>Collaborative trip creation, budgeting tools, and live chat services are provided "as-is" without warranty. We do our best to maintain real-time sync via WebSocket and Kafka services, but are not liable for transient network disruptions.</p>
+                </div>
+              </div>
+            )}
+            {activeModal === 'cookies' && (
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wider mb-3 text-rose-500">Cookie Settings</h3>
+                <div className="text-xs space-y-2.5 max-h-[300px] overflow-y-auto pr-1 leading-relaxed text-slate-500">
+                  <p>Xplorism uses essential cookies and local storage tokens to keep you logged in and preserve your active trip workspace preferences (such as selected tabs or dark mode).</p>
+                  <p>We do not use tracking or advertising cookies. You can choose to disable cookies in your browser settings, but doing so will prevent you from logging in and accessing collaborative features.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </footer>
   );
 }

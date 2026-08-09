@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Compass, Zap, MapPin, CloudRain, Star, Plus, Calendar, DollarSign, Users, Navigation, ArrowRight, Locate, Wallet, FolderLock, MessageSquare } from 'lucide-react';
+import { Compass, Zap, MapPin, CloudRain, Star, Plus, Calendar, DollarSign, Users, Navigation, ArrowRight, Locate, Wallet, FolderLock, MessageSquare, Sun, Moon, Globe, Building, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import Footer from '../components/Footer';
 import { api } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const destinations = [
   {
@@ -130,10 +132,24 @@ const fetchWikipediaAttractions = async (lat, lon) => {
 
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
+  const isDark = theme === 'dark';
   const location = useLocation();
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
+  const [isLangOpen, setIsLangOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.lang-selector-container')) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   // Leaflet Map States & Refs
   const [leafletLoaded, setLeafletLoaded] = useState(false);
@@ -535,28 +551,84 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="bg-white text-slate-800 min-h-screen font-sans selection:bg-rose-100 selection:text-rose-600">
+    <div className={`min-h-screen font-sans selection:bg-rose-100 selection:text-rose-600 transition-colors duration-300 ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-800'}`}>
 
       {/* Navigation */}
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100 flex-nowrap">
+      <nav className={`max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between border-b flex-nowrap ${isDark ? 'border-slate-900' : 'border-slate-100'}`}>
         <Link to="/" className="flex items-center space-x-2 sm:space-x-3 shrink-0">
           <img
             src="/logo.png"
             alt="Xplorism Logo"
             className="h-10 sm:h-14 w-10 sm:w-14 object-contain rounded-full shadow-sm"
           />
-          <span className="text-slate-900 font-extrabold tracking-tight text-lg sm:text-2xl">
+          <span className={`font-extrabold tracking-tight text-lg sm:text-2xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
             Xplorism
           </span>
         </Link>
 
-        <div className="flex items-center shrink-0">
+        <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
+          {/* Language Selector */}
+          <div className="relative lang-selector-container">
+            <button
+              onClick={() => setIsLangOpen(!isLangOpen)}
+              className={`p-2 rounded-xl border flex items-center space-x-1.5 text-xs font-semibold cursor-pointer transition ${
+                isDark ? 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-950'
+              }`}
+            >
+              <Globe className="h-4 w-4" />
+              <span className="uppercase">{language}</span>
+            </button>
+            <div className={`absolute right-0 mt-2 w-32 rounded-2xl shadow-xl border p-1.5 z-50 transition-all ${
+              isLangOpen ? 'block' : 'hidden'
+            } ${
+              isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-700'
+            }`}>
+              {[
+                { code: 'en', label: 'English' },
+                { code: 'es', label: 'Español' },
+                { code: 'fr', label: 'Français' },
+                { code: 'de', label: 'Deutsch' },
+                { code: 'hi', label: 'हिन्दी' },
+                { code: 'ar', label: 'العربية' },
+                { code: 'pt', label: 'Português' }
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    setLanguage(lang.code);
+                    setIsLangOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    language === lang.code
+                      ? 'bg-rose-500 text-white'
+                      : isDark ? 'hover:bg-slate-800 hover:text-white' : 'hover:bg-slate-50 hover:text-slate-950'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className={`p-2 rounded-xl border cursor-pointer transition ${
+              isDark ? 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-950'
+            }`}
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {isDark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-600" />}
+          </button>
+
           {isAuthenticated ? (
             <Link
               to="/dashboard"
-              className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all duration-200"
+              className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
+                isDark ? 'bg-white text-slate-950 hover:bg-slate-100' : 'bg-slate-900 text-white hover:bg-slate-800'
+              }`}
             >
-              Dashboard
+              {t('go_to_dashboard')}
             </Link>
           ) : (
             <div className="flex items-center space-x-1 sm:space-x-3">
@@ -565,18 +637,22 @@ export default function LandingPage() {
                   setAuthModalMode('login');
                   setIsAuthModalOpen(true);
                 }}
-                className="px-2 sm:px-4 py-2 text-slate-600 hover:text-slate-900 font-semibold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
+                className={`px-2 sm:px-4 py-2 font-semibold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                  isDark ? 'text-slate-450 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
               >
-                Sign In
+                {t('sign_in')}
               </button>
               <button
                 onClick={() => {
                   setAuthModalMode('register');
                   setIsAuthModalOpen(true);
                 }}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
+                className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                  isDark ? 'bg-white text-slate-950 hover:bg-slate-100' : 'bg-slate-900 text-white hover:bg-slate-800'
+                }`}
               >
-                Sign Up
+                {t('sign_up')}
               </button>
             </div>
           )}
@@ -589,20 +665,24 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-4xl md:text-6xl font-black tracking-tight mb-6 leading-tight text-slate-900"
+          className="text-4xl md:text-6xl font-black tracking-tight mb-6 leading-tight"
         >
-          <span className="text-[#f87171]">Discover Your Next Adventure:</span>
+          <span className="text-[#f87171]">
+            {language === 'es' ? 'Descubre tu próxima aventura:' : language === 'fr' ? 'Découvrez votre prochaine aventure :' : language === 'de' ? 'Entdecke dein nächstes Abenteuer:' : language === 'hi' ? 'अपने अगले साहसिक कार्य की खोज करें:' : language === 'ar' ? 'اكتشف مغامرتك القادمة:' : language === 'pt' ? 'Descubra sua próxima aventura:' : 'Discover Your Next Adventure:'}
+          </span>
           <br />
-          <span className="text-slate-900 font-black">Personalized Itineraries at Your Fingertips</span>
+          <span className={`font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            {language === 'es' ? ' Itinerarios personalizados al alcance de tu mano' : language === 'fr' ? ' Des itinéraires personnalisés à portée de main' : language === 'de' ? ' Personalisierte Reiserouten auf Knopfdruck' : language === 'hi' ? ' अपनी उंगलियों पर व्यक्तिगत यात्रा कार्यक्रम' : language === 'ar' ? ' مسارات رحلات مخصصة في متناول يدك' : language === 'pt' ? ' Roteiros personalizados ao seu alcance' : ' Personalized Itineraries at Your Fingertips'}
+          </span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
-          className="text-base md:text-lg text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed font-normal"
+          className={`text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
         >
-          Your personal trip planner and travel curator, creating custom itineraries tailored to your interests and budget.
+          {language === 'es' ? 'Tu planificador de viajes personal y curador de viajes, creando itinerarios personalizados adaptados a tus intereses y presupuesto.' : language === 'fr' ? 'Votre planificateur de voyage personnel et conservateur de voyage, créant des itinéraires personnalisés adaptés à vos intérêts et à votre budget.' : language === 'de' ? 'Ihr persönlicher Reiseplaner und Reisekurator, der personalisierte Reiserouten erstellt, die auf Ihre Interessen und Ihr Budget zugeschnitten sind.' : language === 'hi' ? 'आपका व्यक्तिगत यात्रा योजनाकार और यात्रा क्यूरेटर, आपकी रुचियों और बजट के अनुरूप कस्टम यात्रा कार्यक्रम तैयार करता है।' : language === 'ar' ? 'مخطط رحلتك الشخصي ومنسق السفر، لإنشاء مسارات مخصصة تتناسب مع اهتماماتك وميزانيتك.' : language === 'pt' ? 'Seu planejador de viagens pessoal e curador de viagens, criando roteiros personalizados sob medida para seus interesses e orçamento.' : 'Your personal trip planner and travel curator, creating custom itineraries tailored to your interests and budget.'}
         </motion.p>
 
         <motion.div
@@ -614,9 +694,11 @@ export default function LandingPage() {
           {isAuthenticated ? (
             <Link
               to="/dashboard"
-              className="px-7 py-3.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-slate-950/10"
+              className={`px-7 py-3.5 rounded-lg font-semibold text-sm transition-all duration-200 shadow-md ${
+                isDark ? 'bg-white hover:bg-slate-100 text-slate-950' : 'bg-slate-950 hover:bg-slate-800 text-white shadow-slate-950/10'
+              }`}
             >
-              <span>Go to Dashboard</span>
+              <span>{t('go_to_dashboard')}</span>
             </Link>
           ) : (
             <button
@@ -624,9 +706,11 @@ export default function LandingPage() {
                 setAuthModalMode('register');
                 setIsAuthModalOpen(true);
               }}
-              className="px-7 py-3.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-slate-950/10 cursor-pointer"
+              className={`px-7 py-3.5 rounded-lg font-semibold text-sm transition-all duration-200 shadow-md cursor-pointer ${
+                isDark ? 'bg-white hover:bg-slate-100 text-slate-950' : 'bg-slate-950 hover:bg-slate-800 text-white shadow-slate-950/10'
+              }`}
             >
-              <span>Get Started, It's Free</span>
+              <span>{t('get_started_free')}</span>
             </button>
           )}
         </motion.div>
@@ -634,8 +718,8 @@ export default function LandingPage() {
 
       {/* Interactive 3D Laptop Showcase */}
       <section className="relative max-w-6xl mx-auto px-6 pt-10 pb-10 flex flex-col items-center overflow-hidden">
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-12 mb-14 animate-pulse">
-          Scroll down to open your planner
+        <div className={`text-xs font-semibold uppercase tracking-widest mt-12 mb-14 animate-pulse ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+          {t('scroll_down_planner')}
         </div>
 
         {/* 3D Viewport container */}
@@ -660,132 +744,172 @@ export default function LandingPage() {
             {/* Inner Screen Mockup Content */}
             <div className="absolute inset-0 bg-white overflow-hidden text-slate-800 p-3 md:p-6 select-none font-sans text-[10px] md:text-xs">
 
-              {/* Mock Screen Header */}
+              {/* Mock Screen Header (Matches our real website) */}
               <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-nowrap gap-1">
                 <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
                   <img
                     src="/logo.png"
                     alt="Xplorism Logo"
-                    className="h-5 w-5 sm:h-8 sm:w-8 object-contain rounded-full"
+                    className="h-5 w-5 sm:h-7 sm:w-7 object-contain rounded-full"
                   />
                   <span className="font-extrabold text-slate-900 tracking-tight text-[8px] sm:text-xs">Xplorism</span>
                 </div>
-                <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
-                  <button className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-slate-200 hover:bg-slate-50 font-medium text-[6px] sm:text-[9px] text-slate-600 transition whitespace-nowrap">
-                    + Create Trip
+                
+                {/* Real Website Nav Links Mimic */}
+                <div className="hidden md:flex items-center space-x-2 text-[7px] font-bold text-slate-500">
+                  <span className="flex items-center space-x-0.5 text-rose-500">
+                    <Compass className="h-2 w-2 text-rose-500" />
+                    <span>Trips</span>
+                  </span>
+                  <span className="flex items-center space-x-0.5">
+                    <Users className="h-2 w-2 text-slate-400" />
+                    <span>Shared Trips</span>
+                  </span>
+                  <span className="flex items-center space-x-0.5">
+                    <Sun className="h-2 w-2 text-slate-400" />
+                    <span>Weather</span>
+                  </span>
+                  <span className="flex items-center space-x-0.5">
+                    <Navigation className="h-2 w-2 text-slate-400 rotate-45" />
+                    <span>Tracker</span>
+                  </span>
+                  <span className="flex items-center space-x-0.5">
+                    <Building className="h-2 w-2 text-slate-400" />
+                    <span>Hotels</span>
+                  </span>
+                  <span className="flex items-center space-x-0.5">
+                    <DollarSign className="h-2 w-2 text-slate-400" />
+                    <span>Budgets</span>
+                  </span>
+                  <span className="flex items-center space-x-0.5">
+                    <FolderLock className="h-2 w-2 text-slate-400" />
+                    <span>Vault</span>
+                  </span>
+                  <span className="flex items-center space-x-0.5">
+                    <MessageSquare className="h-2 w-2 text-slate-400" />
+                    <span>Community</span>
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-1.5 shrink-0">
+                  {/* Bell Icon Mock */}
+                  <div className="h-4.5 w-4.5 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 cursor-pointer">
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                  </div>
+                  {/* User Avatar Circle Mock (matches the "T" user profile avatar from screenshot) */}
+                  <div className="h-4.5 w-4.5 sm:h-6 sm:w-6 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-[7px] sm:text-[10px] shrink-0">
+                    T
+                  </div>
+                </div>
+              </div>
+
+              {/* Mock Dashboard Body */}
+              <div className="mt-4 flex-1 flex flex-col justify-between overflow-y-auto no-scrollbar max-h-[85%] pr-0.5">
+                {/* Dashboard Title & Action Button */}
+                <div className="flex items-center justify-between pb-3">
+                  <div>
+                    <h2 className="text-xs sm:text-sm font-black text-slate-900 leading-tight">My Trips Dashboard</h2>
+                    <p className="text-[6px] sm:text-[9px] text-slate-400 mt-0.5 font-semibold">Create and manage your customized itineraries.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setAuthModalMode('login');
+                      setIsAuthModalOpen(true);
+                    }}
+                    className="px-2 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-bold text-[6px] sm:text-[9px] flex items-center space-x-1 cursor-pointer transition shadow-sm"
+                  >
+                    <Plus className="h-2 w-2" />
+                    <span>Create New Trip</span>
                   </button>
-                  <button className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-slate-200 hover:bg-slate-50 font-medium text-[6px] sm:text-[9px] text-slate-600 transition whitespace-nowrap">
-                    My Trips
-                  </button>
-                  <div className="h-4 w-4 sm:h-6 sm:w-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[7px] sm:text-[10px] shrink-0">
-                    G
-                  </div>
-                </div>
-              </div>
-
-              {/* Main Banner */}
-              <div className="mt-3 relative rounded-xl overflow-hidden aspect-[16/6.5] bg-slate-100">
-                <img
-                  src="/las_vegas.png"
-                  alt="Las Vegas Strip"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* Destination Details */}
-              <div className="mt-3 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs md:text-base font-extrabold text-slate-900">Las Vegas, NV, USA</h3>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-500 font-medium text-[8px] md:text-[9px]">
-                      <Calendar className="h-2.5 w-2.5" />
-                      <span>2 Day</span>
-                    </span>
-                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 font-medium text-[8px] md:text-[9px]">
-                      <DollarSign className="h-2.5 w-2.5" />
-                      <span>Moderate Budget</span>
-                    </span>
-                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 font-medium text-[8px] md:text-[9px]">
-                      <Users className="h-2.5 w-2.5" />
-                      <span>No. Of Traveler: 2 People</span>
-                    </span>
-                  </div>
                 </div>
 
-                <button className="h-7 w-7 rounded-lg bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 transition">
-                  <Navigation className="h-3.5 w-3.5 fill-current rotate-45" />
-                </button>
-              </div>
-
-              {/* Hotel Recommendations Section */}
-              <div className="mt-5">
-                <h4 className="text-[10px] md:text-xs font-extrabold text-slate-900 mb-2">Hotel Recommendation</h4>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {/* Card 1 */}
-                  <div className="border border-slate-100 rounded-lg overflow-hidden bg-white p-1.5 flex flex-col justify-between">
-                    <div className="aspect-[4/3] rounded-md bg-gradient-to-br from-rose-100 to-rose-200 mb-1.5 flex items-center justify-center text-rose-300">
-                      <Compass className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-[8px] md:text-[9px] text-slate-900 leading-tight">The Venetian Resort</h5>
-                      <p className="text-[7px] text-slate-400 leading-tight mt-0.5">3355 Las Vegas Blvd S</p>
-                      <p className="text-[7px] font-bold text-slate-700 mt-1">$150-$300 / night</p>
-                    </div>
-                    <div className="flex items-center space-x-0.5 text-amber-500 text-[7px] mt-1">
-                      <Star className="h-1.5 w-1.5 fill-current" />
-                      <span>4.5 stars</span>
-                    </div>
+                {/* Recommended Pre-planned Trips Section */}
+                <div className="mt-2">
+                  <div className="flex items-center space-x-1 text-rose-500 mb-2">
+                    <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <h3 className="text-[8px] sm:text-xs font-bold text-slate-900">Recommended Pre-planned Trips</h3>
                   </div>
 
-                  {/* Card 2 */}
-                  <div className="border border-slate-100 rounded-lg overflow-hidden bg-white p-1.5 flex flex-col justify-between">
-                    <div className="aspect-[4/3] rounded-md bg-gradient-to-br from-teal-100 to-teal-200 mb-1.5 flex items-center justify-center text-teal-300">
-                      <Compass className="h-5 w-5" />
+                  {/* Cards Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    
+                    {/* Card 1: Tokyo */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white p-1.5 flex flex-col justify-between shadow-sm">
+                      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-50">
+                        <img src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=300&q=80" alt="Tokyo" className="w-full h-full object-cover" />
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 text-rose-550 shadow-sm">Adventure</span>
+                      </div>
+                      <div className="mt-1.5">
+                        <h4 className="font-extrabold text-[7px] sm:text-[9px] text-slate-900 leading-tight">Tokyo, Japan</h4>
+                        <p className="text-[5px] sm:text-[7px] text-slate-400 font-semibold mt-0.5">3 Days Custom Schedule</p>
+                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] text-slate-550 font-bold">
+                          <span className="flex items-center space-x-0.5"><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
+                          <span className="text-slate-800">¥120,000</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className="font-bold text-[8px] md:text-[9px] text-slate-900 leading-tight">The Wynn Las Vegas</h5>
-                      <p className="text-[7px] text-slate-400 leading-tight mt-0.5">3131 Las Vegas Blvd S</p>
-                      <p className="text-[7px] font-bold text-slate-700 mt-1">$200-$400 / night</p>
-                    </div>
-                    <div className="flex items-center space-x-0.5 text-amber-500 text-[7px] mt-1">
-                      <Star className="h-1.5 w-1.5 fill-current" />
-                      <span>5.0 stars</span>
-                    </div>
-                  </div>
 
-                  {/* Card 3 */}
-                  <div className="border border-slate-100 rounded-lg overflow-hidden bg-white p-1.5 flex flex-col justify-between">
-                    <div className="aspect-[4/3] rounded-md bg-gradient-to-br from-amber-100 to-amber-200 mb-1.5 flex items-center justify-center text-amber-300">
-                      <Compass className="h-5 w-5" />
+                    {/* Card 2: Paris */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white p-1.5 flex flex-col justify-between shadow-sm">
+                      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-50">
+                        <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=300&q=80" alt="Paris" className="w-full h-full object-cover" />
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 text-rose-550 shadow-sm">Romantic & Art</span>
+                      </div>
+                      <div className="mt-1.5">
+                        <h4 className="font-extrabold text-[7px] sm:text-[9px] text-slate-900 leading-tight">Paris, France</h4>
+                        <p className="text-[5px] sm:text-[7px] text-slate-400 font-semibold mt-0.5">4 Days Custom Schedule</p>
+                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] text-slate-550 font-bold">
+                          <span className="flex items-center space-x-0.5"><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
+                          <span className="text-slate-800">€1,800</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className="font-bold text-[8px] md:text-[9px] text-slate-900 leading-tight">The Cosmopolitan</h5>
-                      <p className="text-[7px] text-slate-400 leading-tight mt-0.5">3708 Las Vegas Blvd S</p>
-                      <p className="text-[7px] font-bold text-slate-700 mt-1">$180-$350 / night</p>
-                    </div>
-                    <div className="flex items-center space-x-0.5 text-amber-500 text-[7px] mt-1">
-                      <Star className="h-1.5 w-1.5 fill-current" />
-                      <span>4.0 stars</span>
-                    </div>
-                  </div>
 
-                  {/* Card 4 */}
-                  <div className="border border-slate-100 rounded-lg overflow-hidden bg-white p-1.5 flex flex-col justify-between">
-                    <div className="aspect-[4/3] rounded-md bg-gradient-to-br from-indigo-100 to-indigo-200 mb-1.5 flex items-center justify-center text-indigo-300">
-                      <Compass className="h-5 w-5" />
+                    {/* Card 3: New York */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white p-1.5 flex flex-col justify-between shadow-sm">
+                      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-50">
+                        <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=300&q=80" alt="New York" className="w-full h-full object-cover" />
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 text-rose-550 shadow-sm">Urban Adventure</span>
+                      </div>
+                      <div className="mt-1.5">
+                        <h4 className="font-extrabold text-[7px] sm:text-[9px] text-slate-900 leading-tight">New York, USA</h4>
+                        <p className="text-[5px] sm:text-[7px] text-slate-400 font-semibold mt-0.5">5 Days Custom Schedule</p>
+                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] text-slate-550 font-bold">
+                          <span className="flex items-center space-x-0.5"><Users className="h-1.5 w-1.5 text-slate-400" /><span>1 Travelers</span></span>
+                          <span className="text-slate-800">$2,500</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className="font-bold text-[8px] md:text-[9px] text-slate-900 leading-tight">ARIA Resort & Casino</h5>
-                      <p className="text-[7px] text-slate-400 leading-tight mt-0.5">3730 Las Vegas Blvd S</p>
-                      <p className="text-[7px] font-bold text-slate-700 mt-1">$160-$320 / night</p>
+
+                    {/* Card 4: London */}
+                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white p-1.5 flex flex-col justify-between shadow-sm">
+                      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-50">
+                        <img src="https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=600&q=80" alt="London" className="w-full h-full object-cover" />
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 text-rose-550 shadow-sm">Cultural</span>
+                      </div>
+                      <div className="mt-1.5">
+                        <h4 className="font-extrabold text-[7px] sm:text-[9px] text-slate-900 leading-tight">London, UK</h4>
+                        <p className="text-[5px] sm:text-[7px] text-slate-400 font-semibold mt-0.5">3 Days Custom Schedule</p>
+                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] text-slate-550 font-bold">
+                          <span className="flex items-center space-x-0.5"><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
+                          <span className="text-slate-800">$1,800</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-0.5 text-amber-500 text-[7px] mt-1">
-                      <Star className="h-1.5 w-1.5 fill-current" />
-                      <span>4.5 stars</span>
-                    </div>
+
                   </div>
                 </div>
+
+                {/* My Saved Itineraries header */}
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <h3 className="text-[8px] sm:text-xs font-bold text-slate-900 mb-1">My Saved Itineraries</h3>
+                  <div className="border border-dashed border-slate-200 rounded-xl py-3 text-center text-[7px] sm:text-[9px] text-slate-400 bg-slate-50/50">
+                    No trips created yet. Click "Create New Trip" to get started.
+                  </div>
+                </div>
+
               </div>
 
             </div>
@@ -814,24 +938,28 @@ export default function LandingPage() {
       </section>
 
       {/* Interactive Attraction Finder Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20 border-t border-slate-100 bg-[#fafafa]">
+      <section className={`max-w-7xl mx-auto px-6 py-20 border-t transition-colors duration-300 ${isDark ? 'border-slate-900 bg-slate-950' : 'border-slate-100 bg-[#fafafa]'}`}>
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
+          <h2 className={`text-3xl md:text-4xl font-extrabold tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
             Explore Nearby Sights & Tourist Places
           </h2>
-          <p className="text-slate-500 max-w-2xl mx-auto text-sm md:text-base leading-relaxed mb-6">
+          <p className={`max-w-2xl mx-auto text-sm md:text-base leading-relaxed mb-6 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Enter a destination city below to dynamically query real-time OpenStreetMap points of interest. Select items to inspect details or zoom in on the map.
           </p>
 
           {/* Map Search Form */}
           <div className="max-w-md mx-auto relative z-30">
-            <form onSubmit={handleMapSearch} className="flex items-center bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm gap-1">
+            <form onSubmit={handleMapSearch} className={`flex items-center p-1.5 rounded-2xl border shadow-sm gap-1 ${
+              isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
               <button
                 type="button"
                 onClick={handleGeolocationSearch}
                 title="Use My Current Location"
                 disabled={mapLoading}
-                className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition duration-200 cursor-pointer flex items-center gap-1.5 shrink-0"
+                className={`px-3 py-2 rounded-xl border transition duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                  isDark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-rose-450 hover:bg-rose-950/20' : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600'
+                }`}
               >
                 <Locate className="h-4 w-4" />
                 <span className="text-[9px] font-bold uppercase tracking-wider hidden sm:inline">GPS</span>
@@ -846,13 +974,17 @@ export default function LandingPage() {
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 placeholder="Search city (e.g. Honolulu, Paris, Tokyo...)"
-                className="flex-1 px-2 py-2.5 outline-none text-xs text-slate-800 font-sans"
+                className={`flex-1 px-2 py-2.5 outline-none text-xs font-sans bg-transparent ${
+                  isDark ? 'text-white placeholder-slate-500' : 'text-slate-800 placeholder-slate-400'
+                }`}
                 required
               />
               <button
                 type="submit"
                 disabled={mapLoading || !leafletLoaded}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition cursor-pointer disabled:opacity-50"
+                className={`px-5 py-2.5 rounded-xl font-semibold text-xs transition cursor-pointer disabled:opacity-50 ${
+                  isDark ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white'
+                }`}
               >
                 {mapLoading ? 'Searching...' : 'Find Sights'}
               </button>
@@ -964,10 +1096,14 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Leaflet Map Container */}
-          <div className="lg:col-span-7 bg-white border border-slate-100 rounded-3xl p-3 shadow-sm relative overflow-hidden flex items-center justify-center min-h-[300px] lg:min-h-[450px]">
+          <div className={`lg:col-span-7 border rounded-3xl p-3 shadow-sm relative overflow-hidden flex items-center justify-center min-h-[300px] lg:min-h-[450px] transition-colors duration-300 ${
+            isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'
+          }`}>
             {!leafletLoaded ? (
               <div className="flex flex-col items-center space-y-2">
-                <div className="h-6 w-6 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+                <div className={`h-6 w-6 border-2 rounded-full animate-spin ${
+                  isDark ? 'border-slate-850 border-t-rose-500' : 'border-slate-300 border-t-slate-900'
+                }`} />
                 <p className="text-slate-400 text-xs font-medium">Loading Map interface...</p>
               </div>
             ) : (
@@ -976,22 +1112,30 @@ export default function LandingPage() {
           </div>
 
           {/* Interactive Attraction Cards / Details Panel */}
-          <div className="lg:col-span-5 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm min-h-[420px] lg:min-h-[450px] flex flex-col justify-between">
+          <div className={`lg:col-span-5 border rounded-3xl p-6 shadow-sm min-h-[420px] lg:min-h-[450px] flex flex-col justify-between transition-colors duration-300 ${
+            isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'
+          }`}>
             {mapLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-                <div className="h-8 w-8 border-4 border-slate-100 border-t-rose-500 rounded-full animate-spin" />
-                <h4 className="text-sm font-bold text-slate-700">Searching Nearby Sights...</h4>
-                <p className="text-xs text-slate-400">Querying real-time OpenStreetMap geographic data for {mapSearchQuery}...</p>
+                <div className={`h-8 w-8 border-4 rounded-full animate-spin ${
+                  isDark ? 'border-slate-800/80 border-t-rose-500' : 'border-slate-100 border-t-rose-500'
+                }`} />
+                <h4 className={`text-sm font-bold ${isDark ? 'text-slate-350' : 'text-slate-700'}`}>Searching Nearby Sights...</h4>
+                <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Querying real-time OpenStreetMap geographic data for {mapSearchQuery}...</p>
               </div>
             ) : selectedPlace ? (
               <div>
                 {/* Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+                <div className={`flex items-center justify-between pb-4 border-b mb-5 ${
+                  isDark ? 'border-slate-800' : 'border-slate-100'
+                }`}>
                   <div className="flex-1 pr-2">
-                    <h3 className="text-lg md:text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    <h3 className={`text-lg md:text-xl font-extrabold tracking-tight leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                       {selectedPlace.name}
                     </h3>
-                    <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 font-semibold text-[9px] uppercase tracking-wider">
+                    <span className={`inline-block mt-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[9px] uppercase tracking-wider ${
+                      isDark ? 'bg-rose-500/10 text-rose-455 border border-rose-500/20' : 'bg-rose-50 text-rose-600'
+                    }`}>
                       {selectedPlace.type.replace('_', ' ')}
                     </span>
                   </div>
@@ -1001,13 +1145,13 @@ export default function LandingPage() {
                 </div>
 
                 {/* Description */}
-                <p className="text-slate-500 text-xs md:text-sm leading-relaxed mb-6 font-normal">
+                <p className={`text-xs md:text-sm leading-relaxed mb-6 font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   {selectedPlace.description}
                 </p>
 
                 {/* Nearby Places Selector */}
                 <div className="mb-5">
-                  <h4 className="text-[10px] font-extrabold text-slate-900 uppercase tracking-widest mb-3">
+                  <h4 className={`text-[10px] font-extrabold uppercase tracking-widest mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     Tourist Sights in {mapSearchQuery}
                   </h4>
                   <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
@@ -1023,8 +1167,8 @@ export default function LandingPage() {
                             }
                           }}
                           className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs font-semibold flex items-center justify-between cursor-pointer ${isSelected
-                              ? 'bg-rose-50/50 border-rose-200 text-rose-600'
-                              : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
+                              ? isDark ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-rose-50/50 border-rose-200 text-rose-600'
+                              : isDark ? 'bg-slate-800/40 border-slate-800/85 text-slate-300 hover:bg-slate-800' : 'bg-slate-50 border-slate-100 text-slate-700 hover:bg-slate-100'
                             }`}
                         >
                           <span className="truncate pr-2">{place.name}</span>
@@ -1039,7 +1183,7 @@ export default function LandingPage() {
 
                 {/* Nearby Amenities (Restaurants/Cafes/Parks) */}
                 <div className="mt-4">
-                  <h4 className="text-[10px] font-extrabold text-slate-900 uppercase tracking-widest mb-3">
+                  <h4 className={`text-[10px] font-extrabold uppercase tracking-widest mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     Food, Drinks & Parks Nearby (1km)
                   </h4>
                   {loadingAmenities ? (
@@ -1061,10 +1205,14 @@ export default function LandingPage() {
                                 .openOn(mapRef.current);
                             }
                           }}
-                          className="p-2.5 rounded-xl bg-slate-50/50 border border-slate-100 text-xs font-medium flex items-center justify-between cursor-pointer hover:bg-slate-100 transition"
+                          className={`p-2.5 rounded-xl border text-xs font-medium flex items-center justify-between cursor-pointer transition ${
+                            isDark ? 'bg-slate-800/20 border-slate-800/70 hover:bg-slate-800 text-slate-300' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-100 text-slate-700'
+                          }`}
                         >
-                          <span className="truncate pr-2 font-semibold text-slate-700">{amenity.name}</span>
-                          <span className="text-[9px] uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold shrink-0">
+                          <span className={`truncate pr-2 font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{amenity.name}</span>
+                          <span className={`text-[9px] uppercase px-2 py-0.5 rounded-full font-bold shrink-0 ${
+                            isDark ? 'text-emerald-450 bg-emerald-500/10 border border-emerald-500/20' : 'text-emerald-600 bg-emerald-50'
+                          }`}>
                             {amenity.type}
                           </span>
                         </div>
@@ -1107,10 +1255,12 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-6 py-10 sm:py-20 border-t border-slate-100">
+      <section className={`max-w-7xl mx-auto px-6 py-10 sm:py-20 border-t transition-colors duration-300 ${
+        isDark ? 'border-slate-900 bg-slate-950' : 'border-slate-100'
+      }`}>
         <div className="text-center mb-8 sm:mb-16">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 mb-2 sm:mb-3">Plan Simpler. Travel Better.</h2>
-          <p className="text-slate-500 max-w-xl mx-auto text-xs sm:text-sm">
+          <h2 className={`text-xl sm:text-2xl md:text-3xl font-extrabold mb-2 sm:mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>Plan Simpler. Travel Better.</h2>
+          <p className={`max-w-xl mx-auto text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Everything you need for an unforgettable journey, organized in a clean layout.
           </p>
         </div>
@@ -1123,67 +1273,91 @@ export default function LandingPage() {
           className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8"
         >
           {/* Card 1 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 mb-3 sm:mb-4 md:mb-6">
+          <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
+            isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
+          }`}>
+            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
+              isDark ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-rose-50 text-rose-500'
+            }`}>
               <Zap className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Custom Itinerary Builder</h3>
-            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+            <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Custom Itinerary Builder</h3>
+            <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Enter your budget, dates, and styles. Get customized day-by-day plans, dining recommendations, and travel markers.
             </p>
           </motion.div>
 
           {/* Card 2 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-teal-50 flex items-center justify-center text-teal-650 mb-3 sm:mb-4 md:mb-6">
+          <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
+            isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
+          }`}>
+            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
+              isDark ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-teal-50 text-teal-600'
+            }`}>
               <MapPin className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Interactive Mapping</h3>
-            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+            <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Interactive Mapping</h3>
+            <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Map out destinations on Leaflet OpenStreetMap. Keep coordinates of all sights, hotels, and restaurants in one place.
             </p>
           </motion.div>
 
           {/* Card 3 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-3 sm:mb-4 md:mb-6">
+          <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
+            isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
+          }`}>
+            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
+              isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-amber-50 text-amber-600'
+            }`}>
               <CloudRain className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Weather Forecasting</h3>
-            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+            <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Weather Forecasting</h3>
+            <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Check real-time 5-day forecasts and suggestions on clothing to optimize your daily activity selection.
             </p>
           </motion.div>
 
           {/* Card 4 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-3 sm:mb-4 md:mb-6">
+          <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
+            isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
+          }`}>
+            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
+              isDark ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-emerald-50 text-emerald-600'
+            }`}>
               <Wallet className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Expense & Budget Tracker</h3>
-            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+            <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Expense & Budget Tracker</h3>
+            <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Keep tabs on your travel expenses, set budget caps, and categorize your spending in real-time.
             </p>
           </motion.div>
 
           {/* Card 5 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-blue-50 flex items-center justify-center text-blue-650 mb-3 sm:mb-4 md:mb-6">
+          <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
+            isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
+          }`}>
+            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
+              isDark ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-blue-50 text-blue-600'
+            }`}>
               <FolderLock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Secure Document Vault</h3>
-            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+            <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Secure Document Vault</h3>
+            <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Store your passports, visas, boarding passes, and booking confirmations securely and access them anywhere.
             </p>
           </motion.div>
 
           {/* Card 6 */}
-          <motion.div variants={itemVariants} className="bg-slate-50/50 border border-slate-100 p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl bg-purple-50 flex items-center justify-center text-purple-650 mb-3 sm:mb-4 md:mb-6">
+          <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
+            isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
+          }`}>
+            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
+              isDark ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-purple-50 text-purple-600'
+            }`}>
               <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </div>
-            <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-slate-900 mb-1 sm:mb-2">Community Feed & Sharing</h3>
-            <p className="text-slate-500 text-[10px] sm:text-xs md:text-sm leading-relaxed">
+            <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Community Feed & Sharing</h3>
+            <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Share your travel diaries and itineraries with other travelers, or discover exciting recommendations.
             </p>
           </motion.div>

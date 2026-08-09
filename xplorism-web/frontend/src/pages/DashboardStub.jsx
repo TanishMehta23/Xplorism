@@ -1879,7 +1879,7 @@ export default function DashboardStub() {
 
                       {/* Top style badge & weather pill */}
                       <div className="absolute top-4 left-4 flex items-center space-x-2">
-                        <span className="px-3 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-wider bg-slate-900/90 text-white backdrop-blur-md border border-white/10 shadow-lg">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-rose-550 border border-slate-100/50 backdrop-blur-sm shadow-sm">
                           {style}
                         </span>
                         <span className="px-3 py-1.5 rounded-2xl bg-white/95 text-slate-700 backdrop-blur-md text-[9px] font-black flex items-center space-x-1.5 border border-slate-100/50 shadow-lg">

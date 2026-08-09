@@ -18,6 +18,11 @@ const translations = {
     dark_mode: 'Dark Mode',
     vault: 'Vault',
     community: 'Community',
+    sign_in: 'Sign In',
+    sign_up: 'Sign Up',
+    go_to_dashboard: 'Go to Dashboard',
+    get_started_free: "Get Started, It's Free",
+    scroll_down_planner: 'Scroll down to open your planner',
 
     // Tracker Page
     sky_radar: 'Sky Radar',
@@ -292,6 +297,11 @@ const translations = {
     dark_mode: 'Modo Oscuro',
     vault: 'Bóveda',
     community: 'Comunidad',
+    sign_in: 'Iniciar Sesión',
+    sign_up: 'Registrarse',
+    go_to_dashboard: 'Ir al Panel',
+    get_started_free: 'Comenzar, es Gratis',
+    scroll_down_planner: 'Desplázate hacia abajo para abrir tu planificador',
 
     // Tracker Page
     sky_radar: 'Radar del Cielo',
@@ -566,6 +576,11 @@ const translations = {
     dark_mode: 'Mode Sombre',
     vault: 'Coffre',
     community: 'Communauté',
+    sign_in: 'Se Connecter',
+    sign_up: "S'inscrire",
+    go_to_dashboard: 'Aller au Tableau de Bord',
+    get_started_free: "Commencer, C'est Gratuit",
+    scroll_down_planner: 'Faites défiler pour ouvrir votre planificateur',
 
     // Tracker Page
     sky_radar: 'Radar Aérien',
@@ -840,6 +855,11 @@ const translations = {
     dark_mode: 'Dunkler Modus',
     vault: 'Tresor',
     community: 'Gemeinschaft',
+    sign_in: 'Anmelden',
+    sign_up: 'Registrieren',
+    go_to_dashboard: 'Zum Dashboard',
+    get_started_free: 'Kostenlos starten',
+    scroll_down_planner: 'Scrolle nach unten, um den Planer zu öffnen',
 
     // Tracker Page
     sky_radar: 'Flugradar',
@@ -1114,6 +1134,11 @@ const translations = {
     dark_mode: 'डार्क मोड',
     vault: 'तिजोरी',
     community: 'कम्युनिटी',
+    sign_in: 'साइन इन करें',
+    sign_up: 'साइन अप करें',
+    go_to_dashboard: 'डैशबोर्ड पर जाएं',
+    get_started_free: 'शुरू करें, यह मुफ़्त है',
+    scroll_down_planner: 'योजनाकार खोलने के लिए नीचे स्क्रॉल करें',
 
     // Tracker Page
     sky_radar: 'आकाश रडार',
@@ -1388,6 +1413,11 @@ const translations = {
     dark_mode: 'وضع داكن',
     vault: 'الخزنة',
     community: 'المجتمع',
+    sign_in: 'تسجيل الدخول',
+    sign_up: 'إنشاء حساب',
+    go_to_dashboard: 'الانتقال إلى لوحة التحكم',
+    get_started_free: 'ابدأ الآن، إنه مجاني',
+    scroll_down_planner: 'انزل لأسفل لفتح مخططك',
 
     // Tracker Page
     sky_radar: 'رادار السماء',
@@ -1663,6 +1693,11 @@ const translations = {
     dark_mode: 'Modo Escuro',
     vault: 'Cofre',
     community: 'Comunidade',
+    sign_in: 'Entrar',
+    sign_up: 'Cadastrar-se',
+    go_to_dashboard: 'Ir para o Painel',
+    get_started_free: 'Começar, é Grátis',
+    scroll_down_planner: 'Role para baixo para abrir o planejador',
 
     // Tracker Page
     sky_radar: 'Radar Aéreo',

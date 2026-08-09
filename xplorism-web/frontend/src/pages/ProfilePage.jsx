@@ -136,30 +136,59 @@ export default function ProfilePage() {
     const file = e.target.files[0];
     if (!file) return;
     
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
-      setAccountError('Photo must be less than 2MB.');
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      setAccountError('Photo must be less than 5MB.');
       return;
     }
 
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Photo = reader.result;
-      setProfilePhoto(base64Photo);
-      
-      try {
-        setUpdating(true);
-        const data = await api.put('/auth/profile', {
-          name,
-          email,
-          profilePhoto: base64Photo
-        });
-        setAccountSuccess('Profile photo updated successfully!');
-      } catch (err) {
-        console.error(err);
-        setAccountError('Failed to upload profile photo.');
-      } finally {
-        setUpdating(false);
-      }
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = async () => {
+        // Create a canvas to compress the image
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Compress image to JPEG at 0.7 quality
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        setProfilePhoto(compressedBase64);
+
+        try {
+          setUpdating(true);
+          const data = await api.put('/auth/profile', {
+            name,
+            email,
+            profilePhoto: compressedBase64
+          });
+          setAccountSuccess('Profile photo updated successfully!');
+        } catch (err) {
+          console.error(err);
+          setAccountError('Failed to upload profile photo.');
+        } finally {
+          setUpdating(false);
+        }
+      };
+      img.src = reader.result;
     };
     reader.readAsDataURL(file);
   };
@@ -427,7 +456,8 @@ export default function ProfilePage() {
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-rose-500" />
 
               {/* Avatar circle */}
-              <div className="relative mx-auto w-24 h-24 rounded-full flex items-center justify-center text-3xl font-extrabold shadow-inner mb-4 mt-2 select-none border-4 group overflow-hidden"
+            <div className="relative mx-auto w-24 h-24 mb-4 mt-2">
+              <div className="w-full h-full rounded-full flex items-center justify-center text-3xl font-extrabold shadow-inner select-none border-4 group overflow-hidden"
                    style={{ 
                      backgroundColor: 'var(--bg-tertiary)', 
                      color: 'var(--text-primary)', 
@@ -439,13 +469,20 @@ export default function ProfilePage() {
                   <span>{name ? name.charAt(0).toUpperCase() : 'T'}</span>
                 )}
                 
-                {/* Upload Overlay */}
+                {/* Upload Overlay (Hover) */}
                 <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity duration-200">
                   <Edit2 className="h-4 w-4 text-white" />
                   <span className="text-[8px] text-white font-bold mt-1 uppercase tracking-wider">Change</span>
                   <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
                 </label>
               </div>
+
+              {/* Floating Edit Icon Badge (Visible on Mobile) */}
+              <label className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md cursor-pointer border-2 border-white transition-transform hover:scale-110 active:scale-95">
+                <Edit2 className="h-3.5 w-3.5" />
+                <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+              </label>
+            </div>
 
               <h2 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>{name}</h2>
               <p className="text-xs font-semibold mt-1" style={{ color: 'var(--text-tertiary)' }}>{email}</p>

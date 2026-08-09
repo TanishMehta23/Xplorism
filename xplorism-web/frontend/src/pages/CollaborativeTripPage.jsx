@@ -1365,11 +1365,11 @@ export default function CollaborativeTripPage() {
       {/* Main Container */}
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6 gap-6">
         
-        {/* Left Column: Itinerary and Collaborators (7 cols) */}
-        <div className="lg:col-span-8 flex flex-col space-y-6">
+        {/* Left Column: Itinerary and Collaborators (8 cols on desktop, display contents on mobile) */}
+        <div className="contents lg:flex lg:flex-col lg:space-y-6 lg:col-span-8 lg:order-1">
           
           {/* Header Card */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl relative overflow-hidden order-1">
             <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
             
             <button onClick={() => navigate('/shared-trips')} className="mb-4 flex items-center space-x-1.5 text-xs text-slate-400 hover:text-slate-600 transition">
@@ -1379,73 +1379,73 @@ export default function CollaborativeTripPage() {
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <div className="flex items-center space-x-3">
-                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900">{trip.destination}</h1>
-                  <span className="text-[10px] font-extrabold uppercase bg-rose-500/10 text-rose-500 px-2.5 py-0.5 rounded-full tracking-wider">
+                <div className="flex items-center space-x-2.5 flex-wrap gap-y-1.5">
+                  <h1 className="text-xl sm:text-3xl font-black text-slate-900 leading-tight">{trip.destination}</h1>
+                  <span className="text-[9px] sm:text-[10px] font-extrabold uppercase bg-rose-500/10 text-rose-500 px-2 py-0.5 sm:px-2.5 rounded-full tracking-wider shrink-0">
                     {getTripCountdown()}
                   </span>
                 </div>
                 <button
                   onClick={handleOpenEditDates}
-                  className="text-xs sm:text-sm text-slate-555 hover:text-rose-500 mt-1 flex items-center space-x-1 cursor-pointer transition group"
+                  className="text-[11px] sm:text-sm text-slate-555 hover:text-rose-500 mt-1 flex items-center space-x-1 cursor-pointer transition group"
                   title="Edit Trip Dates"
                 >
-                  <Calendar className="h-3.5 w-3.5 text-rose-500 group-hover:scale-110 transition" />
+                  <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500 group-hover:scale-110 transition" />
                   <span className="font-semibold underline decoration-dotted decoration-slate-300 group-hover:decoration-rose-500">
                     {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()} ({daysCount} days)
                   </span>
-                  <span className="text-[10px] text-slate-400 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all ml-1 font-bold">
+                  <span className="text-[9px] sm:text-[10px] text-slate-400 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all ml-1 font-bold">
                     (Edit)
                   </span>
                 </button>
               </div>
 
               {/* Weather Forecast Pill */}
-              <div className="bg-slate-50 border border-slate-100 px-4 py-2.5 rounded-2xl flex items-center space-x-3 shrink-0 self-start sm:self-auto shadow-sm min-w-[150px]">
+              <div className="bg-slate-550/5 border border-slate-100 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-2xl flex items-center space-x-2.5 shrink-0 self-start sm:self-auto shadow-sm min-w-[130px] sm:min-w-[150px]">
                 {weatherLoading ? (
-                  <div className="h-5 w-5 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin mx-auto" />
+                  <div className="h-4 w-4 sm:h-5 sm:w-5 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin mx-auto" />
                 ) : weatherData ? (
                   <>
-                    <span className="text-2xl">{weatherData.icon}</span>
+                    <span className="text-xl sm:text-2xl">{weatherData.icon}</span>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Live Weather</span>
-                      <span className="text-xs font-black text-slate-800">{weatherData.temp} · {weatherData.cond}</span>
+                      <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Live Weather</span>
+                      <span className="text-[10px] sm:text-xs font-black text-slate-800">{weatherData.temp} · {weatherData.cond}</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <span className="text-2xl">{weather.icon}</span>
+                    <span className="text-xl sm:text-2xl">{weather.icon}</span>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Forecast</span>
-                      <span className="text-xs font-black text-slate-800">{weather.temp} · {weather.cond}</span>
+                      <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Forecast</span>
+                      <span className="text-[10px] sm:text-xs font-black text-slate-800">{weather.temp} · {weather.cond}</span>
                     </div>
                   </>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5">
               <button
                 onClick={handleOpenEditBudget}
-                className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-left hover:border-rose-500/35 transition cursor-pointer group"
+                className="p-2.5 sm:p-3 bg-slate-50 border border-slate-100 rounded-xl text-left hover:border-rose-500/35 transition cursor-pointer group"
                 title="Edit Budget"
               >
-                <span className="text-[10px] text-slate-450 font-bold uppercase block group-hover:text-rose-500 transition">Budget</span>
-                <span className="text-sm font-extrabold text-slate-850 block">{tripCurrency.symbol}{Number(trip.budget).toLocaleString()} <span className="text-[9px] text-slate-400 font-bold group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">(Edit)</span></span>
+                <span className="text-[9px] sm:text-[10px] text-slate-450 font-bold uppercase block group-hover:text-rose-500 transition">Budget</span>
+                <span className="text-xs sm:text-sm font-extrabold text-slate-850 block mt-0.5">{tripCurrency.symbol}{Number(trip.budget).toLocaleString()} <span className="text-[8px] text-slate-400 font-bold group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all ml-1 sm:inline hidden">(Edit)</span></span>
               </button>
-              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                <span className="text-[10px] text-slate-450 font-bold uppercase block">Travel Style</span>
-                <span className="text-sm font-extrabold text-slate-850 capitalize">{style}</span>
+              <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                <span className="text-[9px] sm:text-[10px] text-slate-450 font-bold uppercase block">Travel Style</span>
+                <span className="text-xs sm:text-sm font-extrabold text-slate-850 capitalize block mt-0.5">{style}</span>
               </div>
-              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                <span className="text-[10px] text-slate-450 font-bold uppercase block">Travelers</span>
-                <span className="text-sm font-extrabold text-slate-850">{collaborators.filter(c => c.status !== 'pending').length} Persons</span>
+              <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                <span className="text-[9px] sm:text-[10px] text-slate-450 font-bold uppercase block">Travelers</span>
+                <span className="text-xs sm:text-sm font-extrabold text-slate-850 block mt-0.5">{collaborators.filter(c => c.status !== 'pending').length} Persons</span>
               </div>
             </div>
           </div>
 
           {/* Tabbed Collaborative Workspace Panel */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex-1 flex flex-col h-[600px]">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex flex-col h-[85vh] overflow-hidden order-3 lg:order-2">
             {/* Top Workspace Tab switcher */}
             <div className="flex border-b border-slate-100 mb-6 space-x-5 overflow-x-auto no-scrollbar shrink-0">
               <button
@@ -1499,13 +1499,13 @@ export default function CollaborativeTripPage() {
             </div>
 
             {/* Dynamic Content Panel */}
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0">
               
               {/* ITINERARY TAB */}
               {activeMainTab === 'itinerary' && (
-                <div className="flex-1 flex flex-col">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 mb-6 gap-3 shrink-0">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Workspace Itinerary</h2>
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6 gap-2 shrink-0">
+                    <h2 className="text-[10px] sm:text-sm font-bold uppercase tracking-wider text-slate-500">Workspace Itinerary</h2>
                     <div className="flex items-center space-x-1.5 overflow-x-auto max-w-full no-scrollbar pb-1">
                       {Array.from({ length: daysCount }).map((_, i) => {
                         const dayNum = i + 1;
@@ -1600,9 +1600,9 @@ export default function CollaborativeTripPage() {
 
               {/* PACKING LIST TAB */}
               {activeMainTab === 'packing' && (
-                <div className="flex-1 flex flex-col font-sans">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Cooperative Packing List</h2>
+                <div className="flex-1 flex flex-col font-sans min-h-0">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-2 shrink-0">
+                    <h2 className="text-[10px] sm:text-sm font-bold uppercase tracking-wider text-slate-500">Cooperative Packing List</h2>
                     <div className="flex items-center space-x-3">
                       <button
                         onClick={handleAddPackingCategory}
@@ -1679,9 +1679,10 @@ export default function CollaborativeTripPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center py-12 text-slate-400">
-                      <Sparkles className="h-10 w-10 text-rose-300 animate-pulse mb-2" />
-                      <p className="text-xs font-bold text-slate-500">Generating collaborative checklists...</p>
+                    <div className="flex-1 flex flex-col items-center justify-center py-12 text-slate-450 border border-dashed border-slate-200 rounded-2xl">
+                      <Sparkles className="h-9 w-9 text-rose-300 animate-pulse mb-2" />
+                      <p className="text-xs font-bold text-slate-500">Packing checklist is empty.</p>
+                      <p className="text-[10px] text-slate-400 mt-1 max-w-[250px] text-center leading-normal">Add custom categories and items to coordinate packing collaboratively with your group.</p>
                     </div>
                   )}
                 </div>
@@ -1689,23 +1690,25 @@ export default function CollaborativeTripPage() {
 
               {/* BILL SPLITTER TAB */}
               {activeMainTab === 'expenses' && (
-                <div className="flex-1 flex flex-col">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Shared Expenses Tracker</h2>
-                    <div className="flex space-x-2">
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-2 shrink-0">
+                    <h2 className="text-[9px] xs:text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500">Shared Expenses Tracker</h2>
+                    <div className="flex space-x-1.5">
                       <button
                         onClick={() => setShowDetailedSplitModal(true)}
-                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer border border-slate-200"
+                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] sm:text-xs font-bold transition flex items-center space-x-1 cursor-pointer border border-slate-200"
                       >
-                        <Users className="h-3.5 w-3.5 text-slate-550" />
-                        <span>View Detailed Split</span>
+                        <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-550" />
+                        <span className="hidden sm:inline">View Detailed Split</span>
+                        <span className="sm:hidden">Split</span>
                       </button>
                       <button
                         onClick={() => setShowAddExpenseModal(true)}
-                        className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
+                        className="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[10px] sm:text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-md shadow-rose-500/10"
                       >
-                        <DollarSign className="h-3.5 w-3.5" />
-                        <span>Log Bill</span>
+                        <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        <span className="hidden sm:inline">Log Bill</span>
+                        <span className="sm:hidden">Log</span>
                       </button>
                     </div>
                   </div>
@@ -1824,9 +1827,10 @@ export default function CollaborativeTripPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center py-10 text-slate-450 border border-dashed border-slate-200 rounded-2xl">
-                      <DollarSign className="h-8 w-8 text-slate-300 animate-pulse mb-1.5" />
-                      <p className="text-xs font-bold text-slate-500">No expenses logged. Add dinner bills or shared taxi costs!</p>
+                    <div className="flex-1 flex flex-col items-center justify-center py-12 text-slate-450 border border-dashed border-slate-200 rounded-2xl">
+                      <DollarSign className="h-9 w-9 text-slate-350 animate-pulse mb-2" />
+                      <p className="text-xs font-bold text-slate-500">No expenses logged.</p>
+                      <p className="text-[10px] text-slate-400 mt-1 max-w-[250px] text-center leading-normal">Add shared dinner bills, group taxi fares, or activity tickets to automatically split costs.</p>
                     </div>
                   )}
                 </div>
@@ -1834,9 +1838,9 @@ export default function CollaborativeTripPage() {
 
               {/* SHARED DOCUMENTS VAULT */}
               {activeMainTab === 'docs' && (
-                <div className="flex-1 flex flex-col">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Shared Documents Vault</h2>
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-2 shrink-0">
+                    <h2 className="text-[10px] sm:text-sm font-bold uppercase tracking-wider text-slate-500">Shared Documents Vault</h2>
                     <button
                       onClick={() => setShowUploadDocModal(true)}
                       className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
@@ -1932,9 +1936,9 @@ export default function CollaborativeTripPage() {
 
               {/* WORKSPACE NOTES TAB */}
               {activeMainTab === 'notes' && (
-                <div className="flex-1 flex flex-col font-sans">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Shared Scratchpad Notes</h2>
+                <div className="flex-1 flex flex-col font-sans min-h-0">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-2 shrink-0">
+                    <h2 className="text-[10px] sm:text-sm font-bold uppercase tracking-wider text-slate-500">Shared Scratchpad Notes</h2>
                     <button
                       onClick={handleSaveNotes}
                       disabled={isSavingNotes}
@@ -1960,9 +1964,9 @@ export default function CollaborativeTripPage() {
 
               {/* POLLS & VOTING TAB */}
               {activeMainTab === 'polls' && (
-                <div className="flex-1 flex flex-col font-sans">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 shrink-0">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Active Workspace Polls</h2>
+                <div className="flex-1 flex flex-col font-sans min-h-0">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-2 shrink-0">
+                    <h2 className="text-[10px] sm:text-sm font-bold uppercase tracking-wider text-slate-500">Active Workspace Polls</h2>
                     <button
                       onClick={() => setShowCreatePollModal(true)}
                       className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
@@ -2058,13 +2062,14 @@ export default function CollaborativeTripPage() {
               )}
             </div>
           </div>
+
         </div>
 
-        {/* Right Column: Collaborators and Chat Sidebar (4 cols) */}
-        <div className="lg:col-span-4 flex flex-col space-y-6">
+        {/* Right Column: Collaborators and Chat Sidebar (4 cols on desktop, display contents on mobile) */}
+        <div className="contents lg:flex lg:flex-col lg:space-y-6 lg:col-span-4 lg:order-2">
           
           {/* Members / Collaborators Card */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl h-[300px] flex flex-col">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl max-h-[300px] overflow-hidden flex flex-col order-2 lg:order-1">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <Users className="h-4.5 w-4.5 text-rose-500" />
@@ -2147,7 +2152,7 @@ export default function CollaborativeTripPage() {
           </div>
 
           {/* Live Chat Panel (Kafka Powered) */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex flex-col h-[625px]">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex flex-col h-[500px] lg:h-auto lg:flex-1 overflow-hidden order-4 lg:order-2">
             <div className="flex items-center space-x-2 pb-3 border-b border-slate-100 mb-3 shrink-0">
               <MessageCircle className="h-4.5 w-4.5 text-rose-505" />
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Workspace Chat</h3>

@@ -319,6 +319,22 @@ export default function CollaborativeTripPage() {
       setNotes(data);
     });
 
+    socket.on('documents-updated', ({ action, data }) => {
+      if (action === 'upload') {
+        setTripDocuments(prev => {
+          if (prev.some(d => d.id === data.id)) return prev;
+          return [data, ...prev];
+        });
+        showToast('New document uploaded by co-traveler.', 'info');
+      } else if (action === 'delete') {
+        setTripDocuments(prev => prev.filter(d => d.id !== data.id));
+        showToast('A document was deleted by co-traveler.', 'info');
+      } else if (action === 'update') {
+        setTripDocuments(prev => prev.map(d => d.id === data.id ? { ...d, title: data.title, type: data.type } : d));
+        showToast('Document details updated by co-traveler.', 'info');
+      }
+    });
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -368,7 +384,7 @@ export default function CollaborativeTripPage() {
     try {
       setInviteLoading(true);
       await api.post(`/trips/${id}/collaborators`, { email: inviteEmail });
-      showToast('Collaborator added successfully!', 'success');
+      showToast('Request sent', 'success');
       setInviteEmail('');
       setShowInviteModal(false);
       
@@ -541,7 +557,7 @@ export default function CollaborativeTripPage() {
       }));
 
       if (socketRef.current) {
-        socketRef.current.emit('itinerary-updated', {
+        socketRef.current.emit('itinerary-changed', {
           tripId: id,
           action: 'update',
           data: { ...trip, endDate: updatedTrip.endDate }
@@ -593,7 +609,7 @@ export default function CollaborativeTripPage() {
           showToast(`Day deleted successfully.`, 'success');
 
           if (socketRef.current) {
-            socketRef.current.emit('itinerary-updated', {
+            socketRef.current.emit('itinerary-changed', {
               tripId: id,
               action: 'update',
               data: updatedTrip
@@ -1054,6 +1070,14 @@ export default function CollaborativeTripPage() {
         fileName: ''
       });
       showToast('Document securely uploaded to vault!', 'success');
+
+      if (socketRef.current) {
+        socketRef.current.emit('documents-changed', {
+          tripId: id,
+          action: 'upload',
+          data: uploaded
+        });
+      }
     } catch (err) {
       console.error('Failed to upload document:', err);
       showToast('Failed to upload document.', 'error');
@@ -1116,6 +1140,14 @@ export default function CollaborativeTripPage() {
           setTripDocuments(prev => prev.filter(d => d.id !== doc.id));
           showToast('Document deleted.', 'success');
           setConfirmModal(prev => ({ ...prev, show: false }));
+
+          if (socketRef.current) {
+            socketRef.current.emit('documents-changed', {
+              tripId: id,
+              action: 'delete',
+              data: { id: doc.id }
+            });
+          }
         } catch (err) {
           console.error('Failed to delete document:', err);
           showToast('Failed to delete document.', 'error');
@@ -1146,6 +1178,14 @@ export default function CollaborativeTripPage() {
       setTripDocuments(prev => prev.map(d => d.id === editDocModal.docId ? { ...d, title: updated.title, type: updated.type } : d));
       setEditDocModal({ show: false, docId: null, title: '', type: 'ticket' });
       showToast('Document updated successfully!', 'success');
+
+      if (socketRef.current) {
+        socketRef.current.emit('documents-changed', {
+          tripId: id,
+          action: 'update',
+          data: updated
+        });
+      }
     } catch (err) {
       console.error('Failed to update document:', err);
       showToast('Failed to update document.', 'error');
@@ -3040,10 +3080,10 @@ export default function CollaborativeTripPage() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-2.5 border text-sm font-bold ${
               toast.type === 'success'
-                ? 'bg-slate-900 border-emerald-500/20 text-emerald-400'
+                ? 'bg-white dark:bg-slate-900 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                 : toast.type === 'error'
-                ? 'bg-slate-900 border-rose-500/20 text-rose-455'
-                : 'bg-slate-900 border-slate-800 text-slate-200'
+                ? 'bg-white dark:bg-slate-900 border-rose-500/20 text-rose-600 dark:text-rose-400'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200'
             }`}
           >
             <Sparkles className="h-4.5 w-4.5 shrink-0" />

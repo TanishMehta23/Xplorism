@@ -110,9 +110,8 @@ export const addCollaborator = async (req, res) => {
           trip.travelers,
           trip.travel_style,
           trip.interests,
-          trip.packing_list,
-          trip.notes || '',
-          true
+          trip.packing_list ? JSON.stringify(trip.packing_list) : null,
+          trip.notes || ''
         ]
       );
       const clonedTrip = clonedResult.rows[0];
@@ -213,7 +212,7 @@ export const addCollaborator = async (req, res) => {
     });
   } catch (error) {
     console.error('Add collaborator error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };
 

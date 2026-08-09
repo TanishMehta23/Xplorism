@@ -1020,6 +1020,10 @@ io.on('connection', (socket) => {
     socket.to(tripId).emit('notes-updated', { data });
   });
 
+  socket.on('documents-changed', ({ tripId, action, data }) => {
+    socket.to(tripId).emit('documents-updated', { action, data });
+  });
+
   // Forward cursor presence / active changes
   socket.on('presence-changed', ({ tripId, userName, activeTab }) => {
     socket.to(tripId).emit('presence-updated', { userName, activeTab });

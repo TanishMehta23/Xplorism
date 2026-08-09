@@ -77,6 +77,22 @@
   .dark .text-slate-300 {
     color: #334155 !important;
   }
+  /* Custom light mode utility classes */
+  .text-rose-455,
+  .text-rose-550 {
+    color: #f43f5e; /* rose-500 equivalent */
+  }
+  .text-rose-555 {
+    color: #e11d48; /* rose-600 equivalent */
+  }
+  .text-slate-550,
+  .text-slate-505 {
+    color: #64748b;
+  }
+  .text-slate-450 {
+    color: #475569;
+  }
+
   .dark .text-rose-555,
   .dark .text-rose-455,
   .dark .text-rose-550 {

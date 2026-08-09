@@ -182,6 +182,11 @@ const logSimulationReminder = (email, destination) => {
 export const sendTripInvitationEmail = async (email, trip, hostName, inviteLinkApprove, inviteLinkDecline) => {
   const subject = `✈️ You're Invited to Join a Trip to ${trip.destination}!`;
   
+  const startDate = trip.start_date || trip.startDate;
+  const endDate = trip.end_date || trip.endDate;
+  const formattedStartDate = startDate ? new Date(startDate).toLocaleDateString() : 'N/A';
+  const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'N/A';
+
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
       <h2 style="color: #ef4444; text-align: center;">🎒 Xplorism Trip Invitation</h2>
@@ -191,7 +196,7 @@ export const sendTripInvitationEmail = async (email, trip, hostName, inviteLinkA
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin: 20px 0;">
         <h4 style="margin-top: 0; color: #0f172a;">Trip details:</h4>
         <p style="margin: 5px 0;">🗺️ <strong>Destination:</strong> ${trip.destination}</p>
-        <p style="margin: 5px 0;">📅 <strong>Dates:</strong> ${new Date(trip.startDate).toLocaleDateString()} to ${new Date(trip.endDate).toLocaleDateString()}</p>
+        <p style="margin: 5px 0;">📅 <strong>Dates:</strong> ${formattedStartDate} to ${formattedEndDate}</p>
       </div>
 
       <p style="text-align: center; margin: 30px 0;">

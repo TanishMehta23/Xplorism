@@ -1267,9 +1267,11 @@ export default function DashboardStub() {
   }, [mobileViewMode]);
 
   useEffect(() => {
-    fetchTrips();
-    fetchFavorites();
-  }, []);
+    if (user) {
+      fetchTrips();
+      fetchFavorites();
+    }
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -1841,7 +1843,7 @@ export default function DashboardStub() {
             </p>
             <button
               onClick={() => setIsWizardOpen(true)}
-              className="px-6 py-3 rounded-full bg-slate-955 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
+              className="px-6 py-3 rounded-full bg-slate-950 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
             >
               {t('start_planning')}
             </button>
@@ -2187,10 +2189,10 @@ export default function DashboardStub() {
                   <div className="flex items-center space-x-3">
                     {/* Real-time Collaboration Active Avatars */}
                     {!selectedTrip.isPrePlanned && (
-                      <div className="flex items-center space-x-2 mr-2 bg-indigo-50/50 border border-indigo-100/50 px-3 py-1.5 rounded-full shadow-sm">
-                        <div className="flex -space-x-2 overflow-hidden">
+                      <div className="flex items-center space-x-2.5 mr-2 bg-rose-50/40 hover:bg-rose-50/70 border border-rose-100/40 px-3.5 py-1.5 rounded-full shadow-sm hover:shadow transition duration-250">
+                        <div className="flex -space-x-1.5 overflow-hidden">
                           <div
-                            className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-indigo-650 text-white text-[10px] font-black flex items-center justify-center select-none shadow-sm cursor-help"
+                            className="flex h-6 w-6 rounded-full ring-2 ring-white bg-rose-500 text-white text-[10px] font-black items-center justify-center select-none shadow-sm cursor-help leading-none"
                             title={`You (${user.name}) - Active`}
                           >
                             {user.name.charAt(0).toUpperCase()}
@@ -2198,7 +2200,7 @@ export default function DashboardStub() {
                           {collaborators.map((name, idx) => (
                             <div
                               key={idx}
-                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-rose-500 text-white text-[10px] font-black flex items-center justify-center select-none shadow-sm cursor-help animate-pulse"
+                              className="flex h-6 w-6 rounded-full ring-2 ring-white bg-indigo-600 text-white text-[10px] font-black items-center justify-center select-none shadow-sm cursor-help animate-pulse leading-none"
                               title={`${name} - Editing (Tab: ${presenceList[name] || 'Itinerary'})`}
                             >
                               {name.charAt(0).toUpperCase()}
@@ -2207,23 +2209,27 @@ export default function DashboardStub() {
                         </div>
                         {selectedTrip.userId === user.id ? (
                           <button
-                            onClick={() => setShowInviteModal(true)}
-                            className="flex flex-col text-left shrink-0 hover:text-rose-500 transition cursor-pointer group/add-collab border-none bg-transparent p-0 outline-none"
+                            onClick={() => navigate(`/trips/${selectedTrip.id}/collaborate`)}
+                            className="flex flex-col text-left shrink-0 hover:text-rose-600 transition cursor-pointer group/add-collab border-none bg-transparent p-0 outline-none"
                           >
-                            <span className="text-[9px] font-black text-rose-500 uppercase tracking-wider leading-none flex items-center">
-                              <UserPlus className="h-2.5 w-2.5 mr-0.5 shrink-0" />
+                            <span className="text-[10px] font-extrabold text-rose-500 group-hover/add-collab:text-rose-600 uppercase tracking-wider leading-none flex items-center">
+                              <UserPlus className="h-3 w-3 mr-1 shrink-0" />
                               <span>Add to Collaboration</span>
                             </span>
-                            <span className="text-[8px] font-bold text-slate-500 mt-0.5 leading-none">
-                              {collaborators.length > 0 ? `${collaborators.length + 1} online` : 'Only you'}
-                            </span>
+                            {collaborators.length > 0 && (
+                              <span className="text-[9px] font-bold text-slate-500 mt-0.5 leading-none">
+                                {collaborators.length + 1} online
+                              </span>
+                            )}
                           </button>
                         ) : (
                           <div className="flex flex-col text-left shrink-0">
-                            <span className="text-[9px] font-black text-indigo-755 uppercase tracking-wider leading-none">Collaboration</span>
-                            <span className="text-[8px] font-bold text-slate-500 mt-0.5 leading-none">
-                              {collaborators.length > 0 ? `${collaborators.length + 1} online` : 'Only you'}
-                            </span>
+                            <span className="text-[10px] font-extrabold text-rose-500 uppercase tracking-wider leading-none">Collaboration</span>
+                            {collaborators.length > 0 && (
+                              <span className="text-[9px] font-bold text-slate-500 mt-0.5 leading-none">
+                                {collaborators.length + 1} online
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>

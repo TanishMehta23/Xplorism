@@ -26,6 +26,12 @@ export const getSharedTrips = async (req, res) => {
           'SELECT * FROM itinerary WHERE trip_id = $1 ORDER BY day ASC',
           [trip.id]
         );
+
+        const collabCountResult = await query(
+          "SELECT COUNT(*) FROM trip_collaborators WHERE trip_id = $1 AND status = 'approved'",
+          [trip.id]
+        );
+        const collabCount = parseInt(collabCountResult.rows[0].count) || 0;
         
         return {
           id: trip.id,
@@ -35,7 +41,7 @@ export const getSharedTrips = async (req, res) => {
           startDate: trip.start_date,
           endDate: trip.end_date,
           budget: trip.budget,
-          travelers: trip.travelers,
+          travelers: 1 + collabCount,
           travelStyle: trip.travel_style,
           interests: trip.interests,
           createdAt: trip.created_at,
@@ -197,6 +203,7 @@ export const addCollaborator = async (req, res) => {
         tripId: activeTripId,
         date: new Date()
       });
+      global.io.to(activeTripId).emit('collaborators-updated');
     }
 
     res.status(201).json({
@@ -281,6 +288,10 @@ export const removeCollaborator = async (req, res) => {
       `DELETE FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2`,
       [tripId, userId]
     );
+
+    if (global.io) {
+      global.io.to(tripId).emit('collaborators-updated');
+    }
 
     res.json({ message: 'Collaborator removed successfully' });
   } catch (error) {
@@ -401,12 +412,18 @@ export const respondToInvitation = async (req, res) => {
         `UPDATE trip_collaborators SET status = 'approved' WHERE trip_id = $1 AND user_id = $2`,
         [tripId, userId]
       );
+      if (global.io) {
+        global.io.to(tripId).emit('collaborators-updated');
+      }
       res.json({ message: 'Invitation approved successfully' });
     } else {
       await query(
         `DELETE FROM trip_collaborators WHERE trip_id = $1 AND user_id = $2`,
         [tripId, userId]
       );
+      if (global.io) {
+        global.io.to(tripId).emit('collaborators-updated');
+      }
       res.json({ message: 'Invitation declined successfully' });
     }
   } catch (error) {

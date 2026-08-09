@@ -252,7 +252,6 @@ export default function Navbar({ activeTab }) {
                   >
                     <div className="flex items-center justify-between border-b pb-3 mb-3" style={{ borderColor: 'var(--border-secondary)' }}>
                       <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>Alerts & Reminders</span>
-                      <span className="text-[9px] font-bold uppercase" style={{ color: 'var(--text-tertiary)' }}>Real-time alerts</span>
                     </div>
 
                     <div className="space-y-3">

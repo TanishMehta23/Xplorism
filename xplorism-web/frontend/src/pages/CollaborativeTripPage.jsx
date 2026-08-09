@@ -335,6 +335,15 @@ export default function CollaborativeTripPage() {
       }
     });
 
+    socket.on('collaborators-updated', async () => {
+      try {
+        const collabData = await api.get(`/trips/${id}/collaborators`);
+        setCollaborators(collabData);
+      } catch (err) {
+        console.warn('Failed to refresh collaborators list:', err);
+      }
+    });
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -1535,12 +1544,14 @@ export default function CollaborativeTripPage() {
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin relative">
+                  <div className="flex-1 overflow-y-auto pr-1 pl-6 scrollbar-thin relative">
                     {activeDayItineraries.length > 0 ? (
-                      <div className="relative pl-6 border-l border-slate-200 space-y-5 ml-2">
+                      <div className="relative pl-6 border-l border-slate-200 space-y-5 ml-1">
                         {activeDayItineraries.map((act, index) => (
                           <div key={act.id || index} className="relative group">
-                            <div className="absolute -left-[30px] top-1.5 h-3.5 w-3.5 rounded-full bg-slate-50 border-2 border-rose-500" />
+                            <div className="absolute -left-[36px] top-1.5 w-6 h-6 rounded-full bg-white border-[3px] border-rose-500 flex items-center justify-center z-10 shadow-sm transition-transform duration-300 group-hover:scale-110">
+                              <div className="w-1.5 h-1.5 bg-rose-500 rounded-full" />
+                            </div>
                             <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 relative group/card">
                               <div className="flex items-center justify-between mb-1.5">
                                 <div className="flex items-center space-x-2 text-rose-500 font-bold text-xs">
@@ -1982,31 +1993,44 @@ export default function CollaborativeTripPage() {
                             </div>
                             <div className="space-y-2">
                               {poll.options.map((opt, idx) => {
-                                const optionVotesCount = poll.votes.filter(v => v.optionIndex === idx).length;
+                                const optionVoters = poll.votes.filter(v => v.optionIndex === idx);
+                                const optionVotesCount = optionVoters.length;
                                 const percent = totalVotes > 0 ? Math.round((optionVotesCount / totalVotes) * 100) : 0;
                                 const isUserChoice = userVote && userVote.optionIndex === idx;
 
                                 return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => handleVotePoll(poll.id, idx)}
-                                    className={`w-full p-3 rounded-2xl border text-left text-xs font-bold transition-all relative overflow-hidden flex items-center justify-between cursor-pointer ${
-                                      isUserChoice
-                                        ? 'bg-rose-50 border-rose-400 text-rose-500'
-                                        : 'bg-white border-slate-150 text-slate-700 hover:bg-slate-50'
-                                    }`}
-                                  >
-                                    <div 
-                                      className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ${
-                                        isUserChoice ? 'bg-rose-500/10' : 'bg-slate-200/50'
+                                  <div key={idx} className="space-y-1">
+                                    <button
+                                      onClick={() => handleVotePoll(poll.id, idx)}
+                                      className={`w-full p-3 rounded-2xl border text-left text-xs font-bold transition-all relative overflow-hidden flex items-center justify-between cursor-pointer ${
+                                        isUserChoice
+                                          ? 'bg-rose-50 border-rose-400 text-rose-500'
+                                          : 'bg-white border-slate-150 text-slate-700 hover:bg-slate-50'
                                       }`}
-                                      style={{ width: `${percent}%` }}
-                                    />
-                                    <span className="relative z-10">{opt}</span>
-                                    <span className="relative z-10 text-[10px] text-slate-500">
-                                      {optionVotesCount} votes ({percent}%)
-                                    </span>
-                                  </button>
+                                    >
+                                      <div 
+                                        className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ${
+                                          isUserChoice ? 'bg-rose-500/10' : 'bg-slate-200/50'
+                                        }`}
+                                        style={{ width: `${percent}%` }}
+                                      />
+                                      <span className="relative z-10">{opt}</span>
+                                      <span className="relative z-10 text-[10px] text-slate-500">
+                                        {optionVotesCount} votes ({percent}%)
+                                      </span>
+                                    </button>
+
+                                    {optionVoters.length > 0 && (
+                                      <div className="flex flex-wrap items-center gap-1 mt-0.5 px-2.5">
+                                        <span className="text-[9px] text-slate-400 font-medium">Voted by:</span>
+                                        {optionVoters.map((voter) => (
+                                          <span key={voter.userId} className="text-[9px] bg-white border border-slate-100 text-slate-600 px-1.5 py-0.5 rounded-lg font-bold shadow-sm">
+                                            {voter.userName}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 );
                               })}
                             </div>
@@ -2125,8 +2149,8 @@ export default function CollaborativeTripPage() {
           {/* Live Chat Panel (Kafka Powered) */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex flex-col h-[625px]">
             <div className="flex items-center space-x-2 pb-3 border-b border-slate-100 mb-3 shrink-0">
-              <MessageCircle className="h-4.5 w-4.5 text-rose-500" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Kafka Chat Stream</h3>
+              <MessageCircle className="h-4.5 w-4.5 text-rose-505" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Workspace Chat</h3>
             </div>
 
             {/* Chat Messages Log */}

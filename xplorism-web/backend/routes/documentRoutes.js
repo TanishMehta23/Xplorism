@@ -186,7 +186,7 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     const result = await pool.query(
-      'INSERT INTO documents (id, user_id, trip_id, title, type, file_name, encrypted_file_key, iv, auth_tag) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, title, type, file_name, created_at, trip_id',
+      'INSERT INTO documents (id, user_id, trip_id, title, type, file_name, encrypted_file_key, iv, auth_tag) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, title, type, file_name, created_at, trip_id, user_id',
       [docId, userId, trip_id || null, title, type, file_name, wrappedKey, iv, authTag]
     );
 

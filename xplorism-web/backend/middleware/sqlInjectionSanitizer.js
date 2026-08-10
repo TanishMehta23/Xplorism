@@ -6,7 +6,7 @@
 // Regular expressions to detect typical SQL injection payloads
 const SQL_INJECTION_PATTERNS = [
   /(\b(SELECT|INSERT|UPDATE|DELETE|UNION|DROP|ALTER|CREATE|TRUNCATE|DATABASE|GRANT|REVOKE)\b)/i,
-  /('|--|#|\/\*|\*\/)/, // SQL comments and quotes
+  /(--|#|\/\*|\*\/)/, // SQL comment markers
   /(\bor\b\s+['"]?\d+['"]?\s*=\s*['"]?\d+['"]?)/i, // OR '1'='1' style bypasses
   /(\band\b\s+['"]?\d+['"]?\s*=\s*['"]?\d+['"]?)/i, // AND '1'='1' style logic
   /UNION\s+(ALL\s+)?SELECT/i,

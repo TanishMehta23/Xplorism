@@ -34,8 +34,36 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
     </div>
   `;
 
-  // 1. Try Resend HTTP API first (Bypasses Render's port blocks completely)
-  if (process.env.RESEND_API_KEY) {
+  // 1. PRIMARY: Use SMTP (Gmail) for reliable delivery - avoids spam folder
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const mailOptions = {
+      from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,
+      to: email,
+      subject: subject,
+      html: htmlContent,
+      headers: {
+        'X-Priority': '3',
+        'Importance': 'normal',
+        'X-Mailer': 'Xplorism/1.0',
+        'List-Unsubscribe': '<mailto:support@xplorism.com>',
+        'Reply-To': process.env.SMTP_USER || 'xplorism1@gmail.com',
+        'Precedence': 'normal',
+        'Auto-Submitted': 'no',
+        'X-MSMail-Priority': 'Normal'
+      }
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ OTP email sent successfully via Gmail SMTP to ${email}`);
+      return;
+    } catch (error) {
+      console.error('❌ Failed to send OTP via SMTP:', error.message);
+    }
+  }
+
+  // 2. FALLBACK: Resend API (only if SMTP not configured)
+  if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
     try {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -44,7 +72,7 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: 'Xplorism <onboarding@resend.dev>', // Resend's free sandbox testing sender
+          from: process.env.RESEND_FROM_EMAIL, // Must be a verified domain like noreply@yourdomain.com
           to: email,
           subject: subject,
           html: htmlContent
@@ -52,42 +80,18 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
       });
 
       if (response.ok) {
-        console.log(`✅ Real OTP email sent successfully via Resend HTTP API to ${email}`);
+        console.log(`✅ OTP email sent successfully via Resend to ${email}`);
         return;
       }
       const errText = await response.text();
-      console.warn(`Resend HTTP API failed: ${response.status} - ${errText}`);
+      console.warn(`Resend API failed: ${response.status} - ${errText}`);
     } catch (err) {
-      console.warn(`Resend HTTP API connection failed: ${err.message}`);
+      console.warn(`Resend API connection failed: ${err.message}`);
     }
   }
 
-  // 2. Fallback to standard SMTP (Works locally on your PC)
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    const mailOptions = {
-      from: `"Xplorism Team" <${process.env.SMTP_FROM || 'noreply@xplorism.com'}>`,
-      to: email,
-      subject: subject,
-      html: htmlContent,
-      headers: {
-        'X-Priority': '3 (Normal)',
-        'Importance': 'normal',
-        'List-Unsubscribe': '<mailto:support@xplorism.com>',
-        'Reply-To': 'support@xplorism.com'
-      }
-    };
-
-    transporter.sendMail(mailOptions)
-      .then(() => {
-        console.log(`✅ Real OTP email sent successfully via SMTP to ${email}`);
-      })
-      .catch((error) => {
-        console.error('❌ Failed to send SMTP email. Local console log:', error.message);
-        logSimulation(email, otp);
-      });
-  } else {
-    logSimulation(email, otp);
-  }
+  // 3. LAST RESORT: Fallback to console simulation
+  logSimulation(email, otp);
 };
 
 const logSimulation = (email, otp) => {
@@ -136,7 +140,36 @@ export const sendTripReminderEmail = async (email, trip, notifications, name = '
     </div>
   `;
 
-  if (process.env.RESEND_API_KEY) {
+  // 1. PRIMARY: Use SMTP (Gmail) for reliable delivery
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const mailOptions = {
+      from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,
+      to: email,
+      subject: subject,
+      html: htmlContent,
+      headers: {
+        'X-Priority': '3',
+        'Importance': 'normal',
+        'X-Mailer': 'Xplorism/1.0',
+        'List-Unsubscribe': '<mailto:support@xplorism.com>',
+        'Reply-To': process.env.SMTP_USER || 'xplorism1@gmail.com',
+        'Precedence': 'bulk',
+        'Auto-Submitted': 'auto-generated',
+        'X-MSMail-Priority': 'Normal'
+      }
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Trip reminder email sent successfully via Gmail SMTP to ${email}`);
+      return;
+    } catch (error) {
+      console.error('❌ Failed to send trip reminder via SMTP:', error.message);
+    }
+  }
+
+  // 2. FALLBACK: Resend API (only if SMTP not configured)
+  if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
     try {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -145,37 +178,23 @@ export const sendTripReminderEmail = async (email, trip, notifications, name = '
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: 'Xplorism <onboarding@resend.dev>',
+          from: process.env.RESEND_FROM_EMAIL,
           to: email,
           subject: subject,
           html: htmlContent
         })
       });
       if (response.ok) {
-        console.log(`✅ Real Reminder email sent successfully via Resend to ${email}`);
+        console.log(`✅ Trip reminder email sent successfully via Resend to ${email}`);
         return;
       }
     } catch (err) {
-      console.warn(`Resend HTTP API failed: ${err.message}`);
+      console.warn(`Resend API failed for reminder: ${err.message}`);
     }
   }
 
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    const mailOptions = {
-      from: `"Xplorism Team" <${process.env.SMTP_FROM || 'noreply@xplorism.com'}>`,
-      to: email,
-      subject: subject,
-      html: htmlContent
-    };
-    transporter.sendMail(mailOptions)
-      .then(() => console.log(`✅ Reminder email sent successfully via SMTP to ${email}`))
-      .catch((error) => {
-        console.error('❌ Failed to send SMTP reminder email:', error.message);
-        logSimulationReminder(email, trip.destination);
-      });
-  } else {
-    logSimulationReminder(email, trip.destination);
-  }
+  // 3. LAST RESORT: Fallback to console simulation
+  logSimulationReminder(email, trip.destination);
 };
 
 const logSimulationReminder = (email, destination) => {
@@ -215,7 +234,36 @@ export const sendTripInvitationEmail = async (email, trip, hostName, inviteLinkA
     </div>
   `;
 
-  if (process.env.RESEND_API_KEY) {
+  // 1. PRIMARY: Use SMTP (Gmail) for reliable delivery
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const mailOptions = {
+      from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,
+      to: email,
+      subject: subject,
+      html: htmlContent,
+      headers: {
+        'X-Priority': '3',
+        'Importance': 'normal',
+        'X-Mailer': 'Xplorism/1.0',
+        'List-Unsubscribe': '<mailto:support@xplorism.com>',
+        'Reply-To': process.env.SMTP_USER || 'xplorism1@gmail.com',
+        'Precedence': 'normal',
+        'Auto-Submitted': 'no',
+        'X-MSMail-Priority': 'Normal'
+      }
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Trip invitation email sent successfully via Gmail SMTP to ${email}`);
+      return;
+    } catch (error) {
+      console.error('❌ Failed to send trip invitation via SMTP:', error.message);
+    }
+  }
+
+  // 2. FALLBACK: Resend API (only if SMTP not configured)
+  if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
     try {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -224,37 +272,23 @@ export const sendTripInvitationEmail = async (email, trip, hostName, inviteLinkA
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: 'Xplorism <onboarding@resend.dev>',
+          from: process.env.RESEND_FROM_EMAIL,
           to: email,
           subject: subject,
           html: htmlContent
         })
       });
       if (response.ok) {
-        console.log(`✅ Real Invitation email sent successfully via Resend to ${email}`);
+        console.log(`✅ Trip invitation email sent successfully via Resend to ${email}`);
         return;
       }
     } catch (err) {
-      console.warn(`Resend HTTP API failed: ${err.message}`);
+      console.warn(`Resend API failed for invitation: ${err.message}`);
     }
   }
 
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    const mailOptions = {
-      from: `"Xplorism Team" <${process.env.SMTP_FROM || 'noreply@xplorism.com'}>`,
-      to: email,
-      subject: subject,
-      html: htmlContent
-    };
-    transporter.sendMail(mailOptions)
-      .then(() => console.log(`✅ Invitation email sent successfully via SMTP to ${email}`))
-      .catch((error) => {
-        console.error('❌ Failed to send SMTP invitation email:', error.message);
-        logSimulationInvitation(email, trip.destination, hostName);
-      });
-  } else {
-    logSimulationInvitation(email, trip.destination, hostName);
-  }
+  // 3. LAST RESORT: Fallback to console simulation
+  logSimulationInvitation(email, trip.destination, hostName);
 };
 
 const logSimulationInvitation = (email, destination, hostName) => {

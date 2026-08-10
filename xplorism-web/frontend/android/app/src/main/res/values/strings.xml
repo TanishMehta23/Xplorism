@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Xplorism</string>
+    <string name="title_activity_main">Xplorism</string>
+    <string name="package_name">com.xplorism.app</string>
+    <string name="custom_url_scheme">com.xplorism.app</string>
+</resources>

@@ -13,33 +13,33 @@ yarn-error.log*
 .env.production.local
 !.env.example
 
-# Vite / Build outputs
-dist/
-build/
-.svelte-kit/
-.next/
-.nuxt/
-out/
+# Frontend build outputs
+frontend/dist/
+frontend/build/
+
+# Android / Gradle
+frontend/android/.gradle/
+frontend/android/local.properties/
+frontend/android/.idea/
+frontend/android/build/
+frontend/android/app/build/
+
+# Capacitor generated files
+frontend/android/capacitor-cordova-android-plugins/
 
 # Electron build outputs
 release/
+electron-builder.yml
+builder-effective-config.yaml
+*.blockmap
 
-# IDEs and editors
-.idea/
+# IDE
 .vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.idea/
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
 
-# Xplorism vault uploads
-xplorism-web/backend/vault_storage/
-
-# Electron / temporary files
-*.tmp
-*.temp
+# Backend generated/storage files
+backend/vault_storage/

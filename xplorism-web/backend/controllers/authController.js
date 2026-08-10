@@ -37,7 +37,8 @@ export const register = async (req, res) => {
       password,
       otp,
       expiresAt,
-      type: 'register'
+      type: 'register',
+      resendCount: 0
     });
 
     await sendOtpEmail(email, otp, name);
@@ -45,7 +46,8 @@ export const register = async (req, res) => {
     res.status(200).json({
       requiresOtp: true,
       email,
-      message: 'Verification OTP sent to your email'
+      message: 'Verification OTP sent to your email. Check spam if you don\'t see it.',
+      expiresIn: 600
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -91,7 +93,8 @@ export const login = async (req, res) => {
       email: user.email,
       otp,
       expiresAt,
-      type: 'login'
+      type: 'login',
+      resendCount: 0
     });
 
     await sendOtpEmail(email, otp, user.name);
@@ -244,6 +247,49 @@ export const verifyOtp = async (req, res) => {
   }
 };
 
+// Resend OTP (Helper for spam handling)
+export const resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const cachedData = otpCache.get(email);
+    if (!cachedData) {
+      return res.status(400).json({ message: 'No active OTP request found. Please start fresh.' });
+    }
+
+    // Check if too many resend attempts (prevent spam)
+    if (!cachedData.resendCount) {
+      cachedData.resendCount = 1;
+    } else if (cachedData.resendCount >= 3) {
+      return res.status(429).json({ message: 'Too many resend attempts. Please wait 10 minutes before trying again.' });
+    } else {
+      cachedData.resendCount += 1;
+    }
+
+    // Generate new OTP
+    const newOtp = generateOtp();
+    cachedData.otp = newOtp;
+    cachedData.expiresAt = Date.now() + 10 * 60 * 1000; // Reset 10 min timer
+    otpCache.set(email, cachedData);
+
+    // Determine user name
+    const userName = cachedData.name || cachedData.email.split('@')[0];
+    await sendOtpEmail(email, newOtp, userName);
+
+    res.status(200).json({
+      message: 'Verification OTP resent successfully. Please check your inbox and spam folder.',
+      expiresIn: 600 // 10 minutes in seconds
+    });
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Request Forgot Password (Sends OTP)
 export const requestForgotPassword = async (req, res) => {
   try {
@@ -266,7 +312,8 @@ export const requestForgotPassword = async (req, res) => {
       email,
       otp,
       expiresAt,
-      type: 'forgot'
+      type: 'forgot',
+      resendCount: 0
     });
 
     await sendOtpEmail(email, otp, user.name);
@@ -274,7 +321,8 @@ export const requestForgotPassword = async (req, res) => {
     res.status(200).json({
       requiresOtp: true,
       email,
-      message: 'OTP sent to your email.'
+      message: 'OTP sent to your email. Check spam if you don\'t see it.',
+      expiresIn: 600
     });
   } catch (error) {
     console.error('Forgot password OTP request error:', error);

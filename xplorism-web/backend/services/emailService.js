@@ -68,7 +68,13 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
       from: `"Xplorism Team" <${process.env.SMTP_FROM || 'noreply@xplorism.com'}>`,
       to: email,
       subject: subject,
-      html: htmlContent
+      html: htmlContent,
+      headers: {
+        'X-Priority': '3 (Normal)',
+        'Importance': 'normal',
+        'List-Unsubscribe': '<mailto:support@xplorism.com>',
+        'Reply-To': 'support@xplorism.com'
+      }
     };
 
     transporter.sendMail(mailOptions)

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, AlertCircle, ArrowRight, Eye, EyeOff, ChevronLeft, CheckCircle, ShieldCheck } from 'lucide-react';
+import { X, Mail, Lock, User, AlertCircle, ArrowRight, Eye, EyeOff, ChevronLeft, CheckCircle, ShieldCheck, Mail as MailAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
@@ -25,6 +25,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpType, setOtpType] = useState('login'); // 'login' | 'register' | 'forgot'
   const [pendingEmail, setPendingEmail] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
   
   // Reset Password States
   const [resetEmail, setResetEmail] = useState('');
@@ -99,7 +101,40 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     setShowPassword(false);
     setShowNewPassword(false);
     setOtp('');
+    setResendTimer(0);
   }, [initialMode, isOpen]);
+
+  // Timer for OTP resend countdown
+  useEffect(() => {
+    let interval;
+    if (resendTimer > 0 && mode === 'otp') {
+      interval = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer, mode]);
+
+  const handleResendOtp = async () => {
+    setError('');
+    setResendLoading(true);
+    try {
+      await api.post('/auth/resend-otp', { email: pendingEmail });
+      setOtp('');
+      setResendTimer(60); // 60 second cooldown
+      setError(''); // Clear any previous error
+    } catch (err) {
+      setError(err.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -288,7 +323,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ type: 'spring', duration: 0.5 }}
-          className="bg-white text-slate-800 rounded-3xl w-full max-w-md shadow-2xl relative z-10 overflow-hidden border border-slate-100 font-sans"
+          className="bg-white text-slate-800 rounded-3xl w-full max-w-md max-h-[90vh] shadow-2xl relative z-10 overflow-y-auto border border-slate-100 font-sans"
         >
           {/* Header section with branding & close button */}
           <div className="px-8 pt-8 pb-4 flex justify-between items-start">
@@ -458,6 +493,16 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                     </div>
                   </div>
 
+                  {/* Spam folder warning */}
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-3 p-2 rounded-lg bg-amber-50 border border-amber-100 flex items-start space-x-2 text-amber-700 text-xs"
+                  >
+                    <MailAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span className="font-medium">Didn't receive? Check your spam folder.</span>
+                  </motion.div>
+
                   <form onSubmit={handleOtpSubmit} className="space-y-4">
                     <div>
                       <label className="block text-slate-600 text-xs font-semibold mb-1.5" htmlFor="modal-otp">
@@ -487,6 +532,22 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                           <span>Verify Code</span>
                           <ArrowRight className="h-3.5 w-3.5" />
                         </>
+                      )}
+                    </button>
+
+                    {/* Resend OTP Button */}
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={resendTimer > 0 || resendLoading}
+                      className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resendLoading ? (
+                        <div className="h-4 w-4 border-2 border-slate-400/30 border-t-slate-700 rounded-full animate-spin mx-auto" />
+                      ) : resendTimer > 0 ? (
+                        <span>Resend OTP in {resendTimer}s</span>
+                      ) : (
+                        <span>Didn't receive? Resend OTP</span>
                       )}
                     </button>
                   </form>

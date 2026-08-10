@@ -11,14 +11,18 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+!.env.example
 
 # Vite / Build outputs
 dist/
 build/
-.svelte-kit
-.next
-.nuxt
+.svelte-kit/
+.next/
+.nuxt/
 out/
+
+# Electron build outputs
+release/
 
 # IDEs and editors
 .idea/
@@ -36,3 +40,6 @@ Thumbs.db
 # Xplorism vault uploads
 xplorism-web/backend/vault_storage/
 
+# Electron / temporary files
+*.tmp
+*.temp

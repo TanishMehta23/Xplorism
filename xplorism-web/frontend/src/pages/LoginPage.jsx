@@ -58,19 +58,70 @@ export default function LoginPage() {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
-    if (clientId && window.google && view === 'login') {
-      window.google.accounts.id.initialize({
+    if (!clientId || view !== 'login') {
+      return undefined;
+    }
+
+    let cancelled = false;
+    let retryTimer;
+
+    const renderGoogleButton = () => {
+      const googleApi = window.google?.accounts?.id;
+      const googleBtn = document.getElementById('google-signin-btn');
+
+      if (!googleApi || !googleBtn) {
+        return false;
+      }
+
+      googleBtn.innerHTML = '';
+      googleApi.initialize({
         client_id: clientId,
         callback: handleGoogleCallback,
       });
-      const googleBtn = document.getElementById('google-signin-btn');
-      if (googleBtn) {
-        window.google.accounts.id.renderButton(
-          googleBtn,
-          { theme: 'filled_black', size: 'large', width: '382', text: 'signin_with' }
-        );
+      googleApi.renderButton(googleBtn, {
+        theme: 'filled_black',
+        size: 'large',
+        width: '382',
+        text: 'signin_with',
+      });
+      return true;
+    };
+
+    const startPolling = () => {
+      retryTimer = window.setInterval(() => {
+        if (cancelled) {
+          return;
+        }
+
+        if (renderGoogleButton()) {
+          clearInterval(retryTimer);
+        }
+      }, 100);
+    };
+
+    if (!renderGoogleButton()) {
+      const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+
+      if (script) {
+        script.addEventListener('load', renderGoogleButton, { once: true });
+        startPolling();
+      } else {
+        const googleScript = document.createElement('script');
+        googleScript.src = 'https://accounts.google.com/gsi/client';
+        googleScript.async = true;
+        googleScript.defer = true;
+        googleScript.onload = renderGoogleButton;
+        document.head.appendChild(googleScript);
+        startPolling();
       }
     }
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) {
+        clearInterval(retryTimer);
+      }
+    };
   }, [loginWithGoogle, clientId, view]);
 
   const handleSubmit = async (e) => {

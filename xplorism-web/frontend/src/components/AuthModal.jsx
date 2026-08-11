@@ -54,22 +54,70 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
-    if (clientId && isOpen && window.google && mode === 'login') {
-      const timer = setTimeout(() => {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleCallback,
-        });
-        const targetBtn = document.getElementById('modal-google-signin-btn');
-        if (targetBtn) {
-          window.google.accounts.id.renderButton(
-            targetBtn,
-            { theme: 'outline', size: 'large', width: '352', text: 'signin_with' }
-          );
+    if (!clientId || !isOpen || mode !== 'login') {
+      return undefined;
+    }
+
+    let cancelled = false;
+    let retryTimer;
+
+    const renderGoogleButton = () => {
+      const googleApi = window.google?.accounts?.id;
+      const targetBtn = document.getElementById('modal-google-signin-btn');
+
+      if (!googleApi || !targetBtn) {
+        return false;
+      }
+
+      targetBtn.innerHTML = '';
+      googleApi.initialize({
+        client_id: clientId,
+        callback: handleGoogleCallback,
+      });
+      googleApi.renderButton(targetBtn, {
+        theme: 'outline',
+        size: 'large',
+        width: '352',
+        text: 'signin_with',
+      });
+      return true;
+    };
+
+    const startPolling = () => {
+      retryTimer = window.setInterval(() => {
+        if (cancelled) {
+          return;
+        }
+
+        if (renderGoogleButton()) {
+          clearInterval(retryTimer);
         }
       }, 100);
-      return () => clearTimeout(timer);
+    };
+
+    if (!renderGoogleButton()) {
+      const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+
+      if (script) {
+        script.addEventListener('load', renderGoogleButton, { once: true });
+        startPolling();
+      } else {
+        const googleScript = document.createElement('script');
+        googleScript.src = 'https://accounts.google.com/gsi/client';
+        googleScript.async = true;
+        googleScript.defer = true;
+        googleScript.onload = renderGoogleButton;
+        document.head.appendChild(googleScript);
+        startPolling();
+      }
     }
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) {
+        clearInterval(retryTimer);
+      }
+    };
   }, [isOpen, loginWithGoogle, clientId, mode]);
 
   // Load remembered email on open

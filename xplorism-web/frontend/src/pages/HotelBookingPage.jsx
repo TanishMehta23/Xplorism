@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Hotel, Search, Calendar, Users, Star, MapPin,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -99,6 +100,7 @@ const getCurrencyDetails = (destString) => {
 export default function HotelBookingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Search States
   const [destination, setDestination] = useState('');
@@ -163,11 +165,25 @@ export default function HotelBookingPage() {
   // Booking Flow States
   const [bookingHotel, setBookingHotel] = useState(null);
   const [bookingTripId, setBookingTripId] = useState('');
+  const [tripDropdownOpen, setTripDropdownOpen] = useState(false);
+  const tripDropdownRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (tripDropdownRef.current && !tripDropdownRef.current.contains(e.target)) {
+        setTripDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleOutside);
+    return () => document.removeEventListener('click', handleOutside);
+  }, []);
   const [guestName, setGuestName] = useState(user?.name || '');
   const [guestEmail, setGuestEmail] = useState(user?.email || '');
   const [roomType, setRoomType] = useState('deluxe');
   const [bookingConfirm, setBookingConfirm] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookings, setBookings] = useState([]);
+  const [showBookingsModal, setShowBookingsModal] = useState(false);
 
   // Load Leaflet and Razorpay dynamically on mount
   useEffect(() => {
@@ -185,12 +201,7 @@ export default function HotelBookingPage() {
       setIsLeafletLoaded(true);
     }
 
-    if (!document.getElementById('razorpay-checkout-script')) {
-      const rpScript = document.createElement('script');
-      rpScript.id = 'razorpay-checkout-script';
-      rpScript.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      document.head.appendChild(rpScript);
-    }
+    // Payment integration disabled for now — do not inject Razorpay script.
 
     // Fetch user's trips for booking integration
     api.get('/trips')
@@ -211,10 +222,73 @@ export default function HotelBookingPage() {
     }
   }, [mobileTab, mapInstance]);
 
+  // If navigated back from mock payment with bookingConfirm, show it
+  useEffect(() => {
+    if (location.state && location.state.bookingConfirm) {
+      setBookingConfirm(location.state.bookingConfirm);
+      // clear history state to avoid showing repeatedly
+      setBookingLoading(false);
+      navigate('/hotels', { replace: true, state: {} });
+    }
+  }, [location]);
+
+  // Bookings persistence: load saved bookings and persist new confirmations
+  useEffect(() => {
+    const loadLocal = () => {
+      try {
+        const raw = localStorage.getItem('xplorism_bookings');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setBookings(parsed || []);
+          if (!parsed || parsed.length === 0) setShowBookingsModal(true);
+        } else {
+          setBookings([]);
+          setShowBookingsModal(true);
+        }
+      } catch (err) {
+        console.warn('Failed to load saved bookings:', err.message);
+      }
+    };
+
+    // Try to fetch from API if authenticated
+    api.get('/bookings')
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBookings(data);
+          if (data.length === 0) setShowBookingsModal(true);
+        } else {
+          loadLocal();
+        }
+      })
+      .catch(() => loadLocal());
+  }, []);
+
+  useEffect(() => {
+    if (!bookingConfirm) return;
+    setBookings(prev => {
+      if (prev.some(b => b.confirmationNumber === bookingConfirm.confirmationNumber)) return prev;
+      const next = [bookingConfirm, ...prev];
+      try { localStorage.setItem('xplorism_bookings', JSON.stringify(next)); } catch (err) { console.warn('Failed to save booking:', err.message); }
+      return next;
+    });
+  }, [bookingConfirm]);
+
   // Handle Search Submission
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
-    if (!destination.trim()) return;
+    // Require all search fields to be filled
+    if (!destination.trim()) {
+      alert('Please enter a destination.');
+      return;
+    }
+    if (!checkIn || !checkOut) {
+      alert('Please select both check-in and check-out dates.');
+      return;
+    }
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      alert('Check-out date must be after check-in date.');
+      return;
+    }
 
     setSearchLoading(true);
     setHasSearched(true);
@@ -430,31 +504,42 @@ export default function HotelBookingPage() {
     e.preventDefault();
     if (!guestName || !guestEmail) return;
 
+    // Dates are mandatory for booking
+    if (!checkIn || !checkOut) {
+      alert('Please select both check-in and check-out dates before confirming.');
+      return;
+    }
+
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      alert('Check-out date must be after check-in date.');
+      return;
+    }
+
     setBookingLoading(true);
 
     const rawUSDPrice = bookingHotel.price * (roomType === 'deluxe' ? 1.2 : roomType === 'suite' ? 1.6 : 1);
     const finalLocalPrice = Math.round(rawUSDPrice * currency.rate);
 
     // If Razorpay SDK is not loaded, fallback to normal booking confirmation
-    if (!window.Razorpay) {
-      console.warn('Razorpay SDK not loaded. Simulating booking directly.');
-      setTimeout(() => {
-        const confNum = `BK-${Math.floor(100000 + Math.random() * 900000)}`;
-        setBookingConfirm({
-          confirmationNumber: confNum,
-          hotelName: bookingHotel.name,
-          roomType: roomType === 'deluxe' ? 'Deluxe King Room' : roomType === 'suite' ? 'Executive Suite' : 'Standard Room',
-          guests: guests,
-          checkIn: checkIn || new Date().toISOString().split('T')[0],
-          checkOut: checkOut || new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
-          price: rawUSDPrice,
-          associatedTrip: userTrips.find(t => t.id === bookingTripId)?.destination || 'General Dashboard'
-        });
-        setBookingLoading(false);
-        setBookingHotel(null);
-      }, 1000);
-      return;
-    }
+    // Navigate to mock payment page to simulate Razorpay-like checkout
+    const bookingData = {
+      bookingHotel,
+      rawUSDPrice,
+      finalLocalPrice,
+      currency,
+      roomType: roomType === 'deluxe' ? 'Deluxe King Room' : roomType === 'suite' ? 'Executive Suite' : 'Standard Room',
+      guests,
+      checkIn,
+      checkOut,
+      bookingTripId,
+      guestName,
+      guestEmail,
+      associatedTrip: userTrips.find(t => t.id === bookingTripId)?.destination || 'General Dashboard'
+    };
+
+    setBookingLoading(true);
+    navigate('/mock-payment', { state: { bookingData } });
+    return;
 
     const options = {
       key: "rzp_test_demoKey123456", // Test key for simulation
@@ -472,8 +557,8 @@ export default function HotelBookingPage() {
           hotelName: bookingHotel.name,
           roomType: roomType === 'deluxe' ? 'Deluxe King Room' : roomType === 'suite' ? 'Executive Suite' : 'Standard Room',
           guests: guests,
-          checkIn: checkIn || new Date().toISOString().split('T')[0],
-          checkOut: checkOut || new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
+          checkIn: checkIn,
+          checkOut: checkOut,
           price: rawUSDPrice,
           associatedTrip: userTrips.find(t => t.id === bookingTripId)?.destination || 'General Dashboard'
         });
@@ -517,14 +602,16 @@ export default function HotelBookingPage() {
               Find and reserve premium stays for your itineraries.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border hover:bg-[var(--bg-tertiary)] active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer"
-            style={{ borderColor: 'var(--border-primary)' }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={() => setShowBookingsModal(true)}
+              className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border hover:bg-[var(--bg-tertiary)] active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer"
+              style={{ borderColor: 'var(--border-primary)' }}
+            >
+              <span>My Bookings</span>
+            </button>
+          </div>
         </div>
 
         {/* Search Bar Panel */}
@@ -604,6 +691,7 @@ export default function HotelBookingPage() {
                   onChange={(e) => setCheckIn(e.target.value)}
                   onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                   onFocus={(e) => { try { e.target.showPicker(); } catch (err) {} }}
+                  required
                   className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                 />
               </div>
@@ -628,6 +716,7 @@ export default function HotelBookingPage() {
                   onChange={(e) => setCheckOut(e.target.value)}
                   onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                   onFocus={(e) => { try { e.target.showPicker(); } catch (err) {} }}
+                  required
                   className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                 />
               </div>
@@ -944,20 +1033,59 @@ export default function HotelBookingPage() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Link to Active Trip</label>
-                  <select
-                    value={bookingTripId}
-                    onChange={(e) => setBookingTripId(e.target.value)}
-                    className="w-full bg-[var(--bg-primary)] border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-rose-500"
-                    style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
-                  >
-                    {userTrips.length === 0 ? (
-                      <option value="">No Active Trips (Book General)</option>
-                    ) : (
-                      userTrips.map(t => (
-                        <option key={t.id} value={t.id}>{t.destination} ({t.start_date.split('T')[0]})</option>
-                      ))
+                  <div className="relative" ref={tripDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setTripDropdownOpen(!tripDropdownOpen)}
+                      className="w-full text-left bg-[var(--bg-primary)] border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-rose-500 flex items-center justify-between"
+                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                    >
+                      <span>
+                        {(() => {
+                          if (!bookingTripId) return 'No Active Trips (Book General)';
+                          const t = userTrips.find(x => x.id === bookingTripId);
+                          if (!t) return 'No Active Trips (Book General)';
+                          const fmt = (d) => d ? new Date(d).toISOString().split('T')[0] : 'Unknown Date';
+                          return `${t.destination} (${fmt(t.startDate)} → ${fmt(t.endDate)})`;
+                        })()}
+                      </span>
+                      <svg className="h-3 w-3 text-slate-400" viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+
+                    {tripDropdownOpen && (
+                      <div className="absolute left-0 right-0 mt-2 z-50 rounded-2xl shadow-xl overflow-hidden bg-[var(--bg-primary)] border" style={{ borderColor: 'var(--border-primary)' }}>
+                        <div className="max-h-48 overflow-y-auto">
+                          <button
+                            type="button"
+                            onClick={() => { setBookingTripId(''); setTripDropdownOpen(false); }}
+                            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-[var(--bg-tertiary)] text-xs font-semibold`}
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            <span>No Active Trips (Book General)</span>
+                            {bookingTripId === '' && (<span className="h-2 w-2 rounded-full bg-rose-500" />)}
+                          </button>
+                          {userTrips.map(t => {
+                            const fmt = (d) => d ? new Date(d).toISOString().split('T')[0] : 'Unknown Date';
+                            return (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => { setBookingTripId(t.id); setTripDropdownOpen(false); }}
+                                className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-[var(--bg-tertiary)] text-xs font-semibold`}
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                <div className="flex flex-col text-left">
+                                  <span className="font-bold text-sm">{t.destination}</span>
+                                  <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{fmt(t.startDate)} → {fmt(t.endDate)}</span>
+                                </div>
+                                {bookingTripId === t.id && (<span className="h-2 w-2 rounded-full bg-rose-500" />)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     )}
-                  </select>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -996,6 +1124,41 @@ export default function HotelBookingPage() {
                       style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                       required
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Check-In Date</label>
+                    <div className="relative">
+                      <div className="w-full bg-[var(--bg-primary)] border rounded-xl px-3 py-2 text-xs font-semibold flex items-center justify-between" style={{ borderColor: 'var(--border-primary)', color: checkIn ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
+                        <span>{checkIn ? new Date(checkIn).toLocaleDateString('en-GB') : 'Select check-in date'}</span>
+                        <svg className="h-4 w-4 text-rose-500" viewBox="0 0 24 24" fill="none"><path d="M7 10h10M7 6h10M7 14h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                      <input
+                        type="date"
+                        value={checkIn}
+                        onChange={(e) => setCheckIn(e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Check-Out Date</label>
+                    <div className="relative">
+                      <div className="w-full bg-[var(--bg-primary)] border rounded-xl px-3 py-2 text-xs font-semibold flex items-center justify-between" style={{ borderColor: 'var(--border-primary)', color: checkOut ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
+                        <span>{checkOut ? new Date(checkOut).toLocaleDateString('en-GB') : 'Select check-out date'}</span>
+                        <svg className="h-4 w-4 text-rose-500" viewBox="0 0 24 24" fill="none"><path d="M7 10h10M7 6h10M7 14h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                      <input
+                        type="date"
+                        value={checkOut}
+                        onChange={(e) => setCheckOut(e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1043,6 +1206,52 @@ export default function HotelBookingPage() {
                 </div>
 
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* My Bookings Modal */}
+      <AnimatePresence>
+        {showBookingsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="rounded-3xl border p-6 max-w-lg w-full shadow-2xl relative max-h-[80vh] overflow-y-auto"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>My Bookings</h3>
+                <button onClick={() => setShowBookingsModal(false)} className="text-sm font-bold">Close</button>
+              </div>
+
+              {bookings.length === 0 ? (
+                <div className="text-center text-sm text-[var(--text-secondary)] py-10">You have no bookings yet.</div>
+              ) : (
+                <div className="space-y-3">
+                  {bookings.map((b) => (
+                    <div key={b.confirmationNumber} className="rounded-2xl p-3 bg-[var(--bg-primary)] border" style={{ borderColor: 'var(--border-primary)' }}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-bold" style={{ color: 'var(--text-primary)' }}>{b.hotelName}</div>
+                          <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{b.roomType} • {b.guests} guest(s)</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-extrabold text-rose-500">{currency.symbol}{Math.round((b.price || 0) * currency.rate)}</div>
+                          <div className="text-[11px] text-[var(--text-secondary)]">Ref: {b.confirmationNumber}</div>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        <div>Check-in: {b.checkIn}</div>
+                        <div>Check-out: {b.checkOut}</div>
+                        {b.paymentId && <div>Payment ID: <span className="text-rose-500 font-mono">{b.paymentId}</span></div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           </div>
         )}

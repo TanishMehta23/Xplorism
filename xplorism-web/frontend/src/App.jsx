@@ -12,6 +12,7 @@ import BudgetPage from './pages/BudgetPage';
 import BudgetsListPage from './pages/BudgetsListPage';
 import HotelBookingPage from './pages/HotelBookingPage';
 import ProfilePage from './pages/ProfilePage';
+import TravelPreferencesPage from './pages/TravelPreferencesPage';
 import TrackerPage from './pages/TrackerPage';
 import DocumentVaultPage from './pages/DocumentVaultPage';
 import CommunityFeedPage from './pages/CommunityFeedPage';
@@ -20,6 +21,7 @@ import SharedTripPage from './pages/SharedTripPage';
 import SharedTripsWorkspace from './pages/SharedTripsWorkspace';
 import CollaborativeTripPage from './pages/CollaborativeTripPage';
 import TripInviteRespondPage from './pages/TripInviteRespondPage';
+import MockPaymentPage from './pages/MockPaymentPage';
 
 
 // Protected Route component
@@ -113,6 +115,15 @@ function AppRoutes() {
       />
 
       <Route
+        path="/mock-payment"
+        element={
+          <ProtectedRoute>
+            <MockPaymentPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/trips/:id/budget"
         element={
           <ProtectedRoute>
@@ -139,6 +150,14 @@ function AppRoutes() {
         }
       />
 
+      <Route
+        path="/preferences"
+        element={
+          <ProtectedRoute>
+            <TravelPreferencesPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/vault"

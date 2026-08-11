@@ -176,3 +176,22 @@ CREATE TABLE IF NOT EXISTS workspace_notifications (
     is_read BOOLEAN DEFAULT FALSE
 );
 
+-- Bookings Table (persist simulated bookings for demo)
+CREATE TABLE IF NOT EXISTS bookings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    trip_id UUID REFERENCES trips(id) ON DELETE SET NULL,
+    associated_trip VARCHAR(255),
+    hotel_name VARCHAR(255) NOT NULL,
+    room_type VARCHAR(255) DEFAULT 'Standard',
+    guests INTEGER DEFAULT 1,
+    check_in DATE NOT NULL,
+    check_out DATE NOT NULL,
+    price DOUBLE PRECISION DEFAULT 0,
+    payment_id VARCHAR(255),
+    confirmation_number VARCHAR(255),
+    guest_name VARCHAR(255),
+    guest_email VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+

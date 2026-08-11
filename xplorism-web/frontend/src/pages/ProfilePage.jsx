@@ -1071,10 +1071,23 @@ export default function ProfilePage() {
 
                 </div>
 
-                <div className="flex justify-end pt-4 mt-auto">
+                <div className="flex justify-between pt-4 mt-auto gap-3">
+                  <button
+                    onClick={() => navigate('/preferences')}
+                    className="flex-1 px-4 py-3 rounded-full font-semibold text-xs uppercase tracking-wider transition cursor-pointer border"
+                    style={{ 
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(59,130,246,0.1)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; }}
+                  >
+                    {t('manage_preferences') || 'Manage All Preferences'}
+                  </button>
                   <button
                     onClick={handleSavePreferences}
-                    className="px-6 py-3 rounded-full text-white font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center active:scale-95 shadow-md"
+                    className="flex-1 px-6 py-3 rounded-full text-white font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center active:scale-95 shadow-md"
                     style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}

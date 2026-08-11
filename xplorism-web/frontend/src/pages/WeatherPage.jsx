@@ -108,9 +108,20 @@ export default function WeatherPage() {
   const handleAllowLocation = () => {
     setShowLocationModal(false);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        fetchWeatherForCity('Your Location', latitude, longitude);
+        // Reverse geocode to get city name
+        try {
+          const geoResponse = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const geoData = await geoResponse.json();
+          const cityName = geoData.address?.city || geoData.address?.town || geoData.address?.village || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          fetchWeatherForCity(cityName, latitude, longitude);
+        } catch (err) {
+          console.warn('Reverse geocoding failed:', err.message);
+          fetchWeatherForCity(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, latitude, longitude);
+        }
       },
       (err) => {
         console.warn('Geolocation access denied or failed. Falling back to Paris, France. Error:', err.message);
@@ -453,9 +464,19 @@ export default function WeatherPage() {
                 onClick={() => {
                   if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
-                      (position) => {
+                      async (position) => {
                         const { latitude, longitude } = position.coords;
-                        fetchWeatherForCity('Your Location', latitude, longitude);
+                        try {
+                          const geoResponse = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+                          );
+                          const geoData = await geoResponse.json();
+                          const cityName = geoData.address?.city || geoData.address?.town || geoData.address?.village || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                          fetchWeatherForCity(cityName, latitude, longitude);
+                        } catch (err) {
+                          console.warn('Reverse geocoding failed:', err.message);
+                          fetchWeatherForCity(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, latitude, longitude);
+                        }
                       },
                       (err) => {
                         console.warn('Geolocation access denied or failed. Falling back to Paris, France. Error:', err.message);
@@ -485,9 +506,19 @@ export default function WeatherPage() {
                       onClick={() => {
                         if (navigator.geolocation) {
                           navigator.geolocation.getCurrentPosition(
-                            (position) => {
+                            async (position) => {
                               const { latitude, longitude } = position.coords;
-                              fetchWeatherForCity('Your Location', latitude, longitude);
+                              try {
+                                const geoResponse = await fetch(
+                                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+                                );
+                                const geoData = await geoResponse.json();
+                                const cityName = geoData.address?.city || geoData.address?.town || geoData.address?.village || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                                fetchWeatherForCity(cityName, latitude, longitude);
+                              } catch (err) {
+                                console.warn('Reverse geocoding failed:', err.message);
+                                fetchWeatherForCity(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, latitude, longitude);
+                              }
                             },
                             (err) => {
                               console.warn('Geolocation access denied or failed. Falling back to Paris, France. Error:', err.message);

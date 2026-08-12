@@ -26,6 +26,50 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+const tryBrevoApi = async (email, name, subject, htmlContent) => {
+  const apiKey = process.env.BREVO_API_KEY || (process.env.SMTP_HOST === 'smtp-relay.brevo.com' ? process.env.SMTP_PASS : null);
+  const senderEmail = process.env.SENDER_EMAIL || process.env.SMTP_FROM || 'xplorism1@gmail.com';
+  
+  if (!apiKey) return false;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "Xplorism",
+          email: senderEmail
+        },
+        to: [{ email, name: name || email.split('@')[0] }],
+        subject: subject,
+        htmlContent: htmlContent
+      }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      console.log(`✅ Email sent instantly via Brevo HTTP API to ${email}`);
+      return true;
+    }
+    const errText = await response.text();
+    console.warn(`Brevo HTTP API failed: ${response.status} - ${errText}`);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn(`Brevo HTTP API connection failed or timed out: ${err.message}`);
+  }
+  return false;
+};
+
 export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
   const subject = '🔑 Your Xplorism Verification Code';
   const htmlContent = `
@@ -42,7 +86,11 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
     </div>
   `;
 
-  // 1. PRIMARY: Use SMTP (Gmail) for reliable delivery - avoids spam folder
+  // 1. PRIMARY: Try Brevo HTTP API (over HTTPS / Port 443)
+  const sentViaBrevo = await tryBrevoApi(email, name, subject, htmlContent);
+  if (sentViaBrevo) return;
+
+  // 2. SECONDARY: Use SMTP (Gmail) for reliable delivery - avoids spam folder
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     const mailOptions = {
       from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,
@@ -148,7 +196,11 @@ export const sendTripReminderEmail = async (email, trip, notifications, name = '
     </div>
   `;
 
-  // 1. PRIMARY: Use SMTP (Gmail) for reliable delivery
+  // 1. PRIMARY: Try Brevo HTTP API (over HTTPS / Port 443)
+  const sentViaBrevo = await tryBrevoApi(email, name, subject, htmlContent);
+  if (sentViaBrevo) return;
+
+  // 2. SECONDARY: Use SMTP (Gmail) for reliable delivery
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     const mailOptions = {
       from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,
@@ -242,7 +294,11 @@ export const sendTripInvitationEmail = async (email, trip, hostName, inviteLinkA
     </div>
   `;
 
-  // 1. PRIMARY: Use SMTP (Gmail) for reliable delivery
+  // 1. PRIMARY: Try Brevo HTTP API (over HTTPS / Port 443)
+  const sentViaBrevo = await tryBrevoApi(email, null, subject, htmlContent);
+  if (sentViaBrevo) return;
+
+  // 2. SECONDARY: Use SMTP (Gmail) for reliable delivery
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     const mailOptions = {
       from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,

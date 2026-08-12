@@ -21,6 +21,9 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 5000,
   greetingTimeout: 5000,
   socketTimeout: 5000,
+  lookup: (hostname, options, callback) => {
+    return dns.lookup(hostname, { ...options, family: 4 }, callback);
+  }
 });
 
 export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {

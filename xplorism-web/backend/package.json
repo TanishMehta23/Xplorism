@@ -18,7 +18,7 @@
     "express-rate-limit": "^8.6.2",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
-    "kafkajs": "^2.2.4",
+    "amqplib": "^0.10.4",
     "nodemailer": "^9.0.3",
     "pg": "^8.22.0",
     "socket.io": "^4.8.3",

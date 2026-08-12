@@ -240,10 +240,8 @@ export default function HotelBookingPage() {
         if (raw) {
           const parsed = JSON.parse(raw);
           setBookings(parsed || []);
-          if (!parsed || parsed.length === 0) setShowBookingsModal(true);
         } else {
           setBookings([]);
-          setShowBookingsModal(true);
         }
       } catch (err) {
         console.warn('Failed to load saved bookings:', err.message);
@@ -255,7 +253,6 @@ export default function HotelBookingPage() {
       .then(data => {
         if (Array.isArray(data)) {
           setBookings(data);
-          if (data.length === 0) setShowBookingsModal(true);
         } else {
           loadLocal();
         }

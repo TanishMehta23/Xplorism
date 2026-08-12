@@ -20,7 +20,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import { getNearbyPlacesFromGemini, getHotelsFromGemini, getFlightDetailsFromGemini } from './services/geminiService.js';
 import { globalLimiter, authLimiter } from './middleware/rateLimiter.js';
 import { sqlInjectionSanitizer } from './middleware/sqlInjectionSanitizer.js';
-import { initKafka, subscribeToTopic } from './services/kafkaService.js';
+import { initRabbitMQ, subscribeToTopic } from './services/rabbitmqService.js';
 
 dotenv.config();
 
@@ -1051,13 +1051,13 @@ io.on('connection', (socket) => {
   });
 });
 
-// Initialize database, Kafka, and start server
+// Initialize database, RabbitMQ, and start server
 async function startServer() {
   try {
     await initDatabase();
     
-    // Initialize Kafka
-    await initKafka();
+    // Initialize RabbitMQ
+    await initRabbitMQ();
 
     // Subscribe to chat topic to broadcast real-time messages via Socket.io
     subscribeToTopic('trip-chat', 'trip-chat-group', ({ key: tripId, value: message }) => {

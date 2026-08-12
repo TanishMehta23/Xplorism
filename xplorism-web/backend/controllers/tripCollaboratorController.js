@@ -1,5 +1,5 @@
 import { query } from '../config/db.js';
-import { sendMessage } from '../services/kafkaService.js';
+import { sendMessage } from '../services/rabbitmqService.js';
 import { sendTripInvitationEmail } from '../services/emailService.js';
 
 // Get shared trips (trips where user is a collaborator)
@@ -320,7 +320,7 @@ export const getTripMessages = async (req, res) => {
   }
 };
 
-// Post chat message (Sends via Kafka)
+// Post chat message (Sends via RabbitMQ)
 export const postTripMessage = async (req, res) => {
   try {
     const { id: tripId } = req.params;
@@ -342,7 +342,7 @@ export const postTripMessage = async (req, res) => {
 
     const savedMessage = dbResult.rows[0];
 
-    // Broadcast message via Kafka
+    // Broadcast message via RabbitMQ
     await sendMessage('trip-chat', tripId, savedMessage);
 
     res.status(201).json(savedMessage);

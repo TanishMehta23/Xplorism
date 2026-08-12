@@ -286,13 +286,15 @@ export const sendEmailReminder = async (req, res) => {
       message: wx
     });
 
-    await sendTripReminderEmail(user.email, {
+    sendTripReminderEmail(user.email, {
       destination: trip.destination,
       startDate: trip.start_date,
       endDate: trip.end_date,
       travelers: trip.travelers,
       budget: trip.budget
-    }, emailAlerts, user.name);
+    }, emailAlerts, user.name).catch(err => {
+      console.error('Error sending trip reminder email:', err);
+    });
 
     res.json({ success: true, message: 'Reminder email sent successfully!' });
   } catch (error) {

@@ -41,7 +41,7 @@ export const register = async (req, res) => {
       resendCount: 0
     });
 
-    await sendOtpEmail(email, otp, name);
+    sendOtpEmail(email, otp, name).catch(err => console.error('Error sending register OTP email:', err));
 
     res.status(200).json({
       requiresOtp: true,
@@ -97,7 +97,7 @@ export const login = async (req, res) => {
       resendCount: 0
     });
 
-    await sendOtpEmail(email, otp, user.name);
+    sendOtpEmail(email, otp, user.name).catch(err => console.error('Error sending login OTP email:', err));
 
     res.status(200).json({
       requiresOtp: true,
@@ -278,7 +278,7 @@ export const resendOtp = async (req, res) => {
 
     // Determine user name
     const userName = cachedData.name || cachedData.email.split('@')[0];
-    await sendOtpEmail(email, newOtp, userName);
+    sendOtpEmail(email, newOtp, userName).catch(err => console.error('Error sending resend OTP email:', err));
 
     res.status(200).json({
       message: 'Verification OTP resent successfully. Please check your inbox and spam folder.',
@@ -316,7 +316,7 @@ export const requestForgotPassword = async (req, res) => {
       resendCount: 0
     });
 
-    await sendOtpEmail(email, otp, user.name);
+    sendOtpEmail(email, otp, user.name).catch(err => console.error('Error sending forgot password OTP email:', err));
 
     res.status(200).json({
       requiresOtp: true,
@@ -510,7 +510,7 @@ export const updateProfile = async (req, res) => {
         type: 'update-profile'
       });
 
-      await sendOtpEmail(email, otp, name);
+      sendOtpEmail(email, otp, name).catch(err => console.error('Error sending profile update OTP email:', err));
 
       return res.status(200).json({
         requiresOtp: true,

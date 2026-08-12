@@ -9,6 +9,8 @@ dotenv.config();
 
 // Create SMTP transporter
 const transporter = nodemailer.createTransport({
+  pool: true,
+  maxConnections: 5,
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
@@ -16,6 +18,9 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
   },
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 5000,
 });
 
 export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {

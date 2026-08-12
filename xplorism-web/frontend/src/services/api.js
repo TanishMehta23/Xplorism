@@ -1,4 +1,11 @@
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const getBackendUrl = () => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000';
+  }
+  return import.meta.env.VITE_API_URL || '/api';
+};
+
+const BASE_URL = getBackendUrl();
 
 export const SOCKET_URL = (() => {
   const envUrl = import.meta.env.VITE_API_URL;

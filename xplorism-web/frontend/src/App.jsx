@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -22,6 +22,7 @@ import SharedTripsWorkspace from './pages/SharedTripsWorkspace';
 import CollaborativeTripPage from './pages/CollaborativeTripPage';
 import TripInviteRespondPage from './pages/TripInviteRespondPage';
 import MockPaymentPage from './pages/MockPaymentPage';
+import AIChatbot from './components/AIChatbot';
 
 
 // Protected Route component
@@ -38,6 +39,27 @@ const AuthRoute = ({ children }) => {
 
 function AppRoutes() {
   const { loading } = useAuth();
+
+  useEffect(() => {
+    const checkModals = () => {
+      // Find any modal overlay elements active in the DOM (full-screen overlays use fixed inset-0)
+      const modalActive = document.querySelector('.fixed.inset-0');
+      if (modalActive) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    };
+
+    checkModals();
+    const observer = new MutationObserver(checkModals);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -217,6 +239,7 @@ export default function App() {
         <LanguageProvider>
           <Router>
             <AppRoutes />
+            <AIChatbot />
           </Router>
         </LanguageProvider>
       </ThemeProvider>

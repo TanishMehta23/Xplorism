@@ -362,7 +362,7 @@ export default function CollaborativeTripPage() {
     scrollToBottom();
     const timer = setTimeout(scrollToBottom, 100);
     return () => clearTimeout(timer);
-  }, [messages, loading]);
+  }, [messages, loading, activeMainTab]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -2152,7 +2152,7 @@ export default function CollaborativeTripPage() {
           </div>
 
           {/* Live Chat Panel (Kafka Powered) */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex flex-col h-[500px] lg:h-auto lg:flex-1 overflow-hidden order-4 lg:order-2">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex flex-col h-[500px] lg:h-[74vh] overflow-hidden order-4 lg:order-2">
             <div className="flex items-center space-x-2 pb-3 border-b border-slate-100 mb-3 shrink-0">
               <MessageCircle className="h-4.5 w-4.5 text-rose-505" />
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Workspace Chat</h3>

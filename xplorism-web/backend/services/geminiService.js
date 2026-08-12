@@ -13,7 +13,7 @@ export const askOllamaForItinerary = async ({
 }) => {
   const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
   const primaryModel = process.env.OLLAMA_MODEL || 'llama3';
-  
+
   const modelsToTry = [...new Set([
     primaryModel,
     'qwen3',
@@ -107,7 +107,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
       if (firstBrace !== -1 && lastBrace !== -1) {
         jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
       }
-      
+
       const parsed = JSON.parse(jsonStr);
       console.log(`Successfully generated itinerary using Ollama model: ${model}`);
       return parsed;
@@ -116,7 +116,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
       lastError = err;
     }
   }
-  
+
   throw new Error(`Ollama itinerary generation failed on all models: ${lastError.message}`);
 };
 
@@ -174,7 +174,7 @@ const callOpenAICompatibleAPI = async (endpoint, apiKey, model, prompt, isJson) 
   if (isJson) {
     payload.response_format = { type: 'json_object' };
   }
-  
+
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
@@ -202,11 +202,17 @@ const callOpenAICompatibleAPI = async (endpoint, apiKey, model, prompt, isJson) 
 const getGeminiModels = () => {
   const envModel = process.env.AI_MODEL ? process.env.AI_MODEL.split('/').pop() : null;
   const models = [];
-  if (envModel) models.push(envModel);
-  // Add 2-3 backup Gemini models
-  models.push('gemini-2.0-flash');
-  models.push('gemini-1.5-flash');
-  models.push('gemini-1.5-pro');
+  if (envModel) {
+    if (envModel === 'gemini-1.5-flash' || envModel === 'gemini-2.0-flash') {
+      models.push('gemini-3.5-flash');
+    } else {
+      models.push(envModel);
+    }
+  }
+  // Add active, supported Gemini models
+  models.push('gemini-3.5-flash');
+  models.push('gemini-2.5-pro');
+  models.push('gemini-3.6-flash');
   return [...new Set(models)];
 };
 
@@ -280,14 +286,14 @@ Only return the raw JSON object conforming to the schema above. Do not include m
       try {
         console.log(`Attempting itinerary generation with Gemini model: ${model}`);
         const textResponse = await callGeminiAPI(model, prompt, apiKey);
-        
+
         let jsonStr = textResponse.trim();
         const firstBrace = jsonStr.indexOf('{');
         const lastBrace = jsonStr.lastIndexOf('}');
         if (firstBrace !== -1 && lastBrace !== -1) {
           jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
         }
-        
+
         itineraryResult = JSON.parse(jsonStr);
         console.log(`Successfully generated itinerary using Gemini model: ${model}`);
         break; // Exit the model loop on success
@@ -300,7 +306,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
   // 2. Try Groq
   if (!itineraryResult && process.env.GROQ_API_KEY) {
     console.log('Gemini failed or missing. Attempting Groq cloud fallback...');
-    const groqModels = ['qwen-2.5-coder-32k', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
     for (const model of groqModels) {
       try {
         console.log(`Attempting Groq itinerary generation with model: ${model}`);
@@ -378,7 +384,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
     const daysCount = Math.min(Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1, 1), 30);
-    
+
     const itineraries = [];
     const interestList = (interests && interests.length > 0) ? interests : ['Sightseeing', 'Local Food', 'Historical Architecture'];
     const dailyBudget = Math.round((budget || 50000) / daysCount);
@@ -429,7 +435,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
 
     for (let day = 1; day <= daysCount; day++) {
       const idx = (day - 1) % 8;
-      
+
       itineraries.push({
         day,
         time: "09:00 AM",
@@ -437,7 +443,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
         location: `${city} ${morningLocs[idx]}`,
         estimatedCost: Math.round(dailyBudget * 0.15)
       });
-      
+
       const matchedInterest = interestList[day % interestList.length];
       itineraries.push({
         day,
@@ -446,7 +452,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
         location: `${city} ${afternoonLocs[idx]}`,
         estimatedCost: Math.round(dailyBudget * 0.25)
       });
-      
+
       itineraries.push({
         day,
         time: "06:30 PM",
@@ -499,7 +505,7 @@ You must return a JSON array conforming exactly to this schema:
 Only return the raw JSON array. Do not include markdown code block formatting (like \`\`\`json) or additional conversational text.`;
 
   const url = `${ollamaBaseUrl}/api/generate`;
-  
+
   const headers = {
     'Content-Type': 'application/json'
   };
@@ -543,7 +549,7 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
       lastError = err;
     }
   }
-  
+
   throw new Error(`Ollama nearby places call failed on all models: ${lastError.message}`);
 };
 
@@ -575,14 +581,14 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
       try {
         console.log(`Attempting nearby places generation with Gemini model: ${model}`);
         const textResponse = await callGeminiAPI(model, prompt, apiKey);
-        
+
         let jsonStr = textResponse.trim();
         const firstBrace = jsonStr.indexOf('[');
         const lastBrace = jsonStr.lastIndexOf(']');
         if (firstBrace !== -1 && lastBrace !== -1) {
           jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
         }
-        
+
         nearbyResult = JSON.parse(jsonStr);
         console.log(`Successfully generated nearby places using Gemini model: ${model}`);
         break; // Exit the model loop on success
@@ -763,14 +769,14 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
       try {
         console.log(`Attempting packing list generation with Gemini model: ${model}`);
         const textResponse = await callGeminiAPI(model, prompt, apiKey);
-        
+
         let jsonStr = textResponse.trim();
         const firstBrace = jsonStr.indexOf('[');
         const lastBrace = jsonStr.lastIndexOf(']');
         if (firstBrace !== -1 && lastBrace !== -1) {
           jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
         }
-        
+
         packingResult = JSON.parse(jsonStr);
         console.log(`Successfully generated packing list using Gemini model: ${model}`);
         break;
@@ -851,14 +857,14 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
       try {
         console.log(`Attempting local events generation with Gemini model: ${model}`);
         const textResponse = await callGeminiAPI(model, prompt, apiKey);
-        
+
         let jsonStr = textResponse.trim();
         const firstBrace = jsonStr.indexOf('[');
         const lastBrace = jsonStr.lastIndexOf(']');
         if (firstBrace !== -1 && lastBrace !== -1) {
           jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
         }
-        
+
         eventsResult = JSON.parse(jsonStr);
         console.log(`Successfully generated local events using Gemini model: ${model}`);
         break;
@@ -987,14 +993,14 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
       try {
         console.log(`Attempting real hotel generation with Gemini model: ${model}`);
         const textResponse = await callGeminiAPI(model, prompt, apiKey);
-        
+
         let jsonStr = textResponse.trim();
         const firstBrace = jsonStr.indexOf('[');
         const lastBrace = jsonStr.lastIndexOf(']');
         if (firstBrace !== -1 && lastBrace !== -1) {
           jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
         }
-        
+
         hotelResult = JSON.parse(jsonStr);
         console.log(`Successfully generated real hotels using Gemini model: ${model}`);
         break;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell, Menu, X } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -20,6 +20,7 @@ export default function Navbar({ activeTab }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [emailingTripId, setEmailingTripId] = useState(null);
+  const [respondingInvitationTripId, setRespondingInvitationTripId] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -86,6 +87,7 @@ export default function Navbar({ activeTab }) {
 
   const handleRespondToInvitation = async (tripId, status) => {
     try {
+      setRespondingInvitationTripId(tripId);
       await api.post(`/trips/${tripId}/collaborators/respond`, { status });
       const data = await api.get('/notifications');
       setNotifications(data);
@@ -98,6 +100,8 @@ export default function Navbar({ activeTab }) {
     } catch (err) {
       console.error(err);
       alert('Failed to respond to invitation.');
+    } finally {
+      setRespondingInvitationTripId(null);
     }
   };
 
@@ -272,16 +276,25 @@ export default function Navbar({ activeTab }) {
                             {n.type === 'invitation' ? (
                               <div className="flex items-center space-x-2 mt-2">
                                 <button
+                                  disabled={respondingInvitationTripId === n.tripId}
                                   onClick={() => handleRespondToInvitation(n.tripId, 'approved')}
-                                  className="text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1 px-2.5 rounded-lg transition cursor-pointer shadow-sm"
+                                  className="text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1 px-2.5 rounded-lg transition cursor-pointer shadow-sm disabled:opacity-50 flex items-center space-x-1"
                                 >
-                                  Approve
+                                  {respondingInvitationTripId === n.tripId ? (
+                                    <>
+                                      <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                      <span>Approving...</span>
+                                    </>
+                                  ) : (
+                                    <span>Approve</span>
+                                  )}
                                 </button>
                                 <button
+                                  disabled={respondingInvitationTripId === n.tripId}
                                   onClick={() => handleRespondToInvitation(n.tripId, 'declined')}
-                                  className="text-[10px] bg-rose-500 hover:bg-rose-600 text-white font-bold py-1 px-2.5 rounded-lg transition cursor-pointer shadow-sm"
+                                  className="text-[10px] bg-rose-500 hover:bg-rose-600 text-white font-bold py-1 px-2.5 rounded-lg transition cursor-pointer shadow-sm disabled:opacity-50 flex items-center space-x-1"
                                 >
-                                  Decline
+                                  <span>Decline</span>
                                 </button>
                               </div>
                             ) : (

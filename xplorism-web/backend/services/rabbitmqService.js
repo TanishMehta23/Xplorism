@@ -56,9 +56,10 @@ export async function sendMessage(topic, key, value) {
   }
 
   try {
-    await channel.assertQueue(topic, { durable: true });
+    // Use a fanout exchange to support broadcasting to all connected instances
+    await channel.assertExchange(topic, 'fanout', { durable: true });
     const payload = JSON.stringify({ key, value });
-    channel.sendToQueue(topic, Buffer.from(payload), { persistent: true });
+    channel.publish(topic, '', Buffer.from(payload), { persistent: true });
   } catch (error) {
     console.error(`[RabbitMQ Service] Error sending message to topic ${topic}:`, error);
   }
@@ -80,8 +81,17 @@ export async function subscribeToTopic(topic, groupId, onMessageCallback) {
   }
 
   try {
-    await channel.assertQueue(topic, { durable: true });
-    channel.consume(topic, (msg) => {
+    // Assert the fanout exchange
+    await channel.assertExchange(topic, 'fanout', { durable: true });
+    
+    // Create a unique temporary queue for this instance to prevent round-robin message loss across multiple server restarts/runs
+    const queueName = `${topic}-${groupId}-${Math.random().toString(36).substring(2, 9)}`;
+    await channel.assertQueue(queueName, { exclusive: true, autoDelete: true });
+    
+    // Bind queue to the fanout exchange
+    await channel.bindQueue(queueName, topic, '');
+    
+    channel.consume(queueName, (msg) => {
       if (msg !== null) {
         try {
           const content = JSON.parse(msg.content.toString());
@@ -93,7 +103,7 @@ export async function subscribeToTopic(topic, groupId, onMessageCallback) {
         }
       }
     });
-    console.log(`[RabbitMQ Service] Subscribed to RabbitMQ queue: ${topic}`);
+    console.log(`[RabbitMQ Service] Subscribed to RabbitMQ topic ${topic} with queue ${queueName}`);
   } catch (error) {
     console.error(`[RabbitMQ Service] Error subscribing to topic ${topic}:`, error);
   }

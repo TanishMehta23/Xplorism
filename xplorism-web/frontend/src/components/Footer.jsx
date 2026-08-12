@@ -103,8 +103,26 @@ export default function Footer() {
               <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('travel_guides')}</Link></li>
               <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('help_center')}</Link></li>
               <li><Link to="/community" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('community_feed_footer')}</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('terms_of_service')}</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('privacy_policy')}</Link></li>
+              <li>
+                <button
+                  onClick={() => setActiveModal('terms')}
+                  className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block bg-transparent border-none p-0 outline-none cursor-pointer text-left ${
+                    isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'
+                  }`}
+                >
+                  {t('terms_of_service')}
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => setActiveModal('privacy')}
+                  className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block bg-transparent border-none p-0 outline-none cursor-pointer text-left ${
+                    isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'
+                  }`}
+                >
+                  {t('privacy_policy')}
+                </button>
+              </li>
             </ul>
           </div>
 

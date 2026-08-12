@@ -17,6 +17,7 @@ import postRoutes from './routes/postRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import preferencesRoutes from './routes/preferencesRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 import { getNearbyPlacesFromGemini, getHotelsFromGemini, getFlightDetailsFromGemini } from './services/geminiService.js';
 import { globalLimiter, authLimiter } from './middleware/rateLimiter.js';
 import { sqlInjectionSanitizer } from './middleware/sqlInjectionSanitizer.js';
@@ -66,6 +67,7 @@ app.use('/posts', postRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/preferences', preferencesRoutes);
 app.use('/bookings', bookingRoutes);
+app.use('/chat', chatRoutes);
 
 // Nearby Places Route using Gemini
 app.get('/nearby', async (req, res) => {

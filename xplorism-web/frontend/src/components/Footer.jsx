@@ -48,38 +48,33 @@ export default function Footer() {
   };
 
   return (
-    <footer className={`border-t pt-16 pb-12 mt-auto mt-16 sm:mt-24 transition-colors duration-200 ${
-      isDark ? 'bg-slate-950 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 text-slate-950'
-    }`}>
+    <footer className={`border-t pt-16 pb-12 mt-auto mt-16 sm:mt-24 transition-colors duration-200 ${isDark ? 'bg-slate-950 border-slate-900 text-white' : 'bg-slate-50 border-slate-100 text-slate-950'
+      }`}>
       <div className="max-w-7xl mx-auto px-6">
-        <div className={`grid grid-cols-2 md:grid-cols-12 gap-8 md:gap-10 pb-12 border-b ${
-          isDark ? 'border-slate-900' : 'border-slate-100'
-        }`}>
+        <div className={`grid grid-cols-2 md:grid-cols-12 gap-8 md:gap-10 pb-12 border-b ${isDark ? 'border-slate-900' : 'border-slate-100'
+          }`}>
           {/* Column 1: Branding and Socials */}
           <div className="col-span-2 md:col-span-4 space-y-5">
             <div className="flex items-center space-x-2.5 text-xl font-bold">
               <img
-                src="/logo.png"
+                src="/logo-removebg.png"
                 alt="Xplorism Logo"
                 className="h-10 w-10 object-contain rounded-full shadow-sm"
               />
-              <span className={`font-extrabold tracking-tight ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}>Xplorism</span>
+              <span className={`font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'
+                }`}>Xplorism</span>
             </div>
-            <p className={`text-xs sm:text-sm leading-relaxed max-w-sm transition-colors duration-200 ${
-              isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
-            }`}>
+            <p className={`text-xs sm:text-sm leading-relaxed max-w-sm transition-colors duration-200 ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
+              }`}>
               {t('footer_slogan')}
             </p>
             <div className="flex items-center space-x-4">
               <a
                 href="#"
-                className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm ${
-                  isDark
+                className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm ${isDark
                     ? 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-450 hover:border-rose-900/55'
                     : 'bg-white border border-slate-150 text-slate-550 hover:text-rose-500 hover:border-rose-100 hover:bg-rose-50/20'
-                }`}
+                  }`}
                 aria-label="Twitter"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -88,11 +83,10 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm ${
-                  isDark
+                className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm ${isDark
                     ? 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
                     : 'bg-white border border-slate-150 text-slate-550 hover:text-slate-900 hover:border-slate-350 hover:bg-slate-50/50'
-                }`}
+                  }`}
                 aria-label="GitHub"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -101,11 +95,10 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm ${
-                  isDark
+                className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm ${isDark
                     ? 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-550 hover:border-rose-900/55'
                     : 'bg-white border border-slate-150 text-slate-550 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50/20'
-                }`}
+                  }`}
                 aria-label="Instagram"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -119,9 +112,8 @@ export default function Footer() {
 
           {/* Column 2: Features */}
           <div className="col-span-1 md:col-span-2 space-y-4">
-            <h4 className={`text-xs font-bold uppercase tracking-wider ${
-              isDark ? 'text-slate-200' : 'text-slate-800'
-            }`}>{t('features_title')}</h4>
+            <h4 className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-200' : 'text-slate-800'
+              }`}>{t('features_title')}</h4>
             <ul className="space-y-2.5">
               <li><Link to="/dashboard" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('itinerary_builder')}</Link></li>
               <li><Link to="/tracker" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('interactive_map')}</Link></li>
@@ -133,19 +125,17 @@ export default function Footer() {
 
           {/* Column 3: Resources */}
           <div className="col-span-1 md:col-span-2 space-y-4">
-            <h4 className={`text-xs font-bold uppercase tracking-wider ${
-              isDark ? 'text-slate-200' : 'text-slate-800'
-            }`}>{t('resources_title')}</h4>
+            <h4 className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-200' : 'text-slate-800'
+              }`}>{t('resources_title')}</h4>
             <ul className="space-y-2.5">
-               <li><Link to="/" onClick={handleOpenTravelGuides} className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('travel_guides')}</Link></li>
-               <li><Link to="/" onClick={handleOpenHelp} className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('help_center')}</Link></li>
+              <li><Link to="/" onClick={handleOpenTravelGuides} className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('travel_guides')}</Link></li>
+              <li><Link to="/" onClick={handleOpenHelp} className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('help_center')}</Link></li>
               <li><Link to="/community" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('community_feed_footer')}</Link></li>
               <li>
                 <button
                   onClick={() => setActiveModal('terms')}
-                  className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block bg-transparent border-none p-0 outline-none cursor-pointer text-left ${
-                    isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'
-                  }`}
+                  className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block bg-transparent border-none p-0 outline-none cursor-pointer text-left ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'
+                    }`}
                 >
                   {t('terms_of_service')}
                 </button>
@@ -153,9 +143,8 @@ export default function Footer() {
               <li>
                 <button
                   onClick={() => setActiveModal('privacy')}
-                  className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block bg-transparent border-none p-0 outline-none cursor-pointer text-left ${
-                    isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'
-                  }`}
+                  className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block bg-transparent border-none p-0 outline-none cursor-pointer text-left ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'
+                    }`}
                 >
                   {t('privacy_policy')}
                 </button>
@@ -165,12 +154,10 @@ export default function Footer() {
 
           {/* Column 4: Newsletter */}
           <div className="col-span-2 md:col-span-4 space-y-4">
-            <h4 className={`text-xs font-bold uppercase tracking-wider ${
-              isDark ? 'text-slate-200' : 'text-slate-800'
-            }`}>{t('stay_updated')}</h4>
-            <p className={`text-xs sm:text-sm leading-relaxed transition-colors duration-200 ${
-              isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
-            }`}>
+            <h4 className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-200' : 'text-slate-800'
+              }`}>{t('stay_updated')}</h4>
+            <p className={`text-xs sm:text-sm leading-relaxed transition-colors duration-200 ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'
+              }`}>
               {t('newsletter_desc')}
             </p>
             <form onSubmit={(e) => e.preventDefault()} className="flex items-center space-x-2">
@@ -179,21 +166,19 @@ export default function Footer() {
                 <input
                   type="email"
                   placeholder={t('email_placeholder')}
-                  className={`w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl focus:outline-none focus:ring-1 transition ${
-                    isDark
+                  className={`w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl focus:outline-none focus:ring-1 transition ${isDark
                       ? 'bg-slate-900 border border-slate-800 text-white placeholder-slate-550 focus:border-slate-700 focus:ring-slate-700'
                       : 'bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400'
-                  }`}
+                    }`}
                   required
                 />
               </div>
               <button
                 type="submit"
-                className={`p-2 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1 cursor-pointer ${
-                  isDark
+                className={`p-2 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1 cursor-pointer ${isDark
                     ? 'bg-white hover:bg-slate-100 text-slate-950'
                     : 'bg-slate-900 hover:bg-slate-800 text-white'
-                }`}
+                  }`}
               >
                 <span className="hidden sm:inline">{t('subscribe')}</span>
                 <Send className="h-3.5 w-3.5" />
@@ -203,9 +188,8 @@ export default function Footer() {
         </div>
 
         {/* Bottom Copyright */}
-        <div className={`flex flex-col sm:flex-row items-center justify-between pt-8 text-xs transition-colors duration-200 ${
-          isDark ? 'text-slate-500' : 'text-slate-400'
-        }`}>
+        <div className={`flex flex-col sm:flex-row items-center justify-between pt-8 text-xs transition-colors duration-200 ${isDark ? 'text-slate-500' : 'text-slate-400'
+          }`}>
           <p className={`transition-colors duration-200 ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>&copy; {new Date().getFullYear()} Xplorism. {t('all_rights_reserved')}</p>
           <div className="flex items-center space-x-6 mt-4 sm:mt-0">
             <button onClick={() => setActiveModal('privacy')} className={`transition-all duration-200 hover:scale-105 cursor-pointer bg-transparent border-none p-0 outline-none ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-black'}`}>{t('privacy_policy')}</button>
@@ -217,9 +201,8 @@ export default function Footer() {
 
       {activeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-          <div className={`border rounded-3xl p-6 max-w-md w-full shadow-2xl relative transition-all duration-200 ${
-            isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-800'
-          }`}>
+          <div className={`border rounded-3xl p-6 max-w-md w-full shadow-2xl relative transition-all duration-200 ${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-800'
+            }`}>
             <button
               onClick={() => setActiveModal(null)}
               className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-rose-500 transition cursor-pointer text-sm font-bold border-none bg-transparent"
@@ -288,11 +271,10 @@ export default function Footer() {
                           value={helpForm.email}
                           onChange={(e) => setHelpForm({ ...helpForm, email: e.target.value })}
                           placeholder="you@example.com"
-                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${
-                            isDark
+                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${isDark
                               ? 'bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-slate-700 focus:ring-slate-700'
                               : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400'
-                          }`}
+                            }`}
                           required
                         />
                       </div>
@@ -303,11 +285,10 @@ export default function Footer() {
                           value={helpForm.subject}
                           onChange={(e) => setHelpForm({ ...helpForm, subject: e.target.value })}
                           placeholder="How can we help you?"
-                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${
-                            isDark
+                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${isDark
                               ? 'bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-slate-700 focus:ring-slate-700'
                               : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400'
-                          }`}
+                            }`}
                           required
                         />
                       </div>
@@ -318,11 +299,10 @@ export default function Footer() {
                           onChange={(e) => setHelpForm({ ...helpForm, message: e.target.value })}
                           placeholder="Describe your issue or query..."
                           rows={4}
-                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${
-                            isDark
+                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${isDark
                               ? 'bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-slate-700 focus:ring-slate-700'
                               : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400'
-                          }`}
+                            }`}
                           required
                         />
                       </div>

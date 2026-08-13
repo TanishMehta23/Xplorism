@@ -226,18 +226,7 @@ export default function Navbar({ activeTab }) {
             </button>
           </div>
 
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition relative cursor-pointer text-slate-500 dark:text-slate-400 mr-1"
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5 text-amber-500 animate-pulse" />
-            ) : (
-              <Moon className="h-5 w-5 text-slate-600" />
-            )}
-          </button>
+
 
           {/* Notifications Dropdown Container */}
           {user && (
@@ -351,24 +340,7 @@ export default function Navbar({ activeTab }) {
                   <p className="text-xs font-extrabold truncate" style={{ color: 'var(--text-primary)' }}>{user?.name || 'Traveler'}</p>
                 </div>
                 
-                {/* Theme Selector */}
-                <button
-                  onClick={() => {
-                    toggleTheme();
-                    setIsDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2.5 text-xs font-bold transition flex items-center space-x-2 cursor-pointer border-b"
-                  style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-secondary)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = theme === 'dark' ? 'rgba(217,119,6,0.12)' : '#fffbeb'; e.currentTarget.style.color = '#d97706'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                >
-                  {theme === 'dark' ? (
-                    <Sun className="h-3.5 w-3.5 text-amber-500" />
-                  ) : (
-                    <Moon className="h-3.5 w-3.5" style={{ color: 'var(--text-tertiary)' }} />
-                  )}
-                  <span>{theme === 'dark' ? t('light_mode') : t('dark_mode')}</span>
-                </button>
+
 
                 {/* Language Selector Dropdown */}
                 {(() => {

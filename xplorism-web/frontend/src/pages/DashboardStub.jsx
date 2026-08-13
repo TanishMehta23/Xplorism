@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,8 @@ import {
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
   Maximize2, Minimize2, CheckSquare, Share2, CloudSun, ChevronUp, ChevronDown,
-  UserPlus, Loader2
+  UserPlus, Loader2, Plane, Map, TrendingUp, Coins, Globe, Hotel, Lock, Award,
+  Quote, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
@@ -515,6 +516,208 @@ export default function DashboardStub() {
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
 
+  // Travel Stats & Analytics
+  const travelStats = useMemo(() => {
+    if (!trips || trips.length === 0) {
+      return {
+        totalTrips: 0,
+        countriesVisited: 0,
+        totalSpend: 0,
+        estimatedDistance: 0,
+        totalDays: 0,
+        travelVibe: 'Explorer'
+      };
+    }
+    const uniqueDestinations = new Set();
+    let totalBudget = 0;
+    let totalDays = 0;
+    const interestCounts = {};
+
+    trips.forEach(t => {
+      if (t.destination) {
+        const parts = t.destination.split(',');
+        const country = parts[parts.length - 1].trim();
+        uniqueDestinations.add(country);
+      }
+      totalBudget += Number(t.budget) || 0;
+      
+      const start = new Date(t.startDate);
+      const end = new Date(t.endDate);
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) || 1;
+      totalDays += days;
+
+      if (t.interests && Array.isArray(t.interests)) {
+        t.interests.forEach(interest => {
+          interestCounts[interest] = (interestCounts[interest] || 0) + 1;
+        });
+      }
+    });
+
+    let topInterest = '';
+    let maxCount = 0;
+    Object.entries(interestCounts).forEach(([interest, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        topInterest = interest;
+      }
+    });
+
+    let travelVibe = 'Urban Explorer';
+    if (topInterest) {
+      const vibeMap = {
+        'Food': 'Culinary Explorer',
+        'History': 'History Buff',
+        'Nature': 'Nature Lover',
+        'Adventure': 'Thrill Seeker',
+        'Architecture': 'Design Connoisseur',
+        'Art': 'Art Enthusiast',
+        'Shopping': 'Fashion & Shopaholic',
+        'Beaches': 'Beach Bum'
+      };
+      travelVibe = vibeMap[topInterest] || `${topInterest} Admirer`;
+    }
+
+    return {
+      totalTrips: trips.length,
+      countriesVisited: uniqueDestinations.size || 1,
+      totalSpend: totalBudget,
+      estimatedDistance: trips.length * 4850,
+      totalDays,
+      travelVibe
+    };
+  }, [trips]);
+
+  // Travel Milestones & Achievements
+  const travelMilestones = useMemo(() => {
+    return [
+      {
+        id: 'globetrotter',
+        title: 'Globetrotter',
+        description: 'Explore 3 or more destinations',
+        requirement: 'Visited 3+ destinations',
+        unlocked: travelStats.countriesVisited >= 3,
+        icon: Globe,
+        gradient: 'from-blue-500/25 to-indigo-500/25',
+        border: 'border-blue-200 dark:border-blue-900/30',
+        iconBg: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400'
+      },
+      {
+        id: 'timetraveler',
+        title: 'Time Traveler',
+        description: 'Plan trips totaling 7 or more days',
+        requirement: '7+ total travel days',
+        unlocked: travelStats.totalDays >= 7,
+        icon: Clock,
+        gradient: 'from-amber-500/25 to-orange-500/25',
+        border: 'border-amber-200 dark:border-amber-900/30',
+        iconBg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400'
+      },
+      {
+        id: 'eliteexplorer',
+        title: 'Elite Explorer',
+        description: 'Create 3 or more custom trip plans',
+        requirement: '3+ created trips',
+        unlocked: travelStats.totalTrips >= 3,
+        icon: Award,
+        gradient: 'from-rose-500/25 to-pink-500/25',
+        border: 'border-rose-200 dark:border-rose-900/30',
+        iconBg: 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400'
+      },
+      {
+        id: 'budgetcaptain',
+        title: 'Budget Captain',
+        description: 'Track budgets to unlock spend analytics',
+        requirement: 'Spend logged (> ₹0)',
+        unlocked: travelStats.totalSpend > 0,
+        icon: Coins,
+        gradient: 'from-emerald-500/25 to-teal-500/25',
+        border: 'border-emerald-200 dark:border-emerald-900/30',
+        iconBg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
+      },
+      {
+        id: 'jetset',
+        title: 'Jet Setter',
+        description: 'Plan 5 or more trips to become a Jet Setter',
+        requirement: '5+ total trips',
+        unlocked: travelStats.totalTrips >= 5,
+        icon: Plane,
+        gradient: 'from-purple-500/25 to-violet-500/25',
+        border: 'border-purple-200 dark:border-purple-900/30',
+        iconBg: 'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400'
+      },
+      {
+        id: 'wanderer',
+        title: 'Wanderer',
+        description: 'Accumulate 30 or more travel days',
+        requirement: '30+ total travel days',
+        unlocked: travelStats.totalDays >= 30,
+        icon: Map,
+        gradient: 'from-sky-500/25 to-cyan-500/25',
+        border: 'border-sky-200 dark:border-sky-900/30',
+        iconBg: 'bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400'
+      },
+      {
+        id: 'continent',
+        title: 'Continent Hopper',
+        description: 'Visit destinations in 5 or more distinct regions',
+        requirement: '5+ unique regions',
+        unlocked: travelStats.countriesVisited >= 5,
+        icon: TrendingUp,
+        gradient: 'from-orange-500/25 to-red-500/25',
+        border: 'border-orange-200 dark:border-orange-900/30',
+        iconBg: 'bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400'
+      },
+      {
+        id: 'highroller',
+        title: 'High Roller',
+        description: 'Plan trips with a combined budget over ₹5,00,000',
+        requirement: 'Total budget ≥ ₹5L',
+        unlocked: travelStats.totalSpend >= 500000,
+        icon: DollarSign,
+        gradient: 'from-yellow-500/25 to-amber-400/25',
+        border: 'border-yellow-200 dark:border-yellow-900/30',
+        iconBg: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400'
+      }
+    ];
+  }, [travelStats]);
+
+  const [activeQuoteIdx, setActiveQuoteIdx] = useState(0);
+
+  const travelQuotes = useMemo(() => [
+    {
+      text: "The world is a book and those who do not travel read only one page.",
+      author: "Saint Augustine"
+    },
+    {
+      text: "Travel makes one modest. You see what a tiny place you occupy in the world.",
+      author: "Gustave Flaubert"
+    },
+    {
+      text: "To travel is to live.",
+      author: "Hans Christian Andersen"
+    },
+    {
+      text: "We travel not to escape life, but for life not to escape us.",
+      author: "Anonymous"
+    },
+    {
+      text: "Not all those who wander are lost.",
+      author: "J.R.R. Tolkien"
+    },
+    {
+      text: "Broad, wholesome, charitable views of men and things cannot be acquired by vegetating in one little corner of the earth all one's lifetime.",
+      author: "Mark Twain"
+    }
+  ], []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveQuoteIdx(prev => (prev + 1) % travelQuotes.length);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [travelQuotes]);
+
+
   const [packingList, setPackingList] = useState([]);
   const [packingLoading, setPackingLoading] = useState(false);
 
@@ -806,6 +1009,7 @@ export default function DashboardStub() {
       setFavoritesLoading(false);
     }
   };
+
 
   const handleToggleFavorite = async (item) => {
     try {
@@ -1137,12 +1341,12 @@ export default function DashboardStub() {
     if (selectedTrip && activeDayTab === 'packing') {
       fetchPackingList(selectedTrip.id);
     }
-  }, [selectedTrip, activeDayTab]);
+  }, [selectedTrip?.id, activeDayTab]);
 
   // Reset packing list state when switching selected trip
   useEffect(() => {
     setPackingList([]);
-  }, [selectedTrip]);
+  }, [selectedTrip?.id]);
 
   // Budget tracking functions
   const fetchBudget = async (tripId) => {
@@ -2291,89 +2495,226 @@ export default function DashboardStub() {
         )}
       </main>
 
-      {/* Favorites Section (Wishlist) */}
-      <section className="max-w-7xl w-full mx-auto px-6 pb-12">
+      {/* Enhanced Travel Stats & Analytics Section */}
+      <section className="max-w-7xl w-full mx-auto px-6 pt-12 pb-4 animate-fade-in">
         <div className="flex items-center space-x-2 text-rose-500 mb-6">
-          <Heart className="h-5 w-5" />
-          <h2 className="text-xl font-bold text-slate-900">My Favorites / Wishlist</h2>
+          <TrendingUp className="h-6 w-6 animate-pulse" />
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">My Travel Journey</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {/* Card 1: Total Spend */}
+          <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-950 border border-emerald-100/60 dark:border-emerald-950/30 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
+            <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+              <Coins className="h-7 w-7" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Total Spend</span>
+              <span className="text-xl font-black text-slate-850 dark:text-white mt-1 block">
+                {activeCurrency.symbol}{travelStats.totalSpend.toLocaleString(activeCurrency.locale)}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 2: Regions Visited */}
+          <div className="bg-gradient-to-br from-blue-50 to-white dark:from-slate-900 dark:to-slate-950 border border-blue-100/60 dark:border-blue-950/30 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
+            <div className="p-4 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
+              <Globe className="h-7 w-7" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Regions Visited</span>
+              <span className="text-xl font-black text-slate-850 dark:text-white mt-1 block">
+                {travelStats.countriesVisited} {travelStats.countriesVisited === 1 ? 'Destination' : 'Destinations'}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 3: Days Traveled */}
+          <div className="bg-gradient-to-br from-rose-50 to-white dark:from-slate-900 dark:to-slate-950 border border-rose-100/60 dark:border-rose-955/30 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
+            <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform duration-300">
+              <Calendar className="h-7 w-7" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Days Traveled</span>
+              <span className="text-xl font-black text-slate-850 dark:text-white mt-1 block">
+                {travelStats.totalDays} Days
+              </span>
+            </div>
+          </div>
+
+          {/* Card 4: Travel Vibe */}
+          <div className="bg-gradient-to-br from-amber-50 to-white dark:from-slate-900 dark:to-slate-950 border border-amber-100/60 dark:border-amber-955/30 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
+            <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300">
+              <Sparkles className="h-7 w-7" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Travel Vibe</span>
+              <span className="text-xl font-black text-slate-855 dark:text-white mt-1 block">
+                {travelStats.travelVibe}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {favoritesLoading ? (
-          <div className="flex items-center justify-center py-12 space-x-2">
-            <div className="h-5 w-5 border-2 border-rose-300 border-t-rose-600 rounded-full animate-spin" />
-            <span className="text-xs font-bold text-slate-400">Loading favorites...</span>
+        {/* Passport Stamps Collection */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Passport Stamp Collection</h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Every trip planned adds a stamp to your digital passport.</p>
+            </div>
+            <span className="text-[10px] font-black px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              Stamps: {trips.length}
+            </span>
           </div>
-        ) : favorites.length === 0 ? (
-          <div className="bg-white p-12 rounded-3xl text-center border border-dashed border-slate-200 shadow-sm">
-            <Heart className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm text-slate-500 mb-2">No favorites yet</p>
-            <p className="text-xs text-slate-400">Save attractions and activities you love from trip details to build your wishlist.</p>
+
+          {trips.length === 0 ? (
+            <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center">
+              <Globe className="h-12 w-12 text-slate-300 dark:text-slate-750 mb-3 animate-bounce" />
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Your passport is empty</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">Add your very first trip to start collecting visual destination stamps!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center">
+              {trips.map((t, idx) => {
+                const dest = t.destination.split(',')[0].trim().substring(0, 3).toUpperCase();
+                const cityName = t.destination.split(',')[0].trim();
+                const dateObj = new Date(t.startDate);
+                const year = dateObj.getFullYear();
+                const month = dateObj.toLocaleDateString(undefined, { month: 'short' }).toUpperCase();
+                
+                // Rotations and colors for realistic randomized ink stamps look
+                const rotations = ['rotate-3', '-rotate-6', 'rotate-12', '-rotate-3', 'rotate-6', '-rotate-12', 'rotate-9', '-rotate-9'];
+                const borderStyles = [
+                  'border-rose-500 text-rose-500 bg-rose-50/15 dark:bg-rose-950/5',
+                  'border-blue-500 text-blue-500 bg-blue-50/15 dark:bg-blue-950/5',
+                  'border-emerald-500 text-emerald-500 bg-emerald-50/15 dark:bg-emerald-950/5',
+                  'border-amber-500 text-amber-500 bg-amber-50/15 dark:bg-amber-950/5'
+                ];
+                
+                const stampRotation = rotations[idx % rotations.length];
+                const stampColor = borderStyles[idx % borderStyles.length];
+
+                return (
+                  <div key={t.id} className={`w-24 h-24 rounded-full border-4 border-double flex flex-col items-center justify-center shrink-0 select-none shadow-sm transition-all duration-350 hover:scale-115 hover:shadow-md cursor-default ${stampColor} ${stampRotation}`}>
+                    <span className="text-[8px] font-black tracking-widest opacity-80">{month} {year}</span>
+                    <span className="text-xl font-extrabold tracking-tighter my-0.5">{dest}</span>
+                    <span className="text-[7px] font-black tracking-widest opacity-80 uppercase max-w-[70px] truncate">{cityName}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Travel Milestones & Achievements */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm mt-8 animate-fade-in">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Travel Milestones & Achievements</h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Explore more to unlock unique travel badges and track your achievements.</p>
+            </div>
+            <span className="text-[10px] font-black px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-rose-500 uppercase tracking-widest">
+              {travelMilestones.filter(m => m.unlocked).length} / {travelMilestones.length} Unlocked
+            </span>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
-            {favorites.map((fav) => {
-              const isTripFav = fav.type === 'trip';
+
+          {/* Horizontal scroll row */}
+          <div className="flex gap-5 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {travelMilestones.map((milestone) => {
+              const MilestoneIcon = milestone.icon;
               return (
                 <div
-                  key={fav.id}
-                  onClick={() => {
-                    if (isTripFav) {
-                      const matchedTrip = trips.find(t => t.id === fav.trip_id || t.id === fav.tripId || t.destination === fav.destination);
-                      if (matchedTrip) {
-                        setSelectedTrip(matchedTrip);
-                        setActiveDayTab(1);
-                      }
-                    }
-                  }}
-                  className={`bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition group ${isTripFav ? 'cursor-pointer hover:border-rose-400 hover:ring-2 hover:ring-rose-500/10' : ''
-                    }`}
+                  key={milestone.id}
+                  className={`relative flex-shrink-0 w-52 rounded-3xl p-5 border overflow-hidden transition-all duration-350 ${
+                    milestone.unlocked
+                      ? `bg-gradient-to-br ${milestone.gradient} ${milestone.border} shadow-md hover:scale-105 hover:shadow-xl cursor-default`
+                      : `bg-gradient-to-br ${milestone.gradient} ${milestone.border} cursor-default`
+                  }`}
                 >
-                  {fav.image_url && (
-                    <div className="h-32 w-full overflow-hidden relative">
-                      <img src={fav.image_url} alt={fav.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      {isTripFav && (
-                        <div className="absolute inset-0 bg-slate-900/15" />
-                      )}
+                  {/* Blur overlay for locked badges */}
+                  {!milestone.unlocked && (
+                    <div className="absolute inset-0 z-10 rounded-3xl backdrop-blur-[3px] bg-white/50 dark:bg-slate-900/60 flex flex-col items-center justify-center">
+                      <div className="p-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 mb-1.5">
+                        <Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                      </div>
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Locked</span>
+                      <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 mt-1 px-2 text-center">{milestone.requirement}</span>
                     </div>
                   )}
-                  <div className="p-4">
-                    <div className="flex items-start justify-between">
-                      <h4 className="text-sm font-bold text-slate-900 flex-1 truncate">{fav.name}</h4>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveFavorite(fav.id);
-                        }}
-                        className="p-1 rounded-full hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition ml-2 cursor-pointer shrink-0"
-                        title="Remove from favorites"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+
+                  <div className="flex justify-between items-start mb-3">
+                    <div className={`p-2.5 rounded-xl ${milestone.iconBg} transition duration-300`}>
+                      <MilestoneIcon className="h-5 w-5" />
                     </div>
-                    {fav.location && (
-                      <div className="flex items-center space-x-1 mt-1">
-                        <MapPin className="h-3 w-3 text-slate-400" />
-                        <span className="text-[10px] text-slate-500 truncate">{fav.location}</span>
-                      </div>
-                    )}
-                    {fav.description && (
-                      <p className="text-[10px] text-slate-400 mt-1.5 line-clamp-2">{fav.description}</p>
-                    )}
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${isTripFav ? 'bg-blue-50 text-blue-500' : 'bg-rose-50 text-rose-500'
-                        }`}>
-                        {isTripFav ? 'Whole Trip' : fav.type}
+                    {milestone.unlocked && (
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
+                        ✓ Unlocked
                       </span>
-                      {fav.destination && !isTripFav && (
-                        <span className="px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 text-[9px] font-semibold">{fav.destination}</span>
-                      )}
-                    </div>
+                    )}
+                  </div>
+
+                  <h4 className="text-sm font-black tracking-tight text-slate-800 dark:text-white mt-1">
+                    {milestone.title}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    {milestone.description}
+                  </p>
+
+                  <div className="border-t border-slate-200/60 dark:border-slate-700/40 mt-4 pt-2.5 text-[9px] font-bold tracking-wide text-slate-400 dark:text-slate-500">
+                    Goal: {milestone.requirement}
                   </div>
                 </div>
               );
             })}
           </div>
-        )}
+        </div>
+
+        {/* Curated Travel Quotes Carousel */}
+        <div className="relative mt-8 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 group/quote min-h-[140px] animate-fade-in">
+          {/* Subtle glowing background circles */}
+          <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-rose-500/5 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -right-12 w-32 h-32 rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />
+
+          {/* Left Block: Icon and title */}
+          <div className="flex items-center space-x-4 shrink-0">
+            <div className="p-3.5 rounded-2xl bg-rose-500/10 text-rose-500 dark:text-rose-400">
+              <Quote className="h-6 w-6" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block">Daily Vibe</span>
+              <h3 className="text-sm font-black text-slate-850 dark:text-white tracking-tight mt-0.5">Wanderlust Quotes</h3>
+            </div>
+          </div>
+
+          {/* Center Block: Display active quote */}
+          <div className="flex-1 max-w-xl mx-auto text-center md:text-left px-2 sm:px-6">
+            <p className="text-xs font-bold text-slate-705 dark:text-slate-200 italic leading-relaxed transition-all duration-500">
+              "{travelQuotes[activeQuoteIdx].text}"
+            </p>
+            <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-widest mt-2 block">
+              — {travelQuotes[activeQuoteIdx].author}
+            </span>
+          </div>
+
+          {/* Right Block: Manual pagination buttons */}
+          <div className="flex items-center justify-center space-x-2 shrink-0">
+            <button
+              onClick={() => setActiveQuoteIdx(prev => (prev - 1 + travelQuotes.length) % travelQuotes.length)}
+              className="h-9 w-9 rounded-xl border border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 flex items-center justify-center transition cursor-pointer active:scale-90"
+              title="Previous Quote"
+            >
+              <ChevronLeft className="h-4.5 w-4.5" />
+            </button>
+            <button
+              onClick={() => setActiveQuoteIdx(prev => (prev + 1) % travelQuotes.length)}
+              className="h-9 w-9 rounded-xl border border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 flex items-center justify-center transition cursor-pointer active:scale-90"
+              title="Next Quote"
+            >
+              <ChevronRight className="h-4.5 w-4.5" />
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Trip Details Modal */}
@@ -3486,7 +3827,7 @@ export default function DashboardStub() {
                     initial={{ opacity: 0, y: 50, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                    className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
+                    className={`fixed bottom-36 right-6 z-[9999] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
                       ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
                       : 'bg-rose-50/95 border-rose-200 text-rose-800'
                       }`}

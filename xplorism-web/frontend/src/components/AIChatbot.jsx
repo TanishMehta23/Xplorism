@@ -81,13 +81,18 @@ export default function AIChatbot() {
       fetchConversations();
     }
   }, [isAuthenticated, isOpen]);
-
   // Scroll chat to bottom
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, loading]);
+
+  useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener('open-xplorism-ai', handleOpenChat);
+    return () => window.removeEventListener('open-xplorism-ai', handleOpenChat);
+  }, []);
 
   const fetchConversations = async () => {
     try {
@@ -260,38 +265,37 @@ export default function AIChatbot() {
     <div className="fixed bottom-6 right-6 z-[9999] font-sans">
       {/* Floating Tooltip Bubble */}
       <div
-        className={`absolute bottom-16 right-0 whitespace-nowrap text-[10px] font-black px-3.5 py-1.5 rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.1)] flex items-center space-x-1.5 transition-all duration-500 origin-bottom-right border pointer-events-none select-none z-10 ${
-          isOpen ? 'scale-0 opacity-0 translate-y-5' : 'scale-100 opacity-100 translate-y-0'
-        } ${
-          isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-800'
-        }`}
+        className={`absolute bottom-16 right-0 whitespace-nowrap text-[10px] font-black px-3.5 py-1.5 rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.1)] flex items-center space-x-1.5 transition-all duration-500 origin-bottom-right border pointer-events-none select-none z-10 ${isOpen ? 'scale-0 opacity-0 translate-y-5' : 'scale-100 opacity-100 translate-y-0'
+          } ${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-800'
+          }`}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
         <span>Ask Xplorism AI</span>
         {/* Tooltip Arrow */}
-        <div className={`absolute bottom-[-4px] right-[24px] w-2 h-2 border-r border-b rotate-45 ${
-          isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-        }`} />
+        <div className={`absolute bottom-[-4px] right-[24px] w-2 h-2 border-r border-b rotate-45 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          }`} />
       </div>
 
       {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`absolute bottom-0 right-0 h-14 w-14 rounded-full bg-gradient-to-tr from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 hover:scale-110 active:scale-95 text-white shadow-[0_8px_32px_rgba(244,63,94,0.4)] hover:shadow-[0_12px_40px_rgba(244,63,94,0.55)] flex items-center justify-center transition-all duration-300 cursor-pointer border border-white/10 group z-10 ${
-          isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
-        }`}
+        className={`absolute bottom-0 right-0 h-14 w-14 rounded-full bg-gradient-to-tr from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 hover:scale-110 active:scale-95 text-white shadow-[0_8px_32px_rgba(244,63,94,0.4)] hover:shadow-[0_12px_40px_rgba(244,63,94,0.55)] flex items-center justify-center transition-all duration-300 cursor-pointer border border-white/10 group z-10 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
+          }`}
       >
         {/* Simple chat icon */}
-        <MessageCircle className="h-6 w-6 animate-pulse" />
+        <MessageCircle
+          className="h-6 w-6 animate-pulse darkreader-keep !bg-transparent !border-none !outline-none !shadow-none"
+          style={{ background: 'transparent', backgroundColor: 'transparent' }}
+        />
       </button>
 
       {/* Main Chat Panel */}
       <div
         ref={panelRef}
-        className={`absolute bottom-0 right-0 w-[90vw] sm:w-[450px] h-[600px] max-h-[85vh] rounded-3xl shadow-3xl flex flex-col overflow-hidden border transition-all duration-300 origin-bottom-right ${isOpen
-            ? 'scale-100 opacity-100 pointer-events-auto translate-y-0'
-            : 'scale-75 opacity-0 pointer-events-none translate-y-10'
-          } ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'
+        className={`absolute bottom-0 right-0 w-[90vw] sm:w-[450px] h-[600px] max-h-[85vh] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden border transition-all duration-300 origin-bottom-right ${isOpen
+          ? 'scale-100 opacity-100 pointer-events-auto translate-y-0'
+          : 'scale-75 opacity-0 pointer-events-none translate-y-10'
+          } ${isDark ? 'bg-slate-900/90 border-slate-800/80 backdrop-blur-lg' : 'bg-white/90 border-slate-200/60 backdrop-blur-lg'
           }`}
       >
         {/* Header */}
@@ -374,8 +378,8 @@ export default function AIChatbot() {
                     <div key={idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                       {/* Bubble */}
                       <div className={`px-4 py-3 rounded-3xl text-xs max-w-[85%] leading-relaxed shadow-sm relative group ${isMe
-                          ? 'bg-rose-500 text-white rounded-tr-none'
-                          : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'
+                        ? 'bg-rose-500 text-white rounded-tr-none'
+                        : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'
                         }`}>
                         {isMe ? msg.content : renderMessageContent(msg.content)}
 

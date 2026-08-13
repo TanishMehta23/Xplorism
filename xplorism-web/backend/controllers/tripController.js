@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
-import { askGeminiForItinerary, askGeminiForPackingList, getLocalEventsFromGemini } from '../services/geminiService.js';
+import { askGeminiForItinerary, askGeminiForPackingList, getLocalEventsFromGemini, suggestAlternatives } from '../services/geminiService.js';
 import { createTripNotification } from './notificationController.js';
+import { sendSupportEmail } from '../services/emailService.js';
 
 // Get all trips for the authenticated user
 export const getTrips = async (req, res) => {
@@ -681,6 +682,35 @@ export const deleteTripPoll = async (req, res) => {
   } catch (err) {
     console.error('Delete poll error:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const suggestActivityAlternatives = async (req, res) => {
+  try {
+    const { destination, activity, location, time } = req.body;
+    if (!destination || !activity) {
+      return res.status(400).json({ message: 'Missing destination or activity' });
+    }
+
+    const suggestions = await suggestAlternatives({ destination, location, activity, time });
+    res.json(suggestions);
+  } catch (error) {
+    console.error('Suggest activity alternatives error:', error);
+    res.status(500).json({ message: 'Server error generating suggestions' });
+  }
+};
+
+export const submitHelpRequest = async (req, res) => {
+  try {
+    const { email, subject, message } = req.body;
+    if (!email || !subject || !message) {
+      return res.status(400).json({ message: 'Missing email, subject, or message' });
+    }
+    await sendSupportEmail(email, subject, message);
+    res.json({ message: 'Help request submitted successfully!' });
+  } catch (error) {
+    console.error('Submit help request error:', error);
+    res.status(500).json({ message: 'Server error submitting help request' });
   }
 };
 

@@ -12,7 +12,9 @@ import {
   getTripPolls,
   createTripPoll,
   voteTripPoll,
-  deleteTripPoll
+  deleteTripPoll,
+  suggestActivityAlternatives,
+  submitHelpRequest
 } from '../controllers/tripController.js';
 import {
   getSharedTrips,
@@ -49,6 +51,8 @@ router.post('/:id/messages', postTripMessage);
 router.get('/', getTrips);
 router.post('/', createTrip);
 router.post('/generate', generateItinerary);
+router.post('/suggest-activity', suggestActivityAlternatives);
+router.post('/help-center', submitHelpRequest);
 router.put('/:id', updateTrip);
 router.delete('/:id', deleteTrip);
 

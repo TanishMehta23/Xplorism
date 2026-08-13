@@ -363,4 +363,52 @@ const logSimulationInvitation = (email, destination, hostName) => {
   console.log('====================================');
 };
 
+export const sendSupportEmail = async (userEmail, subject, message) => {
+  const targetEmail = 'xplorism1@gmail.com';
+  const mailSubject = `📩 Xplorism Help Center: ${subject}`;
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <h2 style="color: #ef4444; text-align: center;">📩 Help Center Inquiry</h2>
+      <p>A new support request has been submitted.</p>
+      
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 5px 0;">👤 <strong>From (User):</strong> ${userEmail}</p>
+        <p style="margin: 5px 0;">📌 <strong>Subject:</strong> ${subject}</p>
+        <p style="margin: 15px 0 5px 0;">💬 <strong>Message:</strong></p>
+        <p style="margin: 5px 0; white-space: pre-wrap; background-color: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px;">${message}</p>
+      </div>
+      
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
+      <p style="font-size: 11px; color: #94a3b8; text-align: center;">Xplorism — Support System</p>
+    </div>
+  `;
+
+  const sentViaBrevo = await tryBrevoApi(targetEmail, 'Xplorism Admin', mailSubject, htmlContent);
+  if (sentViaBrevo) return;
+
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const mailOptions = {
+      from: `"Xplorism Help Center" <${process.env.SMTP_USER}>`,
+      to: targetEmail,
+      subject: mailSubject,
+      html: htmlContent,
+      replyTo: userEmail
+    };
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Support email sent successfully via SMTP to ${targetEmail}`);
+      return;
+    } catch (error) {
+      console.error('❌ Failed to send support email via SMTP:', error.message);
+    }
+  }
+
+  console.log('====================================');
+  console.log(`✉️  SUPPORT EMAIL SIMULATION FOR: ${targetEmail}`);
+  console.log(`👤  USER: ${userEmail}`);
+  console.log(`📌  SUBJECT: ${subject}`);
+  console.log(`💬  MESSAGE: ${message}`);
+  console.log('====================================');
+};
+
 

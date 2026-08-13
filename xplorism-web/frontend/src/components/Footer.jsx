@@ -3,12 +3,49 @@ import { Link } from 'react-router-dom';
 import { Send, Mail } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 export default function Footer() {
   const [activeModal, setActiveModal] = useState(null);
+  const [helpForm, setHelpForm] = useState({ email: '', subject: '', message: '' });
+  const [helpSubmitting, setHelpSubmitting] = useState(false);
+  const [helpSubmitted, setHelpSubmitted] = useState(false);
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const isDark = theme === 'dark';
+
+  const handleOpenTravelGuides = (e) => {
+    e.preventDefault();
+    window.dispatchEvent(new Event('open-xplorism-ai'));
+  };
+
+  const handleOpenHelp = (e) => {
+    e.preventDefault();
+    setHelpForm({
+      email: user?.email || '',
+      subject: '',
+      message: ''
+    });
+    setHelpSubmitted(false);
+    setActiveModal('help');
+  };
+
+  const handleHelpSubmit = async (e) => {
+    e.preventDefault();
+    setHelpSubmitting(true);
+    try {
+      await api.post('/trips/help-center', helpForm);
+      setHelpForm({ email: '', subject: '', message: '' });
+      setHelpSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to send support email. Please try again.');
+    } finally {
+      setHelpSubmitting(false);
+    }
+  };
 
   return (
     <footer className={`border-t pt-16 pb-12 mt-auto mt-16 sm:mt-24 transition-colors duration-200 ${
@@ -100,8 +137,8 @@ export default function Footer() {
               isDark ? 'text-slate-200' : 'text-slate-800'
             }`}>{t('resources_title')}</h4>
             <ul className="space-y-2.5">
-              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('travel_guides')}</Link></li>
-              <li><Link to="/" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('help_center')}</Link></li>
+               <li><Link to="/" onClick={handleOpenTravelGuides} className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('travel_guides')}</Link></li>
+               <li><Link to="/" onClick={handleOpenHelp} className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('help_center')}</Link></li>
               <li><Link to="/community" className={`text-xs sm:text-sm transition-all duration-200 hover:translate-x-1.5 inline-block ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-655 hover:text-black'}`}>{t('community_feed_footer')}</Link></li>
               <li>
                 <button
@@ -216,6 +253,91 @@ export default function Footer() {
                   <p>Xplorism uses essential cookies and local storage tokens to keep you logged in and preserve your active trip workspace preferences (such as selected tabs or dark mode).</p>
                   <p>We do not use tracking or advertising cookies. You can choose to disable cookies in your browser settings, but doing so will prevent you from logging in and accessing collaborative features.</p>
                 </div>
+              </div>
+            )}
+            {activeModal === 'help' && (
+              <div>
+                {helpSubmitted ? (
+                  <div className="text-center py-6 space-y-4">
+                    <div className="mx-auto h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Inquiry Sent</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed px-4">
+                      Your help inquiry has been sent successfully!
+                    </p>
+                    <div className="pt-4">
+                      <button
+                        onClick={() => setActiveModal(null)}
+                        className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-white text-xs font-bold transition cursor-pointer border-none shadow-sm"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-wider mb-3 text-rose-500">Help Center / Contact Us</h3>
+                    <form onSubmit={handleHelpSubmit} className="space-y-3.5 mt-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Your Email Address</label>
+                        <input
+                          type="email"
+                          value={helpForm.email}
+                          onChange={(e) => setHelpForm({ ...helpForm, email: e.target.value })}
+                          placeholder="you@example.com"
+                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${
+                            isDark
+                              ? 'bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-slate-700 focus:ring-slate-700'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400'
+                          }`}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Subject</label>
+                        <input
+                          type="text"
+                          value={helpForm.subject}
+                          onChange={(e) => setHelpForm({ ...helpForm, subject: e.target.value })}
+                          placeholder="How can we help you?"
+                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${
+                            isDark
+                              ? 'bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-slate-700 focus:ring-slate-700'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400'
+                          }`}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">Message</label>
+                        <textarea
+                          value={helpForm.message}
+                          onChange={(e) => setHelpForm({ ...helpForm, message: e.target.value })}
+                          placeholder="Describe your issue or query..."
+                          rows={4}
+                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${
+                            isDark
+                              ? 'bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-slate-700 focus:ring-slate-700'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400'
+                          }`}
+                          required
+                        />
+                      </div>
+                      <div className="pt-2">
+                        <button
+                          type="submit"
+                          disabled={helpSubmitting}
+                          className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition flex items-center justify-center space-x-1.5 disabled:opacity-50 cursor-pointer border-none shadow-sm"
+                        >
+                          {helpSubmitting ? 'Sending...' : 'Send Inquiry'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
             )}
           </div>

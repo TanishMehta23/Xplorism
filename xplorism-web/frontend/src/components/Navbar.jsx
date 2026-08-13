@@ -125,7 +125,7 @@ export default function Navbar({ activeTab }) {
 
   return (
     <>
-      <nav className="relative z-30 w-full" style={{ backgroundColor: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}>
+      <nav className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border-b border-slate-100/50 dark:border-slate-800/50">
       <style>{`
         .nav-link {
           position: relative;
@@ -226,7 +226,18 @@ export default function Navbar({ activeTab }) {
             </button>
           </div>
 
-
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition relative cursor-pointer text-slate-500 dark:text-slate-400 mr-1"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-5 w-5 text-amber-500 animate-pulse" />
+            ) : (
+              <Moon className="h-5 w-5 text-slate-600" />
+            )}
+          </button>
 
           {/* Notifications Dropdown Container */}
           {user && (

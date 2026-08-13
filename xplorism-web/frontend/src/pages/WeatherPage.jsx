@@ -96,6 +96,16 @@ export default function WeatherPage() {
   // Custom location permission modal state
   const [showLocationModal, setShowLocationModal] = useState(false);
 
+  const [isDarkMode, setIsDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
   // On mount, show the custom location permission modal (only if geolocation is supported)
   useEffect(() => {
     if (navigator.geolocation) {
@@ -217,17 +227,23 @@ export default function WeatherPage() {
   const getThemeBackground = () => {
     switch (weatherTheme) {
       case 'sunny':
-        return 'from-amber-400/90 via-orange-200/70 to-sky-200/60';
+        return isDarkMode
+          ? 'from-slate-900 via-zinc-900 to-amber-950/40'
+          : 'from-amber-400/90 via-orange-200/70 to-sky-200/60';
       case 'rainy':
         return 'from-blue-950 via-slate-900 to-indigo-950';
       case 'snowy':
-        return 'from-sky-300/80 via-indigo-100 to-slate-200';
+        return isDarkMode
+          ? 'from-slate-900 via-indigo-950/30 to-slate-950'
+          : 'from-sky-300/80 via-indigo-100 to-slate-200';
       case 'thunder':
         return 'from-purple-950 via-slate-900/95 to-violet-950';
       case 'overcast':
       case 'foggy':
       default:
-        return 'from-slate-400/80 via-slate-200/60 to-blue-100/50';
+        return isDarkMode
+          ? 'from-slate-900 via-zinc-900 to-slate-950'
+          : 'from-slate-400/80 via-slate-200/60 to-blue-100/50';
     }
   };
 
@@ -277,7 +293,7 @@ export default function WeatherPage() {
     return null;
   };
 
-  const isDarkTheme = ['rainy', 'thunder'].includes(weatherTheme);
+  const isDarkTheme = isDarkMode || ['rainy', 'thunder'].includes(weatherTheme);
 
   const getCardStyles = () => {
     switch (weatherTheme) {
@@ -308,7 +324,7 @@ export default function WeatherPage() {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkTheme ? 'text-white' : 'text-slate-800'} flex flex-col font-sans transition-colors duration-500 relative overflow-hidden isolate`}>
+    <div className={`min-h-screen ${isDarkTheme ? 'text-white' : 'text-slate-800'} flex flex-col font-sans transition-colors duration-500 relative isolate`}>
       
       {/* Dynamic Animated Atmospheric Background */}
       <div className={`absolute inset-0 -z-10 bg-gradient-to-br ${getThemeBackground()} transition-all duration-700`} />
@@ -667,11 +683,11 @@ export default function WeatherPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`border p-12 rounded-3xl text-center w-full max-w-lg shadow-lg flex flex-col items-center backdrop-blur-md ${isDarkTheme ? 'bg-slate-900/60 border-white/10' : 'bg-white/85 border-white/30'}`}
+            className="border p-12 rounded-3xl text-center w-full max-w-lg shadow-lg flex flex-col items-center backdrop-blur-md bg-white/85 border-white/30 dark:bg-slate-900/60 dark:border-white/10"
           >
             <GlobeAnimation />
-            <h3 className={`text-xl font-extrabold mt-6 ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{t('discover_climates')}</h3>
-            <p className={`text-xs mt-2 max-w-xs leading-relaxed ${isDarkTheme ? 'text-slate-300' : 'text-slate-500'}`}>
+            <h3 className="text-xl font-extrabold mt-6 text-slate-900 dark:text-white">{t('discover_climates')}</h3>
+            <p className="text-xs mt-2 max-w-xs leading-relaxed text-slate-500 dark:text-slate-300">
               {t('discover_climates_desc')}
             </p>
           </motion.div>

@@ -1301,3 +1301,48 @@ Only return the raw JSON object conforming to the schema above. Do not include m
   return null;
 };
 
+export const suggestAlternatives = async ({ destination, location, activity, time }) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing GEMINI_API_KEY environment variable');
+  }
+
+  const prompt = `You are an expert travel assistant. The traveler is visiting ${destination}. 
+For their itinerary slot (${time || 'anytime'}), they currently have the activity: "${activity}" at "${location || 'any place'}".
+Please suggest exactly 3 alternative activities or tourist attractions in/around ${destination} that they could do instead.
+For each suggestion, provide:
+1. Name of the attraction/activity (location)
+2. A short, engaging 1-2 sentence description (activity)
+3. An estimated cost in local currency or USD (numeric only)
+
+Return a raw JSON array of objects with exactly this format:
+[
+  {
+    "location": "Alternative Attraction 1",
+    "activity": "Engaging description...",
+    "estimatedCost": 20.00
+  },
+  ...
+]
+Do not return any markdown code block formatting (like \`\`\`json) or conversational text.`;
+
+  const models = getGeminiModels();
+  for (const model of models) {
+    try {
+      console.log(`Querying Gemini model ${model} for activity alternatives`);
+      const textResponse = await callGeminiAPI(model, prompt, apiKey);
+      let jsonStr = textResponse.trim();
+      const firstBracket = jsonStr.indexOf('[');
+      const lastBracket = jsonStr.lastIndexOf(']');
+      if (firstBracket !== -1 && lastBracket !== -1) {
+        jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
+      }
+      return JSON.parse(jsonStr);
+    } catch (err) {
+      console.warn(`Gemini activity alternatives query failed for model ${model}:`, err.message);
+    }
+  }
+  return [];
+};
+
+

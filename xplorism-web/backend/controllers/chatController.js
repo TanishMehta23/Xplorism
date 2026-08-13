@@ -171,7 +171,64 @@ export const postChatMessage = async (req, res) => {
       }
     }
 
-    // 6. Save message exchange to database
+    // 6. Extract the places entered and add them as tags (sources)
+    const placesEntered = new Set();
+
+    if (toolResults && toolResults.length > 0) {
+      for (const r of toolResults) {
+        if (r.name === 'getWeather' && r.result && r.result.location) {
+          placesEntered.add(r.result.location);
+        }
+      }
+    }
+
+    if (toolCalls && toolCalls.length > 0) {
+      for (const call of toolCalls) {
+        if (call.args) {
+          if (call.name === 'getWeather' && call.args.city) {
+            placesEntered.add(call.args.city);
+          } else if (call.name === 'searchHotels' && call.args.city) {
+            placesEntered.add(call.args.city);
+          } else if (call.name === 'searchDestinations' && call.args.query) {
+            placesEntered.add(call.args.query);
+          } else if (call.name === 'saveTrip') {
+            const dest = call.args.destination || (call.args.tripDetails && call.args.tripDetails.destination);
+            if (dest) placesEntered.add(dest);
+          }
+        }
+      }
+    }
+
+    // Parse capitalized potential place names from the message text
+    const words = message.match(/[A-Z][a-zA-Z]+/g);
+    if (words) {
+      const excludes = ['I', 'The', 'Weather', 'Show', 'What', 'How', 'Is', 'Are', 'Am', 'To', 'In', 'At', 'For', 'About', 'With', 'And', 'Or', 'Xplorism'];
+      for (const word of words) {
+        if (!excludes.includes(word) && word.length > 2) {
+          placesEntered.add(word);
+        }
+      }
+    }
+
+    const finalSources = ragMatches.map(m => ({ title: m.title, category: m.category }));
+    const sortedPlaces = Array.from(placesEntered).sort((a, b) => b.length - a.length);
+
+    for (const place of sortedPlaces) {
+      const formattedPlace = place
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      const exists = finalSources.some(s => 
+        s.title.toLowerCase().includes(formattedPlace.toLowerCase()) || 
+        formattedPlace.toLowerCase().includes(s.title.toLowerCase())
+      );
+      if (!exists) {
+        finalSources.unshift({ title: formattedPlace, category: 'Destination' });
+      }
+    }
+
+    // 7. Save message exchange to database
     await query(
       `INSERT INTO chatbot_messages (conversation_id, role, content)
        VALUES ($1, $2, $3)`,
@@ -185,7 +242,7 @@ export const postChatMessage = async (req, res) => {
         activeConvoId, 
         'model', 
         finalMessage, 
-        JSON.stringify(ragMatches.map(m => ({ title: m.title, category: m.category }))),
+        JSON.stringify(finalSources),
         JSON.stringify(toolCalls)
       ]
     );
@@ -193,7 +250,7 @@ export const postChatMessage = async (req, res) => {
     res.json({
       message: finalMessage,
       conversationId: activeConvoId,
-      sources: ragMatches.map(m => ({ title: m.title, category: m.category })),
+      sources: finalSources,
       toolCalls
     });
 

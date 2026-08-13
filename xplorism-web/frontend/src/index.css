@@ -571,3 +571,40 @@
     transform: translate(0px, 0px) scale(1);
   }
 }
+
+/* Premium interactive card class */
+.interactive-card {
+  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.interactive-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px -4px rgba(244, 63, 94, 0.08), 0 8px 16px -4px rgba(0, 0, 0, 0.05);
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+.dark .interactive-card:hover {
+  box-shadow: 0 16px 32px -4px rgba(244, 63, 94, 0.15), 0 8px 16px -4px rgba(0, 0, 0, 0.25);
+  border-color: rgba(244, 63, 94, 0.45) !important;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 10s linear infinite;
+}
+
+/* Fix floating chat button svg square background issue */
+.fixed.bottom-6.right-6 button svg,
+.darkreader-keep,
+svg.darkreader-keep {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}

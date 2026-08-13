@@ -8,7 +8,7 @@ import {
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
   Maximize2, Minimize2, CheckSquare, Share2, CloudSun, ChevronUp, ChevronDown,
-  UserPlus
+  UserPlus, Loader2
 } from 'lucide-react';
 import { api } from '../services/api';
 import TripWizard from '../components/TripWizard';
@@ -56,6 +56,48 @@ export const PRE_PLANNED_TRIPS = [
   { id: 'pre-ayodhya', destination: 'Ayodhya, Uttar Pradesh, India', image: 'https://images.unsplash.com/photo-1600664901390-3413f6df1600?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 12000, travelers: 2, travelStyle: 'Spiritual & Cultural Heritage|INR', interests: ['History', 'Culture'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Offer prayers at the magnificent Shri Ram Janmabhoomi Mandir', time: '09:00 AM', location: 'Ram Mandir', estimatedCost: 0 }, { day: 1, activity: 'Experience the divine evening Saryu River Aarti at Naya Ghat', time: '06:00 PM', location: 'Saryu Ghat', estimatedCost: 100 }, { day: 2, activity: 'Visit the hilltop Hanuman Garhi temple and beautiful Kanak Bhawan', time: '08:30 AM', location: 'Hanuman Garhi', estimatedCost: 50 }, { day: 2, activity: 'Sunset boat ride on the holy Saryu River with local legends storytelling', time: '04:00 PM', location: 'Saryu River', estimatedCost: 300 }, { day: 3, activity: 'Explore the historic tombs of Gulab Bari and Bahu Begum in Faizabad', time: '10:00 AM', location: 'Gulab Bari', estimatedCost: 150 }] },
   { id: 'pre-jodhpur-jaisalmer', destination: 'Jodhpur & Jaisalmer, Rajasthan, India', image: 'https://images.unsplash.com/photo-1602643163983-ed0babc39797?auto=format&fit=crop&w=600&q=80', startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], budget: 28000, travelers: 2, travelStyle: 'Royal Desert Odyssey|INR', interests: ['History', 'Culture', 'Food'], isPrePlanned: true, itineraries: [{ day: 1, activity: 'Explore the massive Mehrangarh Fort and royal cenotaph Jaswant Thada', time: '09:30 AM', location: 'Mehrangarh Fort', estimatedCost: 800 }, { day: 1, activity: 'Wander the blue-painted streets of Jodhpur Old City and shop at Sardar Market', time: '04:00 PM', location: 'Clock Tower', estimatedCost: 200 }, { day: 2, activity: 'Drive to Jaisalmer and check into a luxury desert camp in Thar Desert', time: '08:00 AM', location: 'Thar Desert', estimatedCost: 3500 }, { day: 2, activity: 'Camel safari, dunes sunset photography, and Rajasthani cultural folk dance show', time: '04:30 PM', location: 'Sam Sand Dunes', estimatedCost: 1500 }, { day: 3, activity: 'Tour the living Jaisalmer Fort (Sonar Qila) and admire Patwon Ki Haveli intricate carvings', time: '09:30 AM', location: 'Jaisalmer Fort', estimatedCost: 500 }, { day: 4, activity: 'Rowboat ride at scenic Gadisar Lake and exploring the mysterious abandoned Kuldhara village', time: '10:00 AM', location: 'Gadisar Lake', estimatedCost: 400 }] },
 ];
+
+const MAP_COORDINATES = {
+  'singapore': { x: 740, y: 260 },
+  'tokyo': { x: 800, y: 160 },
+  'japan': { x: 800, y: 160 },
+  'paris': { x: 480, y: 130 },
+  'france': { x: 480, y: 130 },
+  'london': { x: 470, y: 110 },
+  'uk': { x: 470, y: 110 },
+  'united kingdom': { x: 470, y: 110 },
+  'new york': { x: 300, y: 140 },
+  'usa': { x: 260, y: 150 },
+  'sydney': { x: 840, y: 320 },
+  'australia': { x: 820, y: 310 },
+  'rome': { x: 500, y: 150 },
+  'italy': { x: 500, y: 150 },
+  'venice': { x: 500, y: 140 },
+  'zurich': { x: 490, y: 140 },
+  'swiss': { x: 490, y: 140 },
+  'switzerland': { x: 490, y: 140 },
+  'geneva': { x: 485, y: 145 },
+  'barcelona': { x: 475, y: 160 },
+  'spain': { x: 470, y: 165 },
+  'amsterdam': { x: 480, y: 120 },
+  'netherlands': { x: 480, y: 120 },
+  'delhi': { x: 670, y: 190 },
+  'new delhi': { x: 670, y: 190 },
+  'india': { x: 670, y: 200 },
+  'ayodhya': { x: 685, y: 190 },
+  'jodhpur': { x: 660, y: 195 },
+  'jaisalmer': { x: 650, y: 195 },
+  'manali': { x: 665, y: 180 },
+  'spiti': { x: 670, y: 178 },
+  'lahaul': { x: 668, y: 178 },
+  'ladakh': { x: 670, y: 175 },
+  'kashmir': { x: 665, y: 175 },
+  'leh': { x: 670, y: 175 },
+  'toronto': { x: 290, y: 130 },
+  'canada': { x: 250, y: 110 },
+  'beijing': { x: 760, y: 160 },
+  'china': { x: 730, y: 180 }
+};
 
 const getTripImage = (destination) => {
   const dest = (destination || '').toLowerCase();
@@ -164,13 +206,13 @@ const getWeatherForDestination = (destination, dateStr) => {
 const get3DayForecast = (destination, startDateStr) => {
   const day1 = getWeatherForDestination(destination, startDateStr);
   const start = new Date(startDateStr);
-  
+
   const day2Date = new Date(start);
   day2Date.setDate(start.getDate() + 1);
   const day2 = getWeatherForDestination(destination, day2Date.toISOString());
   day2.temp = day2.temp + 1;
   if (day2.condition === 'Sunny') day2.condition = 'Cloudy';
-  
+
   const day3Date = new Date(start);
   day3Date.setDate(start.getDate() + 2);
   const day3 = getWeatherForDestination(destination, day3Date.toISOString());
@@ -284,9 +326,7 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
   );
 };
 
-
-
-const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMoveUp, onMoveDown }) => {
+const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMoveUp, onMoveDown, onEdit }) => {
   const [imageSrc, setImageSrc] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -342,10 +382,10 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
       </div>
 
       <div className="border hover:border-rose-300 rounded-3xl p-5 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col sm:flex-row gap-5 items-stretch sm:items-start"
-           style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+        style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
         {/* Left image block */}
         <div className="relative w-full h-44 sm:w-36 sm:h-28 rounded-2xl overflow-hidden shrink-0 shadow-sm border group/img bg-slate-100 dark:bg-slate-800"
-             style={{ borderColor: 'var(--border-primary)' }}>
+          style={{ borderColor: 'var(--border-primary)' }}>
           {loading || !imageSrc ? (
             <div className="w-full h-full animate-pulse flex items-center justify-center bg-[var(--bg-tertiary)]">
               <div className="h-4 w-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
@@ -376,6 +416,15 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
                 <span>{item.time}</span>
               </div>
               <div className="flex items-center space-x-1.5">
+                {onEdit && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                    className="p-1.5 rounded-lg bg-[var(--bg-tertiary)] hover:bg-[var(--border-primary)] text-slate-400 hover:text-rose-500 transition cursor-pointer border border-[var(--border-primary)] active:scale-90"
+                    title="Edit Activity"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                  </button>
+                )}
                 {onMoveUp && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
@@ -435,6 +484,7 @@ export default function DashboardStub() {
   const [loading, setLoading] = useState(true);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [activeDayTab, setActiveDayTab] = useState(1);
+  const [dashboardView, setDashboardView] = useState('grid');
   const [mobileViewMode, setMobileViewMode] = useState('list');
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [currencyCode, setCurrencyCode] = useState(() => localStorage.getItem('xplorism_currency') || 'INR');
@@ -472,6 +522,35 @@ export default function DashboardStub() {
   const [localEvents, setLocalEvents] = useState([]);
   const [localEventsLoading, setLocalEventsLoading] = useState(false);
 
+  const [editingActivity, setEditingActivity] = useState(null);
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const [showEditTripModal, setShowEditTripModal] = useState(false);
+  const [editTripForm, setEditTripForm] = useState({ startDate: '', endDate: '', budget: '', travelers: 1 });
+
+  const handleSaveTripDetails = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!selectedTrip) return;
+    try {
+      const updatedTrip = await api.put(`/trips/${selectedTrip.id}`, {
+        startDate: editTripForm.startDate,
+        endDate: editTripForm.endDate,
+        budget: parseFloat(editTripForm.budget) || 0,
+        travelers: parseInt(editTripForm.travelers) || 1
+      });
+      if (updatedTrip) {
+        setSelectedTrip(updatedTrip);
+        setTrips(trips.map(t => t.id === updatedTrip.id ? updatedTrip : t));
+        setShowEditTripModal(false);
+        showToast('Trip details updated successfully!', 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to update trip details.', 'error');
+    }
+  };
+
   // Collaboration State
   const socketRef = useRef(null);
   const [collaborators, setCollaborators] = useState([]);
@@ -479,6 +558,158 @@ export default function DashboardStub() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
+
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+
+  const REAL_COORDINATES = {
+    'singapore': [1.3521, 103.8198],
+    'tokyo': [35.6762, 139.6503],
+    'japan': [35.6762, 139.6503],
+    'paris': [48.8566, 2.3522],
+    'france': [48.8566, 2.3522],
+    'london': [51.5074, -0.1278],
+    'uk': [51.5074, -0.1278],
+    'united kingdom': [51.5074, -0.1278],
+    'new york': [40.7128, -74.0060],
+    'usa': [37.0902, -95.7129],
+    'sydney': [-33.8688, 151.2093],
+    'australia': [-25.2744, 133.7751],
+    'rome': [41.9028, 12.4964],
+    'italy': [41.8719, 12.5674],
+    'venice': [45.4408, 12.3155],
+    'zurich': [47.3769, 8.5417],
+    'swiss': [46.8182, 8.2275],
+    'switzerland': [46.8182, 8.2275],
+    'geneva': [46.2044, 6.1432],
+    'barcelona': [41.3851, 2.1734],
+    'spain': [40.4637, -3.7492],
+    'amsterdam': [52.3676, 4.9041],
+    'netherlands': [52.1326, 5.2913],
+    'delhi': [28.6139, 77.2090],
+    'new delhi': [28.6139, 77.2090],
+    'india': [20.5937, 78.9629],
+    'ayodhya': [26.7956, 82.1943],
+    'jodhpur': [26.2389, 73.0243],
+    'jaisalmer': [26.9157, 70.9083],
+    'manali': [32.2396, 77.1887],
+    'spiti': [32.2461, 78.0349],
+    'lahaul': [32.6738, 77.1050],
+    'ladakh': [34.1526, 77.5771],
+    'kashmir': [34.0837, 74.7973],
+    'leh': [34.1526, 77.5771],
+    'toronto': [43.6532, -79.3832],
+    'canada': [56.1304, -106.3468],
+    'beijing': [39.9042, 116.4074],
+    'china': [35.8617, 104.1954],
+    'frankfurt': [50.1109, 8.6821],
+    'germany': [51.1657, 10.4515]
+  };
+
+  useEffect(() => {
+    if (dashboardView !== 'map') return;
+
+    if (window.L) {
+      setLeafletLoaded(true);
+      return;
+    }
+
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById('leaflet-js')) {
+      const script = document.createElement('script');
+      script.id = 'leaflet-js';
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = () => setLeafletLoaded(true);
+      document.body.appendChild(script);
+    } else {
+      setLeafletLoaded(true);
+    }
+  }, [dashboardView]);
+
+  const getSelectedTripCurrency = () => {
+    if (!selectedTrip) return CURRENCIES.USD;
+    const parts = (selectedTrip.travelStyle || '').split('|');
+    const code = parts[1] || 'USD';
+    return CURRENCIES[code] || CURRENCIES.USD;
+  };
+
+  useEffect(() => {
+    if (!leafletLoaded || dashboardView !== 'map' || !mapContainerRef.current) return;
+
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
+
+    const activeTrips = trips.length > 0 ? trips : PRE_PLANNED_TRIPS.slice(0, 8);
+
+    const map = window.L.map(mapContainerRef.current, {
+      center: [20, 0],
+      zoom: 2,
+      zoomControl: true,
+      attributionControl: false
+    });
+    mapInstanceRef.current = map;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const tileUrl = isDark
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+    window.L.tileLayer(tileUrl, {
+      maxZoom: 19
+    }).addTo(map);
+
+    const customIcon = window.L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    const bounds = [];
+    activeTrips.forEach(t => {
+      const destName = (t.destination || '').toLowerCase();
+      const matchKey = Object.keys(REAL_COORDINATES).find(k => destName.includes(k));
+      const coords = matchKey ? REAL_COORDINATES[matchKey] : [20, 77];
+
+      const marker = window.L.marker(coords, { icon: customIcon }).addTo(map);
+      marker.bindPopup(`
+        <div style="font-family: sans-serif; padding: 4px;">
+          <h4 style="margin: 0 0 4px; font-weight: bold; font-size: 13px; color: #1e293b;">${t.destination}</h4>
+          <p style="margin: 0; font-size: 11px; color: #64748b;">Click to view itinerary</p>
+        </div>
+      `);
+
+      marker.on('click', () => {
+        setSelectedTrip(t);
+        setActiveDayTab(1);
+      });
+
+      bounds.push(coords);
+    });
+
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [40, 40] });
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [leafletLoaded, dashboardView, trips]);
 
   const handleAddCollaborator = async (e) => {
     e.preventDefault();
@@ -489,7 +720,7 @@ export default function DashboardStub() {
       showToast('Collaborator added! Redirecting to collaborative workspace...', 'success');
       setInviteEmail('');
       setShowInviteModal(false);
-      
+
       // If a separate cloned trip was created for collaboration, redirect there
       if (res && res.tripId) {
         setSelectedTrip(null);
@@ -617,16 +848,16 @@ export default function DashboardStub() {
     if (!selectedTrip) return;
     const activeDayList = getDayItineraries(selectedTrip);
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
+
     if (targetIndex < 0 || targetIndex >= activeDayList.length) return;
-    
+
     const itemA = activeDayList[index];
     const itemB = activeDayList[targetIndex];
-    
+
     const tempTime = itemA.time;
     itemA.time = itemB.time;
     itemB.time = tempTime;
-    
+
     const updatedItineraries = selectedTrip.itineraries.map(it => {
       if (it.id === itemA.id) return { ...it, time: itemA.time };
       if (it.id === itemB.id) return { ...it, time: itemB.time };
@@ -644,6 +875,54 @@ export default function DashboardStub() {
       }
     } catch (err) {
       showToast('Failed to update activity order.', 'error');
+    }
+  };
+
+  const handleUpdateActivity = async (updatedActivity) => {
+    if (!selectedTrip) return;
+    const updatedItineraries = selectedTrip.itineraries.map(item =>
+      item.id === updatedActivity.id ? updatedActivity : item
+    );
+
+    try {
+      const updatedTrip = await api.put(`/trips/${selectedTrip.id}`, {
+        itinerary: updatedItineraries.map(item => ({
+          id: item.id,
+          day: item.day,
+          activity: item.activity,
+          time: item.time,
+          location: item.location,
+          estimatedCost: item.estimatedCost || item.estimated_cost || 0
+        }))
+      });
+      if (updatedTrip) {
+        setSelectedTrip(updatedTrip);
+        setTrips(trips.map(t => t.id === updatedTrip.id ? updatedTrip : t));
+        showToast('Activity updated successfully!', 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to update activity.', 'error');
+    }
+  };
+
+  const fetchAISuggestions = async () => {
+    if (!editingActivity || !selectedTrip) return;
+    setAiLoading(true);
+    setAiSuggestions([]);
+    try {
+      const suggestions = await api.post('/trips/suggest-activity', {
+        destination: selectedTrip.destination,
+        activity: editingActivity.activity,
+        location: editingActivity.location,
+        time: editingActivity.time
+      });
+      setAiSuggestions(suggestions || []);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to fetch AI suggestions.', 'error');
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -1690,6 +1969,44 @@ export default function DashboardStub() {
     return Object.entries(categoryMap).map(([category, amount]) => ({ category, amount }));
   };
 
+  const renderMapView = () => {
+    const activeTrips = trips.length > 0 ? trips : PRE_PLANNED_TRIPS.slice(0, 8);
+
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden min-h-[450px] flex flex-col justify-between">
+        <div className="absolute inset-0 opacity-[0.07] dark:opacity-[0.15] bg-grid-pattern pointer-events-none" />
+
+        <div className="relative w-full h-[360px] bg-slate-50/50 dark:bg-slate-950/20 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+          <div ref={mapContainerRef} className="w-full h-full min-h-[360px]" style={{ zIndex: 10 }} />
+          {!leafletLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-900/80 z-20">
+              <div className="flex flex-col items-center space-y-2">
+                <Loader2 className="h-6 w-6 animate-spin text-rose-500" />
+                <span className="text-xs font-bold text-slate-500">Loading Map...</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          {activeTrips.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => {
+                setSelectedTrip(t);
+                setActiveDayTab(1);
+              }}
+              className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-955/20 border border-slate-200/50 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center space-x-1.5"
+            >
+              <MapPin className="h-3 w-3 text-rose-500" />
+              <span>{t.destination}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <style>{`
@@ -1773,7 +2090,7 @@ export default function DashboardStub() {
                         setSelectedTrip(trip);
                         setActiveDayTab(1);
                       }}
-                      className="group marquee-card bg-white rounded-3xl border border-slate-100 hover:border-rose-350 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
+                      className="group marquee-card bg-white rounded-3xl border border-slate-100 interactive-card cursor-pointer overflow-hidden shadow-sm flex flex-col justify-between"
                     >
                       <div className="relative h-40 w-full overflow-hidden">
                         <TripCoverImage
@@ -1788,9 +2105,15 @@ export default function DashboardStub() {
                           {(() => {
                             const w = getWeatherForDestination(trip.destination, trip.startDate);
                             const Icon = w.condition === 'Sunny' ? Sun : w.condition === 'Cloudy' ? Cloud : w.condition === 'Rainy' ? CloudRain : w.condition === 'Snowy' ? Snowflake : Wind;
+                            let animClass = "";
+                            if (w.condition === 'Sunny') animClass = "animate-spin-slow text-amber-500";
+                            else if (w.condition === 'Cloudy') animClass = "animate-pulse text-sky-400";
+                            else if (w.condition === 'Rainy') animClass = "animate-bounce text-blue-500";
+                            else if (w.condition === 'Snowy') animClass = "animate-bounce text-sky-200";
+                            else animClass = "animate-pulse text-teal-400";
                             return (
                               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-slate-700 border border-slate-100/50 backdrop-blur-sm shadow-sm flex items-center space-x-1">
-                                <Icon className="h-3 w-3 text-amber-500" />
+                                <Icon className={`h-3 w-3 ${animClass}`} />
                                 <span>{w.temp}°C</span>
                               </span>
                             );
@@ -1821,20 +2144,34 @@ export default function DashboardStub() {
             </div>
           </div>
         </div>
-
         {/* My Saved Itineraries */}
-        <div className="mb-6 pt-2 border-t border-slate-200/50">
+        <div className="mb-6 pt-2 border-t border-slate-200/50 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">{t('my_saved_itineraries')}</h2>
+
+          <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+            <button
+              onClick={() => setDashboardView('grid')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${dashboardView === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 hover:text-slate-800'}`}
+            >
+              Grid View
+            </button>
+            <button
+              onClick={() => setDashboardView('map')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${dashboardView === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 hover:text-slate-800'}`}
+            >
+              Map View
+            </button>
+          </div>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
             <div className="h-10 w-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-            <p className="text-slate-500 text-sm">{t('loading_saved')}</p>
+            <p className="text-slate-555 text-sm">{t('loading_saved')}</p>
           </div>
         ) : trips.length === 0 ? (
           <div className="bg-white p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed border-slate-200 shadow-sm">
-            <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 mb-6 border border-slate-100">
+            <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-505 mb-6 border border-slate-100">
               <TripIcon className="h-8 w-8 text-rose-400" />
             </div>
             <h2 className="text-xl font-bold text-slate-900 mb-2">{t('no_trips')}</h2>
@@ -1848,6 +2185,8 @@ export default function DashboardStub() {
               {t('start_planning')}
             </button>
           </div>
+        ) : dashboardView === 'map' ? (
+          renderMapView()
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {trips.map((trip) => {
@@ -1865,7 +2204,7 @@ export default function DashboardStub() {
                     setSelectedTrip(trip);
                     setActiveDayTab(1);
                   }}
-                  className="group relative bg-white rounded-[32px] border border-slate-200/60 transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
+                  className="group relative bg-white rounded-[32px] interactive-card border border-slate-200/60 transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
                 >
                   <div>
                     {/* Cover image header */}
@@ -2167,9 +2506,31 @@ export default function DashboardStub() {
                       <span className="text-xs font-bold uppercase tracking-wider">{style} Mode</span>
                     </div>
                     <h2 className="text-xl md:text-2xl font-extrabold text-slate-955 leading-tight">{selectedTrip.destination}</h2>
-                    <p className="text-slate-500 text-xs mt-1">
-                      {formatDate(selectedTrip.startDate)} - {formatDate(selectedTrip.endDate)} • {selectedTrip.travelers} {t('travelers')} • {t('budget_label')}: {tripCurrency.symbol}{Number(selectedTrip.budget).toLocaleString(tripCurrency.locale)}
-                    </p>
+                    <div className="flex items-center space-x-1.5 flex-wrap text-slate-500 text-xs mt-1">
+                      <span>{formatDate(selectedTrip.startDate)} - {formatDate(selectedTrip.endDate)} ({getTripDaysCount(selectedTrip.startDate, selectedTrip.endDate)} days)</span>
+                      <span>•</span>
+                      <span>{selectedTrip.travelers} {t('travelers')}</span>
+                      <span>•</span>
+                      <span>{t('budget_label')}: {tripCurrency.symbol}{Number(selectedTrip.budget).toLocaleString(tripCurrency.locale)}</span>
+                      {!selectedTrip.isPrePlanned && (
+                        <button
+                          onClick={() => {
+                            setEditTripForm({
+                              startDate: (selectedTrip.startDate || '').split('T')[0],
+                              endDate: (selectedTrip.endDate || '').split('T')[0],
+                              budget: selectedTrip.budget,
+                              travelers: selectedTrip.travelers
+                            });
+                            setShowEditTripModal(true);
+                          }}
+                          className="text-rose-500 hover:text-rose-600 font-bold ml-1 flex items-center space-x-0.5 cursor-pointer underline decoration-dotted transition"
+                          title="Edit Trip Details"
+                        >
+                          <Edit className="h-3 w-3" />
+                          <span>(Edit)</span>
+                        </button>
+                      )}
+                    </div>
 
                     <button
                       onClick={() => setShowWeatherPopup(true)}
@@ -2233,8 +2594,8 @@ export default function DashboardStub() {
                           </div>
                         )}
                       </div>
-                    )}
-                    {selectedTrip.isPrePlanned && (
+                     )}
+                     {selectedTrip.isPrePlanned && (
                       <>
                         <button
                           disabled={isSavingTrip}
@@ -2434,14 +2795,63 @@ export default function DashboardStub() {
                           </div>
                         ) : (
                           <>
-                            {/* Summary Card */}
-                            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 shadow-sm">
-                              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Total Trip Budget Limit</span>
-                              <p className="text-2xl font-extrabold text-emerald-800">
-                                {tripCurrency.symbol}{Number(budgetData.totalBudget ?? 0).toLocaleString(tripCurrency.locale)}
-                              </p>
-                              <p className="text-[10px] text-slate-500 mt-1">This is the total cap allocated for your travel expenses.</p>
-                            </div>
+                             {/* Summary Card */}
+                             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                               <div>
+                                 <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Total Trip Budget Limit</span>
+                                 <p className="text-2xl font-extrabold text-emerald-800">
+                                   {tripCurrency.symbol}{Number(budgetData.totalBudget ?? 0).toLocaleString(tripCurrency.locale)}
+                                 </p>
+                                 <p className="text-[10px] text-slate-500 mt-1">This is the total cap allocated for your travel expenses.</p>
+                               </div>
+                               
+                               {/* SVG Donut Chart */}
+                               {budgetData.categoryBreakdown && budgetData.categoryBreakdown.length > 0 && (() => {
+                                 let accumPercent = 0;
+                                 return (
+                                   <div className="relative h-24 w-24 flex items-center justify-center shrink-0 bg-white/40 dark:bg-slate-900/20 rounded-full p-1.5">
+                                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                       <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(16, 185, 129, 0.1)" strokeWidth="3" />
+                                       {budgetData.categoryBreakdown.map((cat, idx) => {
+                                         const percent = budgetData.totalBudget > 0 ? (Number(cat.planned) / Number(budgetData.totalBudget)) * 100 : 0;
+                                         if (percent <= 0) return null;
+                                         
+                                         const colors = [
+                                           '#10b981', // emerald-500
+                                           '#f43f5e', // rose-500
+                                           '#0ea5e9', // sky-500
+                                           '#eab308', // yellow-500
+                                           '#6366f1', // indigo-500
+                                           '#a855f7'  // purple-500
+                                         ];
+                                         const strokeColor = colors[idx % colors.length];
+                                         const dashArray = `${percent} ${100 - percent}`;
+                                         const dashOffset = 100 - accumPercent;
+                                         accumPercent += percent;
+                                         
+                                         return (
+                                           <circle
+                                             key={idx}
+                                             cx="18"
+                                             cy="18"
+                                             r="15.915"
+                                             fill="transparent"
+                                             stroke={strokeColor}
+                                             strokeWidth="3.2"
+                                             strokeDasharray={dashArray}
+                                             strokeDashoffset={dashOffset}
+                                           />
+                                         );
+                                       })}
+                                     </svg>
+                                     <div className="absolute flex flex-col items-center text-center">
+                                       <span className="text-[9px] font-black text-emerald-800 dark:text-emerald-300 leading-none">Limit</span>
+                                       <span className="text-[8px] text-slate-500 leading-none mt-0.5">100%</span>
+                                     </div>
+                                   </div>
+                                 );
+                               })()}
+                             </div>
 
                             {/* Category Breakdown (Allocation) */}
                             {budgetData.categoryBreakdown && budgetData.categoryBreakdown.length > 0 && (
@@ -2694,6 +3104,7 @@ export default function DashboardStub() {
                                   onToggleFavorite={() => handleToggleFavorite(item)}
                                   onMoveUp={idx > 0 && !selectedTrip.isPrePlanned ? () => handleMoveActivity(idx, 'up') : null}
                                   onMoveDown={idx < activeDayList.length - 1 && !selectedTrip.isPrePlanned ? () => handleMoveActivity(idx, 'down') : null}
+                                  onEdit={() => { setEditingActivity(item); setAiSuggestions([]); }}
                                 />
                               );
                             });
@@ -2722,36 +3133,192 @@ export default function DashboardStub() {
                 </div>
 
                 {selectedTrip.interests && selectedTrip.interests.length > 0 && (
-                  <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 z-10 pb-20 md:pb-4">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center mr-2">
-                      <Tag className="h-3.5 w-3.5 mr-1 text-rose-400" />
-                      <span>Applied Interests:</span>
-                    </div>
-                    {selectedTrip.interests.map((interest, idx) => (
-                      <span key={idx} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] text-slate-650 font-semibold shadow-sm">
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                      <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 z-10 pb-20 md:pb-4">
+                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center mr-2">
+                          <Tag className="h-3.5 w-3.5 mr-1 text-rose-400" />
+                          <span>Applied Interests:</span>
+                        </div>
+                        {selectedTrip.interests.map((interest, idx) => (
+                          <span key={idx} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] text-slate-650 font-semibold shadow-sm">
+                            {interest}
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
-                {/* Mobile View Toggle */}
-                <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-55 flex items-center bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-lg border border-slate-800 dark:border-slate-800/80 rounded-full shadow-2xl p-1.5 w-[280px]">
+                    {/* Mobile View Toggle */}
+                    <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-55 flex items-center bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-lg border border-slate-800 dark:border-slate-800/80 rounded-full shadow-2xl p-1.5 w-[280px]">
+                      <button
+                        type="button"
+                        onClick={() => setMobileViewMode('list')}
+                        className={`flex-1 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap ${mobileViewMode === 'list' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'text-slate-400 hover:text-slate-200'}`}
+                      >
+                        <TripIcon className="h-4 w-4" />
+                        <span>Timeline</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMobileViewMode('map')}
+                        className={`flex-1 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap ${mobileViewMode === 'map' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'text-slate-400 hover:text-slate-200'}`}
+                      >
+                        <MapPin className="h-4 w-4" />
+                        <span>Map View</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+                );
+        })()}
+              </AnimatePresence>
+
+              <TripWizard
+                isOpen={isWizardOpen}
+                onClose={() => {
+                  setIsWizardOpen(false);
+                  setWizardInitialData(null);
+                }}
+                onTripCreated={fetchTrips}
+                currencyCode={currencyCode}
+                initialData={wizardInitialData}
+              />
+
+      {/* Edit Activity Modal with AI Suggestions */}
+      <AnimatePresence>
+        {editingActivity && (() => {
+          const tripCurrency = getSelectedTripCurrency();
+          return (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 max-w-lg w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+              >
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                    <Edit className="h-5 w-5 text-rose-500" />
+                    <span>Edit Activity Details</span>
+                  </h3>
                   <button
-                    type="button"
-                    onClick={() => setMobileViewMode('list')}
-                    className={`flex-1 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap ${mobileViewMode === 'list' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'text-slate-400 hover:text-slate-200'}`}
+                    onClick={() => setEditingActivity(null)}
+                    className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition cursor-pointer"
                   >
-                    <TripIcon className="h-4 w-4" />
-                    <span>Timeline</span>
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+                  {/* Basic Inputs */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Time</label>
+                      <input
+                        type="text"
+                        value={editingActivity.time || ''}
+                        onChange={(e) => setEditingActivity({ ...editingActivity, time: e.target.value })}
+                        className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-400 focus:outline-none dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-505 mb-1">Estimated Cost ({tripCurrency.symbol})</label>
+                      <input
+                        type="number"
+                        value={editingActivity.estimatedCost || editingActivity.estimated_cost || 0}
+                        onChange={(e) => setEditingActivity({ ...editingActivity, estimatedCost: parseFloat(e.target.value) || 0 })}
+                        className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-400 focus:outline-none dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-505 mb-1">Location / Landmark</label>
+                    <input
+                      type="text"
+                      value={editingActivity.location || ''}
+                      onChange={(e) => setEditingActivity({ ...editingActivity, location: e.target.value })}
+                      className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-400 focus:outline-none dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-505 mb-1">Activity / Plan Details</label>
+                    <textarea
+                      value={editingActivity.activity || ''}
+                      onChange={(e) => setEditingActivity({ ...editingActivity, activity: e.target.value })}
+                      rows={3}
+                      className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-400 focus:outline-none dark:text-white"
+                    />
+                  </div>
+
+                  {/* AI Section */}
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-rose-500 uppercase tracking-wider flex items-center">
+                        <Sparkles className="h-4 w-4 mr-1 animate-pulse" />
+                        <span>AI Alternatives (Xplorism AI)</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={fetchAISuggestions}
+                        disabled={aiLoading}
+                        className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-bold transition flex items-center space-x-1 disabled:opacity-50 cursor-pointer border-none"
+                      >
+                        {aiLoading ? (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <span>Thinking...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-3 w-3" />
+                            <span>Ask Xplorism AI</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {aiSuggestions.length > 0 && (
+                      <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
+                        {aiSuggestions.map((sug, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => {
+                              setEditingActivity({
+                                ...editingActivity,
+                                location: sug.location,
+                                activity: sug.activity,
+                                estimatedCost: sug.estimatedCost
+                              });
+                            }}
+                            className="p-3 bg-rose-50/30 hover:bg-rose-50/70 border border-rose-100/50 dark:bg-slate-800 dark:border-slate-750 dark:hover:bg-slate-800/80 rounded-2xl cursor-pointer transition text-left group/sug"
+                          >
+                            <div className="flex items-start justify-between mb-1">
+                              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover/sug:text-rose-600 transition truncate">{sug.location}</h4>
+                              <span className="text-[10px] font-black text-rose-500">{tripCurrency.symbol}{sug.estimatedCost}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{sug.activity}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end space-x-3 bg-slate-50/50 dark:bg-slate-900/50 p-4 -mx-6 -mb-6 rounded-b-3xl">
+                  <button
+                    onClick={() => setEditingActivity(null)}
+                    className="px-5 py-2 rounded-xl border border-slate-200 dark:border-slate-750 text-xs font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+                  >
+                    Cancel
                   </button>
                   <button
-                    type="button"
-                    onClick={() => setMobileViewMode('map')}
-                    className={`flex-1 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap ${mobileViewMode === 'map' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'text-slate-400 hover:text-slate-200'}`}
+                    onClick={() => {
+                      handleUpdateActivity(editingActivity);
+                      setEditingActivity(null);
+                    }}
+                    className="px-6 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer shadow-sm"
                   >
-                    <MapPin className="h-4 w-4" />
-                    <span>Map View</span>
+                    Save Changes
                   </button>
                 </div>
               </motion.div>
@@ -2760,227 +3327,91 @@ export default function DashboardStub() {
         })()}
       </AnimatePresence>
 
-      <TripWizard
-        isOpen={isWizardOpen}
-        onClose={() => {
-          setIsWizardOpen(false);
-          setWizardInitialData(null);
-        }}
-        onTripCreated={fetchTrips}
-        currencyCode={currencyCode}
-        initialData={wizardInitialData}
-      />
-
+      {/* Edit Trip Details Modal */}
       <AnimatePresence>
-        {tripToDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+        {showEditTripModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl border border-slate-100 p-6 max-w-sm w-full shadow-xl text-slate-800 relative"
+              className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 max-w-md w-full shadow-2xl flex flex-col"
             >
-              <div className="flex items-center space-x-3 text-red-500 mb-4">
-                <Trash2 className="h-5 w-5" />
-                <h3 className="text-lg font-bold text-slate-900">Delete Trip</h3>
-              </div>
-              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                Are you sure you want to delete your trip to <strong className="text-slate-800">{tripToDelete.destination}</strong>?
-              </p>
-              <div className="flex items-center justify-end space-x-3">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <Calendar className="h-5 w-5 text-rose-500" />
+                  <span>Edit Trip Details</span>
+                </h3>
                 <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={() => !isDeleting && setTripToDelete(null)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={async () => {
-                    if (isDeleting) return;
-                    setIsDeleting(true);
-                    try {
-                      await api.delete(`/trips/${tripToDelete.id}`);
-                      setTrips(trips.filter(t => t.id !== tripToDelete.id));
-                      if (selectedTrip?.id === tripToDelete.id) setSelectedTrip(null);
-                      showToast('Trip deleted successfully.', 'success');
-                      setTripToDelete(null);
-                    } catch (err) {
-                      showToast('Failed to delete trip.', 'error');
-                    } finally {
-                      setIsDeleting(false);
-                    }
-                  }}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:bg-rose-400 text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 flex items-center space-x-1.5 disabled:cursor-not-allowed"
-                >
-                  {isDeleting ? (
-                    <>
-                      <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Deleting...</span>
-                    </>
-                  ) : (
-                    <span>Delete</span>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {toast.show && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
-              ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
-              : 'bg-rose-50/95 border-rose-200 text-rose-800'
-              }`}
-          >
-            <span className="text-xs font-bold tracking-wide">{toast.message}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showWeatherPopup && selectedTrip && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md rounded-3xl border shadow-2xl overflow-hidden flex flex-col"
-              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
-            >
-              <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-secondary)' }}>
-                <div className="flex items-center space-x-2">
-                  <CloudSun className="h-5 w-5 text-rose-500" />
-                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-[var(--text-primary)]">Weather Forecast</h3>
-                </div>
-                <button 
-                  onClick={() => setShowWeatherPopup(false)}
-                  className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-450 hover:text-rose-500 transition cursor-pointer"
+                  onClick={() => setShowEditTripModal(false)}
+                  className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-6 text-left overflow-y-auto">
-                <div className="text-center pb-2">
-                  <h4 className="text-lg font-black text-[var(--text-primary)]">{selectedTrip.destination}</h4>
-                  <p className="text-xs text-[var(--text-secondary)]">3-Day Trip Outlook</p>
-                </div>
-
-                <div className="space-y-4">
-                  {get3DayForecast(selectedTrip.destination, selectedTrip.startDate).map((dayForecast, idx) => {
-                    const WeatherIcon = dayForecast.condition === 'Sunny' ? Sun : dayForecast.condition === 'Cloudy' ? Cloud : dayForecast.condition === 'Rainy' ? CloudRain : dayForecast.condition === 'Snowy' ? Snowflake : Wind;
-                    const dateFormatted = dayForecast.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-                    
-                    return (
-                      <div 
-                        key={idx} 
-                        className="p-4 rounded-2xl border flex items-center justify-between bg-[var(--bg-tertiary)] border-[var(--border-primary)] shadow-sm"
-                      >
-                        <div className="space-y-1">
-                          <p className="text-xs font-black text-[var(--text-primary)]">{dateFormatted}</p>
-                          <p className="text-[11px] text-[var(--text-secondary)] italic">{dayForecast.desc}</p>
-                        </div>
-                        <div className="flex items-center space-x-3.5">
-                          <div className="text-right">
-                            <p className="text-base font-black text-[var(--text-primary)]">{dayForecast.temp}°C</p>
-                            <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">{dayForecast.condition}</p>
-                          </div>
-                          <div className="p-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] flex items-center justify-center">
-                            <WeatherIcon className={`h-5 w-5 ${dayForecast.condition === 'Sunny' ? 'text-amber-500' : dayForecast.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Additional metrics box */}
-                <div className="grid grid-cols-3 gap-3 pt-2 text-center">
-                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
-                    <p className="text-[9px] uppercase font-bold text-slate-400">Humidity</p>
-                    <p className="text-xs font-black text-[var(--text-primary)]">65%</p>
+              <form onSubmit={handleSaveTripDetails} className="py-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      value={editTripForm.startDate}
+                      onChange={(e) => setEditTripForm({ ...editTripForm, startDate: e.target.value })}
+                      className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-400 focus:outline-none dark:text-white"
+                      required
+                    />
                   </div>
-                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
-                    <p className="text-[9px] uppercase font-bold text-slate-400">Wind</p>
-                    <p className="text-xs font-black text-[var(--text-primary)]">14 km/h</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
-                    <p className="text-[9px] uppercase font-bold text-slate-400">UV Index</p>
-                    <p className="text-xs font-black text-[var(--text-primary)]">4 Mod</p>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-505 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      value={editTripForm.endDate}
+                      onChange={(e) => setEditTripForm({ ...editTripForm, endDate: e.target.value })}
+                      className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-400 focus:outline-none dark:text-white"
+                      required
+                    />
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
-      <AnimatePresence>
-        {showInviteModal && selectedTrip && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm rounded-3xl border shadow-2xl p-6 relative flex flex-col text-left"
-              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
-            >
-              <button
-                onClick={() => setShowInviteModal(false)}
-                className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-[var(--text-primary)] transition cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-
-              <div className="flex items-center space-x-3 mb-4 text-rose-505">
-                <UserPlus className="h-6 w-6" />
-                <h3 className="text-lg font-black text-[var(--text-primary)] font-sans">Invite Collaborator</h3>
-              </div>
-
-              <p className="text-[var(--text-secondary)] text-xs mb-6 leading-relaxed">
-                Enter the registered email address of the person you want to invite to this trip.
-              </p>
-
-              <form onSubmit={handleAddCollaborator} className="space-y-4 font-sans">
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">User Email</label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="e.g. companion@example.com"
-                    required
-                    disabled={inviteLoading}
-                    className="w-full px-3.5 py-3 rounded-xl text-sm border focus:outline-none focus:border-rose-500/40"
-                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-505 mb-1">Travelers</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={editTripForm.travelers}
+                      onChange={(e) => setEditTripForm({ ...editTripForm, travelers: parseInt(e.target.value) || 1 })}
+                      className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-400 focus:outline-none dark:text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-505 mb-1">Budget ({getSelectedTripCurrency().symbol})</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editTripForm.budget}
+                      onChange={(e) => setEditTripForm({ ...editTripForm, budget: parseFloat(e.target.value) || 0 })}
+                      className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-rose-400 focus:outline-none dark:text-white"
+                      required
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-3 pt-2">
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end space-x-3 bg-slate-50/50 dark:bg-slate-900/50 p-4 -mx-6 -mb-6 rounded-b-3xl">
                   <button
                     type="button"
-                    onClick={() => setShowInviteModal(false)}
-                    className="flex-1 py-3 rounded-xl border hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] text-xs font-bold transition cursor-pointer"
-                    style={{ borderColor: 'var(--border-primary)' }}
+                    onClick={() => setShowEditTripModal(false)}
+                    className="px-5 py-2 rounded-xl border border-slate-200 dark:border-slate-750 text-xs font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    disabled={inviteLoading || !inviteEmail.trim()}
-                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
+                    className="px-6 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer shadow-sm"
                   >
-                    {inviteLoading ? 'Adding...' : 'Add Member'}
+                    Save Changes
                   </button>
                 </div>
               </form>
@@ -2988,8 +3419,226 @@ export default function DashboardStub() {
           </div>
         )}
       </AnimatePresence>
-      <Footer />
-    </div>
-  );
-}
+
+      <AnimatePresence>
+                {tripToDelete && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="bg-white rounded-3xl border border-slate-100 p-6 max-w-sm w-full shadow-xl text-slate-800 relative"
+                    >
+                      <div className="flex items-center space-x-3 text-red-500 mb-4">
+                        <Trash2 className="h-5 w-5" />
+                        <h3 className="text-lg font-bold text-slate-900">Delete Trip</h3>
+                      </div>
+                      <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                        Are you sure you want to delete your trip to <strong className="text-slate-800">{tripToDelete.destination}</strong>?
+                      </p>
+                      <div className="flex items-center justify-end space-x-3">
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={() => !isDeleting && setTripToDelete(null)}
+                          className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={async () => {
+                            if (isDeleting) return;
+                            setIsDeleting(true);
+                            try {
+                              await api.delete(`/trips/${tripToDelete.id}`);
+                              setTrips(trips.filter(t => t.id !== tripToDelete.id));
+                              if (selectedTrip?.id === tripToDelete.id) setSelectedTrip(null);
+                              showToast('Trip deleted successfully.', 'success');
+                              setTripToDelete(null);
+                            } catch (err) {
+                              showToast('Failed to delete trip.', 'error');
+                            } finally {
+                              setIsDeleting(false);
+                            }
+                          }}
+                          className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:bg-rose-400 text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 flex items-center space-x-1.5 disabled:cursor-not-allowed"
+                        >
+                          {isDeleting ? (
+                            <>
+                              <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              <span>Deleting...</span>
+                            </>
+                          ) : (
+                            <span>Delete</span>
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {toast.show && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                    className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
+                      ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
+                      : 'bg-rose-50/95 border-rose-200 text-rose-800'
+                      }`}
+                  >
+                    <span className="text-xs font-bold tracking-wide">{toast.message}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {showWeatherPopup && selectedTrip && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.95, opacity: 0 }}
+                      className="w-full max-w-md rounded-3xl border shadow-2xl overflow-hidden flex flex-col"
+                      style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+                    >
+                      <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-secondary)' }}>
+                        <div className="flex items-center space-x-2">
+                          <CloudSun className="h-5 w-5 text-rose-500" />
+                          <h3 className="text-sm font-extrabold uppercase tracking-wider text-[var(--text-primary)]">Weather Forecast</h3>
+                        </div>
+                        <button
+                          onClick={() => setShowWeatherPopup(false)}
+                          className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-450 hover:text-rose-500 transition cursor-pointer"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+
+                      <div className="p-6 space-y-6 text-left overflow-y-auto">
+                        <div className="text-center pb-2">
+                          <h4 className="text-lg font-black text-[var(--text-primary)]">{selectedTrip.destination}</h4>
+                          <p className="text-xs text-[var(--text-secondary)]">3-Day Trip Outlook</p>
+                        </div>
+
+                        <div className="space-y-4">
+                          {get3DayForecast(selectedTrip.destination, selectedTrip.startDate).map((dayForecast, idx) => {
+                            const WeatherIcon = dayForecast.condition === 'Sunny' ? Sun : dayForecast.condition === 'Cloudy' ? Cloud : dayForecast.condition === 'Rainy' ? CloudRain : dayForecast.condition === 'Snowy' ? Snowflake : Wind;
+                            const dateFormatted = dayForecast.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+                            return (
+                              <div
+                                key={idx}
+                                className="p-4 rounded-2xl border flex items-center justify-between bg-[var(--bg-tertiary)] border-[var(--border-primary)] shadow-sm"
+                              >
+                                <div className="space-y-1">
+                                  <p className="text-xs font-black text-[var(--text-primary)]">{dateFormatted}</p>
+                                  <p className="text-[11px] text-[var(--text-secondary)] italic">{dayForecast.desc}</p>
+                                </div>
+                                <div className="flex items-center space-x-3.5">
+                                  <div className="text-right">
+                                    <p className="text-base font-black text-[var(--text-primary)]">{dayForecast.temp}°C</p>
+                                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">{dayForecast.condition}</p>
+                                  </div>
+                                  <div className="p-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] flex items-center justify-center">
+                                    <WeatherIcon className={`h-5 w-5 ${dayForecast.condition === 'Sunny' ? 'text-amber-500' : dayForecast.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Additional metrics box */}
+                        <div className="grid grid-cols-3 gap-3 pt-2 text-center">
+                          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                            <p className="text-[9px] uppercase font-bold text-slate-400">Humidity</p>
+                            <p className="text-xs font-black text-[var(--text-primary)]">65%</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                            <p className="text-[9px] uppercase font-bold text-slate-400">Wind</p>
+                            <p className="text-xs font-black text-[var(--text-primary)]">14 km/h</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                            <p className="text-[9px] uppercase font-bold text-slate-400">UV Index</p>
+                            <p className="text-xs font-black text-[var(--text-primary)]">4 Mod</p>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {showInviteModal && selectedTrip && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.95, opacity: 0 }}
+                      className="w-full max-w-sm rounded-3xl border shadow-2xl p-6 relative flex flex-col text-left"
+                      style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+                    >
+                      <button
+                        onClick={() => setShowInviteModal(false)}
+                        className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-[var(--text-primary)] transition cursor-pointer"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+
+                      <div className="flex items-center space-x-3 mb-4 text-rose-505">
+                        <UserPlus className="h-6 w-6" />
+                        <h3 className="text-lg font-black text-[var(--text-primary)] font-sans">Invite Collaborator</h3>
+                      </div>
+
+                      <p className="text-[var(--text-secondary)] text-xs mb-6 leading-relaxed">
+                        Enter the registered email address of the person you want to invite to this trip.
+                      </p>
+
+                      <form onSubmit={handleAddCollaborator} className="space-y-4 font-sans">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">User Email</label>
+                          <input
+                            type="email"
+                            value={inviteEmail}
+                            onChange={(e) => setInviteEmail(e.target.value)}
+                            placeholder="e.g. companion@example.com"
+                            required
+                            disabled={inviteLoading}
+                            className="w-full px-3.5 py-3 rounded-xl text-sm border focus:outline-none focus:border-rose-500/40"
+                            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
+                          />
+                        </div>
+
+                        <div className="flex items-center space-x-3 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowInviteModal(false)}
+                            className="flex-1 py-3 rounded-xl border hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] text-xs font-bold transition cursor-pointer"
+                            style={{ borderColor: 'var(--border-primary)' }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={inviteLoading || !inviteEmail.trim()}
+                            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
+                          >
+                            {inviteLoading ? 'Adding...' : 'Add Member'}
+                          </button>
+                        </div>
+                      </form>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
+              <Footer />
+            </div>
+          );
+        }
 

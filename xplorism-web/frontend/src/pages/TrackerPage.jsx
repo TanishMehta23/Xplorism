@@ -453,7 +453,7 @@ export default function TrackerPage() {
         <div ref={mapRef} className="w-full h-full z-0" style={{ height: '100%', width: '100%', position: 'absolute', top: 0, left: 0 }} />
 
         {!leafletLoaded && (
-          <div className={`absolute inset-0 flex flex-col items-center justify-center z-20 space-y-4 ${isDark ? 'bg-slate-955' : 'bg-slate-50'}`}>
+          <div className={`absolute inset-0 flex flex-col items-center justify-center z-20 space-y-4 ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
             <Activity className="h-10 w-10 text-rose-500 animate-pulse" />
             <p className={`text-sm font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading Radar Maps...</p>
           </div>
@@ -725,7 +725,7 @@ export default function TrackerPage() {
 
         {/* Map Legend Overlay */}
         <div 
-          className={`absolute bottom-6 z-10 p-3.5 rounded-xl shadow-2xl backdrop-blur-md text-[10px] font-bold space-y-1.5 pointer-events-none hidden md:block border ${isDark ? 'bg-slate-955/90 text-white border-slate-800' : 'bg-white/95 text-slate-800 border-slate-200'}`}
+          className={`absolute bottom-6 z-10 p-3.5 rounded-xl shadow-2xl backdrop-blur-md text-[10px] font-bold space-y-1.5 pointer-events-none hidden md:block border ${isDark ? 'bg-slate-900/90 text-white border-slate-800' : 'bg-white/95 text-slate-800 border-slate-200'}`}
           style={{ 
             left: sidebarOpen ? '398px' : '24px', 
             transition: 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' 

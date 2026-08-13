@@ -223,45 +223,82 @@ export default function TripWizard({ isOpen, onClose, onTripCreated, currencyCod
     setStep(5);
     
     try {
-      setGenStatus('Resolving location details...');
-      await new Promise(r => setTimeout(r, 600));
+      if (initialData && initialData.id) {
+        const payload = {
+          destination,
+          startDate,
+          endDate,
+          budget,
+          travelers,
+          travelStyle: `${travelStyle}|${wizardCurrencyCode}`,
+          interests: selectedInterests
+        };
 
-      setGenStatus(`Generating customized travel plan with Gemini AI for ${destination}...`);
-      const genResult = await api.post('/trips/generate', {
-        destination,
-        startDate,
-        endDate,
-        budget,
-        travelers,
-        travelStyle,
-        interests: selectedInterests
-      });
-      
-      setGenStatus('Injecting custom travel schedules...');
-      await new Promise(r => setTimeout(r, 800));
+        const initialStart = (initialData.startDate || '').split('T')[0];
+        const initialEnd = (initialData.endDate || '').split('T')[0];
 
-      setGenStatus('Structuring cost-budget plans...');
-      await new Promise(r => setTimeout(r, 600));
+        if (
+          initialData.destination !== destination ||
+          initialStart !== startDate ||
+          initialEnd !== endDate
+        ) {
+          setGenStatus(`Updating and re-generating itinerary for ${destination}...`);
+          const genResult = await api.post('/trips/generate', {
+            destination,
+            startDate,
+            endDate,
+            budget,
+            travelers,
+            travelStyle,
+            interests: selectedInterests
+          });
+          payload.destination = genResult.resolvedName || destination;
+          payload.itinerary = genResult.itinerary;
+        } else {
+          setGenStatus('Saving updated trip details...');
+          payload.itinerary = initialData.itinerary || initialData.itineraries;
+        }
 
-      setGenStatus('Finalizing itinerary details...');
-      
-      // Save Trip to DB via API
-      const payload = {
-        destination: genResult.resolvedName || destination,
-        startDate,
-        endDate,
-        budget,
-        travelers,
-        travelStyle: `${travelStyle}|${wizardCurrencyCode}`,
-        interests: selectedInterests,
-        itinerary: genResult.itinerary
-      };
+        await api.put(`/trips/${initialData.id}`, payload);
+        setGenStatus('Trip Updated Successfully!');
+      } else {
+        setGenStatus('Resolving location details...');
+        await new Promise(r => setTimeout(r, 600));
 
-      await api.post('/trips', payload);
-      
-      setGenStatus('Trip Created Successfully!');
+        setGenStatus(`Generating customized travel plan with Gemini AI for ${destination}...`);
+        const genResult = await api.post('/trips/generate', {
+          destination,
+          startDate,
+          endDate,
+          budget,
+          travelers,
+          travelStyle,
+          interests: selectedInterests
+        });
+        
+        setGenStatus('Injecting custom travel schedules...');
+        await new Promise(r => setTimeout(r, 800));
+
+        setGenStatus('Structuring cost-budget plans...');
+        await new Promise(r => setTimeout(r, 600));
+
+        setGenStatus('Finalizing itinerary details...');
+        
+        const payload = {
+          destination: genResult.resolvedName || destination,
+          startDate,
+          endDate,
+          budget,
+          travelers,
+          travelStyle: `${travelStyle}|${wizardCurrencyCode}`,
+          interests: selectedInterests,
+          itinerary: genResult.itinerary
+        };
+
+        await api.post('/trips', payload);
+        setGenStatus('Trip Created Successfully!');
+      }
       await new Promise(r => setTimeout(r, 500));
-      
       onTripCreated();
       onClose();
       // Reset state

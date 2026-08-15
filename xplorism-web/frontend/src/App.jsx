@@ -10,7 +10,7 @@ import DashboardStub from './pages/DashboardStub';
 import WeatherPage from './pages/WeatherPage';
 import BudgetPage from './pages/BudgetPage';
 import BudgetsListPage from './pages/BudgetsListPage';
-import HotelBookingPage from './pages/HotelBookingPage';
+// import HotelBookingPage from './pages/HotelBookingPage';
 import ProfilePage from './pages/ProfilePage';
 import TravelPreferencesPage from './pages/TravelPreferencesPage';
 import TrackerPage from './pages/TrackerPage';
@@ -24,6 +24,8 @@ import TripInviteRespondPage from './pages/TripInviteRespondPage';
 import MockPaymentPage from './pages/MockPaymentPage';
 import AIChatbot from './components/AIChatbot';
 
+
+import { CurrencyProvider } from './contexts/CurrencyContext';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -127,14 +129,14 @@ function AppRoutes() {
         }
       />
 
-      <Route
+      {/* <Route
         path="/hotels"
         element={
           <ProtectedRoute>
             <HotelBookingPage />
           </ProtectedRoute>
         }
-      />
+      /> */}
 
       <Route
         path="/mock-payment"
@@ -237,10 +239,12 @@ export default function App() {
     <AuthProvider>
       <ThemeProvider>
         <LanguageProvider>
-          <Router>
-            <AppRoutes />
-            <AIChatbot />
-          </Router>
+          <CurrencyProvider>
+            <Router>
+              <AppRoutes />
+              <AIChatbot />
+            </Router>
+          </CurrencyProvider>
         </LanguageProvider>
       </ThemeProvider>
     </AuthProvider>

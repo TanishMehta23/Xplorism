@@ -228,6 +228,10 @@ export const postChatMessage = async (req, res) => {
       }
     }
 
+    if (!finalMessage || finalMessage.trim() === '') {
+      finalMessage = "I apologize, but both Gemini and Groq are currently unavailable. Please check your internet connection or try again later.";
+    }
+
     // 7. Save message exchange to database
     await query(
       `INSERT INTO chatbot_messages (conversation_id, role, content)

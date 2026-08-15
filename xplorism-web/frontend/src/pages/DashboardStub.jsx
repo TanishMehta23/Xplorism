@@ -16,18 +16,19 @@ import TripWizard from '../components/TripWizard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useLanguage } from '../context/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 export const CURRENCIES = {
-  INR: { symbol: '₹', name: 'INR (₹)', locale: 'en-IN' },
-  USD: { symbol: '$', name: 'USD ($)', locale: 'en-US' },
-  EUR: { symbol: '€', name: 'EUR (€)', locale: 'de-DE' },
-  GBP: { symbol: '£', name: 'GBP (£)', locale: 'en-GB' },
-  JPY: { symbol: '¥', name: 'JPY (¥)', locale: 'ja-JP' },
-  AUD: { symbol: 'A$', name: 'AUD (A$)', locale: 'en-AU' },
-  CAD: { symbol: 'C$', name: 'CAD (C$)', locale: 'en-CA' },
-  CHF: { symbol: 'CHF', name: 'CHF (CHF)', locale: 'de-CH' },
-  CNY: { symbol: '¥', name: 'CNY (¥)', locale: 'zh-CN' },
-  SGD: { symbol: 'S$', name: 'SGD (S$)', locale: 'en-SG' }
+  INR: { code: 'INR', symbol: '₹', name: 'INR (₹)', locale: 'en-IN' },
+  USD: { code: 'USD', symbol: '$', name: 'USD ($)', locale: 'en-US' },
+  EUR: { code: 'EUR', symbol: '€', name: 'EUR (€)', locale: 'de-DE' },
+  GBP: { code: 'GBP', symbol: '£', name: 'GBP (£)', locale: 'en-GB' },
+  JPY: { code: 'JPY', symbol: '¥', name: 'JPY (¥)', locale: 'ja-JP' },
+  AUD: { code: 'AUD', symbol: 'A$', name: 'AUD (A$)', locale: 'en-AU' },
+  CAD: { code: 'CAD', symbol: 'C$', name: 'CAD (C$)', locale: 'en-CA' },
+  CHF: { code: 'CHF', symbol: 'CHF', name: 'CHF (CHF)', locale: 'de-CH' },
+  CNY: { code: 'CNY', symbol: '¥', name: 'CNY (¥)', locale: 'zh-CN' },
+  SGD: { code: 'SGD', symbol: 'S$', name: 'SGD (S$)', locale: 'en-SG' },
 };
 
 export const PRE_PLANNED_TRIPS = [
@@ -328,6 +329,7 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
 };
 
 const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMoveUp, onMoveDown, onEdit }) => {
+  const { formatCurrency } = useCurrency();
   const [imageSrc, setImageSrc] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -466,7 +468,7 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
           <div className="flex flex-wrap items-center gap-2 text-xs pt-1.5">
             <div className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl font-bold border ${Number(item.estimatedCost) > 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] text-slate-400 dark:text-slate-550'}`}>
               <DollarSign className={`h-3.5 w-3.5 shrink-0 ${Number(item.estimatedCost) > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
-              <span>{Number(item.estimatedCost) > 0 ? `${tripCurrency.symbol}${Number(item.estimatedCost).toLocaleString(tripCurrency.locale)}` : 'Free'}</span>
+              <span>{Number(item.estimatedCost) > 0 ? `${formatCurrency(item.estimatedCost, tripCurrency.code || tripCurrency).formatted}` : 'Free'}</span>
             </div>
           </div>
         </div>
@@ -479,6 +481,7 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
 export default function DashboardStub() {
   const { user, logout } = useAuth();
   const { t } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const [trips, setTrips] = useState([]);
@@ -1867,7 +1870,7 @@ export default function DashboardStub() {
                       ` : ''}
                       ${act.estimatedCost !== undefined ? `
                         <span class="meta-item cost-tag">
-                          Est. Cost: ${tripCurrency.symbol}${Number(act.estimatedCost).toLocaleString(tripCurrency.locale)}
+                          Est. Cost: ${formatCurrency(act.estimatedCost, tripCurrency.code || tripCurrency).formatted}
                         </span>
                       ` : ''}
                     </div>
@@ -1977,7 +1980,7 @@ export default function DashboardStub() {
           <div class="metric-card"><div class="metric-label">Duration</div><div class="metric-value">${daysCount} Days</div></div>
           <div class="metric-card"><div class="metric-label">Travelers</div><div class="metric-value">${trip.travelers} ${trip.travelers === 1 ? 'Person' : 'People'}</div></div>
           <div class="metric-card"><div class="metric-label">Style</div><div class="metric-value">${style}</div></div>
-          <div class="metric-card"><div class="metric-label">Budget</div><div class="metric-value">${tripCurrency.symbol}${Number(trip.budget).toLocaleString(tripCurrency.locale)}</div></div>
+          <div class="metric-card"><div class="metric-label">Budget</div><div class="metric-value">${formatCurrency(trip.budget, tripCurrency.code || tripCurrency).formatted}</div></div>
         </div>
 
         <div class="interests-section">
@@ -2337,7 +2340,7 @@ export default function DashboardStub() {
                             <span>{trip.travelers} {t('travelers')}</span>
                           </div>
                           <div className="flex items-center space-x-1.5 font-bold text-slate-900">
-                            <span>{tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+                            <span>{formatCurrency(trip.budget, tripCurrency.code || tripCurrency).formatted}</span>
                           </div>
                         </div>
                       </div>
@@ -2470,7 +2473,7 @@ export default function DashboardStub() {
                           <span className="font-bold">{trip.travelers} {t('travelers')}</span>
                         </div>
                         <div className="flex items-center space-x-1.5 font-extrabold text-slate-900 dark:text-white">
-                          <span>{tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}</span>
+                          <span>{formatCurrency(trip.budget, tripCurrency.code || tripCurrency).formatted}</span>
                         </div>
                       </div>
                     </div>
@@ -2852,7 +2855,7 @@ export default function DashboardStub() {
                       <span>•</span>
                       <span>{selectedTrip.travelers} {t('travelers')}</span>
                       <span>•</span>
-                      <span>{t('budget_label')}: {tripCurrency.symbol}{Number(selectedTrip.budget).toLocaleString(tripCurrency.locale)}</span>
+                      <span>{t('budget_label')}: {formatCurrency(selectedTrip.budget, tripCurrency.code || tripCurrency).formatted}</span>
                       {!selectedTrip.isPrePlanned && (
                         <button
                           onClick={() => {
@@ -3141,7 +3144,7 @@ export default function DashboardStub() {
                                <div>
                                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Total Trip Budget Limit</span>
                                  <p className="text-2xl font-extrabold text-emerald-800">
-                                   {tripCurrency.symbol}{Number(budgetData.totalBudget ?? 0).toLocaleString(tripCurrency.locale)}
+                                   {formatCurrency(budgetData.totalBudget ?? 0, tripCurrency.code || tripCurrency).formatted}
                                  </p>
                                  <p className="text-[10px] text-slate-500 mt-1">This is the total cap allocated for your travel expenses.</p>
                                </div>
@@ -3209,7 +3212,7 @@ export default function DashboardStub() {
                                         <div className="flex justify-between items-center w-full">
                                           <span className="text-xs font-bold text-slate-700">{cat.category}</span>
                                           <span className="text-xs font-black text-slate-900">
-                                            {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}
+                                            {formatCurrency(cat.planned, tripCurrency.code || tripCurrency).formatted}
                                           </span>
                                         </div>
                                         <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden">
@@ -3635,7 +3638,7 @@ export default function DashboardStub() {
                           >
                             <div className="flex items-start justify-between mb-1">
                               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover/sug:text-rose-600 transition truncate">{sug.location}</h4>
-                              <span className="text-[10px] font-black text-rose-500">{tripCurrency.symbol}{sug.estimatedCost}</span>
+                              <span className="text-[10px] font-black text-rose-500">{formatCurrency(sug.estimatedCost, tripCurrency.code || tripCurrency).formatted}</span>
                             </div>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{sug.activity}</p>
                           </div>

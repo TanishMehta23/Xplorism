@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { sendOtpEmail } from '../services/emailService.js';
+import convert from 'heic-convert';
+import sharp from 'sharp';
 
 // In-memory OTP cache
 // Map of: email -> { name, email, password, otp, expiresAt, type }
@@ -476,10 +478,51 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email, password, profilePhoto, preferences, travelHistory } = req.body;
+    let { name, email, password, profilePhoto, preferences, travelHistory } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ message: 'Name and email are required' });
+    }
+    // Process all profile photos on the backend using sharp (for resizing, format normalization to JPEG, and compression)
+    if (profilePhoto && (profilePhoto.startsWith('data:image/') || profilePhoto.startsWith('data:application/octet-stream;base64,'))) {
+      try {
+        console.log('Processing and resizing profile photo using sharp on the backend...');
+        const base64Data = profilePhoto.replace(/^data:[^;]+;base64,/, "");
+        const inputBuffer = Buffer.from(base64Data, 'base64');
+        
+        let outputBuffer;
+        if (profilePhoto.startsWith('data:image/heic') || profilePhoto.startsWith('data:image/heif') || profilePhoto.includes('ftypheic') || profilePhoto.includes('ftypmif1')) {
+          // HEIC conversion with heic-convert fallback
+          try {
+            outputBuffer = await sharp(inputBuffer)
+              .resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true })
+              .jpeg({ quality: 60 })
+              .toBuffer();
+          } catch (sharpHeicErr) {
+            console.error('Sharp HEIC decoding failed, falling back to heic-convert...', sharpHeicErr);
+            const convertedBuffer = await convert({
+              buffer: inputBuffer,
+              format: 'JPEG',
+              quality: 0.6
+            });
+            outputBuffer = await sharp(convertedBuffer)
+              .resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true })
+              .jpeg({ quality: 60 })
+              .toBuffer();
+          }
+        } else {
+          // Standard JPEG, PNG, WEBP conversion and resizing
+          outputBuffer = await sharp(inputBuffer)
+            .resize({ width: 400, height: 400, fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 60 })
+            .toBuffer();
+        }
+        
+        profilePhoto = `data:image/jpeg;base64,${outputBuffer.toString('base64')}`;
+        console.log('Profile photo processed successfully via sharp. Length:', profilePhoto.length);
+      } catch (err) {
+        console.error('Failed to process profile photo on backend:', err);
+      }
     }
 
     // Check email uniqueness if email is changed

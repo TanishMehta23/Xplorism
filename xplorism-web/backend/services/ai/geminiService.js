@@ -135,9 +135,9 @@ export async function generateTextEmbedding(text) {
   }
 }
 
-export async function callOllamaChat(history, currentMessage, ragContext = '') {
-  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-  const model = process.env.OLLAMA_MODEL || 'qwen2.5';
+export async function callGroqChat(history, currentMessage, ragContext = '') {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
 
   const messages = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'assistant',
@@ -146,7 +146,7 @@ export async function callOllamaChat(history, currentMessage, ragContext = '') {
 
   let promptText = currentMessage;
   if (ragContext) {
-    promptText = `[RAG Context / Verified Xplorism Data]:\n${ragContext}\n\n[User Message]:\n${currentMessage}`;
+    promptText = `[Context Data]:\n${ragContext}\n\n[User Message]:\n${currentMessage}`;
   }
 
   messages.push({
@@ -154,20 +154,63 @@ export async function callOllamaChat(history, currentMessage, ragContext = '') {
     content: promptText
   });
 
-  const url = `${ollamaBaseUrl}/api/chat`;
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  if (process.env.OLLAMA_API_KEY) {
-    headers['Authorization'] = `Bearer ${process.env.OLLAMA_API_KEY}`;
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'llama3-70b-8192',
+      messages: [
+        { role: 'system', content: 'You are Xplorism AI, an intelligent travel assistant.' },
+        ...messages
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Groq error: status ${response.status} - ${errText}`);
   }
 
-  const response = await fetch(url, {
+  const data = await response.json();
+  return {
+    message: data.choices[0]?.message?.content || '',
+    functionCalls: null
+  };
+}
+
+export async function callOllamaChat(history, currentMessage, ragContext = '') {
+  const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+  const modelName = process.env.OLLAMA_MODEL || 'qwen2.5';
+
+  const messages = history.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'assistant',
+    content: msg.content
+  }));
+
+  let promptText = currentMessage;
+  if (ragContext) {
+    promptText = `[Context Data]:\n${ragContext}\n\n[User Message]:\n${currentMessage}`;
+  }
+
+  messages.push({
+    role: 'user',
+    content: promptText
+  });
+
+  const response = await fetch(`${baseUrl}/api/chat`, {
     method: 'POST',
-    headers,
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
-      model,
-      messages,
+      model: modelName,
+      messages: [
+        { role: 'system', content: 'You are Xplorism AI, an intelligent travel assistant.' },
+        ...messages
+      ],
       stream: false
     })
   });
@@ -219,12 +262,28 @@ export async function callGeminiChat(history, currentMessage, ragContext = '') {
       rawContent: response.candidates[0].content
     };
   } catch (error) {
-    console.warn('[Gemini Service] Gemini chat failed. Falling back to Ollama:', error.message);
+    console.warn('[Gemini Service] Gemini chat failed. Falling back to Groq:', error.message);
     try {
-      return await callOllamaChat(history, currentMessage, ragContext);
-    } catch (ollamaError) {
-      console.error('[Gemini Service] Both Gemini and Ollama fallback failed:', ollamaError.message);
-      throw error;
+      return await callGroqChat(history, currentMessage, ragContext);
+    } catch (groqError) {
+      console.warn('[Gemini Service] Groq fallback failed. Falling back to Ollama:', groqError.message);
+      try {
+        return await callOllamaChat(history, currentMessage, ragContext);
+      } catch (ollamaError) {
+        console.error('[Gemini Service] All AI fallbacks failed:', ollamaError.message);
+        
+        let fallbackMessage = "I apologize, but all AI services are currently unavailable. Please check your internet connection or try again later.";
+        
+        if (ragContext) {
+          fallbackMessage = `I'm currently operating in offline/fallback mode due to high server demand. Based on my knowledge base, here is some relevant information:\n\n${ragContext}`;
+        }
+        
+        return {
+          message: fallbackMessage,
+          functionCalls: null,
+          rawContent: null
+        };
+      }
     }
   }
 }
@@ -268,6 +327,20 @@ export async function sendToolResponse(history, currentMessage, modelRawContent,
     };
   } catch (error) {
     console.error('[Gemini Service] Tool response handling failed:', error);
-    throw error;
+    console.warn('[Gemini Service] Falling back to Groq for tool response...');
+    try {
+      const toolContext = `[Tool Result for ${toolName}]:\n${JSON.stringify(toolResult, null, 2)}`;
+      return await callGroqChat(history, currentMessage, toolContext);
+    } catch (groqError) {
+      console.warn('[Gemini Service] Groq tool fallback failed. Falling back to Ollama for tool response...');
+      try {
+        return await callOllamaChat(history, currentMessage, toolContext);
+      } catch (ollamaError) {
+        console.error('[Gemini Service] All AI fallbacks failed for tool response:', ollamaError.message);
+        return {
+          message: `I'm currently operating in offline/fallback mode. The action was successful, here are the raw results for ${toolName}:\n\n\`\`\`json\n${JSON.stringify(toolResult, null, 2)}\n\`\`\``
+        };
+      }
+    }
   }
 }

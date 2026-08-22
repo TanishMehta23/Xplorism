@@ -151,7 +151,7 @@ export default function HotelBookingPage() {
 
   // Filter States
   const [minStars, setMinStars] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(500);
+  const [maxPrice, setMaxPrice] = useState(50000);
   const [selectedAmenities, setSelectedAmenities] = useState([]);
 
   // Data States
@@ -208,16 +208,31 @@ export default function HotelBookingPage() {
 
     // Payment integration disabled for now — do not inject Razorpay script.
 
-    // Fetch user's trips for booking integration
+    // Fetch user's trips for booking integration & trigger default hotels search
     api.get('/trips')
       .then(data => {
         setUserTrips(data || []);
         if (data && data.length > 0) {
           setBookingTripId(data[0].id);
+          // Set destination from user's active trip if available
+          const firstDest = data[0].destination || 'Goa, India';
+          setDestination(firstDest);
+        } else {
+          setDestination('Goa, India');
         }
       })
-      .catch(err => console.error('Failed to load trips:', err));
+      .catch(err => {
+        console.error('Failed to load trips:', err);
+        setDestination('Goa, India');
+      });
   }, []);
+
+  // Auto-search hotels when destination is set on mount
+  useEffect(() => {
+    if (destination && !hasSearched) {
+      handleSearch();
+    }
+  }, [destination]);
 
   useEffect(() => {
     if (mobileTab === 'map' && mapInstance) {
@@ -978,13 +993,13 @@ export default function HotelBookingPage() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
                     <span style={{ color: 'var(--text-tertiary)' }}>Max Price</span>
-                    <span className="text-rose-500 font-extrabold">{currency.symbol}{Math.round(maxPrice * currency.rate)}</span>
+                    <span className="text-rose-500 font-extrabold">{currency.symbol}{Math.round(maxPrice)}</span>
                   </div>
                   <input
                     type="range"
                     min="50"
-                    max="500"
-                    step="10"
+                    max="50000"
+                    step="100"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(parseInt(e.target.value))}
                     className="w-full h-1 bg-[var(--bg-primary)] rounded-lg appearance-none cursor-pointer accent-rose-600"
@@ -1126,7 +1141,7 @@ export default function HotelBookingPage() {
                         {/* Price & Booking trigger */}
                         <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--border-primary)' }}>
                           <div className="flex items-baseline space-x-1">
-                            <span className="text-lg font-black text-rose-500">{currency.symbol}{Math.round(hotel.price * currency.rate)}</span>
+                            <span className="text-lg font-black text-rose-500">{hotel.currencySymbol || currency.symbol}{Math.round(hotel.price)}</span>
                             <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>/ night</span>
                           </div>
 

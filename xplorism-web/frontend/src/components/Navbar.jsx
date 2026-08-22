@@ -196,13 +196,13 @@ export default function Navbar({ activeTab }) {
                 <Plane className="h-4 w-4" />
                 <span className="nav-link">{t('tracker')}</span>
               </button>
-              {/* <button
+              <button
                 onClick={() => navigate('/hotels')}
                 className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'hotels' ? 'text-rose-500 font-bold' : ''}`}
               >
                 <Hotel className="h-4 w-4" />
-                <span className="nav-link">{t('hotels')}</span>
-              </button> */}
+                <span className="nav-link">{t('hotels') || 'Book Stays & Travel'}</span>
+              </button>
               <button
                 onClick={() => navigate('/budgets')}
                 className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'budgets' ? 'text-rose-500 font-bold' : ''}`}
@@ -519,14 +519,14 @@ export default function Navbar({ activeTab }) {
                   <Plane className="h-4 w-4" />
                   <span>{t('tracker')}</span>
                 </button>
-                {/* <button
+                <button
                   onClick={() => { navigate('/hotels'); setIsMobileMenuOpen(false); }}
                   className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'hotels' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
                   style={{ color: activeTab === 'hotels' ? '' : 'var(--text-secondary)' }}
                 >
                   <Hotel className="h-4 w-4" />
-                  <span>{t('hotels')}</span>
-                </button> */}
+                  <span>{t('hotels') || 'Book Stays & Travel'}</span>
+                </button>
                 <button
                   onClick={() => { navigate('/budgets'); setIsMobileMenuOpen(false); }}
                   className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'budgets' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}

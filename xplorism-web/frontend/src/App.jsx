@@ -10,7 +10,7 @@ import DashboardStub from './pages/DashboardStub';
 import WeatherPage from './pages/WeatherPage';
 import BudgetPage from './pages/BudgetPage';
 import BudgetsListPage from './pages/BudgetsListPage';
-// import HotelBookingPage from './pages/HotelBookingPage';
+import HotelBookingPage from './pages/HotelBookingPage';
 import ProfilePage from './pages/ProfilePage';
 import TravelPreferencesPage from './pages/TravelPreferencesPage';
 import TrackerPage from './pages/TrackerPage';
@@ -129,14 +129,14 @@ function AppRoutes() {
         }
       />
 
-      {/* <Route
+      <Route
         path="/hotels"
         element={
           <ProtectedRoute>
             <HotelBookingPage />
           </ProtectedRoute>
         }
-      /> */}
+      />
 
       <Route
         path="/mock-payment"

@@ -123,7 +123,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
 /**
  * Helper to call Gemini API with a specific model
  */
-const callGeminiAPI = async (model, prompt, apiKey) => {
+export const callGeminiAPI = async (model, prompt, apiKey) => {
   const apiVersions = ['v1beta', 'v1'];
   let lastError = null;
 
@@ -199,7 +199,7 @@ const callOpenAICompatibleAPI = async (endpoint, apiKey, model, prompt, isJson) 
 /**
  * Get ordered unique list of Gemini models to try (primary + backups)
  */
-const getGeminiModels = () => {
+export const getGeminiModels = () => {
   const envModel = process.env.AI_MODEL ? process.env.AI_MODEL.split('/').pop() : null;
   const models = [];
   if (envModel) {

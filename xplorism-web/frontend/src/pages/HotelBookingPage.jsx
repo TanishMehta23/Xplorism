@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Hotel, Search, Calendar, Users, Star, MapPin,
   Wifi, SlidersHorizontal, Check, ShieldAlert,
-  ArrowLeft, CheckCircle2, ChevronRight, Info
+  ArrowLeft, CheckCircle2, ChevronRight, Info,
+  Plane, Train, Bus, ExternalLink
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -102,7 +103,11 @@ export default function HotelBookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Search States
+  // Search & Travel Mode States
+  const [activeSearchTab, setActiveSearchTab] = useState('hotels'); // 'hotels', 'flights', 'trains', 'buses'
+  const [origin, setOrigin] = useState('');
+  const [flightsData, setFlightsData] = useState([]);
+  const [transitData, setTransitData] = useState([]);
   const [destination, setDestination] = useState('');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -273,17 +278,8 @@ export default function HotelBookingPage() {
   // Handle Search Submission
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
-    // Require all search fields to be filled
     if (!destination.trim()) {
       alert('Please enter a destination.');
-      return;
-    }
-    if (!checkIn || !checkOut) {
-      alert('Please select both check-in and check-out dates.');
-      return;
-    }
-    if (new Date(checkOut) <= new Date(checkIn)) {
-      alert('Check-out date must be after check-in date.');
       return;
     }
 
@@ -303,71 +299,77 @@ export default function HotelBookingPage() {
       }
 
       setMapCoords(centerCoords);
-
-      // Resolve and apply local currency based on destination country
       const cur = getCurrencyDetails(resolvedAddress);
       setCurrency(cur);
 
-      // 2. Fetch real hotel locations from Gemini AI proxy
-      let finalHotels = [];
-      try {
-        const geminiData = await api.get(`/hotels/search?destination=${encodeURIComponent(destination)}&lat=${centerCoords[0]}&lon=${centerCoords[1]}`);
+      if (activeSearchTab === 'flights') {
+        const flightsRes = await api.get(`/travel/flights?origin=${encodeURIComponent(origin || 'DEL')}&destination=${encodeURIComponent(destination)}&departureDate=${encodeURIComponent(checkIn)}&currency=${cur.code}`);
+        setFlightsData(Array.isArray(flightsRes) ? flightsRes : []);
+      } else if (activeSearchTab === 'trains' || activeSearchTab === 'buses') {
+        const mode = activeSearchTab === 'trains' ? 'train' : 'bus';
+        const transitRes = await api.get(`/travel/transit?origin=${encodeURIComponent(origin || 'Delhi')}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(checkIn)}&mode=${mode}&currency=${cur.code}`);
+        setTransitData(Array.isArray(transitRes) ? transitRes : []);
+      } else {
+        // Hotels Search
+        let finalHotels = [];
+        try {
+          const serpData = await api.get(`/travel/hotels?location=${encodeURIComponent(destination)}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${guests}&currency=${cur.code}`);
 
-        if (geminiData && geminiData.length > 0) {
-          finalHotels = geminiData.map((el, idx) => {
-            const tpl = HOTEL_TEMPLATES[idx % HOTEL_TEMPLATES.length];
+          if (Array.isArray(serpData) && serpData.length > 0) {
+            finalHotels = serpData.map((el, idx) => {
+              const tpl = HOTEL_TEMPLATES[idx % HOTEL_TEMPLATES.length];
+              return {
+                id: el.id || `hotel-serp-${idx}-${Date.now()}`,
+                name: el.name,
+                stars: el.stars || 4,
+                rating: el.rating || 8.9,
+                reviewsCount: el.reviewsCount || 420,
+                price: el.price || tpl.price,
+                amenities: el.amenities || tpl.amenities,
+                image: tpl.image,
+                description: el.description || tpl.description,
+                bookingUrl: el.bookingUrl || `https://www.google.com/travel/hotels/${encodeURIComponent(destination)}`,
+                provider: el.provider || 'Google Hotels',
+                lat: centerCoords[0] + (Math.random() - 0.5) * 0.015,
+                lon: centerCoords[1] + (Math.random() - 0.5) * 0.015,
+                distance: (Math.random() * 2 + 0.3).toFixed(1)
+              };
+            });
+          }
+        } catch (serpErr) {
+          console.warn('Google Travel Hotels fetch error, using template generation:', serpErr);
+        }
+
+        if (finalHotels.length === 0) {
+          const baseCity = destination.split(',')[0].trim();
+          finalHotels = HOTEL_TEMPLATES.map((tpl, idx) => {
+            const latOffset = (Math.random() - 0.5) * 0.015;
+            const lonOffset = (Math.random() - 0.5) * 0.015;
+
+            let name = tpl.name;
+            if (idx === 0) name = `The Ritz-Carlton ${baseCity}`;
+            else if (idx === 1) name = `${baseCity} Grand Plaza & Suites`;
+            else if (idx === 2) name = `${baseCity} Oasis Boutique Retreat`;
+            else if (idx === 3) name = `Urban Style Inn - ${baseCity}`;
+            else if (idx === 4) name = `Aura Premium ${baseCity} Lodge`;
+            else if (idx === 5) name = `${baseCity} Parkview Executive Hotel`;
+
             return {
-              id: el.hotelId || `hotel-gemini-${idx}-${Date.now()}`,
-              name: el.name,
-              stars: el.stars,
-              rating: el.rating,
-              reviewsCount: el.reviewsCount,
-              price: el.price,
-              amenities: el.amenities,
-              image: tpl.image, // Use premium templates for beautiful photos
-              description: el.description,
-              lat: el.geoCode ? el.geoCode.latitude : centerCoords[0],
-              lon: el.geoCode ? el.geoCode.longitude : centerCoords[1],
+              id: `hotel-${idx}-${Date.now()}`,
+              ...tpl,
+              name,
+              lat: centerCoords[0] + latOffset,
+              lon: centerCoords[1] + lonOffset,
               distance: (Math.random() * 2 + 0.3).toFixed(1)
             };
           });
         }
-      } catch (geminiErr) {
-        console.warn('Gemini hotels fetch failed, falling back to localized programmatically generated hotels:', geminiErr);
+        setHotels(finalHotels);
+        setFilteredHotels(finalHotels);
       }
-
-      // If Gemini returned no hotels, use localized programmatically generated fallback hotels
-      if (finalHotels.length === 0) {
-        const baseCity = destination.split(',')[0].trim();
-        finalHotels = HOTEL_TEMPLATES.map((tpl, idx) => {
-          const latOffset = (Math.random() - 0.5) * 0.015;
-          const lonOffset = (Math.random() - 0.5) * 0.015;
-
-          // Generate localized names
-          let name = tpl.name;
-          if (idx === 0) name = `The Ritz-Carlton ${baseCity}`;
-          else if (idx === 1) name = `${baseCity} Grand Plaza & Suites`;
-          else if (idx === 2) name = `${baseCity} Oasis Boutique Retreat`;
-          else if (idx === 3) name = `Urban Style Inn - ${baseCity}`;
-          else if (idx === 4) name = `Aura Premium ${baseCity} Lodge`;
-          else if (idx === 5) name = `${baseCity} Parkview Executive Hotel`;
-
-          return {
-            id: `hotel-${idx}-${Date.now()}`,
-            ...tpl,
-            name,
-            lat: centerCoords[0] + latOffset,
-            lon: centerCoords[1] + lonOffset,
-            distance: (Math.random() * 2 + 0.3).toFixed(1)
-          };
-        });
-      }
-
-      setHotels(finalHotels);
     } catch (err) {
       console.error('Search failed:', err);
-      // Fail-safe default coordinates
-      setMapCoords([48.8566, 2.3522]); // Paris
+      setMapCoords([48.8566, 2.3522]);
     } finally {
       setSearchLoading(false);
     }
@@ -375,13 +377,16 @@ export default function HotelBookingPage() {
 
   // Filter Hotels when filters change
   useEffect(() => {
-    if (hotels.length === 0) return;
+    if (hotels.length === 0) {
+      setFilteredHotels([]);
+      return;
+    }
 
     const filtered = hotels.filter(hotel => {
       const matchStars = hotel.stars >= minStars;
       const matchPrice = hotel.price <= maxPrice;
       const matchAmenities = selectedAmenities.every(amenity =>
-        hotel.amenities.includes(amenity)
+        (hotel.amenities || []).includes(amenity)
       );
       return matchStars && matchPrice && matchAmenities;
     });
@@ -593,10 +598,10 @@ export default function HotelBookingPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              Hotel Search & Booking
+              Travel & Booking Portal
             </h1>
             <p className="text-sm font-medium mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Find and reserve premium stays for your itineraries.
+              Powered by Groq AI & Google Travel — search hotels, flights, trains, and buses with real pricing.
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -611,13 +616,60 @@ export default function HotelBookingPage() {
           </div>
         </div>
 
+        {/* Mode Selector Tabs */}
+        <div className="flex items-center space-x-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
+          {[
+            { id: 'hotels', label: 'Hotels & Stays', icon: Hotel },
+            { id: 'flights', label: 'Flights', icon: Plane },
+            { id: 'trains', label: 'Trains', icon: Train },
+            { id: 'buses', label: 'Buses', icon: Bus }
+          ].map(tab => {
+            const IconComp = tab.icon;
+            const active = activeSearchTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setActiveSearchTab(tab.id);
+                }}
+                className={`flex items-center space-x-2 px-5 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer shadow-sm ${active
+                  ? 'bg-rose-600 text-white shadow-rose-500/20'
+                  : 'bg-[var(--bg-secondary)] border text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'}`}
+                style={{ borderColor: active ? '#e11d48' : 'var(--border-primary)' }}
+              >
+                <IconComp className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Search Bar Panel */}
         <div className="rounded-3xl border p-6 mb-8 shadow-md" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            {activeSearchTab !== 'hotels' && (
+              <div className="space-y-2 relative">
+                <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                  <MapPin className="h-3.5 w-3.5 text-rose-500" />
+                  <span>From (Origin)</span>
+                </label>
+                <input
+                  type="text"
+                  value={origin}
+                  onChange={(e) => setOrigin(e.target.value)}
+                  placeholder={activeSearchTab === 'flights' ? 'Airport or City (e.g. DEL)' : 'Origin City'}
+                  className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                  required
+                />
+              </div>
+            )}
+
             <div className="space-y-2 relative search-container">
               <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
                 <Search className="h-3.5 w-3.5 text-rose-500" />
-                <span>Destination</span>
+                <span>{activeSearchTab === 'hotels' ? 'Destination' : 'To (Destination)'}</span>
               </label>
               <div className="relative">
                 <input
@@ -688,7 +740,6 @@ export default function HotelBookingPage() {
                   onChange={(e) => setCheckIn(e.target.value)}
                   onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                   onFocus={(e) => { try { e.target.showPicker(); } catch (err) {} }}
-                  required
                   className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                 />
               </div>
@@ -713,7 +764,6 @@ export default function HotelBookingPage() {
                   onChange={(e) => setCheckOut(e.target.value)}
                   onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                   onFocus={(e) => { try { e.target.showPicker(); } catch (err) {} }}
-                  required
                   className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                 />
               </div>
@@ -763,12 +813,108 @@ export default function HotelBookingPage() {
         {!hasSearched ? (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
             <div className="p-4 rounded-full bg-rose-500/10 text-rose-500">
-              <Hotel className="h-12 w-12" />
+              {activeSearchTab === 'flights' ? <Plane className="h-12 w-12" /> :
+               activeSearchTab === 'trains' ? <Train className="h-12 w-12" /> :
+               activeSearchTab === 'buses' ? <Bus className="h-12 w-12" /> :
+               <Hotel className="h-12 w-12" />}
             </div>
-            <h2 className="text-xl font-bold">Find Your Next Premium Stay</h2>
-            <p className="text-sm max-w-sm" style={{ color: 'var(--text-secondary)' }}>
-              Type in a destination above to see available hotels, interactive maps, and book a room.
+            <h2 className="text-xl font-bold">
+              {activeSearchTab === 'flights' ? 'Search Google Flights' :
+               activeSearchTab === 'trains' ? 'Find Rail Schedules' :
+               activeSearchTab === 'buses' ? 'Find Intercity Buses' :
+               'Find Your Next Premium Stay'}
+            </h2>
+            <p className="text-sm max-w-md" style={{ color: 'var(--text-secondary)' }}>
+              Powered by Groq AI and Google Travel. Enter origin and destination above to see real pricing and direct booking links.
             </p>
+          </div>
+        ) : activeSearchTab === 'flights' ? (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">Available Flight Options</h2>
+              <span className="text-xs text-[var(--text-secondary)] font-medium">Powered by Groq AI & Google Flights</span>
+            </div>
+            {flightsData.length === 0 ? (
+              <p className="text-center py-10 text-sm text-[var(--text-secondary)]">No flight routes found. Try another search.</p>
+            ) : (
+              flightsData.map((f, i) => (
+                <div key={f.id || i} className="p-5 rounded-3xl border bg-[var(--bg-secondary)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ borderColor: 'var(--border-primary)' }}>
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 text-xl font-bold">
+                      {f.logo || '✈️'}
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold">{f.airline} <span className="text-xs font-semibold opacity-70">({f.flightNumber})</span></h4>
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">{f.departureTime} ➔ {f.arrivalTime} • {f.duration} • {f.stops}</p>
+                      <span className="inline-block mt-2 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600">
+                        {f.cabinClass || 'Economy'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 self-end md:self-auto">
+                    <div className="text-right">
+                      <span className="text-xs text-[var(--text-tertiary)] block">Fare Estimate</span>
+                      <span className="text-xl font-black text-rose-500">{f.currencySymbol || '$'}{f.price}</span>
+                    </div>
+                    <a
+                      href={f.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md"
+                    >
+                      <span>Book on Google Flights</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : activeSearchTab === 'trains' || activeSearchTab === 'buses' ? (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">{activeSearchTab === 'trains' ? 'Train Schedules' : 'Intercity Bus Schedules'}</h2>
+              <span className="text-xs text-[var(--text-secondary)] font-medium">Powered by Groq AI</span>
+            </div>
+            {transitData.length === 0 ? (
+              <p className="text-center py-10 text-sm text-[var(--text-secondary)]">No options found. Try another query.</p>
+            ) : (
+              transitData.map((t, i) => (
+                <div key={t.id || i} className="p-5 rounded-3xl border bg-[var(--bg-secondary)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ borderColor: 'var(--border-primary)' }}>
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500 text-xl font-bold">
+                      {activeSearchTab === 'trains' ? '🚆' : '🚌'}
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold">{t.operator} <span className="text-xs font-semibold opacity-70">({t.serviceNumber})</span></h4>
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">{t.departureTime} ➔ {t.arrivalTime} • {t.duration}</p>
+                      <div className="flex items-center space-x-2 mt-2">
+                        {(t.classOptions || []).map((c, idx) => (
+                          <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 self-end md:self-auto">
+                    <div className="text-right">
+                      <span className="text-xs text-[var(--text-tertiary)] block">From</span>
+                      <span className="text-xl font-black text-rose-500">{t.currencySymbol || '$'}{t.price}</span>
+                    </div>
+                    <a
+                      href={t.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md"
+                    >
+                      <span>Book Direct / Official</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         ) : (
           <>
@@ -984,16 +1130,32 @@ export default function HotelBookingPage() {
                             <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>/ night</span>
                           </div>
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setBookingHotel(hotel);
-                            }}
-                            className="bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-md active:scale-95 flex items-center space-x-1.5 cursor-pointer border-0"
-                          >
-                            <span>Book Now</span>
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            {hotel.bookingUrl && (
+                              <a
+                                href={hotel.bookingUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="bg-[var(--bg-tertiary)] hover:bg-[var(--bg-primary)] border text-[var(--text-primary)] font-bold text-[11px] px-3 py-2 rounded-xl transition flex items-center space-x-1"
+                                style={{ borderColor: 'var(--border-primary)' }}
+                              >
+                                <span>Google Hotels</span>
+                                <ExternalLink className="h-3 w-3 text-rose-500" />
+                              </a>
+                            )}
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setBookingHotel(hotel);
+                              }}
+                              className="bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-md active:scale-95 flex items-center space-x-1.5 cursor-pointer border-0"
+                            >
+                              <span>Book In-App</span>
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
 
                       </div>

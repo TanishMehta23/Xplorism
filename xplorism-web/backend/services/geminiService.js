@@ -200,19 +200,14 @@ const callOpenAICompatibleAPI = async (endpoint, apiKey, model, prompt, isJson) 
  * Get ordered unique list of Gemini models to try (primary + backups)
  */
 export const getGeminiModels = () => {
-  const envModel = process.env.AI_MODEL ? process.env.AI_MODEL.split('/').pop() : null;
   const models = [];
-  if (envModel) {
-    if (envModel === 'gemini-1.5-flash' || envModel === 'gemini-2.0-flash') {
-      models.push('gemini-3.5-flash');
-    } else {
-      models.push(envModel);
-    }
+  if (process.env.AI_MODEL) {
+    const custom = process.env.AI_MODEL.replace(/^gemini\//, '').trim();
+    if (custom) models.push(custom);
   }
-  // Add active, supported Gemini models
-  models.push('gemini-3.5-flash');
-  models.push('gemini-2.5-pro');
-  models.push('gemini-3.6-flash');
+  // Active supported official Gemini models
+  models.push('gemini-1.5-flash');
+  models.push('gemini-1.5-pro');
   return [...new Set(models)];
 };
 
@@ -306,7 +301,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
   // 2. Try Groq
   if (!itineraryResult && process.env.GROQ_API_KEY) {
     console.log('Gemini failed or missing. Attempting Groq cloud fallback...');
-    const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    const groqModels = [process.env.GROQ_MODEL || 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
     for (const model of groqModels) {
       try {
         console.log(`Attempting Groq itinerary generation with model: ${model}`);

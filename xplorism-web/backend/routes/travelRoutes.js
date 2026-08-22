@@ -31,7 +31,7 @@ router.get('/hotels', async (req, res) => {
 // GET /travel/flights?origin=DEL&destination=BOM&departureDate=2026-09-01&returnDate=2026-09-05&travelers=1&currency=USD
 router.get('/flights', async (req, res) => {
   try {
-    const { origin, destination, departureDate, returnDate, travelers, currency } = req.query;
+    const { origin, destination, departureDate, returnDate, tripType, travelers, currency } = req.query;
     if (!origin || !destination) {
       return res.status(400).json({ message: 'Both origin and destination query parameters are required' });
     }
@@ -40,6 +40,7 @@ router.get('/flights', async (req, res) => {
       destination,
       departureDate,
       returnDate,
+      tripType,
       travelers: travelers ? parseInt(travelers, 10) : 1,
       currency: currency || 'USD'
     });
@@ -53,7 +54,7 @@ router.get('/flights', async (req, res) => {
 // GET /travel/transit?origin=Delhi&destination=Agra&date=2026-09-01&mode=train&currency=USD
 router.get('/transit', async (req, res) => {
   try {
-    const { origin, destination, date, mode, currency } = req.query;
+    const { origin, destination, date, returnDate, tripType, mode, currency } = req.query;
     if (!origin || !destination) {
       return res.status(400).json({ message: 'Both origin and destination query parameters are required' });
     }
@@ -61,6 +62,8 @@ router.get('/transit', async (req, res) => {
       origin,
       destination,
       date,
+      returnDate,
+      tripType,
       mode: mode || 'train',
       currency: currency || 'USD'
     });

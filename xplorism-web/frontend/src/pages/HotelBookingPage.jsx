@@ -109,13 +109,17 @@ export default function HotelBookingPage() {
   const [flightsData, setFlightsData] = useState([]);
   const [transitData, setTransitData] = useState([]);
   const [destination, setDestination] = useState('');
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [tripType, setTripType] = useState('oneway'); // 'oneway' or 'roundtrip'
+  const [flightDepartureDate, setFlightDepartureDate] = useState('');
+  const [flightReturnDate, setFlightReturnDate] = useState('');
   const [guests, setGuests] = useState('2');
+  const [rooms, setRooms] = useState('1');
   const [hasSearched, setHasSearched] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [originSuggestions, setOriginSuggestions] = useState([]);
+  const [showOriginSuggestions, setShowOriginSuggestions] = useState(false);
   const [currency, setCurrency] = useState({ symbol: '$', rate: 1, code: 'USD' });
 
   // Fetch autocomplete suggestions for destination
@@ -138,11 +142,34 @@ export default function HotelBookingPage() {
     return () => clearTimeout(delayDebounce);
   }, [destination]);
 
+  // Fetch autocomplete suggestions for origin
+  useEffect(() => {
+    if (origin.trim().length < 2) {
+      setOriginSuggestions([]);
+      return;
+    }
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const data = await api.get(`/geocode?q=${encodeURIComponent(origin)}`);
+        if (data && data.length > 0) {
+          setOriginSuggestions(data.slice(0, 6));
+        }
+      } catch (err) {
+        console.error('Origin autocomplete error:', err);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [origin]);
+
   // Click outside listener for suggestions dropdown
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (!e.target.closest('.search-container')) {
         setShowSuggestions(false);
+      }
+      if (!e.target.closest('.search-origin-container')) {
+        setShowOriginSuggestions(false);
       }
     };
     document.addEventListener('click', handleOutsideClick);
@@ -184,7 +211,7 @@ export default function HotelBookingPage() {
   }, []);
   const [guestName, setGuestName] = useState(user?.name || '');
   const [guestEmail, setGuestEmail] = useState(user?.email || '');
-  const [roomType, setRoomType] = useState('deluxe');
+  const [roomType, setRoomType] = useState('standard');
   const [bookingConfirm, setBookingConfirm] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
@@ -227,12 +254,12 @@ export default function HotelBookingPage() {
       });
   }, []);
 
-  // Auto-search hotels when destination is set on mount
+  // Auto-search travel options when destination or active search tab changes
   useEffect(() => {
-    if (destination && !hasSearched) {
+    if (destination) {
       handleSearch();
     }
-  }, [destination]);
+  }, [destination, activeSearchTab]);
 
   useEffect(() => {
     if (mobileTab === 'map' && mapInstance) {
@@ -318,19 +345,21 @@ export default function HotelBookingPage() {
       setCurrency(cur);
 
       if (activeSearchTab === 'flights') {
-        const flightsRes = await api.get(`/travel/flights?origin=${encodeURIComponent(origin || 'DEL')}&destination=${encodeURIComponent(destination)}&departureDate=${encodeURIComponent(checkIn)}&currency=${cur.code}`);
+        const queryOrigin = origin.trim() || 'New Delhi';
+        const flightsRes = await api.get(`/travel/flights?origin=${encodeURIComponent(queryOrigin)}&destination=${encodeURIComponent(destination)}&departureDate=${encodeURIComponent(flightDepartureDate)}&returnDate=${encodeURIComponent(flightReturnDate)}&tripType=${encodeURIComponent(tripType)}&currency=${cur.code}`);
         setFlightsData(Array.isArray(flightsRes) ? flightsRes : []);
       } else if (activeSearchTab === 'trains' || activeSearchTab === 'buses') {
         const mode = activeSearchTab === 'trains' ? 'train' : 'bus';
-        const transitRes = await api.get(`/travel/transit?origin=${encodeURIComponent(origin || 'Delhi')}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(checkIn)}&mode=${mode}&currency=${cur.code}`);
+        const queryOrigin = origin.trim() || 'Delhi';
+        const transitRes = await api.get(`/travel/transit?origin=${encodeURIComponent(queryOrigin)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(flightDepartureDate)}&mode=${mode}&currency=${cur.code}`);
         setTransitData(Array.isArray(transitRes) ? transitRes : []);
       } else {
         // Hotels Search
         let finalHotels = [];
         try {
-          const serpData = await api.get(`/travel/hotels?location=${encodeURIComponent(destination)}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${guests}&currency=${cur.code}`);
+          const serpData = await api.get(`/travel/hotels?location=${encodeURIComponent(destination)}&currency=${cur.code}`);
 
-          if (Array.isArray(serpData) && serpData.length > 0) {
+          if (Array.isArray(serpData)) {
             finalHotels = serpData.map((el, idx) => {
               const tpl = HOTEL_TEMPLATES[idx % HOTEL_TEMPLATES.length];
               return {
@@ -352,33 +381,9 @@ export default function HotelBookingPage() {
             });
           }
         } catch (serpErr) {
-          console.warn('Google Travel Hotels fetch error, using template generation:', serpErr);
+          console.warn('Google Travel Hotels fetch error:', serpErr);
         }
 
-        if (finalHotels.length === 0) {
-          const baseCity = destination.split(',')[0].trim();
-          finalHotels = HOTEL_TEMPLATES.map((tpl, idx) => {
-            const latOffset = (Math.random() - 0.5) * 0.015;
-            const lonOffset = (Math.random() - 0.5) * 0.015;
-
-            let name = tpl.name;
-            if (idx === 0) name = `The Ritz-Carlton ${baseCity}`;
-            else if (idx === 1) name = `${baseCity} Grand Plaza & Suites`;
-            else if (idx === 2) name = `${baseCity} Oasis Boutique Retreat`;
-            else if (idx === 3) name = `Urban Style Inn - ${baseCity}`;
-            else if (idx === 4) name = `Aura Premium ${baseCity} Lodge`;
-            else if (idx === 5) name = `${baseCity} Parkview Executive Hotel`;
-
-            return {
-              id: `hotel-${idx}-${Date.now()}`,
-              ...tpl,
-              name,
-              lat: centerCoords[0] + latOffset,
-              lon: centerCoords[1] + lonOffset,
-              distance: (Math.random() * 2 + 0.3).toFixed(1)
-            };
-          });
-        }
         setHotels(finalHotels);
         setFilteredHotels(finalHotels);
       }
@@ -532,10 +537,10 @@ export default function HotelBookingPage() {
       return;
     }
 
-    setBookingLoading(true);
-
-    const rawUSDPrice = bookingHotel.price * (roomType === 'deluxe' ? 1.2 : roomType === 'suite' ? 1.6 : 1);
-    const finalLocalPrice = Math.round(rawUSDPrice * currency.rate);
+    const numRooms = parseInt(rooms) || 1;
+    const nights = Math.max(1, Math.ceil(Math.abs(new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)));
+    const rawUSDPrice = bookingHotel.price * numRooms;
+    const finalLocalPrice = Math.round(rawUSDPrice * nights);
 
     // If Razorpay SDK is not loaded, fallback to normal booking confirmation
     // Navigate to mock payment page to simulate Razorpay-like checkout
@@ -543,8 +548,10 @@ export default function HotelBookingPage() {
       bookingHotel,
       rawUSDPrice,
       finalLocalPrice,
+      nights,
+      rooms: numRooms,
       currency,
-      roomType: roomType === 'deluxe' ? 'Deluxe King Room' : roomType === 'suite' ? 'Executive Suite' : 'Standard Room',
+      roomType: 'Standard Room',
       guests,
       checkIn,
       checkOut,
@@ -661,155 +668,177 @@ export default function HotelBookingPage() {
         </div>
 
         {/* Search Bar Panel */}
-        <div className="rounded-3xl border p-6 mb-8 shadow-md" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
-          <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            {activeSearchTab !== 'hotels' && (
-              <div className="space-y-2 relative">
-                <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                  <MapPin className="h-3.5 w-3.5 text-rose-500" />
-                  <span>From (Origin)</span>
-                </label>
-                <input
-                  type="text"
-                  value={origin}
-                  onChange={(e) => setOrigin(e.target.value)}
-                  placeholder={activeSearchTab === 'flights' ? 'Airport or City (e.g. DEL)' : 'Origin City'}
-                  className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
-                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
-                  required
-                />
+        <div className="rounded-3xl border p-6 mb-8 shadow-xl bg-[var(--bg-secondary)] backdrop-blur-xl transition-all" style={{ borderColor: 'var(--border-primary)' }}>
+          <form onSubmit={handleSearch} className="space-y-4">
+            {activeSearchTab === 'flights' && (
+              <div className="flex items-center space-x-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setTripType('oneway')}
+                  className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer border ${tripType === 'oneway' ? 'bg-rose-600 border-rose-600 text-white shadow-md' : 'bg-[var(--bg-primary)] text-[var(--text-secondary)]'}`}
+                  style={{ borderColor: tripType === 'oneway' ? '#e11d48' : 'var(--border-primary)' }}
+                >
+                  One-Way
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTripType('roundtrip')}
+                  className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer border ${tripType === 'roundtrip' ? 'bg-rose-600 border-rose-600 text-white shadow-md' : 'bg-[var(--bg-primary)] text-[var(--text-secondary)]'}`}
+                  style={{ borderColor: tripType === 'roundtrip' ? '#e11d48' : 'var(--border-primary)' }}
+                >
+                  Round-Trip
+                </button>
               </div>
             )}
+            <div className="flex flex-col md:flex-row items-stretch md:items-end gap-4">
+              {activeSearchTab !== 'hotels' && (
+                <div className="space-y-2 relative search-origin-container flex-1">
+                  <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                    <MapPin className="h-3.5 w-3.5 text-rose-500" />
+                    <span>From (Origin)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={origin}
+                      onChange={(e) => {
+                        setOrigin(e.target.value);
+                        setShowOriginSuggestions(true);
+                      }}
+                      onFocus={() => setShowOriginSuggestions(true)}
+                      placeholder={activeSearchTab === 'flights' ? 'Airport or City (e.g. DEL or Delhi)' : 'Origin City (e.g. Delhi)'}
+                      className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
+                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
 
-            <div className="space-y-2 relative search-container">
-              <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                <Search className="h-3.5 w-3.5 text-rose-500" />
-                <span>{activeSearchTab === 'hotels' ? 'Destination' : 'To (Destination)'}</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={destination}
-                  onChange={(e) => {
-                    setDestination(e.target.value);
-                    setShowSuggestions(true);
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  placeholder="Where are you going?"
-                  className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
-                  style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
-                  required
-                />
-              </div>
-
-              {/* Autocomplete Suggestions */}
-              <AnimatePresence>
-                {showSuggestions && suggestions.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute left-0 right-0 mt-2 z-40 max-h-52 overflow-y-auto border rounded-2xl shadow-xl divide-y backdrop-blur-md"
-                    style={{
-                      backgroundColor: 'var(--bg-secondary)',
-                      borderColor: 'var(--border-primary)',
-                      color: 'var(--text-primary)'
-                    }}
-                  >
-                    {suggestions.map((item) => (
-                      <button
-                        key={item.place_id}
-                        type="button"
-                        onClick={() => {
-                          setDestination(item.display_name);
-                          setShowSuggestions(false);
+                  {/* Origin Autocomplete Suggestions */}
+                  <AnimatePresence>
+                    {showOriginSuggestions && originSuggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute left-0 right-0 mt-2 z-40 max-h-52 overflow-y-auto border rounded-2xl shadow-xl divide-y backdrop-blur-md"
+                        style={{
+                          backgroundColor: 'var(--bg-secondary)',
+                          borderColor: 'var(--border-primary)',
+                          color: 'var(--text-primary)'
                         }}
-                        className="w-full text-left px-5 py-3 hover:bg-[var(--bg-tertiary)] transition text-xs flex items-center space-x-2 font-semibold"
-                        style={{ color: 'var(--text-primary)' }}
                       >
-                        <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                        <span className="truncate">{item.display_name}</span>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                <Calendar className="h-3.5 w-3.5 text-rose-500" />
-                <span>Check-In</span>
-              </label>
-              <div className="relative">
-                {/* Visual backdrop card */}
-                <div className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center justify-between transition-all select-none cursor-pointer hover:border-rose-300"
-                     style={{ borderColor: 'var(--border-primary)', color: checkIn ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
-                  <span>{checkIn ? new Date(checkIn).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Select check-in date'}</span>
-                  <Calendar className="h-4 w-4 text-rose-500 shrink-0" />
+                        {originSuggestions.map((item) => (
+                          <button
+                            key={item.place_id}
+                            type="button"
+                            onClick={() => {
+                              setOrigin(item.display_name);
+                              setShowOriginSuggestions(false);
+                            }}
+                            className="w-full text-left px-5 py-3 hover:bg-[var(--bg-tertiary)] transition text-xs flex items-center space-x-2 font-semibold"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                            <span className="truncate">{item.display_name}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                {/* Real input layered on top */}
-                <input
-                  type="date"
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
-                  onFocus={(e) => { try { e.target.showPicker(); } catch (err) {} }}
-                  className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
-                />
-              </div>
-            </div>
+              )}
 
-            <div className="space-y-2">
-              <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                <Calendar className="h-3.5 w-3.5 text-rose-500" />
-                <span>Check-Out</span>
-              </label>
-              <div className="relative">
-                {/* Visual backdrop card */}
-                <div className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center justify-between transition-all select-none cursor-pointer hover:border-rose-300"
-                     style={{ borderColor: 'var(--border-primary)', color: checkOut ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
-                  <span>{checkOut ? new Date(checkOut).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Select check-out date'}</span>
-                  <Calendar className="h-4 w-4 text-rose-500 shrink-0" />
-                </div>
-                {/* Real input layered on top */}
-                <input
-                  type="date"
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
-                  onFocus={(e) => { try { e.target.showPicker(); } catch (err) {} }}
-                  className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <div className="space-y-2 flex-1">
+              <div className="space-y-2 relative search-container flex-1">
                 <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                  <Users className="h-3.5 w-3.5 text-rose-500" />
-                  <span>Guests</span>
+                  <Search className="h-3.5 w-3.5 text-rose-500" />
+                  <span>{activeSearchTab === 'hotels' ? 'Search Destination' : 'To (Destination)'}</span>
                 </label>
                 <div className="relative">
-                  <select
-                    value={guests}
-                    onChange={(e) => setGuests(e.target.value)}
-                    className="w-full bg-[var(--bg-primary)] border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all cursor-pointer"
+                  <input
+                    type="text"
+                    value={destination}
+                    onChange={(e) => {
+                      setDestination(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    placeholder="Where are you going? (e.g. Goa, Tokyo, Paris)"
+                    className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
                     style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
-                  >
-                    <option value="1">1 Guest</option>
-                    <option value="2">2 Guests</option>
-                    <option value="3">3 Guests</option>
-                    <option value="4">4 Guests</option>
-                    <option value="5+">5+ Guests</option>
-                  </select>
+                    required
+                  />
                 </div>
+
+                {/* Autocomplete Suggestions */}
+                <AnimatePresence>
+                  {showSuggestions && suggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute left-0 right-0 mt-2 z-40 max-h-52 overflow-y-auto border rounded-2xl shadow-xl divide-y backdrop-blur-md"
+                      style={{
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderColor: 'var(--border-primary)',
+                        color: 'var(--text-primary)'
+                      }}
+                    >
+                      {suggestions.map((item) => (
+                        <button
+                          key={item.place_id}
+                          type="button"
+                          onClick={() => {
+                            setDestination(item.display_name);
+                            setShowSuggestions(false);
+                          }}
+                          className="w-full text-left px-5 py-3 hover:bg-[var(--bg-tertiary)] transition text-xs flex items-center space-x-2 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                          <span className="truncate">{item.display_name}</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+              {activeSearchTab !== 'hotels' && (
+                <>
+                  <div className="space-y-2 flex-1">
+                    <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                      <Calendar className="h-3.5 w-3.5 text-rose-500" />
+                      <span>Departure Date</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={flightDepartureDate}
+                      onChange={(e) => setFlightDepartureDate(e.target.value)}
+                      className="w-full bg-[var(--bg-primary)] border rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all shadow-inner cursor-pointer"
+                      style={{ borderColor: 'var(--border-primary)', color: flightDepartureDate ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
+                    />
+                  </div>
+
+                  {activeSearchTab === 'flights' && tripType === 'roundtrip' && (
+                    <div className="space-y-2 flex-1">
+                      <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                        <Calendar className="h-3.5 w-3.5 text-rose-500" />
+                        <span>Return Date</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={flightReturnDate}
+                        onChange={(e) => setFlightReturnDate(e.target.value)}
+                        className="w-full bg-[var(--bg-primary)] border rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all shadow-inner cursor-pointer"
+                        style={{ borderColor: 'var(--border-primary)', color: flightReturnDate ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
 
               <button
                 type="submit"
                 disabled={searchLoading}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm px-6 py-2.5 rounded-xl transition shadow-md flex items-center justify-center space-x-2 active:scale-95 disabled:opacity-50 cursor-pointer h-[42px] self-end"
+                className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm px-8 py-3 rounded-2xl transition shadow-lg shadow-rose-600/20 flex items-center justify-center space-x-2 active:scale-95 disabled:opacity-50 cursor-pointer h-[46px] self-end border-0 shrink-0"
               >
                 {searchLoading ? (
                   <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -888,43 +917,61 @@ export default function HotelBookingPage() {
         ) : activeSearchTab === 'trains' || activeSearchTab === 'buses' ? (
           <div className="space-y-4 max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">{activeSearchTab === 'trains' ? 'Train Schedules' : 'Intercity Bus Schedules'}</h2>
-              <span className="text-xs text-[var(--text-secondary)] font-medium">Powered by Groq AI</span>
+              <h2 className="text-lg font-black">{activeSearchTab === 'trains' ? 'Available Train Schedules' : 'Available Intercity Bus Routes'}</h2>
+              <span className="text-xs text-[var(--text-secondary)] font-extrabold">Powered by Groq AI & Real-Time Aggregator</span>
             </div>
             {transitData.length === 0 ? (
-              <p className="text-center py-10 text-sm text-[var(--text-secondary)]">No options found. Try another query.</p>
+              <div className="rounded-3xl border border-dashed p-12 text-center space-y-3 bg-[var(--bg-secondary)]" style={{ borderColor: 'var(--border-primary)' }}>
+                <ShieldAlert className="h-8 w-8 text-amber-500 mx-auto" />
+                <h4 className="text-base font-extrabold">No Direct Routes Available</h4>
+                <p className="text-xs max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
+                  {activeSearchTab === 'trains' 
+                    ? `No direct railway stations or train tracks connect ${origin || 'Origin'} and ${destination}. Try searching for nearby major junction stations or switch to Buses/Flights.`
+                    : `No direct bus service operates on this route. Try adjusting your origin or destination.`}
+                </p>
+              </div>
             ) : (
               transitData.map((t, i) => (
-                <div key={t.id || i} className="p-5 rounded-3xl border bg-[var(--bg-secondary)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ borderColor: 'var(--border-primary)' }}>
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500 text-xl font-bold">
+                <div key={t.id || i} className="p-5.5 rounded-3xl border bg-[var(--bg-secondary)] shadow-lg hover:shadow-xl transition-all flex flex-col md:flex-row md:items-center justify-between gap-5" style={{ borderColor: 'var(--border-primary)' }}>
+                  <div className="flex items-start space-x-4">
+                    <div className="p-3.5 rounded-2xl bg-indigo-500/10 text-indigo-500 text-2xl font-black shrink-0 border border-indigo-500/20">
                       {activeSearchTab === 'trains' ? '🚆' : '🚌'}
                     </div>
-                    <div>
-                      <h4 className="text-base font-extrabold">{t.operator} <span className="text-xs font-semibold opacity-70">({t.serviceNumber})</span></h4>
-                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">{t.departureTime} ➔ {t.arrivalTime} • {t.duration}</p>
-                      <div className="flex items-center space-x-2 mt-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="text-base font-black text-[var(--text-primary)]">{t.operator}</h4>
+                        <span className="text-xs font-mono font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">
+                          {t.serviceNumber}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-[var(--text-secondary)] flex items-center space-x-2">
+                        <span>{t.departureTime} ({t.origin || origin})</span>
+                        <span className="text-rose-500 font-bold">➔</span>
+                        <span>{t.arrivalTime} ({t.destination || destination})</span>
+                        <span className="text-[11px] opacity-60">({t.duration})</span>
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
                         {(t.classOptions || []).map((c, idx) => (
-                          <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
+                          <span key={idx} className="text-[10px] font-extrabold px-2.5 py-1 rounded-xl bg-[var(--bg-primary)] border text-[var(--text-secondary)]" style={{ borderColor: 'var(--border-primary)' }}>
                             {c}
                           </span>
                         ))}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 self-end md:self-auto">
+                  <div className="flex items-center space-x-4 self-end md:self-auto shrink-0">
                     <div className="text-right">
-                      <span className="text-xs text-[var(--text-tertiary)] block">From</span>
-                      <span className="text-xl font-black text-rose-500">{t.currencySymbol || '$'}{t.price}</span>
+                      <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider block">Fare Starts From</span>
+                      <span className="text-2xl font-black text-rose-500">{t.currencySymbol || currency.symbol}{Math.round(t.price)}</span>
                     </div>
                     <a
                       href={t.bookingUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md"
+                      className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-xs px-5 py-3 rounded-2xl transition shadow-lg shadow-indigo-600/20 active:scale-95 border-0"
                     >
-                      <span>Book Direct / Official</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>{activeSearchTab === 'trains' ? 'IRCTC / Direct Booking' : 'RedBus / Book Direct'}</span>
+                      <ExternalLink className="h-4 w-4" />
                     </a>
                   </div>
                 </div>
@@ -1086,35 +1133,35 @@ export default function HotelBookingPage() {
                       key={hotel.id}
                       id={`hotel-card-${hotel.id}`}
                       onClick={() => setSelectedHotel(hotel)}
-                      className={`rounded-3xl border overflow-hidden shadow-md hover:shadow-xl grid grid-cols-1 md:grid-cols-3 gap-5 p-4 transition-all duration-300 cursor-pointer ${selectedHotel?.id === hotel.id
-                          ? 'ring-2 ring-rose-500 border-transparent scale-[1.01]'
-                          : 'hover:border-rose-300'
+                      className={`rounded-3xl border overflow-hidden shadow-lg hover:shadow-2xl grid grid-cols-1 md:grid-cols-12 gap-5 p-4.5 transition-all duration-300 cursor-pointer ${selectedHotel?.id === hotel.id
+                          ? 'ring-2 ring-rose-500 border-transparent bg-[var(--bg-secondary)] shadow-rose-500/10'
+                          : 'hover:border-rose-400/50 bg-[var(--bg-secondary)]'
                         }`}
-                      style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+                      style={{ borderColor: 'var(--border-primary)' }}
                     >
                       {/* Hotel Thumbnail */}
-                      <div className="col-span-1 h-36 rounded-2xl overflow-hidden relative shrink-0 bg-[var(--bg-tertiary)] flex items-center justify-center">
+                      <div className="md:col-span-4 h-40 rounded-2xl overflow-hidden relative shrink-0 bg-[var(--bg-tertiary)] group">
                         <img
                           src={hotel.image}
                           alt={hotel.name}
-                          className="w-full h-full object-cover hover:scale-105 transition-all duration-500 text-transparent"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500 text-transparent"
                         />
-                        <div className="absolute top-2 left-2 bg-slate-900/70 backdrop-blur-md border border-white/10 text-white px-2 py-0.5 rounded-lg text-[10px] font-bold">
-                          {hotel.distance} km from center
+                        <div className="absolute top-2.5 left-2.5 bg-black/60 backdrop-blur-md border border-white/20 text-white px-2.5 py-1 rounded-xl text-[10px] font-extrabold tracking-wide">
+                          📍 {hotel.distance} km from center
                         </div>
                       </div>
 
                       {/* Details Box */}
-                      <div className="col-span-1 md:col-span-2 flex flex-col justify-between space-y-3">
-                        <div className="space-y-1">
+                      <div className="md:col-span-8 flex flex-col justify-between space-y-3">
+                        <div className="space-y-1.5">
                           <div className="flex items-start justify-between gap-2">
-                            <h3 className="text-base font-extrabold leading-tight" style={{ color: 'var(--text-primary)' }}>{hotel.name}</h3>
-                            <div className="flex items-center space-x-1 bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded-lg text-xs font-bold shrink-0 border border-rose-500/10">
-                              <Star className="h-3 w-3 fill-current" />
-                              <span>{hotel.stars}</span>
+                            <h3 className="text-base font-black leading-snug tracking-tight" style={{ color: 'var(--text-primary)' }}>{hotel.name}</h3>
+                            <div className="flex items-center space-x-1 bg-amber-500/10 text-amber-500 px-2.5 py-1 rounded-xl text-xs font-black shrink-0 border border-amber-500/20">
+                              <Star className="h-3.5 w-3.5 fill-current" />
+                              <span>{hotel.stars}★</span>
                             </div>
                           </div>
-                          <p className="text-xs line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                          <p className="text-xs line-clamp-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                             {hotel.description}
                           </p>
                         </div>
@@ -1124,25 +1171,25 @@ export default function HotelBookingPage() {
                           {hotel.amenities.slice(0, 4).map((a, idx) => (
                             <span
                               key={idx}
-                              className="text-[10px] px-2 py-0.5 rounded-lg bg-[var(--bg-primary)] border font-semibold flex items-center space-x-1"
+                              className="text-[10px] px-2.5 py-1 rounded-xl bg-[var(--bg-primary)] border font-bold flex items-center space-x-1"
                               style={{ borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
                             >
-                              {a === 'WiFi' && <Wifi className="h-2.5 w-2.5" />}
+                              {a === 'WiFi' && <Wifi className="h-3 w-3 text-rose-500" />}
                               <span>{a}</span>
                             </span>
                           ))}
                           {hotel.amenities.length > 4 && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-lg bg-[var(--bg-primary)] border font-semibold" style={{ borderColor: 'var(--border-primary)', color: 'var(--text-tertiary)' }}>
+                            <span className="text-[10px] px-2.5 py-1 rounded-xl bg-[var(--bg-primary)] border font-bold" style={{ borderColor: 'var(--border-primary)', color: 'var(--text-tertiary)' }}>
                               +{hotel.amenities.length - 4} more
                             </span>
                           )}
                         </div>
 
                         {/* Price & Booking trigger */}
-                        <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+                        <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: 'var(--border-primary)' }}>
                           <div className="flex items-baseline space-x-1">
-                            <span className="text-lg font-black text-rose-500">{hotel.currencySymbol || currency.symbol}{Math.round(hotel.price)}</span>
-                            <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>/ night</span>
+                            <span className="text-xl font-black text-rose-500">{hotel.currencySymbol || currency.symbol}{Math.round(hotel.price)}</span>
+                            <span className="text-[11px] font-semibold text-[var(--text-tertiary)]">/ night</span>
                           </div>
 
                           <div className="flex items-center space-x-2">
@@ -1152,20 +1199,21 @@ export default function HotelBookingPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                className="bg-[var(--bg-tertiary)] hover:bg-[var(--bg-primary)] border text-[var(--text-primary)] font-bold text-[11px] px-3 py-2 rounded-xl transition flex items-center space-x-1"
+                                className="bg-[var(--bg-tertiary)] hover:bg-[var(--bg-primary)] border text-[var(--text-primary)] font-extrabold text-[11px] px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-sm"
                                 style={{ borderColor: 'var(--border-primary)' }}
                               >
                                 <span>Google Hotels</span>
-                                <ExternalLink className="h-3 w-3 text-rose-500" />
+                                <ExternalLink className="h-3.5 w-3.5 text-rose-500" />
                               </a>
                             )}
 
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                setRoomType('standard');
                                 setBookingHotel(hotel);
                               }}
-                              className="bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-md active:scale-95 flex items-center space-x-1.5 cursor-pointer border-0"
+                              className="bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 text-white font-black text-xs px-4.5 py-2.5 rounded-xl transition shadow-lg shadow-rose-500/20 active:scale-95 flex items-center space-x-1.5 cursor-pointer border-0"
                             >
                               <span>Book In-App</span>
                               <ChevronRight className="h-3.5 w-3.5" />
@@ -1262,20 +1310,6 @@ export default function HotelBookingPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Room Type</label>
-                  <select
-                    value={roomType}
-                    onChange={(e) => setRoomType(e.target.value)}
-                    className="w-full bg-[var(--bg-primary)] border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-rose-500"
-                    style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
-                  >
-                    <option value="standard">Standard Queen Room - {currency.symbol}{Math.round(bookingHotel.price * currency.rate)}/night</option>
-                    <option value="deluxe">Deluxe King Room - {currency.symbol}{Math.round(bookingHotel.price * 1.2 * currency.rate)}/night</option>
-                    <option value="suite">Executive Suite (Park View) - {currency.symbol}{Math.round(bookingHotel.price * 1.6 * currency.rate)}/night</option>
-                  </select>
-                </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Guest Name</label>
@@ -1298,6 +1332,38 @@ export default function HotelBookingPage() {
                       style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                       required
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Guests</label>
+                    <select
+                      value={guests}
+                      onChange={(e) => setGuests(e.target.value)}
+                      className="w-full bg-[var(--bg-primary)] border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-rose-500 cursor-pointer"
+                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                    >
+                      <option value="1">1 Guest</option>
+                      <option value="2">2 Guests</option>
+                      <option value="3">3 Guests</option>
+                      <option value="4">4 Guests</option>
+                      <option value="5+">5+ Guests</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Number of Rooms</label>
+                    <select
+                      value={rooms}
+                      onChange={(e) => setRooms(e.target.value)}
+                      className="w-full bg-[var(--bg-primary)] border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-rose-500 cursor-pointer"
+                      style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                    >
+                      <option value="1">1 Room</option>
+                      <option value="2">2 Rooms</option>
+                      <option value="3">3 Rooms</option>
+                      <option value="4+">4+ Rooms</option>
+                    </select>
                   </div>
                 </div>
 
@@ -1339,8 +1405,8 @@ export default function HotelBookingPage() {
                 {/* Price Summary Breakdown */}
                 <div className="rounded-2xl p-4 bg-[var(--bg-primary)] border space-y-2 mt-2" style={{ borderColor: 'var(--border-primary)' }}>
                   <div className="flex items-center justify-between text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                    <span>Room Rate</span>
-                    <span>{currency.symbol}{Math.round((roomType === 'deluxe' ? bookingHotel.price * 1.2 : roomType === 'suite' ? bookingHotel.price * 1.6 : bookingHotel.price) * currency.rate)} / night</span>
+                    <span>Room Rate ({rooms} Room{parseInt(rooms) > 1 ? 's' : ''})</span>
+                    <span>{bookingHotel.currencySymbol || currency.symbol}{Math.round(bookingHotel.price * (parseInt(rooms) || 1))} / night</span>
                   </div>
                   <div className="flex items-center justify-between text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
                     <span>Azure Service Fee</span>
@@ -1349,7 +1415,7 @@ export default function HotelBookingPage() {
                   <hr style={{ borderColor: 'var(--border-primary)' }} />
                   <div className="flex items-center justify-between text-sm font-extrabold">
                     <span>Est. Nightly Total</span>
-                    <span className="text-rose-500">{currency.symbol}{Math.round((roomType === 'deluxe' ? bookingHotel.price * 1.2 : roomType === 'suite' ? bookingHotel.price * 1.6 : bookingHotel.price) * currency.rate)}</span>
+                    <span className="text-rose-500">{bookingHotel.currencySymbol || currency.symbol}{Math.round(bookingHotel.price * (parseInt(rooms) || 1))}</span>
                   </div>
                 </div>
 
@@ -1413,8 +1479,8 @@ export default function HotelBookingPage() {
                           <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{b.roomType} • {b.guests} guest(s)</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-extrabold text-rose-500">{currency.symbol}{Math.round((b.price || 0) * currency.rate)}</div>
-                          <div className="text-[11px] text-[var(--text-secondary)]">Ref: {b.confirmationNumber}</div>
+                          <div className="font-extrabold text-rose-500 text-base">{b.currencySymbol || currency.symbol}{Math.round(b.price || 0).toLocaleString()}</div>
+                          <div className="text-[11px] text-[var(--text-tertiary)]">Ref: {b.confirmationNumber}</div>
                         </div>
                       </div>
                       <div className="mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -1434,73 +1500,114 @@ export default function HotelBookingPage() {
       {/* Animated Success Confirmation Modal */}
       <AnimatePresence>
         {bookingConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)' }}>
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="rounded-3xl border p-6 max-w-md w-full shadow-2xl relative text-center space-y-5"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="rounded-3xl border max-w-md w-full shadow-2xl relative overflow-hidden text-center"
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
             >
-              <div className="h-14 w-14 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto animate-pulse">
-                <CheckCircle2 className="h-10 w-10" />
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>Booking Confirmed!</h3>
-                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  Your reservation reference is <span className="font-extrabold text-rose-500">{bookingConfirm.confirmationNumber}</span>
-                </p>
-              </div>
-
-              {/* Booking Summary Box */}
-              <div className="rounded-2xl p-4 bg-[var(--bg-primary)] border text-left space-y-3 text-xs" style={{ borderColor: 'var(--border-primary)' }}>
-                <div className="flex justify-between">
-                  <span className="font-bold text-slate-400">Hotel</span>
-                  <span className="font-extrabold" style={{ color: 'var(--text-primary)' }}>{bookingConfirm.hotelName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-bold text-slate-400">Room</span>
-                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{bookingConfirm.roomType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-bold text-slate-400">Linked Itinerary</span>
-                  <span className="font-bold text-emerald-500">{bookingConfirm.associatedTrip}</span>
-                </div>
-                {bookingConfirm.paymentId && (
-                  <div className="flex justify-between">
-                    <span className="font-bold text-slate-400">Payment ID</span>
-                    <span className="font-semibold text-rose-500 font-mono text-[10px]">{bookingConfirm.paymentId}</span>
+              {/* Premium Gradient Header Banner */}
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-rose-600 p-6 text-white relative">
+                <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
+                <div className="relative z-10 space-y-2">
+                  <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center mx-auto shadow-lg ring-4 ring-white/30">
+                    <CheckCircle2 className="h-10 w-10 text-white" />
                   </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="font-bold text-slate-400">Check-In</span>
-                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{bookingConfirm.checkIn}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-bold text-slate-400">Check-Out</span>
-                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{bookingConfirm.checkOut}</span>
-                </div>
-                <hr style={{ borderColor: 'var(--border-primary)' }} />
-                <div className="flex justify-between text-sm font-extrabold">
-                  <span>Price Per Night</span>
-                  <span className="text-rose-500">{currency.symbol}{Math.round(bookingConfirm.price * currency.rate)}</span>
+                  <h3 className="text-2xl font-black tracking-tight">Booking Confirmed!</h3>
+                  <p className="text-xs font-medium text-emerald-100 uppercase tracking-widest">
+                    Reservation Pass
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 justify-center bg-sky-500/5 text-sky-500 p-3 rounded-2xl border" style={{ borderColor: 'rgba(14,165,233,0.15)' }}>
-                <Info className="h-4 w-4 shrink-0" />
-                <span className="text-[10px] font-semibold text-left leading-normal">
-                  A verification and itinerary update email has been scheduled for delivery to your guest inbox.
-                </span>
-              </div>
+              <div className="p-6 space-y-5">
+                {/* Ref Code Badge */}
+                <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-black tracking-wider uppercase">
+                  <span>Ref:</span>
+                  <span className="font-mono text-sm">{bookingConfirm.confirmationNumber}</span>
+                </div>
 
-              <button
-                onClick={() => setBookingConfirm(null)}
-                className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 font-bold text-xs transition shadow active:scale-95 cursor-pointer"
-              >
-                Close & Return
-              </button>
+                {/* Ticket Style Pass Box */}
+                <div className="rounded-2xl p-4 bg-[var(--bg-primary)] border text-left space-y-3 text-xs relative overflow-hidden" style={{ borderColor: 'var(--border-primary)' }}>
+                  <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-primary)' }}>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-[var(--text-tertiary)] block">Hotel Property</span>
+                      <span className="font-extrabold text-sm text-[var(--text-primary)]">{bookingConfirm.hotelName}</span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase">Confirmed</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-tertiary)] block">Check-In</span>
+                      <span className="font-extrabold text-xs text-[var(--text-primary)]">{bookingConfirm.checkIn || 'Confirmed'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-tertiary)] block">Check-Out</span>
+                      <span className="font-extrabold text-xs text-[var(--text-primary)]">{bookingConfirm.checkOut || 'Confirmed'}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-tertiary)] block">Room Category</span>
+                      <span className="font-semibold text-xs text-[var(--text-primary)]">{bookingConfirm.roomType}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-tertiary)] block">Duration</span>
+                      <span className="font-semibold text-xs text-[var(--text-primary)]">
+                        {(() => {
+                          if (!bookingConfirm.checkIn || !bookingConfirm.checkOut) return '1 Night';
+                          const n = Math.max(1, Math.ceil(Math.abs(new Date(bookingConfirm.checkOut) - new Date(bookingConfirm.checkIn)) / (1000 * 60 * 60 * 24)));
+                          return `${n} Night${n > 1 ? 's' : ''}`;
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {bookingConfirm.paymentId && (
+                    <div className="pt-1">
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-tertiary)] block">Payment ID</span>
+                      <span className="font-mono text-xs text-rose-500 font-bold">{bookingConfirm.paymentId}</span>
+                    </div>
+                  )}
+
+                  <hr style={{ borderColor: 'var(--border-primary)' }} />
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-tertiary)] block">Total Paid</span>
+                      <span className="text-xl font-black text-rose-500">
+                        {(() => {
+                          const n = (!bookingConfirm.checkIn || !bookingConfirm.checkOut) ? 1 : Math.max(1, Math.ceil(Math.abs(new Date(bookingConfirm.checkOut) - new Date(bookingConfirm.checkIn)) / (1000 * 60 * 60 * 24)));
+                          return `${bookingConfirm.currencySymbol || currency.symbol}${Math.round((bookingConfirm.price || 0) * n)}`;
+                        })()}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold uppercase text-[var(--text-tertiary)] block">Linked Itinerary</span>
+                      <span className="font-bold text-xs text-emerald-500">{bookingConfirm.associatedTrip}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2.5 justify-center bg-sky-500/10 text-sky-500 p-3.5 rounded-2xl border" style={{ borderColor: 'rgba(14,165,233,0.2)' }}>
+                  <Info className="h-4 w-4 shrink-0" />
+                  <span className="text-[11px] font-semibold text-left leading-tight">
+                    Reservation saved! Access & view anytime from <strong>My Bookings</strong> in top navbar.
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => setBookingConfirm(null)}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-extrabold text-xs transition shadow-lg shadow-rose-500/20 active:scale-95 cursor-pointer border-0"
+                >
+                  Done & View Dashboard
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

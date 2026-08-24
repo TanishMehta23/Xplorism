@@ -95,6 +95,37 @@ export const createTrip = async (req, res) => {
 
     const trip = tripResult.rows[0];
 
+    // Add to user's travel history (passport stamps) permanently
+    try {
+      const userRes = await query('SELECT travel_history FROM users WHERE id = $1', [userId]);
+      let travelHistory = userRes.rows[0]?.travel_history || [];
+      if (typeof travelHistory === 'string') {
+        try { travelHistory = JSON.parse(travelHistory); } catch (e) { travelHistory = []; }
+      }
+      if (!Array.isArray(travelHistory)) {
+        travelHistory = [];
+      }
+      
+      const exists = travelHistory.some(h => h.tripId === trip.id || (h.destination === destination && h.startDate === startDate));
+      if (!exists) {
+        travelHistory.push({
+          id: trip.id,
+          tripId: trip.id,
+          destination: trip.destination,
+          startDate: trip.start_date,
+          endDate: trip.end_date,
+          travelStyle: trip.travel_style,
+          addedAt: new Date().toISOString()
+        });
+        await query(
+          'UPDATE users SET travel_history = $1 WHERE id = $2',
+          [JSON.stringify(travelHistory), userId]
+        );
+      }
+    } catch (histErr) {
+      console.error('Failed to update travel history:', histErr);
+    }
+
     // If itineraries exist, insert them
     let insertedItineraries = [];
     if (itinerary && itinerary.length > 0) {

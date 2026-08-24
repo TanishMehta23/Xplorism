@@ -193,7 +193,8 @@ const callOpenAICompatibleAPI = async (endpoint, apiKey, model, prompt, isJson) 
   if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
     throw new Error(`Invalid response structure`);
   }
-  return data.choices[0].message.content;
+  const content = data.choices[0].message.content || '';
+  return content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 };
 
 /**
@@ -301,7 +302,7 @@ Only return the raw JSON object conforming to the schema above. Do not include m
   // 2. Try Groq
   if (!itineraryResult && process.env.GROQ_API_KEY) {
     console.log('Gemini failed or missing. Attempting Groq cloud fallback...');
-    const groqModels = [process.env.GROQ_MODEL || 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    const groqModels = [process.env.GROQ_MODEL || 'qwen/qwen3.6-27b', 'groq/compound', 'openai/gpt-oss-20b'];
     for (const model of groqModels) {
       try {
         console.log(`Attempting Groq itinerary generation with model: ${model}`);
@@ -596,7 +597,7 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
   // 2. Try Groq
   if (!nearbyResult && process.env.GROQ_API_KEY) {
     console.log('Gemini failed or missing. Attempting Groq cloud fallback for nearby places...');
-    const groqModels = ['qwen-2.5-coder-32k', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    const groqModels = ['qwen/qwen3.6-27b', 'groq/compound', 'openai/gpt-oss-20b'];
     for (const model of groqModels) {
       try {
         console.log(`Attempting Groq nearby places with model: ${model}`);
@@ -872,7 +873,7 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
   // 2. Try Groq
   if (!eventsResult && process.env.GROQ_API_KEY) {
     console.log('Gemini failed or missing. Attempting Groq cloud fallback for local events...');
-    const groqModels = ['qwen-2.5-coder-32k', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    const groqModels = ['qwen/qwen3.6-27b', 'groq/compound', 'openai/gpt-oss-20b'];
     for (const model of groqModels) {
       try {
         const textResponse = await callOpenAICompatibleAPI(
@@ -1008,7 +1009,7 @@ Only return the raw JSON array. Do not include markdown code block formatting (l
   // 2. Try Groq
   if (!hotelResult && process.env.GROQ_API_KEY) {
     console.log('Gemini failed or missing. Trying Groq for real hotels...');
-    const groqModels = ['qwen-2.5-coder-32k', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    const groqModels = ['qwen/qwen3.6-27b', 'groq/compound', 'openai/gpt-oss-20b'];
     for (const model of groqModels) {
       try {
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {

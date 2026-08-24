@@ -518,6 +518,24 @@ export default function DashboardStub() {
   // Favorites State
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [passportStamps, setPassportStamps] = useState([]);
+
+  const displayStamps = useMemo(() => {
+    const merged = [...passportStamps];
+    trips.forEach(trip => {
+      const exists = merged.some(m => m.tripId === trip.id || m.id === trip.id || (m.destination === trip.destination && m.startDate === trip.startDate));
+      if (!exists) {
+        merged.push({
+          id: trip.id,
+          tripId: trip.id,
+          destination: trip.destination,
+          startDate: trip.startDate,
+          endDate: trip.endDate
+        });
+      }
+    });
+    return merged;
+  }, [passportStamps, trips]);
 
   // Travel Stats & Analytics
   const travelStats = useMemo(() => {
@@ -1010,6 +1028,38 @@ export default function DashboardStub() {
       console.error('Failed to fetch favorites:', err);
     } finally {
       setFavoritesLoading(false);
+    }
+  };
+
+  const fetchPassportStamps = async () => {
+    try {
+      const data = await api.get('/auth/profile');
+      let history = data.user?.travel_history || data.user?.travelHistory || [];
+      if (typeof history === 'string') {
+        try { history = JSON.parse(history); } catch (e) { history = []; }
+      }
+      setPassportStamps(Array.isArray(history) ? history : []);
+    } catch (err) {
+      console.error('Failed to fetch passport stamps:', err);
+    }
+  };
+
+  const handleDeleteStamp = async (stampId, e) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm('Remove this stamp from your passport collection?')) return;
+    try {
+      const updatedStamps = passportStamps.filter(s => s.id !== stampId && s.tripId !== stampId);
+      setPassportStamps(updatedStamps);
+      
+      await api.put('/auth/profile', {
+        name: user.name,
+        email: user.email,
+        travelHistory: updatedStamps
+      });
+      showToast('Passport stamp removed.', 'success');
+    } catch (err) {
+      console.error('Failed to delete passport stamp:', err);
+      showToast('Failed to remove passport stamp.', 'error');
     }
   };
 
@@ -1756,6 +1806,7 @@ export default function DashboardStub() {
     if (user) {
       fetchTrips();
       fetchFavorites();
+      fetchPassportStamps();
     }
   }, [user]);
 
@@ -2576,11 +2627,11 @@ export default function DashboardStub() {
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Every trip planned adds a stamp to your digital passport.</p>
             </div>
             <span className="text-[10px] font-black px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              Stamps: {trips.length}
+              Stamps: {displayStamps.length}
             </span>
           </div>
 
-          {trips.length === 0 ? (
+          {displayStamps.length === 0 ? (
             <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center">
               <Globe className="h-12 w-12 text-slate-300 dark:text-slate-750 mb-3 animate-bounce" />
               <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Your passport is empty</p>
@@ -2588,12 +2639,13 @@ export default function DashboardStub() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center">
-              {trips.map((t, idx) => {
+              {displayStamps.map((t, idx) => {
                 const dest = t.destination.split(',')[0].trim().substring(0, 3).toUpperCase();
                 const cityName = t.destination.split(',')[0].trim();
-                const dateObj = new Date(t.startDate);
-                const year = dateObj.getFullYear();
-                const month = dateObj.toLocaleDateString(undefined, { month: 'short' }).toUpperCase();
+                const dateObj = t.startDate ? new Date(t.startDate) : null;
+                const isValidDate = dateObj && !isNaN(dateObj.getTime());
+                const year = isValidDate ? dateObj.getFullYear() : '';
+                const month = isValidDate ? dateObj.toLocaleDateString(undefined, { month: 'short' }).toUpperCase() : '';
                 
                 // Rotations and colors for realistic randomized ink stamps look
                 const rotations = ['rotate-3', '-rotate-6', 'rotate-12', '-rotate-3', 'rotate-6', '-rotate-12', 'rotate-9', '-rotate-9'];
@@ -2606,12 +2658,24 @@ export default function DashboardStub() {
                 
                 const stampRotation = rotations[idx % rotations.length];
                 const stampColor = borderStyles[idx % borderStyles.length];
+                const isTripActive = trips.some(trip => trip.id === t.tripId || trip.id === t.id);
 
                 return (
-                  <div key={t.id} className={`w-24 h-24 rounded-full border-4 border-double flex flex-col items-center justify-center shrink-0 select-none shadow-sm transition-all duration-350 hover:scale-115 hover:shadow-md cursor-default ${stampColor} ${stampRotation}`}>
-                    <span className="text-[8px] font-black tracking-widest opacity-80">{month} {year}</span>
+                  <div key={t.id} className={`relative w-24 h-24 rounded-full border-4 border-double flex flex-col items-center justify-center shrink-0 select-none shadow-sm transition-all duration-350 hover:scale-115 hover:shadow-md cursor-default ${stampColor} ${stampRotation} ${!isTripActive ? 'opacity-60 grayscale-[30%]' : ''}`}>
+                    {isValidDate && (
+                      <span className="text-[8px] font-black tracking-widest opacity-80">{month} {year}</span>
+                    )}
                     <span className="text-xl font-extrabold tracking-tighter my-0.5">{dest}</span>
                     <span className="text-[7px] font-black tracking-widest opacity-80 uppercase max-w-[70px] truncate">{cityName}</span>
+                    {!isTripActive && (
+                      <button
+                        onClick={(e) => handleDeleteStamp(t.id || t.tripId, e)}
+                        className="absolute -top-1.5 -right-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-0.5 shadow-sm border border-white dark:border-slate-900 transition-colors duration-200 cursor-pointer active:scale-90 flex items-center justify-center"
+                        title="Remove Stamp"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    )}
                   </div>
                 );
               })}

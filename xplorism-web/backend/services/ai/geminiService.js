@@ -135,9 +135,11 @@ export async function generateTextEmbedding(text) {
   }
 }
 
-export async function callGroqChat(history, currentMessage, ragContext = '') {
+export async function callGroqChat(history, currentMessage, ragContext = '', modelOverride = null) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
+
+  const groqModels = [modelOverride || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', 'llama-3.3-70b-versatile', 'llama3-8b-8192'];
 
   const messages = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'assistant',
@@ -161,7 +163,7 @@ export async function callGroqChat(history, currentMessage, ragContext = '') {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'llama3-70b-8192',
+      model: groqModels[0],
       messages: [
         { role: 'system', content: 'You are Xplorism AI, an intelligent travel assistant.' },
         ...messages
@@ -229,13 +231,11 @@ export async function callOllamaChat(history, currentMessage, ragContext = '') {
 
 export async function callGeminiChat(history, currentMessage, ragContext = '') {
   try {
-    // Format history for Gemini chat structure
     const contents = history.map(msg => ({
       role: msg.role === 'user' ? 'user' : 'model',
       parts: [{ text: msg.content }]
     }));
 
-    // Inject RAG context into the current message if available
     let promptText = currentMessage;
     if (ragContext) {
       promptText = `[RAG Context / Verified Xplorism Data]:\n${ragContext}\n\n[User Message]:\n${currentMessage}`;
@@ -253,7 +253,6 @@ export async function callGeminiChat(history, currentMessage, ragContext = '') {
 
     const response = result.response;
     
-    // Check if the model requested a function/tool call
     const functionCalls = response.functionCalls();
     
     return {
@@ -271,6 +270,8 @@ export async function callGeminiChat(history, currentMessage, ragContext = '') {
         return await callOllamaChat(history, currentMessage, ragContext);
       } catch (ollamaError) {
         console.error('[Gemini Service] All AI fallbacks failed:', ollamaError.message);
+        
+        const fallbackModels = ['llama-3.3-70b-versatile', 'llama3-8b-8192'];
         
         let fallbackMessage = "I apologize, but all AI services are currently unavailable. Please check your internet connection or try again later.";
         

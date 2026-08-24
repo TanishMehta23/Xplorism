@@ -26,6 +26,15 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
+
+    const handleUnauthorized = () => {
+      setUser(null);
+    };
+
+    window.addEventListener('auth-unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('auth-unauthorized', handleUnauthorized);
+    };
   }, []);
 
   // Helper to save user to storage without large profile photo base64 data to avoid QuotaExceededError

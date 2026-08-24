@@ -48,6 +48,11 @@ const request = async (endpoint, options = {}) => {
     }
 
     if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.dispatchEvent(new Event('auth-unauthorized'));
+      }
       throw new Error(data.message || 'Something went wrong');
     }
 

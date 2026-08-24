@@ -145,7 +145,7 @@ IMPORTANT REAL-WORLD RULES:
 1. If "${location}" is an invalid/gibberish location or a place where zero commercial hotels/lodges exist, return an empty JSON array [].
 2. Do NOT invent fake hotel names for non-existent places.
 
-If real hotels exist, provide up to 6 realistic hotel choices in "${location}" for check-in: ${checkIn || 'Tomorrow'} to check-out: ${checkOut || 'Next Week'} for ${guests} guests.
+If real hotels exist, provide up to 8 realistic hotel choices in "${location}" for check-in: ${checkIn || 'Tomorrow'} to check-out: ${checkOut || 'Next Week'} for ${guests} guests across a diverse range of star categories (from 1-star budget hostels/inns up to 5-star luxury resorts).
 Return currency in ${currency}.
 
 Return a JSON array of objects with this EXACT structure (or [] if no hotels exist):
@@ -154,7 +154,7 @@ Return a JSON array of objects with this EXACT structure (or [] if no hotels exi
     "id": "hotel_1",
     "name": "Hotel Name",
     "stars": 4,
-    "rating": 8.8,
+    "rating": 4.4,
     "reviewsCount": 1240,
     "price": 145,
     "currencySymbol": "$",
@@ -169,11 +169,18 @@ Return a JSON array of objects with this EXACT structure (or [] if no hotels exi
   try {
     const hotels = await generateTravelData(prompt);
     if (!Array.isArray(hotels)) return [];
-    return hotels.map((h, i) => ({
-      ...h,
-      id: h.id || `hotel_${i + 1}`,
-      bookingUrl: h.bookingUrl || `https://www.google.com/travel/hotels?q=${encodeURIComponent(h.name + ' ' + location)}`
-    }));
+    return hotels.map((h, i) => {
+      let rawRating = Number(h.rating) || 4.2;
+      if (rawRating > 5) {
+        rawRating = (rawRating / 2);
+      }
+      return {
+        ...h,
+        id: h.id || `hotel_${i + 1}`,
+        rating: Number(rawRating.toFixed(1)),
+        bookingUrl: h.bookingUrl || `https://www.google.com/travel/hotels?q=${encodeURIComponent(h.name + ' ' + location)}`
+      };
+    });
   } catch (err) {
     console.error('Hotel search error:', err.message);
     return [];
@@ -188,12 +195,12 @@ export const searchGoogleFlights = async ({ origin, destination, departureDate, 
   const encDest = encodeURIComponent(destination);
   const isRoundTrip = tripType === 'roundtrip' && returnDate;
   
-  // Construct pre-filled Google Flights deep link string
-  let flightQueryStr = `flights+from+${encOrigin}+to+${encDest}`;
-  if (departureDate) flightQueryStr += `+on+${encodeURIComponent(departureDate)}`;
-  if (isRoundTrip) flightQueryStr += `+through+${encodeURIComponent(returnDate)}`;
+  // Construct clean Google search query for flights (same pattern as trains and buses)
+  let searchQuery = `${isRoundTrip ? 'round trip ' : 'one way '}flights from ${origin} to ${destination}`;
+  if (departureDate) searchQuery += ` on ${departureDate}`;
+  if (isRoundTrip && returnDate) searchQuery += ` return on ${returnDate}`;
   
-  const googleFlightsUrl = `https://www.google.com/travel/flights?q=${flightQueryStr}`;
+  const googleFlightsUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
 
   const prompt = `You are a strict, real-world flight availability search engine.
 Check if commercial flight routes exist between origin "${origin}" and destination "${destination}".
@@ -203,7 +210,7 @@ IMPORTANT REAL-WORLD RULES:
 
 Trip Type: ${isRoundTrip ? 'Round-trip' : 'One-way'}.
 Provide up to 5 flight options departing from ${origin} to ${destination}${departureDate ? ' on ' + departureDate : ''}${isRoundTrip ? ' returning on ' + returnDate : ''} for ${travelers} passenger(s).
-Return pricing in ${currency}.
+Return total combined trip pricing in ${currency}.
 
 Return a JSON array of objects with this EXACT structure (or [] if no flights exist):
 [
@@ -218,6 +225,7 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
     "destinationCode": "${destination.toUpperCase().slice(0, 3)}",
     "duration": "2h 45m",
     "stops": "Non-stop",
+    ${isRoundTrip ? '"returnFlightNumber": "6E-205", "returnDepartureTime": "06:00 PM", "returnArrivalTime": "08:45 PM", "returnDuration": "2h 45m",' : ''}
     "price": 180,
     "currencySymbol": "$",
     "cabinClass": "Economy",
@@ -232,7 +240,7 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
     return flights.map((f, i) => ({
       ...f,
       id: f.id || `flight_${i + 1}`,
-      bookingUrl: f.bookingUrl || googleFlightsUrl
+      bookingUrl: googleFlightsUrl
     }));
   } catch (err) {
     console.error('Flight search error:', err.message);
@@ -262,7 +270,7 @@ IMPORTANT REAL-WORLD RULES:
 1. If ${isTrain ? 'no direct or major railway connection exists (e.g. mountainous districts like Kinnaur or Hamirpur without train stations)' : 'no bus transport operates between these locations'}, return an empty JSON array [].
 2. Do NOT invent fake schedules for non-existent railway tracks or non-existent bus routes.
 
-Provide up to 8 diverse options departing from ${origin} to ${destination}${date ? ' on ' + date : ''}.
+Provide up to 10 realistic ${isTrain ? 'train schedules (e.g. Mangala Lakshadweep Express, Rajdhani Express, Kerala Sampark Kranti, Goa Express, Nizamuddin Duronto, etc.)' : 'bus options'} running from ${origin} to ${destination}${date ? ' on ' + date : ''}.
 Return pricing in ${currency}.
 
 Return a JSON array of objects with this EXACT structure (or [] if no routes exist):
@@ -289,7 +297,7 @@ Return a JSON array of objects with this EXACT structure (or [] if no routes exi
   try {
     const transit = await generateTravelData(prompt);
     if (Array.isArray(transit) && transit.length > 0) {
-      return transit.map((t, i) => ({
+      return transit.slice(0, 10).map((t, i) => ({
         ...t,
         id: t.id || `${mode}_${i + 1}`,
         bookingUrl: t.bookingUrl || googleSearchUrl
@@ -307,67 +315,67 @@ Return a JSON array of objects with this EXACT structure (or [] if no routes exi
     return [
       {
         id: `train_1_${Date.now()}`,
-        operator: `Vande Bharat Express`,
-        serviceNumber: '20901',
+        operator: `Mangala Lakshadweep Express`,
+        serviceNumber: '12618',
         mode: 'train',
-        departureTime: '06:00 AM',
-        arrivalTime: '11:45 AM',
-        duration: '5h 45m',
+        departureTime: '05:35 AM',
+        arrivalTime: '05:50 PM (+1 day)',
+        duration: '36h 15m',
         origin: origin,
         destination: destination,
-        classOptions: ['Executive CC', 'AC Chair Car'],
-        price: isINR ? 1450 : 22,
+        classOptions: ['Sleeper', '3AC', '2AC', '1AC'],
+        price: isINR ? 913 : 12,
+        currencySymbol: sym,
+        rating: 4.6,
+        bookingUrl: googleSearchUrl,
+        provider: 'IRCTC Direct'
+      },
+      {
+        id: `train_2_${Date.now()}`,
+        operator: `Thiruvananthapuram Rajdhani Express`,
+        serviceNumber: '12432',
+        mode: 'train',
+        departureTime: '06:16 AM',
+        arrivalTime: '08:25 AM (+1 day)',
+        duration: '26h 09m',
+        origin: origin,
+        destination: destination,
+        classOptions: ['1st AC', '2nd AC', '3rd AC'],
+        price: isINR ? 4181 : 52,
         currencySymbol: sym,
         rating: 4.8,
         bookingUrl: googleSearchUrl,
         provider: 'IRCTC Direct'
       },
       {
-        id: `train_2_${Date.now()}`,
-        operator: `Shatabdi Express`,
-        serviceNumber: '12002',
-        mode: 'train',
-        departureTime: '08:10 AM',
-        arrivalTime: '02:30 PM',
-        duration: '6h 20m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['1st AC', 'Executive CC', 'AC Chair'],
-        price: isINR ? 1280 : 19,
-        currencySymbol: sym,
-        rating: 4.7,
-        bookingUrl: googleSearchUrl,
-        provider: 'IRCTC Direct'
-      },
-      {
         id: `train_3_${Date.now()}`,
-        operator: `Rajdhani Superfast Express`,
-        serviceNumber: '12432',
+        operator: `Thiruvananthapuram Weekly SF Express`,
+        serviceNumber: '12484',
         mode: 'train',
-        departureTime: '03:45 PM',
-        arrivalTime: '10:00 PM',
-        duration: '6h 15m',
+        departureTime: '01:10 PM',
+        arrivalTime: '06:25 PM (+1 day)',
+        duration: '29h 15m',
         origin: origin,
         destination: destination,
-        classOptions: ['1st AC', '2nd AC', '3rd AC'],
-        price: isINR ? 1890 : 28,
+        classOptions: ['Sleeper', '3AC', '2AC'],
+        price: isINR ? 893 : 11,
         currencySymbol: sym,
-        rating: 4.7,
+        rating: 4.5,
         bookingUrl: googleSearchUrl,
         provider: 'IRCTC Direct'
       },
       {
         id: `train_4_${Date.now()}`,
-        operator: `Duronto Express`,
-        serviceNumber: '12260',
+        operator: `Goa Express`,
+        serviceNumber: '12780',
         mode: 'train',
-        departureTime: '07:30 PM',
-        arrivalTime: '02:15 AM',
-        duration: '6h 45m',
+        departureTime: '03:15 PM',
+        arrivalTime: '05:40 AM (+2 days)',
+        duration: '38h 25m',
         origin: origin,
         destination: destination,
-        classOptions: ['1st AC', '2nd AC', '3rd AC'],
-        price: isINR ? 1650 : 24,
+        classOptions: ['Sleeper', '3AC', '2AC', '1AC'],
+        price: isINR ? 903 : 11,
         currencySymbol: sym,
         rating: 4.6,
         bookingUrl: googleSearchUrl,
@@ -375,35 +383,35 @@ Return a JSON array of objects with this EXACT structure (or [] if no routes exi
       },
       {
         id: `train_5_${Date.now()}`,
-        operator: `Garib Rath Superfast`,
-        serviceNumber: '12215',
+        operator: `Kerala Sampark Kranti Express`,
+        serviceNumber: '12218',
         mode: 'train',
-        departureTime: '10:15 PM',
-        arrivalTime: '05:30 AM',
-        duration: '7h 15m',
+        departureTime: '08:10 PM',
+        arrivalTime: '07:15 PM (+1 day)',
+        duration: '23h 05m',
         origin: origin,
         destination: destination,
-        classOptions: ['3rd AC Economy'],
-        price: isINR ? 750 : 11,
+        classOptions: ['Sleeper', '3AC', '2AC'],
+        price: isINR ? 945 : 12,
         currencySymbol: sym,
-        rating: 4.4,
+        rating: 4.7,
         bookingUrl: googleSearchUrl,
         provider: 'IRCTC Direct'
       },
       {
         id: `train_6_${Date.now()}`,
-        operator: `Jan Shatabdi Express`,
-        serviceNumber: '12058',
+        operator: `Nizamuddin Ernakulam Duronto Express`,
+        serviceNumber: '12284',
         mode: 'train',
-        departureTime: '02:20 PM',
-        arrivalTime: '08:40 PM',
-        duration: '6h 20m',
+        departureTime: '09:40 PM',
+        arrivalTime: '11:10 PM (+1 day)',
+        duration: '25h 30m',
         origin: origin,
         destination: destination,
-        classOptions: ['AC Chair Car', 'Second Seating (2S)'],
-        price: isINR ? 540 : 8,
+        classOptions: ['1st AC', '2nd AC', '3rd AC'],
+        price: isINR ? 3420 : 42,
         currencySymbol: sym,
-        rating: 4.5,
+        rating: 4.8,
         bookingUrl: googleSearchUrl,
         provider: 'IRCTC Direct'
       }

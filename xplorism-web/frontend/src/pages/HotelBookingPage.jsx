@@ -74,6 +74,26 @@ const HOTEL_TEMPLATES = [
     amenities: ["WiFi", "Gym", "AC"],
     image: "https://images.unsplash.com/photo-1582719478250-c89cae4db85b?auto=format&fit=crop&w=600&q=80",
     description: "Spacious suites adjacent to central parks, providing a peaceful environment with prime access."
+  },
+  {
+    name: "Backpackers Central Lodge",
+    stars: 2,
+    rating: 7.9,
+    reviewsCount: 380,
+    price: 45,
+    amenities: ["WiFi", "AC"],
+    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80",
+    description: "Cozy budget stay close to main transport hubs. Clean rooms with vibrant common spaces for travelers."
+  },
+  {
+    name: "City Express Stay & Hostel",
+    stars: 1,
+    rating: 7.4,
+    reviewsCount: 210,
+    price: 25,
+    amenities: ["WiFi"],
+    image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80",
+    description: "Budget-friendly single & dorm accommodations equipped with high-speed Internet for solo wanderers."
   }
 ];
 
@@ -212,6 +232,8 @@ export default function HotelBookingPage() {
   const [guestName, setGuestName] = useState(user?.name || '');
   const [guestEmail, setGuestEmail] = useState(user?.email || '');
   const [roomType, setRoomType] = useState('standard');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
   const [bookingConfirm, setBookingConfirm] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
@@ -343,6 +365,11 @@ export default function HotelBookingPage() {
       setMapCoords(centerCoords);
       const cur = getCurrencyDetails(resolvedAddress);
       setCurrency(cur);
+      if (cur.code === 'INR') {
+        setMaxPrice(50000);
+      } else {
+        setMaxPrice(2000);
+      }
 
       if (activeSearchTab === 'flights') {
         const queryOrigin = origin.trim() || 'New Delhi';
@@ -359,14 +386,14 @@ export default function HotelBookingPage() {
         try {
           const serpData = await api.get(`/travel/hotels?location=${encodeURIComponent(destination)}&currency=${cur.code}`);
 
-          if (Array.isArray(serpData)) {
+          if (Array.isArray(serpData) && serpData.length > 0) {
             finalHotels = serpData.map((el, idx) => {
               const tpl = HOTEL_TEMPLATES[idx % HOTEL_TEMPLATES.length];
               return {
                 id: el.id || `hotel-serp-${idx}-${Date.now()}`,
                 name: el.name,
-                stars: el.stars || 4,
-                rating: el.rating || 8.9,
+                stars: Number(el.stars) || tpl.stars,
+                rating: el.rating ? (el.rating > 5 ? (el.rating / 2).toFixed(1) : el.rating) : 4.4,
                 reviewsCount: el.reviewsCount || 420,
                 price: el.price || tpl.price,
                 amenities: el.amenities || tpl.amenities,
@@ -403,7 +430,7 @@ export default function HotelBookingPage() {
     }
 
     const filtered = hotels.filter(hotel => {
-      const matchStars = hotel.stars >= minStars;
+      const matchStars = minStars === 0 ? true : hotel.stars === minStars;
       const matchPrice = hotel.price <= maxPrice;
       const matchAmenities = selectedAmenities.every(amenity =>
         (hotel.amenities || []).includes(amenity)
@@ -477,10 +504,7 @@ export default function HotelBookingPage() {
       const popupContent = `
         <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4;">
           <h4 style="margin: 0 0 4px 0; font-weight: 700; color: #1e293b;">${hotel.name}</h4>
-          <p style="margin: 0 0 6px 0; color: #64748b;">${hotel.stars}★ Hotel • ${hotel.rating} Rating</p>
-          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700;">
-            <span style="color: #e11d48;">${currency.symbol}${Math.round(hotel.price * currency.rate)}/night</span>
-          </div>
+          <p style="margin: 0; color: #64748b; font-weight: 600;">${hotel.stars}★ Hotel • ${hotel.rating} Rating</p>
         </div>
       `;
 
@@ -668,7 +692,7 @@ export default function HotelBookingPage() {
         </div>
 
         {/* Search Bar Panel */}
-        <div className="rounded-3xl border p-6 mb-8 shadow-xl bg-[var(--bg-secondary)] backdrop-blur-xl transition-all" style={{ borderColor: 'var(--border-primary)' }}>
+        <div className="relative z-30 rounded-3xl border p-6 mb-8 shadow-xl bg-[var(--bg-secondary)] backdrop-blur-xl transition-all" style={{ borderColor: 'var(--border-primary)' }}>
           <form onSubmit={handleSearch} className="space-y-4">
             {activeSearchTab === 'flights' && (
               <div className="flex items-center space-x-2 mb-2">
@@ -709,6 +733,7 @@ export default function HotelBookingPage() {
                       placeholder={activeSearchTab === 'flights' ? 'Airport or City (e.g. DEL or Delhi)' : 'Origin City (e.g. Delhi)'}
                       className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
                       style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                      autoComplete="off"
                     />
                   </div>
 
@@ -719,7 +744,7 @@ export default function HotelBookingPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute left-0 right-0 mt-2 z-40 max-h-52 overflow-y-auto border rounded-2xl shadow-xl divide-y backdrop-blur-md"
+                        className="absolute left-0 right-0 top-full mt-2 z-50 max-h-52 overflow-y-auto border rounded-2xl shadow-2xl divide-y backdrop-blur-md"
                         style={{
                           backgroundColor: 'var(--bg-secondary)',
                           borderColor: 'var(--border-primary)',
@@ -764,6 +789,7 @@ export default function HotelBookingPage() {
                     placeholder="Where are you going? (e.g. Goa, Tokyo, Paris)"
                     className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
                     style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -775,7 +801,7 @@ export default function HotelBookingPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute left-0 right-0 mt-2 z-40 max-h-52 overflow-y-auto border rounded-2xl shadow-xl divide-y backdrop-blur-md"
+                      className="absolute left-0 right-0 top-full mt-2 z-50 max-h-52 overflow-y-auto border rounded-2xl shadow-2xl divide-y backdrop-blur-md"
                       style={{
                         backgroundColor: 'var(--bg-secondary)',
                         borderColor: 'var(--border-primary)',
@@ -889,10 +915,20 @@ export default function HotelBookingPage() {
                     </div>
                     <div>
                       <h4 className="text-base font-extrabold">{f.airline} <span className="text-xs font-semibold opacity-70">({f.flightNumber})</span></h4>
-                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">{f.departureTime} ➔ {f.arrivalTime} • {f.duration} • {f.stops}</p>
-                      <span className="inline-block mt-2 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600">
-                        {f.cabinClass || 'Economy'}
-                      </span>
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">Outbound: {f.departureTime} ➔ {f.arrivalTime} • {f.duration} • {f.stops || 'Non-stop'}</p>
+                      {f.returnDepartureTime && (
+                        <p className="text-xs text-rose-500 font-semibold mt-0.5">Return ({f.returnFlightNumber || 'Return'}): {f.returnDepartureTime} ➔ {f.returnArrivalTime} • {f.returnDuration || f.duration}</p>
+                      )}
+                      <div className="flex items-center space-x-2 mt-2">
+                        <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600">
+                          {f.cabinClass || 'Economy'}
+                        </span>
+                        {tripType === 'roundtrip' && (
+                          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600">
+                            Round-Trip
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4 self-end md:self-auto">
@@ -906,7 +942,7 @@ export default function HotelBookingPage() {
                       rel="noopener noreferrer"
                       className="flex items-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md"
                     >
-                      <span>Book on Google Flights</span>
+                      <span>Google Flights / Search</span>
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   </div>
@@ -1007,7 +1043,7 @@ export default function HotelBookingPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Filter & Map Pane (Sticky on desktop) */}
-            <div className={`lg:col-span-5 space-y-4 md:sticky md:top-24 self-start ${mobileTab === 'list' ? 'hidden lg:block' : 'block'}`}>
+            <div className={`lg:col-span-5 space-y-4 md:sticky md:top-24 self-start z-10 ${mobileTab === 'list' ? 'hidden lg:block' : 'block'}`}>
 
               {/* Filter Card (Compact & Clean) */}
               <div className={`rounded-3xl border p-4 shadow-md space-y-4 ${mobileTab === 'filters' ? 'block' : 'hidden lg:block'}`} style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
@@ -1019,18 +1055,18 @@ export default function HotelBookingPage() {
                 {/* Stars Filter */}
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Star Rating</span>
-                  <div className="flex items-center space-x-1.5">
-                    {[0, 3, 4, 5].map((stars) => (
+                  <div className="flex items-center space-x-1 overflow-x-auto pb-0.5">
+                    {[0, 1, 2, 3, 4, 5].map((stars) => (
                       <button
                         key={stars}
                         onClick={() => setMinStars(stars)}
-                        className={`flex-1 py-1 rounded-lg border text-[10px] font-bold transition-all cursor-pointer ${minStars === stars
+                        className={`flex-1 min-w-[32px] py-1 rounded-lg border text-[10px] font-bold transition-all cursor-pointer text-center ${minStars === stars
                             ? 'bg-rose-600 border-rose-600 text-white'
                             : 'hover:bg-[var(--bg-tertiary)]'
                           }`}
                         style={{ borderColor: minStars === stars ? '#e11d48' : 'var(--border-primary)' }}
                       >
-                        {stars === 0 ? 'Any' : `${stars}★+`}
+                        {stars === 0 ? 'Any' : `${stars}★`}
                       </button>
                     ))}
                   </div>
@@ -1044,9 +1080,9 @@ export default function HotelBookingPage() {
                   </div>
                   <input
                     type="range"
-                    min="50"
-                    max="50000"
-                    step="100"
+                    min={currency.code === 'INR' ? 500 : 20}
+                    max={currency.code === 'INR' ? 100000 : 3000}
+                    step={currency.code === 'INR' ? 500 : 25}
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(parseInt(e.target.value))}
                     className="w-full h-1 bg-[var(--bg-primary)] rounded-lg appearance-none cursor-pointer accent-rose-600"
@@ -1211,6 +1247,12 @@ export default function HotelBookingPage() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setRoomType('standard');
+                                const tomorrow = new Date();
+                                tomorrow.setDate(tomorrow.getDate() + 1);
+                                const nextWeek = new Date();
+                                nextWeek.setDate(nextWeek.getDate() + 4);
+                                if (!checkIn) setCheckIn(tomorrow.toISOString().split('T')[0]);
+                                if (!checkOut) setCheckOut(nextWeek.toISOString().split('T')[0]);
                                 setBookingHotel(hotel);
                               }}
                               className="bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 text-white font-black text-xs px-4.5 py-2.5 rounded-xl transition shadow-lg shadow-rose-500/20 active:scale-95 flex items-center space-x-1.5 cursor-pointer border-0"

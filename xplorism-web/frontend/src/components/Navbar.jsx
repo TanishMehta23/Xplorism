@@ -201,7 +201,7 @@ export default function Navbar({ activeTab }) {
                 className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'hotels' ? 'text-rose-500 font-bold' : ''}`}
               >
                 <Hotel className="h-4 w-4" />
-                <span className="nav-link">{t('hotels') || 'Book Stays & Travel'}</span>
+                <span className="nav-link">{t('hotels') || 'Bookings'}</span>
               </button>
               <button
                 onClick={() => navigate('/budgets')}
@@ -525,7 +525,7 @@ export default function Navbar({ activeTab }) {
                   style={{ color: activeTab === 'hotels' ? '' : 'var(--text-secondary)' }}
                 >
                   <Hotel className="h-4 w-4" />
-                  <span>{t('hotels') || 'Book Stays & Travel'}</span>
+                  <span>{t('hotels') || 'Bookings'}</span>
                 </button>
                 <button
                   onClick={() => { navigate('/budgets'); setIsMobileMenuOpen(false); }}

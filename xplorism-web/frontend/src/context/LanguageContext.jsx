@@ -9,7 +9,7 @@ const translations = {
     shared_trips: 'Shared Trips',
     weather: 'Weather',
     tracker: 'Tracker',
-    hotels: 'Hotels',
+    hotels: 'Bookings',
     budgets: 'Budgets',
     logged_in_as: 'Logged in as',
     profile: 'Profile',

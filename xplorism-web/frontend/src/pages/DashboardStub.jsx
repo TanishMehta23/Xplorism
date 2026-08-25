@@ -507,6 +507,29 @@ export default function DashboardStub() {
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(true);
 
+  // Custom confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    type: 'danger',
+    onConfirm: null
+  });
+
+  const showConfirm = ({ title, message, confirmText, cancelText, type = 'danger', onConfirm }) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      confirmText: confirmText || 'Confirm',
+      cancelText: cancelText || 'Cancel',
+      type,
+      onConfirm
+    });
+  };
+
   // Budget Tracking State
   const [budgetData, setBudgetData] = useState(null);
   const [budgetLoading, setBudgetLoading] = useState(false);
@@ -1046,21 +1069,30 @@ export default function DashboardStub() {
 
   const handleDeleteStamp = async (stampId, e) => {
     if (e) e.stopPropagation();
-    if (!window.confirm('Remove this stamp from your passport collection?')) return;
-    try {
-      const updatedStamps = passportStamps.filter(s => s.id !== stampId && s.tripId !== stampId);
-      setPassportStamps(updatedStamps);
-      
-      await api.put('/auth/profile', {
-        name: user.name,
-        email: user.email,
-        travelHistory: updatedStamps
-      });
-      showToast('Passport stamp removed.', 'success');
-    } catch (err) {
-      console.error('Failed to delete passport stamp:', err);
-      showToast('Failed to remove passport stamp.', 'error');
-    }
+    
+    showConfirm({
+      title: 'Remove Stamp?',
+      message: 'Are you sure you want to remove this stamp from your passport collection? This action cannot be undone.',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const updatedStamps = passportStamps.filter(s => s.id !== stampId && s.tripId !== stampId);
+          setPassportStamps(updatedStamps);
+          
+          await api.put('/auth/profile', {
+            name: user.name,
+            email: user.email,
+            travelHistory: updatedStamps
+          });
+          showToast('Passport stamp removed.', 'success');
+        } catch (err) {
+          console.error('Failed to delete passport stamp:', err);
+          showToast('Failed to remove passport stamp.', 'error');
+        }
+      }
+    });
   };
 
 
@@ -4054,6 +4086,79 @@ export default function DashboardStub() {
                   </div>
                 )}
               </AnimatePresence>
+
+              {/* Custom Premium Confirmation Modal */}
+              <AnimatePresence>
+                {confirmDialog.isOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 bg-transparent"
+                      onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                    />
+                    
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                      className="relative w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl p-6 z-10"
+                      style={{ 
+                        backgroundColor: 'var(--bg-secondary)', 
+                        borderColor: 'var(--border-primary)',
+                        color: 'var(--text-primary)'
+                      }}
+                    >
+                      <div className="flex items-start space-x-4">
+                        <div className={`p-3 rounded-2xl flex-shrink-0 ${
+                          confirmDialog.type === 'danger' 
+                            ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500' 
+                            : 'bg-amber-50 dark:bg-amber-950/30 text-amber-500'
+                        }`}>
+                          <Trash2 className="h-6 w-6" />
+                        </div>
+                        
+                        <div className="flex-1">
+                          <h3 className="text-lg font-black tracking-tight mb-2">
+                            {confirmDialog.title}
+                          </h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                            {confirmDialog.message}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-end space-x-3 mt-6">
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                          className="px-4 py-2.5 rounded-xl border hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] text-xs font-bold transition cursor-pointer"
+                          style={{ borderColor: 'var(--border-primary)' }}
+                        >
+                          {confirmDialog.cancelText}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirmDialog.onConfirm) confirmDialog.onConfirm();
+                            setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                          }}
+                          className={`px-5 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-lg cursor-pointer ${
+                            confirmDialog.type === 'danger'
+                              ? 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 shadow-rose-500/10'
+                              : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/10'
+                          }`}
+                        >
+                          {confirmDialog.confirmText}
+                        </button>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
+
               <Footer />
             </div>
           );

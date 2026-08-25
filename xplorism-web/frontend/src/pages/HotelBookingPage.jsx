@@ -257,31 +257,25 @@ export default function HotelBookingPage() {
 
     // Payment integration disabled for now — do not inject Razorpay script.
 
-    // Fetch user's trips for booking integration & trigger default hotels search
+    // Fetch user's trips for booking integration
     api.get('/trips')
       .then(data => {
         setUserTrips(data || []);
         if (data && data.length > 0) {
           setBookingTripId(data[0].id);
-          // Set destination from user's active trip if available
-          const firstDest = data[0].destination || 'Goa, India';
-          setDestination(firstDest);
-        } else {
-          setDestination('Goa, India');
         }
       })
       .catch(err => {
         console.error('Failed to load trips:', err);
-        setDestination('Goa, India');
       });
   }, []);
 
-  // Auto-search travel options when destination or active search tab changes
+  // Auto-search travel options when active search tab changes, but only if user has already executed a search
   useEffect(() => {
-    if (destination) {
+    if (hasSearched && destination) {
       handleSearch();
     }
-  }, [destination, activeSearchTab]);
+  }, [activeSearchTab]);
 
   useEffect(() => {
     if (mobileTab === 'map' && mapInstance) {
@@ -399,7 +393,7 @@ export default function HotelBookingPage() {
                 amenities: el.amenities || tpl.amenities,
                 image: tpl.image,
                 description: el.description || tpl.description,
-                bookingUrl: el.bookingUrl || `https://www.google.com/travel/hotels/${encodeURIComponent(destination)}`,
+                bookingUrl: `https://www.google.com/travel/search?q=${encodeURIComponent(el.name + ' ' + destination)}`,
                 provider: el.provider || 'Google Hotels',
                 lat: centerCoords[0] + (Math.random() - 0.5) * 0.015,
                 lon: centerCoords[1] + (Math.random() - 0.5) * 0.015,
@@ -647,7 +641,7 @@ export default function HotelBookingPage() {
               Travel & Booking Portal
             </h1>
             <p className="text-sm font-medium mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Powered by Groq AI & Google Travel — search hotels, flights, trains, and buses with real pricing.
+              Powered by Google Travel — search hotels, flights, trains, and buses with real pricing.
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -663,7 +657,7 @@ export default function HotelBookingPage() {
         </div>
 
         {/* Mode Selector Tabs */}
-        <div className="flex items-center space-x-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
+        <div className="grid grid-cols-4 gap-1.5 mb-4 p-1.5 rounded-2xl border bg-[var(--bg-secondary)] shadow-sm w-full relative z-20" style={{ borderColor: 'var(--border-primary)' }}>
           {[
             { id: 'hotels', label: 'Hotels & Stays', icon: Hotel },
             { id: 'flights', label: 'Flights', icon: Plane },
@@ -679,13 +673,18 @@ export default function HotelBookingPage() {
                 onClick={() => {
                   setActiveSearchTab(tab.id);
                 }}
-                className={`flex items-center space-x-2 px-5 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer shadow-sm ${active
-                  ? 'bg-rose-600 text-white shadow-rose-500/20'
-                  : 'bg-[var(--bg-secondary)] border text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'}`}
-                style={{ borderColor: active ? '#e11d48' : 'var(--border-primary)' }}
+                className={`relative flex items-center justify-center space-x-2 h-11 rounded-xl text-xs font-black transition-colors duration-200 cursor-pointer select-none leading-none ${active ? 'text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
               >
-                <IconComp className="h-4 w-4" />
-                <span>{tab.label}</span>
+                {active && (
+                  <motion.div
+                    layoutId="activeSearchTabIndicator"
+                    className="absolute inset-0 bg-rose-600 rounded-xl shadow-lg shadow-rose-500/15"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    style={{ zIndex: 0 }}
+                  />
+                )}
+                <IconComp className="h-4 w-4 relative z-10" />
+                <span className="relative z-10">{tab.label}</span>
               </button>
             );
           })}
@@ -714,32 +713,97 @@ export default function HotelBookingPage() {
                 </button>
               </div>
             )}
-            <div className="flex flex-col md:flex-row items-stretch md:items-end gap-4">
-              {activeSearchTab !== 'hotels' && (
-                <div className="space-y-2 relative search-origin-container flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSearchTab}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col md:flex-row items-stretch md:items-end gap-4"
+              >
+                {activeSearchTab !== 'hotels' && (
+                  <div className="space-y-2 relative search-origin-container flex-1">
+                    <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                      <MapPin className="h-3.5 w-3.5 text-rose-500" />
+                      <span>From (Origin)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={origin}
+                        onChange={(e) => {
+                          setOrigin(e.target.value);
+                          setShowOriginSuggestions(true);
+                        }}
+                        onFocus={() => setShowOriginSuggestions(true)}
+                        placeholder={activeSearchTab === 'flights' ? 'Airport or City (e.g. DEL or Delhi)' : 'Origin City (e.g. Delhi)'}
+                        className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
+                        style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                        autoComplete="off"
+                      />
+                    </div>
+
+                    {/* Origin Autocomplete Suggestions */}
+                    <AnimatePresence>
+                      {showOriginSuggestions && originSuggestions.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute left-0 right-0 top-full mt-2 z-50 max-h-52 overflow-y-auto border rounded-2xl shadow-2xl divide-y backdrop-blur-md"
+                          style={{
+                            backgroundColor: 'var(--bg-secondary)',
+                            borderColor: 'var(--border-primary)',
+                            color: 'var(--text-primary)'
+                          }}
+                        >
+                          {originSuggestions.map((item) => (
+                            <button
+                              key={item.place_id}
+                              type="button"
+                              onClick={() => {
+                                setOrigin(item.display_name);
+                                setShowOriginSuggestions(false);
+                              }}
+                              className="w-full text-left px-5 py-3 hover:bg-[var(--bg-tertiary)] transition text-xs flex items-center space-x-2 font-semibold"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                              <span className="truncate">{item.display_name}</span>
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                <div className="space-y-2 relative search-container flex-1">
                   <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                    <MapPin className="h-3.5 w-3.5 text-rose-500" />
-                    <span>From (Origin)</span>
+                    <Search className="h-3.5 w-3.5 text-rose-500" />
+                    <span>{activeSearchTab === 'hotels' ? 'Search Destination' : 'To (Destination)'}</span>
                   </label>
                   <div className="relative">
                     <input
                       type="text"
-                      value={origin}
+                      value={destination}
                       onChange={(e) => {
-                        setOrigin(e.target.value);
-                        setShowOriginSuggestions(true);
+                        setDestination(e.target.value);
+                        setShowSuggestions(true);
                       }}
-                      onFocus={() => setShowOriginSuggestions(true)}
-                      placeholder={activeSearchTab === 'flights' ? 'Airport or City (e.g. DEL or Delhi)' : 'Origin City (e.g. Delhi)'}
+                      onFocus={() => setShowSuggestions(true)}
+                      placeholder="Where are you going? (e.g. Goa, Tokyo, Paris)"
                       className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
                       style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                       autoComplete="off"
+                      required
                     />
                   </div>
 
-                  {/* Origin Autocomplete Suggestions */}
+                  {/* Autocomplete Suggestions */}
                   <AnimatePresence>
-                    {showOriginSuggestions && originSuggestions.length > 0 && (
+                    {showSuggestions && suggestions.length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -751,13 +815,13 @@ export default function HotelBookingPage() {
                           color: 'var(--text-primary)'
                         }}
                       >
-                        {originSuggestions.map((item) => (
+                        {suggestions.map((item) => (
                           <button
                             key={item.place_id}
                             type="button"
                             onClick={() => {
-                              setOrigin(item.display_name);
-                              setShowOriginSuggestions(false);
+                              setDestination(item.display_name);
+                              setShowSuggestions(false);
                             }}
                             className="w-full text-left px-5 py-3 hover:bg-[var(--bg-tertiary)] transition text-xs flex items-center space-x-2 font-semibold"
                             style={{ color: 'var(--text-primary)' }}
@@ -770,112 +834,56 @@ export default function HotelBookingPage() {
                     )}
                   </AnimatePresence>
                 </div>
-              )}
-
-              <div className="space-y-2 relative search-container flex-1">
-                <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                  <Search className="h-3.5 w-3.5 text-rose-500" />
-                  <span>{activeSearchTab === 'hotels' ? 'Search Destination' : 'To (Destination)'}</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={destination}
-                    onChange={(e) => {
-                      setDestination(e.target.value);
-                      setShowSuggestions(true);
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    placeholder="Where are you going? (e.g. Goa, Tokyo, Paris)"
-                    className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
-                    style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
-                    autoComplete="off"
-                    required
-                  />
-                </div>
-
-                {/* Autocomplete Suggestions */}
-                <AnimatePresence>
-                  {showSuggestions && suggestions.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute left-0 right-0 top-full mt-2 z-50 max-h-52 overflow-y-auto border rounded-2xl shadow-2xl divide-y backdrop-blur-md"
-                      style={{
-                        backgroundColor: 'var(--bg-secondary)',
-                        borderColor: 'var(--border-primary)',
-                        color: 'var(--text-primary)'
-                      }}
-                    >
-                      {suggestions.map((item) => (
-                        <button
-                          key={item.place_id}
-                          type="button"
-                          onClick={() => {
-                            setDestination(item.display_name);
-                            setShowSuggestions(false);
-                          }}
-                          className="w-full text-left px-5 py-3 hover:bg-[var(--bg-tertiary)] transition text-xs flex items-center space-x-2 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                          <span className="truncate">{item.display_name}</span>
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              {activeSearchTab !== 'hotels' && (
-                <>
-                  <div className="space-y-2 flex-1">
-                    <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                      <Calendar className="h-3.5 w-3.5 text-rose-500" />
-                      <span>Departure Date</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={flightDepartureDate}
-                      onChange={(e) => setFlightDepartureDate(e.target.value)}
-                      className="w-full bg-[var(--bg-primary)] border rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all shadow-inner cursor-pointer"
-                      style={{ borderColor: 'var(--border-primary)', color: flightDepartureDate ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
-                    />
-                  </div>
-
-                  {activeSearchTab === 'flights' && tripType === 'roundtrip' && (
+                {activeSearchTab !== 'hotels' && (
+                  <>
                     <div className="space-y-2 flex-1">
                       <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
                         <Calendar className="h-3.5 w-3.5 text-rose-500" />
-                        <span>Return Date</span>
+                        <span>Departure Date</span>
                       </label>
                       <input
                         type="date"
-                        value={flightReturnDate}
-                        onChange={(e) => setFlightReturnDate(e.target.value)}
+                        value={flightDepartureDate}
+                        onChange={(e) => setFlightDepartureDate(e.target.value)}
                         className="w-full bg-[var(--bg-primary)] border rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all shadow-inner cursor-pointer"
-                        style={{ borderColor: 'var(--border-primary)', color: flightReturnDate ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
+                        style={{ borderColor: 'var(--border-primary)', color: flightDepartureDate ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
                       />
                     </div>
-                  )}
-                </>
-              )}
 
-              <button
-                type="submit"
-                disabled={searchLoading}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm px-8 py-3 rounded-2xl transition shadow-lg shadow-rose-600/20 flex items-center justify-center space-x-2 active:scale-95 disabled:opacity-50 cursor-pointer h-[46px] self-end border-0 shrink-0"
-              >
-                {searchLoading ? (
-                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" />
-                    <span>Search</span>
+                    {activeSearchTab === 'flights' && tripType === 'roundtrip' && (
+                      <div className="space-y-2 flex-1">
+                        <label className="flex items-center space-x-1.5 text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                          <Calendar className="h-3.5 w-3.5 text-rose-500" />
+                          <span>Return Date</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={flightReturnDate}
+                          onChange={(e) => setFlightReturnDate(e.target.value)}
+                          className="w-full bg-[var(--bg-primary)] border rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all shadow-inner cursor-pointer"
+                          style={{ borderColor: 'var(--border-primary)', color: flightReturnDate ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
+                        />
+                      </div>
+                    )}
                   </>
                 )}
-              </button>
-            </div>
+
+                <button
+                  type="submit"
+                  disabled={searchLoading}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm px-8 py-3 rounded-2xl transition shadow-lg shadow-rose-600/20 flex items-center justify-center space-x-2 active:scale-95 disabled:opacity-50 cursor-pointer h-[46px] self-end border-0 shrink-0"
+                >
+                  {searchLoading ? (
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4" />
+                      <span>Search</span>
+                    </>
+                  )}
+                </button>
+              </motion.div>
+            </AnimatePresence>
           </form>
         </div>
 
@@ -895,14 +903,14 @@ export default function HotelBookingPage() {
                'Find Your Next Premium Stay'}
             </h2>
             <p className="text-sm max-w-md" style={{ color: 'var(--text-secondary)' }}>
-              Powered by Groq AI and Google Travel. Enter origin and destination above to see real pricing and direct booking links.
+              Powered by Google Travel. Enter origin and destination above to see real pricing and direct booking links.
             </p>
           </div>
         ) : activeSearchTab === 'flights' ? (
           <div className="space-y-4 max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold">Available Flight Options</h2>
-              <span className="text-xs text-[var(--text-secondary)] font-medium">Powered by Groq AI & Google Flights</span>
+              <span className="text-xs text-[var(--text-secondary)] font-medium">Powered by Google Flights</span>
             </div>
             {flightsData.length === 0 ? (
               <p className="text-center py-10 text-sm text-[var(--text-secondary)]">No flight routes found. Try another search.</p>
@@ -954,7 +962,7 @@ export default function HotelBookingPage() {
           <div className="space-y-4 max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-black">{activeSearchTab === 'trains' ? 'Available Train Schedules' : 'Available Intercity Bus Routes'}</h2>
-              <span className="text-xs text-[var(--text-secondary)] font-extrabold">Powered by Groq AI & Real-Time Aggregator</span>
+              <span className="text-xs text-[var(--text-secondary)] font-extrabold">Powered by Real-Time Aggregator</span>
             </div>
             {transitData.length === 0 ? (
               <div className="rounded-3xl border border-dashed p-12 text-center space-y-3 bg-[var(--bg-secondary)]" style={{ borderColor: 'var(--border-primary)' }}>
@@ -1257,7 +1265,7 @@ export default function HotelBookingPage() {
                               }}
                               className="bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 text-white font-black text-xs px-4.5 py-2.5 rounded-xl transition shadow-lg shadow-rose-500/20 active:scale-95 flex items-center space-x-1.5 cursor-pointer border-0"
                             >
-                              <span>Book In-App</span>
+                               <span>Book Here</span>
                               <ChevronRight className="h-3.5 w-3.5" />
                             </button>
                           </div>

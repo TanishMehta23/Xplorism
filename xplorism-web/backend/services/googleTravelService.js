@@ -161,7 +161,7 @@ Return a JSON array of objects with this EXACT structure (or [] if no hotels exi
     "image": "https://source.unsplash.com/featured/600x400/?hotel,resort,luxury,building",
     "amenities": ["WiFi", "Pool", "Gym", "Breakfast", "AC"],
     "description": "Short engaging description of hotel location and highlights.",
-    "bookingUrl": "${googleTravelUrl}",
+    "bookingUrl": "https://www.google.com/travel/search?q=Hotel+Name+City",
     "provider": "Google Hotels & Booking"
   }
 ]`;
@@ -178,7 +178,7 @@ Return a JSON array of objects with this EXACT structure (or [] if no hotels exi
         ...h,
         id: h.id || `hotel_${i + 1}`,
         rating: Number(rawRating.toFixed(1)),
-        bookingUrl: h.bookingUrl || `https://www.google.com/travel/hotels?q=${encodeURIComponent(h.name + ' ' + location)}`
+        bookingUrl: `https://www.google.com/travel/search?q=${encodeURIComponent(h.name + ' ' + location)}`
       };
     });
   } catch (err) {

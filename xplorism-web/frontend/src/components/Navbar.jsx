@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, Hotel, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2 } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, Ticket, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -200,7 +200,7 @@ export default function Navbar({ activeTab }) {
                 onClick={() => navigate('/hotels')}
                 className={`nav-button hover:text-rose-500 transition cursor-pointer flex items-center space-x-1.5 ${activeTab === 'hotels' ? 'text-rose-500 font-bold' : ''}`}
               >
-                <Hotel className="h-4 w-4" />
+                <Ticket className="h-4 w-4" />
                 <span className="nav-link">{t('hotels') || 'Bookings'}</span>
               </button>
               <button
@@ -524,7 +524,7 @@ export default function Navbar({ activeTab }) {
                   className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'hotels' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
                   style={{ color: activeTab === 'hotels' ? '' : 'var(--text-secondary)' }}
                 >
-                  <Hotel className="h-4 w-4" />
+                  <Ticket className="h-4 w-4" />
                   <span>{t('hotels') || 'Bookings'}</span>
                 </button>
                 <button

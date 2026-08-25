@@ -1,4 +1,4 @@
-# 📡 Xplorism API Reference
+# Xplorism API Reference
 
 This document provides a comprehensive list of API endpoints available in the Xplorism backend service.
 

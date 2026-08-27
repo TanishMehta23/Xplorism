@@ -134,14 +134,6 @@ export default function BudgetsListPage() {
             <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('my_saved_budgets')}</h1>
             <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{t('budgets_desc')}</p>
           </div>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border hover:bg-[var(--bg-tertiary)] active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer"
-            style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-secondary)' }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>{t('back_to_dashboard')}</span>
-          </button>
         </div>
 
         {loading ? (

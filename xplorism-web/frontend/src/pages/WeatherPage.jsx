@@ -442,20 +442,6 @@ export default function WeatherPage() {
               {t('weather_desc')}
             </p>
           </div>
-          
-          <div className="md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2 mt-4 md:mt-0">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={`flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border active:scale-95 transition-all select-none cursor-pointer shrink-0 ${
-                isDarkTheme 
-                  ? 'bg-slate-900/40 border-white/10 hover:bg-slate-900/60 text-white' 
-                  : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-800'
-              }`}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>{t('back_to_dashboard')}</span>
-            </button>
-          </div>
         </div>
 
         {/* Search widget wrapper */}

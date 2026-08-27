@@ -138,10 +138,9 @@ export default function TrackerPage() {
 
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      // English-labeled CartoDB Voyager map
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
+      // Google Maps Tile Layer (no API key required for these public tiles)
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        attribution: '&copy; Google Maps',
         maxZoom: 20
       }).addTo(map);
 

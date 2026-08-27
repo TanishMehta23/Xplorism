@@ -491,13 +491,6 @@ export default function BudgetPage() {
               </h1>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border bg-white border-slate-200 hover:bg-slate-50 active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer text-slate-800"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>{t('back_to_dashboard')}</span>
-          </button>
         </div>
 
         {/* Info Banner */}

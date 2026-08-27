@@ -351,9 +351,9 @@ export default function DocumentVaultPage() {
           </div>
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center justify-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold px-5 py-3 rounded-2xl transition cursor-pointer shadow-lg active:scale-95 text-sm self-start md:self-auto"
+            className="flex items-center justify-center space-x-2.5 text-sm font-extrabold px-5 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer self-start md:self-auto dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
           >
-            <Plus className="h-4.5 w-4.5" />
+            <Plus className="h-4.5 w-4.5 text-rose-500 dark:text-rose-400" />
             <span>{t('add_document')}</span>
           </button>
         </div>

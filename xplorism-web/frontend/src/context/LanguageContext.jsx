@@ -26,7 +26,7 @@ const translations = {
 
     // Tracker Page
     sky_radar: 'Sky Radar',
-    live_api: 'Live API',
+    live_api: 'Live',
     simulated_radar: 'Simulated Radar',
     tracked: 'Tracked',
     avg_speed: 'Avg Speed',
@@ -305,7 +305,7 @@ const translations = {
 
     // Tracker Page
     sky_radar: 'Radar del Cielo',
-    live_api: 'API en Vivo',
+    live_api: 'En Vivo',
     simulated_radar: 'Radar Simulado',
     tracked: 'Rastreados',
     avg_speed: 'Vel. Promedio',
@@ -584,7 +584,7 @@ const translations = {
 
     // Tracker Page
     sky_radar: 'Radar Aérien',
-    live_api: 'API en Direct',
+    live_api: 'En Direct',
     simulated_radar: 'Radar Simulé',
     tracked: 'Suivis',
     avg_speed: 'Vitesse Moy.',
@@ -863,7 +863,7 @@ const translations = {
 
     // Tracker Page
     sky_radar: 'Flugradar',
-    live_api: 'Live-API',
+    live_api: 'Live',
     simulated_radar: 'Simulierter Radar',
     tracked: 'Verfolgt',
     text_avg_speed: 'Durchschnittsgeschw.',
@@ -1142,7 +1142,7 @@ const translations = {
 
     // Tracker Page
     sky_radar: 'आकाश रडार',
-    live_api: 'लाइव एपीआई',
+    live_api: 'लाइव',
     simulated_radar: 'सिम्युलेटेड रडार',
     tracked: 'ट्रैक किया गया',
     avg_speed: 'औसत गति',
@@ -1421,7 +1421,7 @@ const translations = {
 
     // Tracker Page
     sky_radar: 'رادار السماء',
-    live_api: 'بث مباشر',
+    live_api: 'مباشر',
     simulated_radar: 'رادار محاكي',
     tracked: 'المتتبع',
     avg_speed: 'متوسط السرعة',
@@ -1701,7 +1701,7 @@ const translations = {
 
     // Tracker Page
     sky_radar: 'Radar Aéreo',
-    live_api: 'API em Tempo Real',
+    live_api: 'Ao Vivo',
     simulated_radar: 'Radar Simulado',
     tracked: 'Rastreados',
     avg_speed: 'Vel. Média',

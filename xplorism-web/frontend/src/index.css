@@ -608,3 +608,11 @@ svg.darkreader-keep {
   box-shadow: none !important;
   outline: none !important;
 }
+
+/* Leaflet Map Dark Mode Filter */
+.dark .leaflet-tile-pane {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+.dark .leaflet-container {
+  background: #0f172a !important;
+}

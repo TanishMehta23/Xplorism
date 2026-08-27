@@ -10,6 +10,81 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
+const FALLBACK_POSTS = [
+  {
+    id: "mock-1",
+    user_id: "mock-user-1",
+    username: "Sophia Loren",
+    title: "Chasing Sunsets in Santorini! 🌅✨",
+    content: "Just spent an unforgettable week exploring the white-washed streets of Oia. Pro tip: head down to Amoudi Bay early in the afternoon to secure a table for fresh octopus right by the water as the sun dips below the horizon. The views are absolutely unmatched!",
+    trip_destination: "#greece #santorini #travel #sunset",
+    photo_content: JSON.stringify(["https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=600&q=80"]),
+    likes: 42,
+    liked_by: [],
+    created_at: new Date(Date.now() - 3600000 * 2).toISOString()
+  },
+  {
+    id: "mock-2",
+    user_id: "mock-user-2",
+    username: "Alex Mercer",
+    title: "Hiking through the mystical bamboo groves of Kyoto 🎋🚶‍♂️",
+    content: "Woke up at 5:30 AM to catch Arashiyama Bamboo Grove before the crowds arrive. It was completely silent except for the rustling leaves and creaking stalks in the morning wind. It felt like stepping directly into another dimension. Highly recommend waking up early!",
+    trip_destination: "#japan #kyoto #nature #hiking",
+    photo_content: JSON.stringify(["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80"]),
+    likes: 38,
+    liked_by: [],
+    created_at: new Date(Date.now() - 3600000 * 5).toISOString()
+  },
+  {
+    id: "mock-3",
+    user_id: "mock-user-3",
+    username: "Emma Watson",
+    title: "A cozy rainy afternoon in a Parisian café ☕️🥐",
+    content: "Found the most charming little bookshop café in the Latin Quarter. Sipping a café au lait, eating a perfectly flaky butter croissant, and watching the rain fall on the cobblestones. Paris has a special kind of magic when it rains.",
+    trip_destination: "#paris #france #cafe #cozy",
+    photo_content: JSON.stringify(["https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80"]),
+    likes: 56,
+    liked_by: [],
+    created_at: new Date(Date.now() - 3600000 * 24).toISOString()
+  },
+  {
+    id: "mock-4",
+    user_id: "mock-user-4",
+    username: "Liam Neeson",
+    title: "Witnessing the breathtaking Northern Lights in Tromsø! 🌌💚",
+    content: "Words and photos cannot describe the feeling of standing in the freezing snow and watching green ribbons of light dance across the Arctic sky. It is a surreal bucket-list experience that everyone should experience at least once.",
+    trip_destination: "#norway #aurora #travel #arctic",
+    photo_content: JSON.stringify(["https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=600&q=80"]),
+    likes: 89,
+    liked_by: [],
+    created_at: new Date(Date.now() - 3600000 * 48).toISOString()
+  },
+  {
+    id: "mock-5",
+    user_id: "mock-user-5",
+    username: "Chloe Bennett",
+    title: "Wandering the vibrant blue streets of Chefchaouen 💙🇲🇦",
+    content: "Chefchaouen is a photographer's dream. Every single alleyway, staircase, and doorway is painted in beautiful shades of blue. The locals are incredibly friendly, and the mint tea is the best I've ever had. Don't forget to hike up to the Spanish Mosque for a panoramic view!",
+    trip_destination: "#morocco #bluecity #travelphotography",
+    photo_content: JSON.stringify(["https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&w=600&q=80"]),
+    likes: 47,
+    liked_by: [],
+    created_at: new Date(Date.now() - 3600000 * 72).toISOString()
+  },
+  {
+    id: "mock-6",
+    user_id: "mock-user-6",
+    username: "David Attenborough",
+    title: "Safari adventure in Serengeti National Park 🦁🐘",
+    content: "Incredible morning game drive. We managed to spot a pride of lions resting under an acacia tree, a herd of elephants bathing in the river, and even a rare leopard hiding in the brush. Nature at its absolute finest.",
+    trip_destination: "#serengeti #safari #wildlife #africa",
+    photo_content: JSON.stringify(["https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=600&q=80"]),
+    likes: 124,
+    liked_by: [],
+    created_at: new Date(Date.now() - 3600000 * 96).toISOString()
+  }
+];
+
 export default function CommunityFeedPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -55,7 +130,7 @@ export default function CommunityFeedPage() {
       // Keep only last 20 posts in cache, and strip heavy photo base64 strings to save quota space
       const simplified = postsToCache.slice(0, 20).map(post => ({
         ...post,
-        photo_content: null
+        photo_content: post.photo_content && post.photo_content.startsWith('http') ? post.photo_content : null
       }));
       localStorage.setItem('xplorism_posts_cache', JSON.stringify(simplified));
     } catch (e) {
@@ -70,12 +145,15 @@ export default function CommunityFeedPage() {
     }
     try {
       const feedData = await api.get('/posts');
-      if (feedData) {
+      if (feedData && feedData.length > 0) {
         setPosts(feedData);
         cachePostsSafe(feedData);
+      } else {
+        setPosts(FALLBACK_POSTS);
       }
     } catch (err) {
       console.error('Error loading community feed:', err);
+      setPosts(FALLBACK_POSTS);
     } finally {
       setLoading(false);
     }
@@ -339,10 +417,9 @@ export default function CommunityFeedPage() {
                 setEditPostId(null);
                 setShowFormModal(true);
               }}
-              className="px-6 py-3 rounded-2xl text-white font-extrabold flex items-center justify-center space-x-2 transition shadow-lg hover:scale-105 active:scale-95 cursor-pointer self-start md:self-auto"
-              style={{ backgroundColor: '#f43f5e', boxShadow: '0 8px 30px rgba(244, 63, 94, 0.25)' }}
+              className="flex items-center justify-center space-x-2.5 text-sm font-extrabold px-6 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer self-start md:self-auto dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-5 w-5 text-rose-500 dark:text-rose-400" />
               <span>{t('share_experience')}</span>
             </button>
           </div>

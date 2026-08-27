@@ -906,12 +906,9 @@ export default function DashboardStub() {
     });
     mapInstanceRef.current = map;
 
-    const isDark = document.documentElement.classList.contains('dark');
-    const tileUrl = isDark
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-
-    window.L.tileLayer(tileUrl, {
+    // Google Maps Tile Layer (no API key required for these public tiles)
+    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps',
       maxZoom: 19
     }).addTo(map);
 

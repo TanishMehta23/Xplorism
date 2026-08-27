@@ -5,7 +5,7 @@ import {
   Hotel, Search, Calendar, Users, Star, MapPin,
   Wifi, SlidersHorizontal, Check, ShieldAlert,
   ArrowLeft, CheckCircle2, ChevronRight, Info,
-  Plane, Train, Bus, ExternalLink
+  Plane, Train, Bus, ExternalLink, Ticket
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -213,6 +213,10 @@ export default function HotelBookingPage() {
   const [mapInstance, setMapInstance] = useState(null);
   const [markersList, setMarkersList] = useState([]);
   const [isLeafletLoaded, setIsLeafletLoaded] = useState(false);
+  const [transitOriginCoords, setTransitOriginCoords] = useState(null);
+  const [transitDestCoords, setTransitDestCoords] = useState(null);
+  const [transitMapInstance, setTransitMapInstance] = useState(null);
+  const [transitMarkersList, setTransitMarkersList] = useState([]);
 
   // Booking Flow States
   const [bookingHotel, setBookingHotel] = useState(null);
@@ -357,6 +361,26 @@ export default function HotelBookingPage() {
       }
 
       setMapCoords(centerCoords);
+      setTransitDestCoords(centerCoords);
+
+      // Geocode origin for transit if it's not hotels
+      if (activeSearchTab !== 'hotels') {
+        const queryOrigin = origin.trim();
+        if (queryOrigin) {
+          try {
+            const origData = await api.get(`/geocode?q=${encodeURIComponent(queryOrigin)}`);
+            if (origData && origData.length > 0) {
+              setTransitOriginCoords([parseFloat(origData[0].lat), parseFloat(origData[0].lon)]);
+            } else {
+              setTransitOriginCoords([centerCoords[0] + 0.1, centerCoords[1] - 0.1]);
+            }
+          } catch (origErr) {
+            console.warn('Origin geocoding error, using fallback offset:', origErr);
+            setTransitOriginCoords([centerCoords[0] + 0.1, centerCoords[1] - 0.1]);
+          }
+        }
+      }
+
       const cur = getCurrencyDetails(resolvedAddress);
       setCurrency(cur);
       if (cur.code === 'INR') {
@@ -530,6 +554,68 @@ export default function HotelBookingPage() {
     }
   }, [selectedHotel]);
 
+  // Load/Update Transit Map Leaflet instance for Flights/Trains/Buses
+  useEffect(() => {
+    if (!isLeafletLoaded || !hasSearched || activeSearchTab === 'hotels') return;
+    if (!transitOriginCoords || !transitDestCoords) return;
+
+    const container = document.getElementById('transit-map-container');
+    if (!container) return;
+
+    // Reset container if it exists
+    if (container._leaflet_id && !transitMapInstance) {
+      container.innerHTML = '';
+      container._leaflet_id = null;
+    }
+
+    let map = transitMapInstance;
+    if (!map) {
+      map = window.L.map('transit-map-container', {
+        zoomControl: false,
+        dragging: true,
+        touchZoom: true,
+        scrollWheelZoom: true
+      }).setView(transitDestCoords, 10);
+
+      window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        attribution: '© Google Maps'
+      }).addTo(map);
+
+      window.L.control.zoom({ position: 'bottomright' }).addTo(map);
+      setTransitMapInstance(map);
+    }
+
+    // Clear previous markers
+    transitMarkersList.forEach(item => item.remove());
+    const newMarkers = [];
+
+    // Create markers
+    const originPin = window.L.marker(transitOriginCoords).addTo(map)
+      .bindPopup(`<b>Origin</b><br>${origin}`);
+    const destPin = window.L.marker(transitDestCoords).addTo(map)
+      .bindPopup(`<b>Destination</b><br>${destination}`);
+
+    // Create flight route path (dashed for flight, solid for land transit)
+    const flightPath = window.L.polyline([transitOriginCoords, transitDestCoords], {
+      color: '#e11d48',
+      weight: 3,
+      opacity: 0.8,
+      dashArray: activeSearchTab === 'flights' ? '6, 6' : '0'
+    }).addTo(map);
+
+    newMarkers.push(originPin, destPin, flightPath);
+    setTransitMarkersList(newMarkers);
+
+    // Zoom map to fit both markers
+    const bounds = window.L.latLngBounds([transitOriginCoords, transitDestCoords]);
+    map.fitBounds(bounds.pad(0.25));
+
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+
+  }, [isLeafletLoaded, transitOriginCoords, transitDestCoords, hasSearched, activeSearchTab]);
+
   // Toggle Amenity Filter Selection
   const toggleAmenity = (amenity) => {
     if (selectedAmenities.includes(amenity)) {
@@ -648,9 +734,9 @@ export default function HotelBookingPage() {
             <button
               type="button"
               onClick={() => setShowBookingsModal(true)}
-              className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border hover:bg-[var(--bg-tertiary)] active:scale-95 transition-all select-none self-start md:self-auto cursor-pointer"
-              style={{ borderColor: 'var(--border-primary)' }}
+              className="flex items-center space-x-2.5 text-sm font-extrabold px-5 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
             >
+              <Ticket className="h-4.5 w-4.5 text-rose-500 dark:text-rose-400" />
               <span>My Bookings</span>
             </button>
           </div>
@@ -741,6 +827,7 @@ export default function HotelBookingPage() {
                         className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
                         style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                         autoComplete="off"
+                        required
                       />
                     </div>
 
@@ -847,6 +934,7 @@ export default function HotelBookingPage() {
                         onChange={(e) => setFlightDepartureDate(e.target.value)}
                         className="w-full bg-[var(--bg-primary)] border rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all shadow-inner cursor-pointer"
                         style={{ borderColor: 'var(--border-primary)', color: flightDepartureDate ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
+                        required
                       />
                     </div>
 
@@ -862,6 +950,7 @@ export default function HotelBookingPage() {
                           onChange={(e) => setFlightReturnDate(e.target.value)}
                           className="w-full bg-[var(--bg-primary)] border rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all shadow-inner cursor-pointer"
                           style={{ borderColor: 'var(--border-primary)', color: flightReturnDate ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
+                          required
                         />
                       </div>
                     )}
@@ -906,121 +995,149 @@ export default function HotelBookingPage() {
               Powered by Google Travel. Enter origin and destination above to see real pricing and direct booking links.
             </p>
           </div>
-        ) : activeSearchTab === 'flights' ? (
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Available Flight Options</h2>
-              <span className="text-xs text-[var(--text-secondary)] font-medium">Powered by Google Flights</span>
-            </div>
-            {flightsData.length === 0 ? (
-              <p className="text-center py-10 text-sm text-[var(--text-secondary)]">No flight routes found. Try another search.</p>
-            ) : (
-              flightsData.map((f, i) => (
-                <div key={f.id || i} className="p-5 rounded-3xl border bg-[var(--bg-secondary)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ borderColor: 'var(--border-primary)' }}>
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 text-xl font-bold">
-                      {f.logo || '✈️'}
-                    </div>
-                    <div>
-                      <h4 className="text-base font-extrabold">{f.airline} <span className="text-xs font-semibold opacity-70">({f.flightNumber})</span></h4>
-                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">Outbound: {f.departureTime} ➔ {f.arrivalTime} • {f.duration} • {f.stops || 'Non-stop'}</p>
-                      {f.returnDepartureTime && (
-                        <p className="text-xs text-rose-500 font-semibold mt-0.5">Return ({f.returnFlightNumber || 'Return'}): {f.returnDepartureTime} ➔ {f.returnArrivalTime} • {f.returnDuration || f.duration}</p>
-                      )}
-                      <div className="flex items-center space-x-2 mt-2">
-                        <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600">
-                          {f.cabinClass || 'Economy'}
-                        </span>
-                        {tripType === 'roundtrip' && (
-                          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600">
-                            Round-Trip
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4 self-end md:self-auto">
-                    <div className="text-right">
-                      <span className="text-xs text-[var(--text-tertiary)] block">Fare Estimate</span>
-                      <span className="text-xl font-black text-rose-500">{f.currencySymbol || '$'}{f.price}</span>
-                    </div>
-                    <a
-                      href={f.bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md"
-                    >
-                      <span>Google Flights / Search</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
-                </div>
-              ))
-            )}
+         ) : searchLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 bg-[var(--bg-secondary)] border rounded-3xl p-8 shadow-sm max-w-4xl mx-auto" style={{ borderColor: 'var(--border-primary)' }}>
+            <div className="h-10 w-10 border-4 border-rose-600 border-t-transparent rounded-full animate-spin" />
+            <h3 className="text-base font-extrabold mt-2" style={{ color: 'var(--text-primary)' }}>Searching for real-time travel options...</h3>
+            <p className="text-xs text-[var(--text-secondary)]">Please wait while we query travel aggregates and schedules.</p>
           </div>
-        ) : activeSearchTab === 'trains' || activeSearchTab === 'buses' ? (
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-black">{activeSearchTab === 'trains' ? 'Available Train Schedules' : 'Available Intercity Bus Routes'}</h2>
-              <span className="text-xs text-[var(--text-secondary)] font-extrabold">Powered by Real-Time Aggregator</span>
-            </div>
-            {transitData.length === 0 ? (
-              <div className="rounded-3xl border border-dashed p-12 text-center space-y-3 bg-[var(--bg-secondary)]" style={{ borderColor: 'var(--border-primary)' }}>
-                <ShieldAlert className="h-8 w-8 text-amber-500 mx-auto" />
-                <h4 className="text-base font-extrabold">No Direct Routes Available</h4>
-                <p className="text-xs max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
-                  {activeSearchTab === 'trains' 
-                    ? `No direct railway stations or train tracks connect ${origin || 'Origin'} and ${destination}. Try searching for nearby major junction stations or switch to Buses/Flights.`
-                    : `No direct bus service operates on this route. Try adjusting your origin or destination.`}
-                </p>
+        ) : (activeSearchTab === 'flights' || activeSearchTab === 'trains' || activeSearchTab === 'buses') ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Transit Map Panel */}
+            <div className="lg:col-span-5 space-y-4 md:sticky md:top-24 self-start z-10">
+              <div className="rounded-3xl border overflow-hidden shadow-sm relative h-80 lg:h-[450px]" style={{ borderColor: 'var(--border-primary)' }}>
+                <div id="transit-map-container" className="w-full h-full z-10" />
+                {!isLeafletLoaded && (
+                  <div className="absolute inset-0 bg-slate-50/80 z-20 flex items-center justify-center flex-col space-y-2">
+                    <div className="h-6 w-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-medium">Loading Map Assets...</span>
+                  </div>
+                )}
               </div>
-            ) : (
-              transitData.map((t, i) => (
-                <div key={t.id || i} className="p-5.5 rounded-3xl border bg-[var(--bg-secondary)] shadow-lg hover:shadow-xl transition-all flex flex-col md:flex-row md:items-center justify-between gap-5" style={{ borderColor: 'var(--border-primary)' }}>
-                  <div className="flex items-start space-x-4">
-                    <div className="p-3.5 rounded-2xl bg-indigo-500/10 text-indigo-500 text-2xl font-black shrink-0 border border-indigo-500/20">
-                      {activeSearchTab === 'trains' ? '🚆' : '🚌'}
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <h4 className="text-base font-black text-[var(--text-primary)]">{t.operator}</h4>
-                        <span className="text-xs font-mono font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">
-                          {t.serviceNumber}
-                        </span>
+            </div>
+
+            {/* Right Pane */}
+            <div className="lg:col-span-7 space-y-4">
+              {activeSearchTab === 'flights' ? (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                      Available Flights from {origin} to {destination} ({flightsData.length} found)
+                    </span>
+                  </div>
+                  {flightsData.length === 0 ? (
+                    <p className="text-center py-10 text-sm text-[var(--text-secondary)]">No flight routes found. Try another search.</p>
+                  ) : (
+                    flightsData.map((f, i) => (
+                      <div key={f.id ? `flight-${f.id}-${i}` : `flight-fallback-${i}`} className="p-5 rounded-3xl border bg-[var(--bg-secondary)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in-up" style={{ borderColor: 'var(--border-primary)' }}>
+                        <div className="flex items-center space-x-4">
+                          <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 text-xl font-bold">
+                            {f.logo || '✈️'}
+                          </div>
+                          <div>
+                            <h4 className="text-base font-extrabold">{f.airline} <span className="text-xs font-semibold opacity-70">({f.flightNumber})</span></h4>
+                            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Outbound: {f.departureTime} ➔ {f.arrivalTime} • {f.duration} • {f.stops || 'Non-stop'}</p>
+                            {f.returnDepartureTime && (
+                              <p className="text-xs text-rose-500 font-semibold mt-0.5">Return ({f.returnFlightNumber || 'Return'}): {f.returnDepartureTime} ➔ {f.returnArrivalTime} • {f.returnDuration || f.duration}</p>
+                            )}
+                            <div className="flex items-center space-x-2 mt-2">
+                              <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600">
+                                {f.cabinClass || 'Economy'}
+                              </span>
+                              {tripType === 'roundtrip' && (
+                                <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600">
+                                  Round-Trip
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4 self-end md:self-auto">
+                          <div className="text-right">
+                            <span className="text-xs text-[var(--text-tertiary)] block">Fare Estimate</span>
+                            <span className="text-xl font-black text-rose-500">{f.currencySymbol || '$'}{f.price}</span>
+                          </div>
+                          <a
+                            href={f.bookingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md border-0"
+                          >
+                            <span>Google Flights</span>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
                       </div>
-                      <p className="text-xs font-semibold text-[var(--text-secondary)] flex items-center space-x-2">
-                        <span>{t.departureTime} ({t.origin || origin})</span>
-                        <span className="text-rose-500 font-bold">➔</span>
-                        <span>{t.arrivalTime} ({t.destination || destination})</span>
-                        <span className="text-[11px] opacity-60">({t.duration})</span>
+                    ))
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                      {activeSearchTab === 'trains' ? 'Train Schedules' : 'Intercity Bus Routes'} from {origin} to {destination} ({transitData.length} found)
+                    </span>
+                  </div>
+                  {transitData.length === 0 ? (
+                    <div className="rounded-3xl border border-dashed p-12 text-center space-y-3 bg-[var(--bg-secondary)]" style={{ borderColor: 'var(--border-primary)' }}>
+                      <ShieldAlert className="h-8 w-8 text-amber-500 mx-auto" />
+                      <h4 className="text-base font-extrabold">No Direct Routes Available</h4>
+                      <p className="text-xs max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
+                        {activeSearchTab === 'trains' 
+                          ? `No direct railway stations or train tracks connect ${origin || 'Origin'} and ${destination}. Try searching for nearby major junction stations or switch to Buses/Flights.`
+                          : `No direct bus service operates on this route. Try adjusting your origin or destination.`}
                       </p>
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {(t.classOptions || []).map((c, idx) => (
-                          <span key={idx} className="text-[10px] font-extrabold px-2.5 py-1 rounded-xl bg-[var(--bg-primary)] border text-[var(--text-secondary)]" style={{ borderColor: 'var(--border-primary)' }}>
-                            {c}
-                          </span>
-                        ))}
+                    </div>
+                  ) : (
+                    transitData.map((t, i) => (
+                      <div key={t.id ? `transit-${t.id}-${i}` : `transit-fallback-${i}`} className="p-5 rounded-3xl border bg-[var(--bg-secondary)] shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-5" style={{ borderColor: 'var(--border-primary)' }}>
+                        <div className="flex items-start space-x-4">
+                          <div className="p-3.5 rounded-2xl bg-indigo-500/10 text-indigo-500 text-2xl font-black shrink-0 border border-indigo-500/20">
+                            {activeSearchTab === 'trains' ? '🚆' : '🚌'}
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <h4 className="text-base font-black text-[var(--text-primary)]">{t.operator}</h4>
+                              <span className="text-xs font-mono font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">
+                                {t.serviceNumber}
+                              </span>
+                            </div>
+                            <p className="text-xs font-semibold text-[var(--text-secondary)] flex items-center space-x-2">
+                              <span>{t.departureTime} ({t.origin || origin})</span>
+                              <span className="text-rose-500 font-bold">➔</span>
+                              <span>{t.arrivalTime} ({t.destination || destination})</span>
+                              <span className="text-[11px] opacity-60">({t.duration})</span>
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {(t.classOptions || []).map((c, idx) => (
+                                <span key={idx} className="text-[10px] font-extrabold px-2.5 py-1 rounded-xl bg-[var(--bg-primary)] border text-[var(--text-secondary)]" style={{ borderColor: 'var(--border-primary)' }}>
+                                  {c}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4 self-end md:self-auto shrink-0">
+                          <div className="text-right">
+                            <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider block">Fare Starts From</span>
+                            <span className="text-2xl font-black text-rose-500">{t.currencySymbol || currency.symbol}{Math.round(t.price)}</span>
+                          </div>
+                          <a
+                            href={t.bookingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-xs px-5 py-3 rounded-2xl transition shadow-lg shadow-indigo-600/20 active:scale-95 border-0"
+                          >
+                            <span>{activeSearchTab === 'trains' ? 'IRCTC / Direct' : 'RedBus / Direct'}</span>
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4 self-end md:self-auto shrink-0">
-                    <div className="text-right">
-                      <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider block">Fare Starts From</span>
-                      <span className="text-2xl font-black text-rose-500">{t.currencySymbol || currency.symbol}{Math.round(t.price)}</span>
-                    </div>
-                    <a
-                      href={t.bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-xs px-5 py-3 rounded-2xl transition shadow-lg shadow-indigo-600/20 active:scale-95 border-0"
-                    >
-                      <span>{activeSearchTab === 'trains' ? 'IRCTC / Direct Booking' : 'RedBus / Book Direct'}</span>
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
-                </div>
-              ))
-            )}
+                    ))
+                  )}
+                </>
+              )}
+            </div>
           </div>
         ) : (
           <>

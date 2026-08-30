@@ -187,29 +187,129 @@ Return a JSON array of objects with this EXACT structure (or [] if no hotels exi
   }
 };
 
+import { AIRPORTS } from '../data/airports.js';
+
 /**
- * Search Google Flights via Groq/Gemini with Google Flights deep links
+ * Helper to extract clean 3-letter IATA code from user input string or airport name
+ */
+function extractIataCode(str, fallback = 'DEL') {
+  if (!str) return fallback;
+  
+  // 1. Check parenthesized (e.g. 'Delhi (DEL)' or 'Lisbon (LIS)')
+  const parenMatch = str.match(/\(([A-Za-z]{3})\)/);
+  if (parenMatch) return parenMatch[1].toUpperCase();
+
+  // 2. Check standalone 3-letter uppercase token matching real airport
+  const wordMatch = str.match(/\b([A-Za-z]{3})\b/);
+  if (wordMatch) {
+    const w = wordMatch[1].toUpperCase();
+    if (AIRPORTS.some(a => a.code === w)) return w;
+  }
+
+  // 3. Search by city name or airport name in AIRPORTS dataset
+  const q = str.trim().toLowerCase();
+  const found = AIRPORTS.find(a => 
+    q.includes(a.city.toLowerCase()) || 
+    a.city.toLowerCase().includes(q) || 
+    q.includes(a.name.toLowerCase()) || 
+    a.name.toLowerCase().includes(q)
+  );
+  if (found) return found.code;
+
+  // 4. Default 3-letter alphanumeric fallback
+  const cleaned = str.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
+  return cleaned.length === 3 ? cleaned : fallback;
+}
+
+/**
+ * Format date to YYMMDD (for Skyscanner) or YYYY-MM-DD (for Booking.com & Google Flights)
+ */
+function formatFlightDates(depDateStr, retDateStr) {
+  let depYYMMDD = '';
+  let retYYMMDD = '';
+  let depISO = '';
+  let retISO = '';
+
+  if (depDateStr) {
+    const d = new Date(depDateStr);
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const yy = String(yyyy).slice(-2);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      depYYMMDD = `${yy}${mm}${dd}`;
+      depISO = `${yyyy}-${mm}-${dd}`;
+    }
+  }
+
+  if (retDateStr) {
+    const d = new Date(retDateStr);
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const yy = String(yyyy).slice(-2);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      retYYMMDD = `${yy}${mm}${dd}`;
+      retISO = `${yyyy}-${mm}-${dd}`;
+    }
+  }
+
+  return { depYYMMDD, retYYMMDD, depISO, retISO };
+}
+
+/**
+ * Search Google Flights via Groq/Gemini with clean multi-provider deep links (Google Flights, Skyscanner, Booking.com)
  */
 export const searchGoogleFlights = async ({ origin, destination, departureDate, returnDate, tripType = 'oneway', travelers = 1, currency = 'USD' }) => {
-  const encOrigin = encodeURIComponent(origin);
-  const encDest = encodeURIComponent(destination);
   const isRoundTrip = tripType === 'roundtrip' && returnDate;
-  
-  // Construct clean Google search query for flights (same pattern as trains and buses)
-  let searchQuery = `${isRoundTrip ? 'round trip ' : 'one way '}flights from ${origin} to ${destination}`;
-  if (departureDate) searchQuery += ` on ${departureDate}`;
-  if (isRoundTrip && returnDate) searchQuery += ` return on ${returnDate}`;
-  
-  const googleFlightsUrl = `https://www.google.com/travel/flights?q=${encodeURIComponent(searchQuery)}`;
+  const originCode = extractIataCode(origin, 'DEL');
+  const destCode = extractIataCode(destination, 'BOM');
+  const { depYYMMDD, retYYMMDD, depISO, retISO } = formatFlightDates(departureDate, returnDate);
+
+  // Clean City Names without airport codes for search queries
+  const cleanOriginCity = origin.replace(/\s*\([A-Za-z0-9]+\)/g, '').trim() || originCode;
+  const cleanDestCity = destination.replace(/\s*\([A-Za-z0-9]+\)/g, '').trim() || destCode;
+
+  // 1. Construct Clean Google Flights URL (passing only clean from, to, and date)
+  // Format: flights from DEL to LIS on 2026-09-01
+  let gQuery = `${isRoundTrip ? 'round trip ' : 'one way '}flights from ${originCode} to ${destCode}`;
+  if (depISO) gQuery += ` on ${depISO}`;
+  if (isRoundTrip && retISO) gQuery += ` return on ${retISO}`;
+  const googleFlightsUrl = `https://www.google.com/travel/flights?q=${encodeURIComponent(gQuery)}`;
+
+  // 2. Construct Skyscanner URL (Passing IATA codes and dates)
+  let skyscannerUrl = '';
+  if (depYYMMDD) {
+    if (isRoundTrip && retYYMMDD) {
+      skyscannerUrl = `https://www.skyscanner.com/transport/flights/${originCode.toLowerCase()}/${destCode.toLowerCase()}/${depYYMMDD}/${retYYMMDD}/?adultsv2=${travelers}&cabinclass=economy`;
+    } else {
+      skyscannerUrl = `https://www.skyscanner.com/transport/flights/${originCode.toLowerCase()}/${destCode.toLowerCase()}/${depYYMMDD}/?adultsv2=${travelers}&cabinclass=economy`;
+    }
+  } else {
+    skyscannerUrl = `https://www.skyscanner.com/transport/flights/${originCode.toLowerCase()}/${destCode.toLowerCase()}/?adultsv2=${travelers}&cabinclass=economy`;
+  }
+
+  // 3. Construct Kayak Flights URL (Industry standard reliable URL schema: https://www.kayak.com/flights/DEL-LIS/2026-09-01)
+  let kayakUrl = '';
+  if (depISO) {
+    if (isRoundTrip && retISO) {
+      kayakUrl = `https://www.kayak.com/flights/${originCode}-${destCode}/${depISO}/${retISO}/${travelers}adults`;
+    } else {
+      kayakUrl = `https://www.kayak.com/flights/${originCode}-${destCode}/${depISO}/${travelers}adults`;
+    }
+  } else {
+    kayakUrl = `https://www.kayak.com/flights/${originCode}-${destCode}/${travelers}adults`;
+  }
 
   const prompt = `You are a strict, real-world flight availability search engine.
-Check if commercial flight routes exist between origin "${origin}" and destination "${destination}".
+Check if commercial flight routes exist between origin "${cleanOriginCity}" (${originCode}) and destination "${cleanDestCity}" (${destCode}).
 IMPORTANT REAL-WORLD RULES:
-1. If either "${origin}" or "${destination}" lacks a commercial airport or active airline service (e.g. Hamirpur, Kinnaur, Shimla/Mandi without active commercial flights, remote mountain towns), return an empty JSON array [].
+1. If either "${origin}" or "${destination}" lacks a commercial airport or active airline service, return an empty JSON array [].
 2. Do NOT invent fake airline flights for places without airports.
 
 Trip Type: ${isRoundTrip ? 'Round-trip' : 'One-way'}.
-Provide up to 5 flight options departing from ${origin} to ${destination}${departureDate ? ' on ' + departureDate : ''}${isRoundTrip ? ' returning on ' + returnDate : ''} for ${travelers} passenger(s).
+Provide 10 to 12 realistic and diverse commercial flight options departing from ${cleanOriginCity} (${originCode}) to ${cleanDestCity} (${destCode})${depISO ? ' on ' + depISO : ''}${isRoundTrip && retISO ? ' returning on ' + retISO : ''} for ${travelers} passenger(s).
+Include multiple major airlines (e.g. Air India, IndiGo, Emirates, Lufthansa, Qatar Airways, Etihad, Turkish Airlines, British Airways, KLM, Singapore Airlines, United, etc.), covering different departure times across morning, afternoon, evening, and night, with both direct/non-stop and 1-stop options.
 Return total combined trip pricing in ${currency}.
 
 Return a JSON array of objects with this EXACT structure (or [] if no flights exist):
@@ -221,18 +321,19 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
     "logo": "✈️",
     "departureTime": "08:30 AM",
     "arrivalTime": "11:15 AM",
-    "originCode": "${origin.toUpperCase().slice(0, 3)}",
-    "destinationCode": "${destination.toUpperCase().slice(0, 3)}",
+    "originCode": "${originCode}",
+    "destinationCode": "${destCode}",
     "duration": "2h 45m",
     "stops": "Non-stop",
     ${isRoundTrip ? '"returnFlightNumber": "6E-205", "returnDepartureTime": "06:00 PM", "returnArrivalTime": "08:45 PM", "returnDuration": "2h 45m",' : ''}
     "price": 180,
     "currencySymbol": "$",
-    "cabinClass": "Economy",
-    "bookingUrl": "${googleFlightsUrl}",
-    "provider": "Google Flights Direct"
+    "cabinClass": "Economy"
   }
 ]`;
+
+
+
 
   const makeFlightLink = (airline, flightNumber) => {
     let q = `${airline} ${flightNumber} flights from ${origin} to ${destination}`;
@@ -247,7 +348,13 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
       return flights.map((f, i) => ({
         ...f,
         id: f.id || `flight_${i + 1}`,
-        bookingUrl: makeFlightLink(f.airline, f.flightNumber)
+        originCode: f.originCode || originCode,
+        destinationCode: f.destinationCode || destCode,
+        bookingUrl: googleFlightsUrl,
+        googleFlightsUrl: googleFlightsUrl,
+        skyscannerUrl,
+        kayakUrl,
+        provider: 'Google Flights & Partners'
       }));
     }
   } catch (err) {
@@ -258,8 +365,6 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
   const isINR = currency === 'INR' || currency === '₹';
   const sym = isINR ? '₹' : '$';
   const basePrice = isINR ? 45000 : 550;
-  const parsedOriginCode = origin.trim().split(/[\s,]+/)[0].slice(0, 3).toUpperCase();
-  const parsedDestCode = destination.trim().split(/[\s,]+/)[0].slice(0, 3).toUpperCase();
 
   return [
     {
@@ -269,15 +374,18 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
       logo: '✈️',
       departureTime: '01:45 PM',
       arrivalTime: '06:45 PM',
-      originCode: parsedOriginCode || 'DEL',
-      destinationCode: parsedDestCode || 'FRA',
+      originCode: originCode || 'DEL',
+      destinationCode: destCode || 'FRA',
       duration: '8h 30m',
       stops: 'Non-stop',
       price: Math.round(basePrice),
       currencySymbol: sym,
       cabinClass: 'Economy',
-      bookingUrl: makeFlightLink('Air India', 'AI-121'),
-      provider: 'Google Flights'
+      bookingUrl: googleFlightsUrl,
+      googleFlightsUrl: googleFlightsUrl,
+      skyscannerUrl,
+      kayakUrl,
+      provider: 'Air India Direct'
     },
     {
       id: `flight_fb_2_${Date.now()}`,
@@ -286,14 +394,17 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
       logo: '✈️',
       departureTime: '02:50 AM',
       arrivalTime: '07:45 AM',
-      originCode: parsedOriginCode || 'DEL',
-      destinationCode: parsedDestCode || 'FRA',
+      originCode: originCode || 'DEL',
+      destinationCode: destCode || 'FRA',
       duration: '8h 25m',
       stops: 'Non-stop',
-      price: Math.round(basePrice * 1.3),
+      price: Math.round(basePrice * 1.2),
       currencySymbol: sym,
       cabinClass: 'Economy',
-      bookingUrl: makeFlightLink('Lufthansa', 'LH-761'),
+      bookingUrl: googleFlightsUrl,
+      googleFlightsUrl: googleFlightsUrl,
+      skyscannerUrl,
+      kayakUrl,
       provider: 'Lufthansa Direct'
     },
     {
@@ -303,14 +414,17 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
       logo: '✈️',
       departureTime: '10:30 AM',
       arrivalTime: '07:40 PM',
-      originCode: parsedOriginCode || 'DEL',
-      destinationCode: parsedDestCode || 'FRA',
-      duration: '11h 40m',
+      originCode: originCode || 'DEL',
+      destinationCode: destCode || 'FRA',
+      duration: '12h 40m',
       stops: '1 Stop (DXB)',
       price: Math.round(basePrice * 1.15),
       currencySymbol: sym,
       cabinClass: 'Economy',
-      bookingUrl: makeFlightLink('Emirates', 'EK-513'),
+      bookingUrl: googleFlightsUrl,
+      googleFlightsUrl: googleFlightsUrl,
+      skyscannerUrl,
+      kayakUrl,
       provider: 'Emirates Booking'
     },
     {
@@ -320,18 +434,104 @@ Return a JSON array of objects with this EXACT structure (or [] if no flights ex
       logo: '✈️',
       departureTime: '03:45 AM',
       arrivalTime: '01:20 PM',
-      originCode: parsedOriginCode || 'DEL',
-      destinationCode: parsedDestCode || 'FRA',
-      duration: '12h 05m',
+      originCode: originCode || 'DEL',
+      destinationCode: destCode || 'FRA',
+      duration: '13h 05m',
       stops: '1 Stop (DOH)',
       price: Math.round(basePrice * 1.1),
       currencySymbol: sym,
       cabinClass: 'Economy',
-      bookingUrl: makeFlightLink('Qatar Airways', 'QR-579'),
-      provider: 'Google Flights'
+      bookingUrl: googleFlightsUrl,
+      googleFlightsUrl: googleFlightsUrl,
+      skyscannerUrl,
+      kayakUrl,
+      provider: 'Qatar Airways'
+    },
+    {
+      id: `flight_fb_5_${Date.now()}`,
+      airline: 'British Airways',
+      flightNumber: 'BA-142',
+      logo: '✈️',
+      departureTime: '06:15 AM',
+      arrivalTime: '04:30 PM',
+      originCode: originCode || 'DEL',
+      destinationCode: destCode || 'FRA',
+      duration: '13h 45m',
+      stops: '1 Stop (LHR)',
+      price: Math.round(basePrice * 1.05),
+      currencySymbol: sym,
+      cabinClass: 'Economy',
+      bookingUrl: googleFlightsUrl,
+      googleFlightsUrl: googleFlightsUrl,
+      skyscannerUrl,
+      kayakUrl,
+      provider: 'British Airways'
+    },
+    {
+      id: `flight_fb_6_${Date.now()}`,
+      airline: 'Etihad Airways',
+      flightNumber: 'EY-217',
+      logo: '✈️',
+      departureTime: '08:50 PM',
+      arrivalTime: '06:30 AM (+1 day)',
+      originCode: originCode || 'DEL',
+      destinationCode: destCode || 'FRA',
+      duration: '13h 10m',
+      stops: '1 Stop (AUH)',
+      price: Math.round(basePrice * 1.08),
+      currencySymbol: sym,
+      cabinClass: 'Economy',
+      bookingUrl: googleFlightsUrl,
+      googleFlightsUrl: googleFlightsUrl,
+      skyscannerUrl,
+      kayakUrl,
+      provider: 'Etihad Airways'
+    },
+    {
+      id: `flight_fb_7_${Date.now()}`,
+      airline: 'Turkish Airlines',
+      flightNumber: 'TK-717',
+      logo: '✈️',
+      departureTime: '06:40 AM',
+      arrivalTime: '03:15 PM',
+      originCode: originCode || 'DEL',
+      destinationCode: destCode || 'FRA',
+      duration: '12h 05m',
+      stops: '1 Stop (IST)',
+      price: Math.round(basePrice * 0.95),
+      currencySymbol: sym,
+      cabinClass: 'Economy',
+      bookingUrl: googleFlightsUrl,
+      googleFlightsUrl: googleFlightsUrl,
+      skyscannerUrl,
+      kayakUrl,
+      provider: 'Turkish Airlines'
+    },
+    {
+      id: `flight_fb_8_${Date.now()}`,
+      airline: 'KLM Royal Dutch',
+      flightNumber: 'KL-872',
+      logo: '✈️',
+      departureTime: '03:10 AM',
+      arrivalTime: '11:45 AM',
+      originCode: originCode || 'DEL',
+      destinationCode: destCode || 'FRA',
+      duration: '12h 05m',
+      stops: '1 Stop (AMS)',
+      price: Math.round(basePrice * 1.12),
+      currencySymbol: sym,
+      cabinClass: 'Economy',
+      bookingUrl: googleFlightsUrl,
+      googleFlightsUrl: googleFlightsUrl,
+      skyscannerUrl,
+      kayakUrl,
+      provider: 'KLM Direct'
     }
   ];
 };
+
+
+
 
 /**
  * Search Trains & Buses via Groq/Gemini with Google Travel / Official deep links

@@ -4,8 +4,24 @@ import {
   searchGoogleFlights,
   searchGoogleTransit
 } from '../services/googleTravelService.js';
+import { searchAirports } from '../data/airports.js';
 
 const router = express.Router();
+
+// GET /travel/airports?q=delhi
+router.get('/airports', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length === 0) {
+      return res.json([]);
+    }
+    const airports = searchAirports(q);
+    res.json(airports);
+  } catch (err) {
+    console.error('Route /travel/airports error:', err);
+    res.status(500).json({ message: 'Failed to search airports' });
+  }
+});
 
 // GET /travel/hotels?location=Goa&checkIn=2026-09-01&checkOut=2026-09-05&guests=2&currency=USD
 router.get('/hotels', async (req, res) => {

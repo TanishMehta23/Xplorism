@@ -142,45 +142,68 @@ export default function HotelBookingPage() {
   const [showOriginSuggestions, setShowOriginSuggestions] = useState(false);
   const [currency, setCurrency] = useState({ symbol: '$', rate: 1, code: 'USD' });
 
-  // Fetch autocomplete suggestions for destination
+  // Fetch autocomplete suggestions for destination (Airports for flights, Geocode for hotels/trains/buses)
   useEffect(() => {
-    if (destination.trim().length < 2) {
+    if (destination.trim().length < 1) {
       setSuggestions([]);
       return;
     }
     const delayDebounce = setTimeout(async () => {
       try {
-        const data = await api.get(`/geocode?q=${encodeURIComponent(destination)}`);
-        if (data && data.length > 0) {
-          setSuggestions(data.slice(0, 6));
+        if (activeSearchTab === 'flights') {
+          const data = await api.get(`/travel/airports?q=${encodeURIComponent(destination)}`);
+          if (data && data.length > 0) {
+            setSuggestions(data.slice(0, 8));
+          } else {
+            setSuggestions([]);
+          }
+        } else {
+          const data = await api.get(`/geocode?q=${encodeURIComponent(destination)}`);
+          if (data && data.length > 0) {
+            setSuggestions(data.slice(0, 6));
+          } else {
+            setSuggestions([]);
+          }
         }
       } catch (err) {
-        console.error('Hotel autocomplete error:', err);
+        console.error('Destination autocomplete error:', err);
       }
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(delayDebounce);
-  }, [destination]);
+  }, [destination, activeSearchTab]);
 
-  // Fetch autocomplete suggestions for origin
+  // Fetch autocomplete suggestions for origin (Airports for flights, Geocode for trains/buses)
   useEffect(() => {
-    if (origin.trim().length < 2) {
+    if (origin.trim().length < 1) {
       setOriginSuggestions([]);
       return;
     }
     const delayDebounce = setTimeout(async () => {
       try {
-        const data = await api.get(`/geocode?q=${encodeURIComponent(origin)}`);
-        if (data && data.length > 0) {
-          setOriginSuggestions(data.slice(0, 6));
+        if (activeSearchTab === 'flights') {
+          const data = await api.get(`/travel/airports?q=${encodeURIComponent(origin)}`);
+          if (data && data.length > 0) {
+            setOriginSuggestions(data.slice(0, 8));
+          } else {
+            setOriginSuggestions([]);
+          }
+        } else {
+          const data = await api.get(`/geocode?q=${encodeURIComponent(origin)}`);
+          if (data && data.length > 0) {
+            setOriginSuggestions(data.slice(0, 6));
+          } else {
+            setOriginSuggestions([]);
+          }
         }
       } catch (err) {
         console.error('Origin autocomplete error:', err);
       }
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(delayDebounce);
-  }, [origin]);
+  }, [origin, activeSearchTab]);
+
 
   // Click outside listener for suggestions dropdown
   useEffect(() => {
@@ -350,14 +373,26 @@ export default function HotelBookingPage() {
     setSelectedHotel(null);
 
     try {
-      // 1. Geocode location via proxy
-      const data = await api.get(`/geocode?q=${encodeURIComponent(destination)}`);
-      let centerCoords = [20.5937, 78.9629]; // India default
+      // 1. Geocode location via proxy / airports
+      let centerCoords = [28.5562, 77.1000]; // Delhi default
       let resolvedAddress = destination;
 
-      if (data && data.length > 0) {
-        centerCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        resolvedAddress = data[0].display_name || destination;
+      if (activeSearchTab === 'flights') {
+        try {
+          const airportData = await api.get(`/travel/airports?q=${encodeURIComponent(destination)}`);
+          if (Array.isArray(airportData) && airportData.length > 0) {
+            centerCoords = [parseFloat(airportData[0].lat), parseFloat(airportData[0].lon)];
+            resolvedAddress = airportData[0].display_name || destination;
+          }
+        } catch (e) {
+          console.warn('Flight airport destination geocode fallback:', e.message);
+        }
+      } else {
+        const data = await api.get(`/geocode?q=${encodeURIComponent(destination)}`);
+        if (data && data.length > 0) {
+          centerCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+          resolvedAddress = data[0].display_name || destination;
+        }
       }
 
       setMapCoords(centerCoords);
@@ -368,18 +403,29 @@ export default function HotelBookingPage() {
         const queryOrigin = origin.trim();
         if (queryOrigin) {
           try {
-            const origData = await api.get(`/geocode?q=${encodeURIComponent(queryOrigin)}`);
-            if (origData && origData.length > 0) {
-              setTransitOriginCoords([parseFloat(origData[0].lat), parseFloat(origData[0].lon)]);
+            if (activeSearchTab === 'flights') {
+              const origAirport = await api.get(`/travel/airports?q=${encodeURIComponent(queryOrigin)}`);
+              if (Array.isArray(origAirport) && origAirport.length > 0) {
+                setTransitOriginCoords([parseFloat(origAirport[0].lat), parseFloat(origAirport[0].lon)]);
+              } else {
+                setTransitOriginCoords([28.5562, 77.1000]); // Delhi
+              }
             } else {
-              setTransitOriginCoords([centerCoords[0] + 0.1, centerCoords[1] - 0.1]);
+              const origData = await api.get(`/geocode?q=${encodeURIComponent(queryOrigin)}`);
+              if (origData && origData.length > 0) {
+                setTransitOriginCoords([parseFloat(origData[0].lat), parseFloat(origData[0].lon)]);
+              } else {
+                setTransitOriginCoords([centerCoords[0] + 0.1, centerCoords[1] - 0.1]);
+              }
             }
           } catch (origErr) {
             console.warn('Origin geocoding error, using fallback offset:', origErr);
-            setTransitOriginCoords([centerCoords[0] + 0.1, centerCoords[1] - 0.1]);
+            setTransitOriginCoords([28.5562, 77.1000]);
           }
         }
       }
+
+
 
       const cur = getCurrencyDetails(resolvedAddress);
       setCurrency(cur);
@@ -557,12 +603,15 @@ export default function HotelBookingPage() {
   // Load/Update Transit Map Leaflet instance for Flights/Trains/Buses
   useEffect(() => {
     if (!isLeafletLoaded || !hasSearched || activeSearchTab === 'hotels') return;
-    if (!transitOriginCoords || !transitDestCoords) return;
+    
+    // Default coordinates fallback if not resolved yet
+    const origCoords = transitOriginCoords || [28.5562, 77.1000]; // DEL default
+    const dstCoords = transitDestCoords || [50.0379, 8.5622]; // FRA default
 
     const container = document.getElementById('transit-map-container');
     if (!container) return;
 
-    // Reset container if it exists
+    // Reset container if previous instance died or got out of sync
     if (container._leaflet_id && !transitMapInstance) {
       container.innerHTML = '';
       container._leaflet_id = null;
@@ -575,10 +624,12 @@ export default function HotelBookingPage() {
         dragging: true,
         touchZoom: true,
         scrollWheelZoom: true
-      }).setView(transitDestCoords, 10);
+      }).setView(dstCoords, 3);
 
+      // Google Maps Standard Terrain / Street Layer
       window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        attribution: '© Google Maps'
+        attribution: '&copy; Google Maps',
+        maxZoom: 20
       }).addTo(map);
 
       window.L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -586,35 +637,119 @@ export default function HotelBookingPage() {
     }
 
     // Clear previous markers
-    transitMarkersList.forEach(item => item.remove());
+    transitMarkersList.forEach(item => {
+      try { item.remove(); } catch (e) {}
+    });
     const newMarkers = [];
 
-    // Create markers
-    const originPin = window.L.marker(transitOriginCoords).addTo(map)
-      .bindPopup(`<b>Origin</b><br>${origin}`);
-    const destPin = window.L.marker(transitDestCoords).addTo(map)
-      .bindPopup(`<b>Destination</b><br>${destination}`);
+    // Custom modern auto-sized Pin Icons without overflow
+    const createCustomIcon = (label, color, isPlane = false) => {
+      return window.L.divIcon({
+        className: 'custom-transit-pin',
+        html: `
+          <div style="
+            background: ${color};
+            color: #ffffff;
+            padding: 5px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 800;
+            font-family: system-ui, -apple-system, sans-serif;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            border: 2px solid #ffffff;
+            transform: translate(-50%, -50%);
+            width: max-content;
+          ">
+            <span style="font-size: 12px; line-height: 1;">${isPlane ? '✈️' : '📍'}</span>
+            <span style="letter-spacing: 0.2px;">${label}</span>
+          </div>
+        `,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0]
+      });
+    };
 
-    // Create flight route path (dashed for flight, solid for land transit)
-    const flightPath = window.L.polyline([transitOriginCoords, transitDestCoords], {
+    const originName = origin ? origin.split(/[(,]/)[0].trim() : 'Origin';
+    const destName = destination ? destination.split(/[(,]/)[0].trim() : 'Destination';
+
+    const originPin = window.L.marker(origCoords, {
+      icon: createCustomIcon(originName, '#4f46e5', false)
+    }).addTo(map).bindPopup(`<b>Origin:</b> ${origin || originName}`);
+
+    const destPin = window.L.marker(dstCoords, {
+      icon: createCustomIcon(destName, '#e11d48', true)
+    }).addTo(map).bindPopup(`<b>Destination:</b> ${destination || destName}`);
+
+    // Generate smooth curved flight path (Great-circle / Bezier flight arc)
+    const generateCurvedPath = (start, end, numPoints = 60) => {
+      const [lat1, lon1] = start;
+      const [lat2, lon2] = end;
+
+      // Midpoint
+      const midLat = (lat1 + lat2) / 2;
+      const midLon = (lon1 + lon2) / 2;
+
+      // Distance and elevation offset for realistic aviation arc
+      const dLat = lat2 - lat1;
+      const dLon = lon2 - lon1;
+      const dist = Math.sqrt(dLat * dLat + dLon * dLon);
+
+      // Arc offset perpendicular to flight direction (northward curve)
+      const arcHeight = Math.min(Math.max(dist * 0.22, 3), 18);
+      const controlLat = midLat + arcHeight;
+      const controlLon = midLon;
+
+      const points = [];
+      for (let i = 0; i <= numPoints; i++) {
+        const t = i / numPoints;
+        // Quadratic Bezier interpolation: B(t) = (1-t)^2*P0 + 2(1-t)t*P1 + t^2*P2
+        const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * controlLat + t * t * lat2;
+        const lon = (1 - t) * (1 - t) * lon1 + 2 * (1 - t) * t * controlLon + t * t * lon2;
+        points.push([lat, lon]);
+      }
+      return points;
+    };
+
+    const pathCoordinates = activeSearchTab === 'flights' 
+      ? generateCurvedPath(origCoords, dstCoords) 
+      : [origCoords, dstCoords];
+
+    // Create flight route curved path
+    const flightPath = window.L.polyline(pathCoordinates, {
       color: '#e11d48',
-      weight: 3,
-      opacity: 0.8,
-      dashArray: activeSearchTab === 'flights' ? '6, 6' : '0'
+      weight: 3.5,
+      opacity: 0.85,
+      dashArray: activeSearchTab === 'flights' ? '8, 8' : '0',
+      smoothFactor: 1
     }).addTo(map);
 
     newMarkers.push(originPin, destPin, flightPath);
     setTransitMarkersList(newMarkers);
 
-    // Zoom map to fit both markers
-    const bounds = window.L.latLngBounds([transitOriginCoords, transitDestCoords]);
-    map.fitBounds(bounds.pad(0.25));
+    // Zoom map to fit curved path bounds
+    try {
+      const bounds = window.L.latLngBounds(pathCoordinates);
+      map.fitBounds(bounds.pad(0.35));
+    } catch (err) {
+      console.warn('fitBounds error:', err);
+    }
 
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 200);
 
-  }, [isLeafletLoaded, transitOriginCoords, transitDestCoords, hasSearched, activeSearchTab]);
+    // Force map tile recalculation
+    const t1 = setTimeout(() => { if (map) map.invalidateSize(); }, 100);
+    const t2 = setTimeout(() => { if (map) map.invalidateSize(); }, 500);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [isLeafletLoaded, transitOriginCoords, transitDestCoords, hasSearched, activeSearchTab, flightsData]);
+
+
 
   // Toggle Amenity Filter Selection
   const toggleAmenity = (amenity) => {
@@ -838,7 +973,7 @@ export default function HotelBookingPage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
-                          className="absolute left-0 right-0 top-full mt-2 z-50 max-h-52 overflow-y-auto border rounded-2xl shadow-2xl divide-y backdrop-blur-md"
+                          className="absolute left-0 right-0 top-full mt-2 z-50 max-h-60 overflow-y-auto border rounded-2xl shadow-2xl divide-y backdrop-blur-md"
                           style={{
                             backgroundColor: 'var(--bg-secondary)',
                             borderColor: 'var(--border-primary)',
@@ -850,14 +985,34 @@ export default function HotelBookingPage() {
                               key={item.place_id}
                               type="button"
                               onClick={() => {
-                                setOrigin(item.display_name);
+                                setOrigin(item.code ? `${item.city} (${item.code})` : item.display_name);
                                 setShowOriginSuggestions(false);
                               }}
-                              className="w-full text-left px-5 py-3 hover:bg-[var(--bg-tertiary)] transition text-xs flex items-center space-x-2 font-semibold"
+                              className="w-full text-left px-4 py-3 hover:bg-[var(--bg-tertiary)] transition flex items-center justify-between gap-2"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                              <span className="truncate">{item.display_name}</span>
+                              <div className="flex items-center space-x-2.5 truncate">
+                                {item.type === 'airport' || item.code ? (
+                                  <Plane className="h-4 w-4 text-rose-500 shrink-0" />
+                                ) : (
+                                  <MapPin className="h-4 w-4 text-rose-500 shrink-0" />
+                                )}
+                                <div className="truncate">
+                                  <div className="text-xs font-bold truncate">
+                                    {item.name || item.display_name}
+                                  </div>
+                                  {item.city && (
+                                    <div className="text-[10px] text-[var(--text-secondary)] font-medium">
+                                      {item.city}, {item.country}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              {item.code && (
+                                <span className="font-mono text-xs font-extrabold px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+                                  {item.code}
+                                </span>
+                              )}
                             </button>
                           ))}
                         </motion.div>
@@ -880,7 +1035,7 @@ export default function HotelBookingPage() {
                         setShowSuggestions(true);
                       }}
                       onFocus={() => setShowSuggestions(true)}
-                      placeholder="Where are you going? (e.g. Goa, Tokyo, Paris)"
+                      placeholder={activeSearchTab === 'flights' ? 'Airport or Destination City (e.g. BOM, DXB, London)' : 'Where are you going? (e.g. Goa, Tokyo, Paris)'}
                       className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
                       style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                       autoComplete="off"
@@ -895,7 +1050,7 @@ export default function HotelBookingPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute left-0 right-0 top-full mt-2 z-50 max-h-52 overflow-y-auto border rounded-2xl shadow-2xl divide-y backdrop-blur-md"
+                        className="absolute left-0 right-0 top-full mt-2 z-50 max-h-60 overflow-y-auto border rounded-2xl shadow-2xl divide-y backdrop-blur-md"
                         style={{
                           backgroundColor: 'var(--bg-secondary)',
                           borderColor: 'var(--border-primary)',
@@ -907,14 +1062,34 @@ export default function HotelBookingPage() {
                             key={item.place_id}
                             type="button"
                             onClick={() => {
-                              setDestination(item.display_name);
+                              setDestination(item.code ? `${item.city} (${item.code})` : item.display_name);
                               setShowSuggestions(false);
                             }}
-                            className="w-full text-left px-5 py-3 hover:bg-[var(--bg-tertiary)] transition text-xs flex items-center space-x-2 font-semibold"
+                            className="w-full text-left px-4 py-3 hover:bg-[var(--bg-tertiary)] transition flex items-center justify-between gap-2"
                             style={{ color: 'var(--text-primary)' }}
                           >
-                            <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                            <span className="truncate">{item.display_name}</span>
+                            <div className="flex items-center space-x-2.5 truncate">
+                              {item.type === 'airport' || item.code ? (
+                                <Plane className="h-4 w-4 text-rose-500 shrink-0" />
+                              ) : (
+                                <MapPin className="h-4 w-4 text-rose-500 shrink-0" />
+                              )}
+                              <div className="truncate">
+                                <div className="text-xs font-bold truncate">
+                                  {item.name || item.display_name}
+                                </div>
+                                {item.city && (
+                                  <div className="text-[10px] text-[var(--text-secondary)] font-medium">
+                                    {item.city}, {item.country}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {item.code && (
+                              <span className="font-mono text-xs font-extrabold px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+                                {item.code}
+                              </span>
+                            )}
                           </button>
                         ))}
                       </motion.div>
@@ -986,13 +1161,13 @@ export default function HotelBookingPage() {
                <Hotel className="h-12 w-12" />}
             </div>
             <h2 className="text-xl font-bold">
-              {activeSearchTab === 'flights' ? 'Search Google Flights' :
+              {activeSearchTab === 'flights' ? 'Search Flights with Live Providers' :
                activeSearchTab === 'trains' ? 'Find Rail Schedules' :
                activeSearchTab === 'buses' ? 'Find Intercity Buses' :
                'Find Your Next Premium Stay'}
             </h2>
             <p className="text-sm max-w-md" style={{ color: 'var(--text-secondary)' }}>
-              Powered by Google Travel. Enter origin and destination above to see real pricing and direct booking links.
+              Compare real-time schedules and prices across Google Flights, Skyscanner, and Booking.com.
             </p>
           </div>
          ) : searchLoading ? (
@@ -1005,8 +1180,20 @@ export default function HotelBookingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Transit Map Panel */}
             <div className="lg:col-span-5 space-y-4 md:sticky md:top-24 self-start z-10">
-              <div className="rounded-3xl border overflow-hidden shadow-sm relative h-80 lg:h-[450px]" style={{ borderColor: 'var(--border-primary)' }}>
-                <div id="transit-map-container" className="w-full h-full z-10" />
+              <div className="rounded-3xl border overflow-hidden shadow-sm relative h-80 lg:h-[450px] bg-slate-100 dark:bg-slate-800" style={{ borderColor: 'var(--border-primary)' }}>
+                {activeSearchTab === 'flights' && (!transitOriginCoords && !transitDestCoords) ? (
+                  <iframe
+                    title="Flight Route Map"
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    style={{ border: 0 }}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(origin + ' to ' + destination)}&t=&z=4&ie=UTF8&iwloc=&output=embed`}
+                    allowFullScreen
+                  />
+                ) : (
+                  <div id="transit-map-container" className="w-full h-full min-h-[320px] lg:min-h-[450px] z-10" />
+                )}
                 {!isLeafletLoaded && (
                   <div className="absolute inset-0 bg-slate-50/80 z-20 flex items-center justify-center flex-col space-y-2">
                     <div className="h-6 w-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
@@ -1015,6 +1202,7 @@ export default function HotelBookingPage() {
                 )}
               </div>
             </div>
+
 
             {/* Right Pane */}
             <div className="lg:col-span-7 space-y-4">
@@ -1030,12 +1218,24 @@ export default function HotelBookingPage() {
                   ) : (
                     flightsData.map((f, i) => (
                       <div key={f.id ? `flight-${f.id}-${i}` : `flight-fallback-${i}`} className="p-5 rounded-3xl border bg-[var(--bg-secondary)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in-up" style={{ borderColor: 'var(--border-primary)' }}>
-                        <div className="flex items-center space-x-4">
-                          <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 text-xl font-bold">
+                        <div className="flex items-center space-x-4 min-w-0 flex-1">
+                          <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 text-xl font-bold shrink-0">
                             {f.logo || '✈️'}
                           </div>
-                          <div>
-                            <h4 className="text-base font-extrabold">{f.airline} <span className="text-xs font-semibold opacity-70">({f.flightNumber})</span></h4>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                              <h4 className="text-base font-extrabold text-[var(--text-primary)] whitespace-nowrap">
+                                {f.airline}{' '}
+                                <span className="text-xs font-semibold opacity-70 whitespace-nowrap">
+                                  ({f.flightNumber})
+                                </span>
+                              </h4>
+                              {f.originCode && f.destinationCode && (
+                                <span className="inline-flex items-center text-[11px] font-mono font-extrabold text-rose-500 bg-rose-500/10 px-2.5 py-0.5 rounded-lg border border-rose-500/20 whitespace-nowrap shrink-0">
+                                  {f.originCode} ➔ {f.destinationCode}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-[var(--text-secondary)] mt-0.5">Outbound: {f.departureTime} ➔ {f.arrivalTime} • {f.duration} • {f.stops || 'Non-stop'}</p>
                             {f.returnDepartureTime && (
                               <p className="text-xs text-rose-500 font-semibold mt-0.5">Return ({f.returnFlightNumber || 'Return'}): {f.returnDepartureTime} ➔ {f.returnArrivalTime} • {f.returnDuration || f.duration}</p>
@@ -1052,26 +1252,59 @@ export default function HotelBookingPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4 self-end md:self-auto">
+
+
+                        {/* Booking & Price Buttons */}
+                        <div className="flex flex-col items-end gap-2.5 self-end md:self-auto shrink-0">
                           <div className="text-right">
-                            <span className="text-xs text-[var(--text-tertiary)] block">Fare Estimate</span>
+                            <span className="text-xs text-[var(--text-tertiary)] block">Fare Starts From</span>
                             <span className="text-xl font-black text-rose-500">{f.currencySymbol || '$'}{f.price}</span>
                           </div>
-                          <a
-                            href={f.bookingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md border-0"
-                          >
-                            <span>Google Flights</span>
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </a>
+
+                          <div className="flex flex-wrap items-center gap-1.5 justify-end">
+                            {f.skyscannerUrl && (
+                              <a
+                                href={f.skyscannerUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Search & Compare on Skyscanner"
+                                className="flex items-center space-x-1.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-[11px] px-3 py-2 rounded-xl transition shadow-sm border-0"
+                              >
+                                <span>Skyscanner</span>
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                            {f.kayakUrl && (
+                              <a
+                                href={f.kayakUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Search & Compare on Kayak"
+                                className="flex items-center space-x-1.5 bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] px-3 py-2 rounded-xl transition shadow-sm border-0"
+                              >
+                                <span>Kayak</span>
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                            <a
+                              href={f.googleFlightsUrl || f.bookingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Search & Compare on Google Flights"
+                              className="flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] px-3 py-2 rounded-xl transition shadow-sm border-0"
+                            >
+                              <span>Google Flights</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+
                         </div>
                       </div>
                     ))
                   )}
                 </>
               ) : (
+
                 <>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>

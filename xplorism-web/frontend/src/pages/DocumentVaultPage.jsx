@@ -342,25 +342,34 @@ export default function DocumentVaultPage() {
       <Navbar activeTab="vault" />
 
       {/* Main Container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full flex-1 py-12 space-y-8 min-h-[85vh] pb-24">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 py-8 sm:py-12 space-y-6 sm:space-y-8 min-h-[85vh] pb-24">
         
         {/* Title Block */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-2">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2.5 mb-3">
-              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                <FolderLock className="h-5 w-5" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 pb-1 sm:pb-2 text-left">
+          <div className="w-full md:w-auto">
+            <div className="flex items-center justify-between md:justify-start space-x-2.5 mb-2 sm:mb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 sm:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                  <FolderLock className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                </div>
+                <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">{t('secure_storage') || 'Encrypted Storage'}</span>
               </div>
-              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('secure_storage') || 'Encrypted Storage'}</span>
+              <button
+                onClick={handleOpenAddModal}
+                className="md:hidden flex items-center justify-center space-x-1 text-xs font-extrabold px-3.5 py-2 rounded-xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm active:scale-95 transition-all duration-200 select-none cursor-pointer dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
+              >
+                <Plus className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" />
+                <span>{t('add_document')}</span>
+              </button>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>
               <span>{t('vault_title')}</span>
             </h1>
-            <p className="text-sm md:text-base font-medium text-[var(--text-secondary)]">{t('vault_subtitle')}</p>
+            <p className="text-xs sm:text-sm md:text-base font-medium text-[var(--text-secondary)]">{t('vault_subtitle')}</p>
           </div>
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center justify-center space-x-2.5 text-sm font-extrabold px-5 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer self-start md:self-auto dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
+            className="hidden md:flex items-center justify-center space-x-2.5 text-sm font-extrabold px-5 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer self-start md:self-auto dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
           >
             <Plus className="h-4.5 w-4.5 text-rose-500 dark:text-rose-400" />
             <span>{t('add_document')}</span>
@@ -369,31 +378,31 @@ export default function DocumentVaultPage() {
 
         {/* Warning Alerts Section (Expired or Expiring soon) */}
         {alertDocuments.length > 0 && (
-          <div className="p-4.5 rounded-2xl border bg-rose-500/10 border-rose-500/25 space-y-3">
-            <h3 className="text-xs uppercase font-extrabold tracking-wider text-rose-400 flex items-center gap-1.5">
-              <ShieldAlert className="h-4.5 w-4.5" />
+          <div className="p-3.5 sm:p-4.5 rounded-xl sm:rounded-2xl border bg-rose-500/10 border-rose-500/25 space-y-2.5 sm:space-y-3">
+            <h3 className="text-[11px] sm:text-xs uppercase font-extrabold tracking-wider text-rose-400 flex items-center gap-1.5">
+              <ShieldAlert className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               <span>Security Warnings / Attention Required</span>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
               {alertDocuments.map(doc => {
                 const { status, daysRemaining } = getExpirationStatus(doc.expiry_date);
                 const isExpired = status === 'expired';
                 return (
                   <div 
                     key={doc.id}
-                    className="p-3.5 rounded-xl border flex items-center justify-between text-xs backdrop-blur-md"
+                    className="p-3 sm:p-3.5 rounded-xl border flex items-center justify-between text-xs backdrop-blur-md"
                     style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'rgba(244, 63, 94, 0.2)' }}
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center shrink-0">
+                    <div className="flex items-center space-x-2.5 sm:space-x-3">
+                      <div className="p-1.5 sm:p-2 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center shrink-0">
                         {getTypeIcon(doc.type)}
                       </div>
                       <div>
-                        <p className="font-extrabold text-[var(--text-primary)] truncate max-w-[150px]">{doc.title}</p>
-                        <p className="text-[10px] text-[var(--text-secondary)] font-semibold">{doc.doc_number}</p>
+                        <p className="font-extrabold text-[var(--text-primary)] truncate max-w-[130px] sm:max-w-[150px] text-xs">{doc.title}</p>
+                        <p className="text-[9.5px] sm:text-[10px] text-[var(--text-secondary)] font-semibold">{doc.doc_number}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                    <span className={`px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black uppercase ${
                       isExpired ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                     }`}>
                       {isExpired ? t('expired') : `${daysRemaining} Days Left`}
@@ -406,14 +415,14 @@ export default function DocumentVaultPage() {
         )}
 
         {/* Filter categories (Horizontal Swipeable Pill Category Row) */}
-        <div className="flex items-center space-x-2 overflow-x-auto pb-3 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 whitespace-nowrap">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto pb-2 sm:pb-3 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 whitespace-nowrap">
           {['all', 'passport', 'visa', 'ticket', 'hotel_voucher', 'insurance', 'other'].map(filter => {
             const isActive = activeFilter === filter;
             return (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`inline-flex items-center space-x-1.5 px-4.5 py-2.5 rounded-full text-xs font-bold transition-all duration-200 border cursor-pointer shrink-0 active:scale-95 shadow-sm ${
+                className={`inline-flex items-center space-x-1.5 px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-200 border cursor-pointer shrink-0 active:scale-95 shadow-sm ${
                   isActive 
                     ? 'text-white border-rose-500 bg-rose-500' 
                     : 'border-[var(--border-primary)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)]'
@@ -448,7 +457,7 @@ export default function DocumentVaultPage() {
             <p className="text-xs text-[var(--text-secondary)] max-w-sm">{t('no_documents')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {filteredDocuments.map(doc => {
               const { status } = getExpirationStatus(doc.expiry_date);
               const isExpired = status === 'expired';
@@ -460,7 +469,7 @@ export default function DocumentVaultPage() {
                   layout
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl border p-5 flex flex-col justify-between space-y-4 backdrop-blur-md relative overflow-hidden group shadow-lg transition-all duration-300"
+                  className="rounded-2xl border p-4 sm:p-5 flex flex-col justify-between space-y-3.5 sm:space-y-4 backdrop-blur-md relative overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-300"
                   style={{ 
                     backgroundColor: 'var(--bg-secondary)', 
                     borderColor: isExpired ? 'rgba(239, 68, 68, 0.4)' : isWarning ? 'rgba(245, 158, 11, 0.4)' : 'var(--border-primary)' 
@@ -468,31 +477,31 @@ export default function DocumentVaultPage() {
                 >
                   {/* Top Header */}
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3.5">
-                      <div className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center shrink-0">
+                    <div className="flex items-center space-x-3 sm:space-x-3.5">
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] flex items-center justify-center shrink-0">
                         {getTypeIcon(doc.type)}
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-[var(--text-primary)] text-base leading-tight group-hover:text-rose-500 transition">{doc.title}</h4>
-                        <p className="text-[10px] uppercase font-bold text-rose-500 mt-1">{t(doc.type)}</p>
+                        <h4 className="font-extrabold text-[var(--text-primary)] text-sm sm:text-base leading-tight group-hover:text-rose-500 transition">{doc.title}</h4>
+                        <p className="text-[9px] sm:text-[10px] uppercase font-bold text-rose-500 mt-0.5 sm:mt-1">{t(doc.type)}</p>
                       </div>
                     </div>
                     
                     {/* Action buttons */}
-                    <div className="flex items-center space-x-1.5 opacity-80 group-hover:opacity-100 transition">
+                    <div className="flex items-center space-x-1 sm:space-x-1.5 opacity-80 group-hover:opacity-100 transition">
                       <button 
                         onClick={() => handleOpenEditModal(doc)}
                         className="p-1.5 rounded-lg bg-[var(--bg-tertiary)] hover:bg-[var(--border-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer"
                         title={t('edit')}
                       >
-                        <Edit3 className="h-4 w-4" />
+                        <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                       <button 
                         onClick={() => triggerDeleteConfirm(doc)}
                         className="p-1.5 rounded-lg bg-[var(--bg-tertiary)] hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-500 transition cursor-pointer"
                         title={t('delete')}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     </div>
                   </div>
@@ -500,21 +509,21 @@ export default function DocumentVaultPage() {
                   {/* Attachment Footer */}
                   {doc.file_name && (
                     <div className="flex items-center justify-between p-2 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-xs">
-                      <div className="flex items-center space-x-2 truncate max-w-[200px]">
-                        <FileText className="h-4 w-4 text-rose-500 flex-shrink-0" />
-                        <span className="text-[var(--text-primary)] truncate font-semibold text-[11px]">{doc.file_name}</span>
+                      <div className="flex items-center space-x-1.5 sm:space-x-2 truncate max-w-[140px] sm:max-w-[200px]">
+                        <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-rose-500 flex-shrink-0" />
+                        <span className="text-[var(--text-primary)] truncate font-semibold text-[10px] sm:text-[11px]">{doc.file_name}</span>
                       </div>
-                      <div className="flex items-center space-x-1.5">
+                      <div className="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
                         <button
                           onClick={() => handleViewDocument(doc)}
-                          className="p-1 px-2.5 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--border-primary)] text-[var(--text-primary)] border border-[var(--border-primary)] font-extrabold text-[10px] flex items-center space-x-1 cursor-pointer transition active:scale-95"
+                          className="p-1 px-2 sm:px-2.5 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--border-primary)] text-[var(--text-primary)] border border-[var(--border-primary)] font-extrabold text-[9px] sm:text-[10px] flex items-center space-x-1 cursor-pointer transition active:scale-95"
                         >
                           <Eye className="h-3 w-3" />
                           <span>View</span>
                         </button>
                         <button
                           onClick={() => handleDownloadDocument(doc)}
-                          className="p-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[10px] flex items-center space-x-1 cursor-pointer transition shadow-sm active:scale-95"
+                          className="p-1 px-2 sm:px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[9px] sm:text-[10px] flex items-center space-x-1 cursor-pointer transition shadow-sm active:scale-95"
                         >
                           <Download className="h-3 w-3" />
                           <span>{t('download')}</span>

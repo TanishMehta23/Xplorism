@@ -471,21 +471,21 @@ export default function WeatherPage() {
         )}
       </AnimatePresence>
 
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 min-h-[85vh] pb-24 space-y-8">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 min-h-[85vh] pb-24 space-y-6 sm:space-y-8">
         
         {/* Page Header (Consistent with all other pages) */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 pb-1 sm:pb-2 text-left">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2.5 mb-3">
-              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                <Sun className="h-5 w-5" />
+            <div className="flex items-center space-x-2.5 mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                <Sun className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               </div>
-              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('climate_radar')}</span>
+              <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">{t('climate_radar')}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>
               {t('global_weather_forecast')}
             </h1>
-            <p className="text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-xs sm:text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
               {t('weather_desc')}
             </p>
           </div>
@@ -495,7 +495,7 @@ export default function WeatherPage() {
         <div className="w-full flex flex-col items-start space-y-4">
           <div className="w-full relative search-container">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5 pointer-events-none" />
+              <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 h-4.5 w-4.5 sm:h-5 sm:w-5 pointer-events-none" />
               <input 
                 type="text" 
                 value={query}
@@ -505,7 +505,7 @@ export default function WeatherPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder={t('search_city_placeholder')}
-                className={`w-full pl-12 pr-12 py-3.5 rounded-2xl outline-none transition text-sm shadow-sm border ${isDarkTheme ? 'bg-slate-900/60 border-slate-800 text-white focus:border-rose-500' : 'bg-white border-slate-200 text-slate-800 focus:border-rose-400'}`}
+                className={`w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl outline-none transition text-xs sm:text-sm shadow-sm border ${isDarkTheme ? 'bg-slate-900/60 border-slate-800 text-white focus:border-rose-500' : 'bg-white border-slate-200 text-slate-800 focus:border-rose-400'}`}
               />
               <button
                 onClick={() => {
@@ -532,10 +532,10 @@ export default function WeatherPage() {
                     );
                   }
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition cursor-pointer"
+                className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition cursor-pointer"
                 title="Use current location"
               >
-                <MapPin className="h-4.5 w-4.5" />
+                <MapPin className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </button>
             </div>
 
@@ -614,22 +614,22 @@ export default function WeatherPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full space-y-8"
+            className="w-full space-y-6 sm:space-y-8"
           >
             
             {/* Dynamic Weather Card matching current atmospheric conditions */}
-            <div className={`border rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center md:justify-between gap-8 relative overflow-hidden backdrop-blur-md ${getCardStyles()}`}>
-              <div className="space-y-4 text-center md:text-left z-10">
-                <div className="flex items-center justify-center md:justify-start space-x-2 text-rose-500">
-                  <MapPin className="h-5 w-5 animate-bounce-slow" />
-                  <h2 className={`text-lg font-bold tracking-tight ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{selectedCity}</h2>
+            <div className={`border rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm flex flex-col md:flex-row items-center md:justify-between gap-6 sm:gap-8 relative overflow-hidden backdrop-blur-md ${getCardStyles()}`}>
+              <div className="space-y-3 sm:space-y-4 text-center md:text-left z-10 w-full md:w-auto">
+                <div className="flex items-center justify-center md:justify-start space-x-1.5 sm:space-x-2 text-rose-500">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 animate-bounce-slow" />
+                  <h2 className={`text-base sm:text-lg font-bold tracking-tight ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{selectedCity}</h2>
                 </div>
                 <div className="space-y-1">
-                  <div className={`text-6xl md:text-7xl font-extrabold tracking-tighter ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
+                  <div className={`text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tighter ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
                     {Math.round(weatherData.current.temperature_2m)}°C
                   </div>
-                  <div className="flex items-center justify-center md:justify-start space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${currentCondition.bg} ${currentCondition.color} border backdrop-blur-sm`}>
+                  <div className="flex items-center justify-center md:justify-start space-x-2 pt-1">
+                    <span className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold ${currentCondition.bg} ${currentCondition.color} border backdrop-blur-sm`}>
                       {t(currentCondition.labelKey) || currentCondition.label}
                     </span>
                   </div>
@@ -637,32 +637,32 @@ export default function WeatherPage() {
               </div>
  
               {/* Climate stats list */}
-              <div className={`grid grid-cols-3 gap-6 md:gap-8 p-6 rounded-2xl border shrink-0 w-full md:w-auto z-10 ${isDarkTheme ? 'bg-slate-950/40 border-white/5' : 'bg-slate-50/50 border-slate-200/40'}`}>
-                <div className="flex flex-col items-center space-y-2">
-                  <Thermometer className="h-5 w-5 text-rose-500 animate-pulse" />
-                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('feels_like')}</div>
-                  <div className="font-extrabold text-sm">{Math.round(weatherData.current.apparent_temperature)}°C</div>
+              <div className={`grid grid-cols-3 gap-3 sm:gap-6 md:gap-8 p-3.5 sm:p-6 rounded-xl sm:rounded-2xl border shrink-0 w-full md:w-auto z-10 ${isDarkTheme ? 'bg-slate-950/40 border-white/5' : 'bg-slate-50/50 border-slate-200/40'}`}>
+                <div className="flex flex-col items-center space-y-1.5 sm:space-y-2">
+                  <Thermometer className="h-4 w-4 sm:h-5 sm:w-5 text-rose-500 animate-pulse" />
+                  <div className={`text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('feels_like')}</div>
+                  <div className="font-extrabold text-xs sm:text-sm">{Math.round(weatherData.current.apparent_temperature)}°C</div>
                 </div>
-                <div className="flex flex-col items-center space-y-2">
-                  <Droplets className="h-5 w-5 text-blue-400 animate-float" />
-                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('humidity_label')}</div>
-                  <div className="font-extrabold text-sm">{weatherData.current.relative_humidity_2m}%</div>
+                <div className="flex flex-col items-center space-y-1.5 sm:space-y-2">
+                  <Droplets className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 animate-float" />
+                  <div className={`text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('humidity_label')}</div>
+                  <div className="font-extrabold text-xs sm:text-sm">{weatherData.current.relative_humidity_2m}%</div>
                 </div>
-                <div className="flex flex-col items-center space-y-2">
-                  <Wind className="h-5 w-5 text-teal-400 animate-float" style={{ animationDelay: '1s' }} />
-                  <div className={`text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('wind_speed_label')}</div>
-                  <div className="font-extrabold text-sm">{weatherData.current.wind_speed_10m} km/h</div>
+                <div className="flex flex-col items-center space-y-1.5 sm:space-y-2">
+                  <Wind className="h-4 w-4 sm:h-5 sm:w-5 text-teal-400 animate-float" style={{ animationDelay: '1s' }} />
+                  <div className={`text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('wind_speed_label')}</div>
+                  <div className="font-extrabold text-xs sm:text-sm">{weatherData.current.wind_speed_10m} km/h</div>
                 </div>
               </div>
 
               {/* Decorative weather icon in background */}
-              <CurrentIcon className={`absolute right-[-4%] bottom-[-8%] h-44 w-44 ${currentCondition.color} opacity-10 pointer-events-none animate-float`} />
+              <CurrentIcon className={`absolute right-[-4%] bottom-[-8%] h-36 w-36 sm:h-44 sm:w-44 ${currentCondition.color} opacity-10 pointer-events-none animate-float`} />
             </div>
 
             {/* 7-Day Forecast Grid */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center space-x-2 pl-1" style={{ color: 'var(--text-primary)' }}>
-                <Calendar className="h-5 w-5 text-rose-500" />
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-xl font-bold flex items-center space-x-2 pl-1" style={{ color: 'var(--text-primary)' }}>
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-rose-500" />
                 <span>{t('extended_outlook')}</span>
               </h3>
 

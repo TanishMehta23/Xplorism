@@ -2302,54 +2302,81 @@ export default function DashboardStub() {
 
       <style>{`
         .marquee-wrapper {
-          overflow-x: auto;
+          overflow-x: hidden;
           width: 100%;
-          display: flex;
           position: relative;
           padding-bottom: 12px;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .marquee-wrapper::-webkit-scrollbar {
-          display: none;
+          -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+          mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
         }
         .marquee-track {
           display: flex;
           flex-direction: row;
           flex-wrap: nowrap;
-          gap: 24px;
+          gap: 16px;
+          width: max-content;
+          animation: marqueeScroll 260s linear infinite;
+        }
+        .marquee-track:hover {
+          animation-play-state: paused;
+        }
+        @keyframes marqueeScroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        @media (min-width: 768px) {
+          .marquee-track {
+            gap: 24px;
+            animation-duration: 300s;
+          }
         }
         .marquee-card {
           width: 280px;
           min-width: 280px;
+          max-width: 280px;
           flex-shrink: 0;
         }
         @media (min-width: 768px) {
           .marquee-card {
             width: 320px;
             min-width: 320px;
+            max-width: 320px;
           }
         }
       `}</style>
 
       <Navbar activeTab="trips" />
 
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 text-center md:text-left">
-          <div>
-            <div className="flex items-center space-x-2.5 mb-3 justify-center md:justify-start">
-              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                <Compass className="h-5 w-5" />
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 min-h-[85vh] pb-24">
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-10 text-left">
+          <div className="w-full md:w-auto">
+            <div className="flex items-center justify-between md:justify-start space-x-2.5 mb-2.5">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 md:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                  <Compass className="h-4.5 w-4.5 md:h-5 md:w-5" />
+                </div>
+                <span className="text-[11px] md:text-xs font-black text-rose-500 uppercase tracking-widest">{t('travel_hub') || 'Personal Travel Hub'}</span>
               </div>
-              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('travel_hub') || 'Personal Travel Hub'}</span>
+              <button
+                onClick={() => setIsWizardOpen(true)}
+                className="md:hidden px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-extrabold text-xs transition-all duration-200 shadow-md shadow-rose-500/10 active:scale-95 flex items-center justify-center space-x-1 cursor-pointer whitespace-nowrap shrink-0"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>{t('create_new_trip')}</span>
+              </button>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">{t('dashboard_title')}</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base">{t('dashboard_desc')}</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-1.5 whitespace-nowrap">{t('dashboard_title')}</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm md:text-base">{t('dashboard_desc')}</p>
           </div>
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
+          <div className="hidden md:flex items-center justify-end gap-3">
             <button
               onClick={() => setIsWizardOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-extrabold text-xs transition-all duration-200 shadow-md shadow-rose-500/10 active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-extrabold text-xs transition-all duration-200 shadow-md shadow-rose-500/10 active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>{t('create_new_trip')}</span>
@@ -2359,8 +2386,8 @@ export default function DashboardStub() {
 
         {/* Pre-planned Trips Section */}
         <div className="mb-12">
-          <div className="mb-6">
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('recommended_trips')}</h2>
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight whitespace-nowrap">{t('recommended_trips')}</h2>
           </div>
 
           <div className="relative w-full">
@@ -2443,19 +2470,19 @@ export default function DashboardStub() {
           </div>
         </div>
         {/* My Saved Itineraries */}
-        <div className="mb-6 pt-2 border-t border-slate-200/50 flex items-center justify-between">
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('my_saved_itineraries')}</h2>
+        <div className="mb-6 pt-2 border-t border-slate-200/50 flex items-center justify-between gap-3 flex-nowrap">
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight whitespace-nowrap shrink-0">{t('my_saved_itineraries')}</h2>
 
-          <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
             <button
               onClick={() => setDashboardView('grid')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${dashboardView === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${dashboardView === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 hover:text-slate-800'}`}
             >
               {t('grid_view')}
             </button>
             <button
               onClick={() => setDashboardView('map')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${dashboardView === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${dashboardView === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 hover:text-slate-800'}`}
             >
               {t('map_view')}
             </button>
@@ -2486,7 +2513,7 @@ export default function DashboardStub() {
         ) : dashboardView === 'map' ? (
           renderMapView()
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {trips.map((trip) => {
               const days = getTripDaysCount(trip.startDate, trip.endDate);
               const parts = (trip.travelStyle || '').split('|');
@@ -2502,11 +2529,11 @@ export default function DashboardStub() {
                     setSelectedTrip(trip);
                     setActiveDayTab(1);
                   }}
-                  className="group relative bg-white rounded-[32px] interactive-card border border-slate-200/60 transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
+                  className="group relative bg-white rounded-2xl sm:rounded-[32px] interactive-card border border-slate-200/60 transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm"
                 >
                   <div>
                     {/* Cover image header */}
-                    <div className="relative h-48 w-full overflow-hidden">
+                    <div className="relative h-36 sm:h-48 w-full overflow-hidden">
                       <TripCoverImage
                         destination={trip.destination}
                         defaultImage={trip.image}
@@ -2515,52 +2542,52 @@ export default function DashboardStub() {
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-black/10" />
 
                       {/* Top style badge & weather pill */}
-                      <div className="absolute top-4 left-4 flex items-center space-x-2">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-rose-550 border border-slate-100/50 backdrop-blur-sm shadow-sm">
+                      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 flex items-center space-x-1.5 sm:space-x-2">
+                        <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold bg-white/95 text-rose-550 border border-slate-100/50 backdrop-blur-sm shadow-sm">
                           {style}
                         </span>
-                        <span className="px-3 py-1.5 rounded-2xl bg-white/95 text-slate-700 backdrop-blur-md text-[9px] font-black flex items-center space-x-1.5 border border-slate-100/50 shadow-lg">
-                          <WeatherIcon className={`h-3.5 w-3.5 ${weather.condition === 'Sunny' ? 'text-amber-500 animate-spin-slow' : weather.condition === 'Rainy' ? 'text-sky-500' : 'text-slate-555'}`} />
+                        <span className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl bg-white/95 text-slate-700 backdrop-blur-md text-[8px] sm:text-[9px] font-black flex items-center space-x-1 sm:space-x-1.5 border border-slate-100/50 shadow-lg">
+                          <WeatherIcon className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${weather.condition === 'Sunny' ? 'text-amber-500 animate-spin-slow' : weather.condition === 'Rainy' ? 'text-sky-500' : 'text-slate-555'}`} />
                           <span>{weather.temp}°C</span>
                         </span>
                       </div>
 
                       {/* Top Action buttons */}
-                      <div className="absolute top-4 right-4 flex items-center space-x-2">
+                      <div className="absolute top-2.5 sm:top-4 right-2.5 sm:right-4 flex items-center space-x-1.5 sm:space-x-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             exportTripToPDF(trip);
                           }}
-                          className="h-9 w-9 rounded-2xl bg-white/90 hover:bg-rose-500 text-slate-700 hover:text-white hover:border-rose-500 transition-all duration-300 shadow-md cursor-pointer border border-slate-200/50 flex items-center justify-center active:scale-90"
+                          className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl sm:rounded-2xl bg-white/90 hover:bg-rose-500 text-slate-700 hover:text-white hover:border-rose-500 transition-all duration-300 shadow-md cursor-pointer border border-slate-200/50 flex items-center justify-center active:scale-90"
                           title="Export Trip PDF"
                         >
-                          <Download className="h-4 w-4" />
+                          <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button
                           onClick={(e) => handleDeleteTrip(trip, e)}
-                          className="h-9 w-9 rounded-2xl bg-white/90 hover:bg-red-650 text-slate-700 hover:text-white hover:border-red-650 transition-all duration-300 shadow-md cursor-pointer border border-slate-200/50 flex items-center justify-center active:scale-90"
+                          className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl sm:rounded-2xl bg-white/90 hover:bg-red-650 text-slate-700 hover:text-white hover:border-red-650 transition-all duration-300 shadow-md cursor-pointer border border-slate-200/50 flex items-center justify-center active:scale-90"
                           title="Delete Trip"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </div>
 
                     {/* Card Content body */}
-                    <div className="p-6 pb-4">
-                      <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-2 transition-colors duration-300 truncate">
+                    <div className="p-4 sm:p-6 pb-3 sm:pb-4">
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-1.5 sm:mb-2 transition-colors duration-300 truncate">
                         {trip.destination}
                       </h3>
 
-                      <div className="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400 text-xs mb-4">
+                      <div className="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400 text-xs mb-3 sm:mb-4">
                         <Calendar className="h-3.5 w-3.5 text-rose-505 shrink-0" />
                         <span className="font-bold">{formatDate(trip.startDate)} - {formatDate(trip.endDate)} ({days} {days === 1 ? t('day') : t('days')})</span>
                       </div>
 
-                      <div className="flex items-center justify-between text-slate-505 dark:text-slate-400 text-xs pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between text-slate-505 dark:text-slate-400 text-xs pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-slate-800">
                         <div className="flex items-center space-x-1.5">
-                          <Users className="h-4 w-4 text-rose-505 shrink-0" />
+                          <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-rose-505 shrink-0" />
                           <span className="font-bold">{trip.travelers} {t('travelers')}</span>
                         </div>
                         <div className="flex items-center space-x-1.5 font-extrabold text-slate-900 dark:text-white">
@@ -2571,9 +2598,9 @@ export default function DashboardStub() {
                   </div>
 
                   {trip.interests && trip.interests.length > 0 && (
-                    <div className="flex flex-wrap gap-2 px-6 pb-6 pt-3 border-t border-slate-100/60 dark:border-slate-800/60">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 px-4 sm:px-6 pb-4 sm:pb-6 pt-2.5 sm:pt-3 border-t border-slate-100/60 dark:border-slate-800/60">
                       {trip.interests.slice(0, 4).map((interest, idx) => (
-                        <span key={idx} className="px-2.5 py-1 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/40 dark:border-rose-900/30 text-[9px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider hover:bg-rose-100 dark:hover:bg-rose-900/40 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-200">
+                        <span key={idx} className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/40 dark:border-rose-900/30 text-[8.5px] sm:text-[9px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider hover:bg-rose-100 dark:hover:bg-rose-900/40 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-200">
                           {interest}
                         </span>
                       ))}
@@ -2590,59 +2617,59 @@ export default function DashboardStub() {
       </main>
 
       {/* Enhanced Travel Stats & Analytics Section */}
-      <section className="max-w-7xl w-full mx-auto px-6 pt-12 pb-4 animate-fade-in">
+      <section className="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-12 pb-4 animate-fade-in">
         <div className="mb-6">
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('my_travel_journey')}</h2>
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight whitespace-nowrap">{t('my_travel_journey')}</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
           {/* Card 1: Total Spend */}
-          <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
-            <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-              <Coins className="h-7 w-7" />
+          <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-350 flex flex-col sm:flex-row items-start sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4 group">
+            <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+              <Coins className="h-5 w-5 sm:h-7 sm:w-7" />
             </div>
-            <div>
-              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">{t('total_spend')}</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+            <div className="min-w-0 flex-1">
+              <span className="text-[9.5px] sm:text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block truncate">{t('total_spend')}</span>
+              <span className="text-sm sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 block truncate">
                 {activeCurrency.symbol}{travelStats.totalSpend.toLocaleString(activeCurrency.locale)}
               </span>
             </div>
           </div>
 
           {/* Card 2: Regions Visited */}
-          <div className="bg-gradient-to-br from-blue-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
-            <div className="p-4 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
-              <Globe className="h-7 w-7" />
+          <div className="bg-gradient-to-br from-blue-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-350 flex flex-col sm:flex-row items-start sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4 group">
+            <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
+              <Globe className="h-5 w-5 sm:h-7 sm:w-7" />
             </div>
-            <div>
-              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">{t('regions_visited')}</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+            <div className="min-w-0 flex-1">
+              <span className="text-[9.5px] sm:text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block truncate">{t('regions_visited')}</span>
+              <span className="text-sm sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 block truncate">
                 {travelStats.countriesVisited} {travelStats.countriesVisited === 1 ? t('destination_count') : t('destinations_count')}
               </span>
             </div>
           </div>
 
           {/* Card 3: Days Traveled */}
-          <div className="bg-gradient-to-br from-rose-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
-            <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform duration-300">
-              <Calendar className="h-7 w-7" />
+          <div className="bg-gradient-to-br from-rose-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-350 flex flex-col sm:flex-row items-start sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4 group">
+            <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform duration-300">
+              <Calendar className="h-5 w-5 sm:h-7 sm:w-7" />
             </div>
-            <div>
-              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">{t('days_traveled')}</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+            <div className="min-w-0 flex-1">
+              <span className="text-[9.5px] sm:text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block truncate">{t('days_traveled')}</span>
+              <span className="text-sm sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 block truncate">
                 {travelStats.totalDays} {t('days_unit')}
               </span>
             </div>
           </div>
 
           {/* Card 4: Travel Vibe */}
-          <div className="bg-gradient-to-br from-amber-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
-            <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300">
-              <Sparkles className="h-7 w-7" />
+          <div className="bg-gradient-to-br from-amber-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-350 flex flex-col sm:flex-row items-start sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4 group">
+            <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300">
+              <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" />
             </div>
-            <div>
-              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">{t('travel_vibe')}</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+            <div className="min-w-0 flex-1">
+              <span className="text-[9.5px] sm:text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block truncate">{t('travel_vibe')}</span>
+              <span className="text-sm sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 block truncate">
                 {travelStats.travelVibe}
               </span>
             </div>
@@ -2650,25 +2677,25 @@ export default function DashboardStub() {
         </div>
 
         {/* Passport Stamps Collection */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('passport_stamp_collection')}</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t('passport_stamp_subtitle')}</p>
+              <h3 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white">{t('passport_stamp_collection')}</h3>
+              <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t('passport_stamp_subtitle')}</p>
             </div>
-            <span className="text-[10px] font-black px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <span className="text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-500 uppercase tracking-widest shrink-0">
               {t('stamps_label')}: {displayStamps.length}
             </span>
           </div>
 
           {displayStamps.length === 0 ? (
-            <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center">
-              <Globe className="h-12 w-12 text-slate-300 dark:text-slate-750 mb-3 animate-bounce" />
+            <div className="text-center py-10 sm:py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center">
+              <Globe className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 dark:text-slate-750 mb-3 animate-bounce" />
               <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{t('passport_empty_title')}</p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">{t('passport_empty_desc')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 sm:gap-6 justify-items-center">
               {displayStamps.map((tItem, idx) => {
                 const dest = tItem.destination.split(',')[0].trim().substring(0, 3).toUpperCase();
                 const cityName = tItem.destination.split(',')[0].trim();
@@ -2691,12 +2718,12 @@ export default function DashboardStub() {
                 const isTripActive = trips.some(trip => trip.id === tItem.tripId || trip.id === tItem.id);
 
                 return (
-                  <div key={tItem.id} className={`relative w-24 h-24 rounded-full border-4 border-double flex flex-col items-center justify-center shrink-0 select-none shadow-sm transition-all duration-350 hover:scale-115 hover:shadow-md cursor-default ${stampColor} ${stampRotation} ${!isTripActive ? 'opacity-60 grayscale-[30%]' : ''}`}>
+                  <div key={tItem.id} className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-double flex flex-col items-center justify-center shrink-0 select-none shadow-sm transition-all duration-350 hover:scale-115 hover:shadow-md cursor-default ${stampColor} ${stampRotation} ${!isTripActive ? 'opacity-60 grayscale-[30%]' : ''}`}>
                     {isValidDate && (
-                      <span className="text-[8px] font-black tracking-widest opacity-80">{month} {year}</span>
+                      <span className="text-[7px] sm:text-[8px] font-black tracking-widest opacity-80">{month} {year}</span>
                     )}
-                    <span className="text-xl font-extrabold tracking-tighter my-0.5">{dest}</span>
-                    <span className="text-[7px] font-black tracking-widest opacity-80 uppercase max-w-[70px] truncate">{cityName}</span>
+                    <span className="text-lg sm:text-xl font-extrabold tracking-tighter my-0.5">{dest}</span>
+                    <span className="text-[6.5px] sm:text-[7px] font-black tracking-widest opacity-80 uppercase max-w-[60px] sm:max-w-[70px] truncate">{cityName}</span>
                     {!isTripActive && (
                       <button
                         onClick={(e) => handleDeleteStamp(tItem.id || tItem.tripId, e)}
@@ -2714,59 +2741,59 @@ export default function DashboardStub() {
         </div>
 
         {/* Travel Milestones & Achievements */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm mt-8 animate-fade-in">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-sm mt-6 sm:mt-8 animate-fade-in">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('travel_milestones_title')}</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t('travel_milestones_subtitle')}</p>
+              <h3 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white">{t('travel_milestones_title')}</h3>
+              <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t('travel_milestones_subtitle')}</p>
             </div>
-            <span className="text-[10px] font-black px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-rose-500 uppercase tracking-widest">
+            <span className="text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-rose-500 uppercase tracking-widest shrink-0">
               {travelMilestones.filter(m => m.unlocked).length} / {travelMilestones.length} {t('unlocked_label')}
             </span>
           </div>
 
           {/* Horizontal scroll row */}
-          <div className="flex gap-5 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex gap-4 sm:gap-5 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {travelMilestones.map((milestone) => {
               const MilestoneIcon = milestone.icon;
               return (
                 <div
                   key={milestone.id}
-                  className={`relative flex-shrink-0 w-52 rounded-3xl p-5 border overflow-hidden transition-all duration-350 ${milestone.unlocked
+                  className={`relative flex-shrink-0 w-44 sm:w-52 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border overflow-hidden transition-all duration-350 ${milestone.unlocked
                     ? `bg-gradient-to-br ${milestone.gradient} ${milestone.border} shadow-md hover:scale-105 hover:shadow-xl cursor-default`
                     : `bg-gradient-to-br ${milestone.gradient} ${milestone.border} cursor-default`
                     }`}
                 >
                   {/* Blur overlay for locked badges */}
                   {!milestone.unlocked && (
-                    <div className="absolute inset-0 z-10 rounded-3xl backdrop-blur-[3px] bg-white/50 dark:bg-slate-900/60 flex flex-col items-center justify-center">
-                      <div className="p-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 mb-1.5">
-                        <Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                    <div className="absolute inset-0 z-10 rounded-2xl sm:rounded-3xl backdrop-blur-[3px] bg-white/50 dark:bg-slate-900/60 flex flex-col items-center justify-center">
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 mb-1.5">
+                        <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500 dark:text-slate-400" />
                       </div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('locked_label')}</span>
-                      <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 mt-1 px-2 text-center">{milestone.requirement}</span>
+                      <span className="text-[8.5px] sm:text-[9px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('locked_label')}</span>
+                      <span className="text-[7.5px] sm:text-[8px] font-bold text-slate-400 dark:text-slate-500 mt-1 px-2 text-center">{milestone.requirement}</span>
                     </div>
                   )}
 
-                  <div className="flex justify-between items-start mb-3">
-                    <div className={`p-2.5 rounded-xl ${milestone.iconBg} transition duration-300`}>
-                      <MilestoneIcon className="h-5 w-5" />
+                  <div className="flex justify-between items-start mb-2.5 sm:mb-3">
+                    <div className={`p-2 sm:p-2.5 rounded-xl ${milestone.iconBg} transition duration-300`}>
+                      <MilestoneIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
                     {milestone.unlocked && (
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
+                      <span className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
                         ✓ {t('unlocked_label')}
                       </span>
                     )}
                   </div>
 
-                  <h4 className="text-sm font-black tracking-tight text-slate-800 dark:text-white mt-1">
+                  <h4 className="text-xs sm:text-sm font-black tracking-tight text-slate-800 dark:text-white mt-1">
                     {milestone.title}
                   </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                     {milestone.description}
                   </p>
 
-                  <div className="border-t border-slate-200/60 dark:border-slate-700/40 mt-4 pt-2.5 text-[9px] font-bold tracking-wide text-slate-400 dark:text-slate-500">
+                  <div className="border-t border-slate-200/60 dark:border-slate-700/40 mt-3 sm:mt-4 pt-2 sm:pt-2.5 text-[8.5px] sm:text-[9px] font-bold tracking-wide text-slate-400 dark:text-slate-500">
                     {t('goal_label')}: {milestone.requirement}
                   </div>
                 </div>
@@ -2776,19 +2803,19 @@ export default function DashboardStub() {
         </div>
 
         {/* Curated Travel Quotes Carousel */}
-        <div className="relative mt-8 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 group/quote min-h-[140px] animate-fade-in">
+        <div className="relative mt-6 sm:mt-8 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-4 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 group/quote min-h-[140px] animate-fade-in">
           {/* Subtle glowing background circles */}
           <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-rose-500/5 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-12 -right-12 w-32 h-32 rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />
 
           {/* Left Block: Icon and title */}
-          <div className="flex items-center space-x-4 shrink-0">
-            <div className="p-3.5 rounded-2xl bg-rose-500/10 text-rose-500 dark:text-rose-400">
-              <Quote className="h-6 w-6" />
+          <div className="flex items-center space-x-3 sm:space-x-4 shrink-0">
+            <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-rose-500/10 text-rose-500 dark:text-rose-400">
+              <Quote className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div>
-              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block">{t('daily_vibe')}</span>
-              <h3 className="text-sm font-black text-slate-850 dark:text-white tracking-tight mt-0.5">{t('wanderlust_quotes')}</h3>
+              <span className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest block">{t('daily_vibe')}</span>
+              <h3 className="text-xs sm:text-sm font-black text-slate-850 dark:text-white tracking-tight mt-0.5">{t('wanderlust_quotes')}</h3>
             </div>
           </div>
 
@@ -2797,7 +2824,7 @@ export default function DashboardStub() {
             <p className="text-xs font-bold text-slate-705 dark:text-slate-200 italic leading-relaxed transition-all duration-500">
               "{travelQuotes[activeQuoteIdx].text}"
             </p>
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-widest mt-2 block">
+            <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-widest mt-1.5 sm:mt-2 block">
               — {travelQuotes[activeQuoteIdx].author}
             </span>
           </div>
@@ -2806,17 +2833,17 @@ export default function DashboardStub() {
           <div className="flex items-center justify-center space-x-2 shrink-0">
             <button
               onClick={() => setActiveQuoteIdx(prev => (prev - 1 + travelQuotes.length) % travelQuotes.length)}
-              className="h-9 w-9 rounded-xl border border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 flex items-center justify-center transition cursor-pointer active:scale-90"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 flex items-center justify-center transition cursor-pointer active:scale-90"
               title="Previous Quote"
             >
-              <ChevronLeft className="h-4.5 w-4.5" />
+              <ChevronLeft className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </button>
             <button
               onClick={() => setActiveQuoteIdx(prev => (prev + 1) % travelQuotes.length)}
-              className="h-9 w-9 rounded-xl border border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 flex items-center justify-center transition cursor-pointer active:scale-90"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl border border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 flex items-center justify-center transition cursor-pointer active:scale-90"
               title="Next Quote"
             >
-              <ChevronRight className="h-4.5 w-4.5" />
+              <ChevronRight className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </button>
           </div>
         </div>

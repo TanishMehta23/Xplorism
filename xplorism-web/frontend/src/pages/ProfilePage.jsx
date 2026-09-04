@@ -493,28 +493,42 @@ export default function ProfilePage() {
 
       <Navbar activeTab="profile" />
 
-      {/* Main Container */}
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 min-h-[85vh] pb-24 space-y-8">
-
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2.5 mb-3">
-              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                <User className="h-5 w-5" />
+      {/* Main Container - Full width expansion to maximize screen space */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 py-8 sm:py-12 space-y-6 sm:space-y-8 min-h-[85vh] pb-24">
+        
+        {/* Header Block with Back button */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 pb-1 sm:pb-2 text-left">
+          <div className="w-full md:w-auto">
+            <div className="flex items-center justify-between md:justify-start space-x-2.5 mb-2 sm:mb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 sm:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                  <User className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                </div>
+                <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">{t('account_settings')}</span>
               </div>
-              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('account_settings')}</span>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="md:hidden flex items-center space-x-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all select-none cursor-pointer shadow-sm active:scale-95"
+                style={{
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: 'var(--bg-secondary)',
+                  color: 'var(--text-primary)'
+                }}
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>{t('back_to_dashboard')}</span>
+              </button>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>
               {t('profile_title')}
             </h1>
-            <p className="text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-xs sm:text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
               {t('profile_desc')}
             </p>
           </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border transition-all select-none self-start md:self-auto cursor-pointer shadow-sm hover:-translate-y-0.5 active:scale-95"
+            className="hidden md:flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border transition-all select-none self-start md:self-auto cursor-pointer shadow-sm hover:-translate-y-0.5 active:scale-95"
             style={{
               borderColor: 'var(--border-primary)',
               backgroundColor: 'var(--bg-secondary)',
@@ -529,30 +543,30 @@ export default function ProfilePage() {
         </div>
 
         {/* Outer grid spanning full width: 3 columns layout on desktop to fill empty space */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 w-full">
 
           {/* COLUMN 1: User Card & statistics */}
-          <div className="space-y-6 w-full">
+          <div className="space-y-4 sm:space-y-6 w-full">
 
             {/* User Main Card */}
-            <div className="rounded-3xl border shadow-lg relative overflow-hidden w-full"
+            <div className="rounded-2xl sm:rounded-3xl border shadow-sm sm:shadow-lg relative overflow-hidden w-full"
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
 
               {/* Full-width hero gradient banner */}
-              <div className="relative h-24 bg-gradient-to-r from-violet-500 via-rose-500 to-orange-400 overflow-hidden">
-                <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_left,_rgba(255,255,255,0.4)_0%,_transparent_70%)]" />
+              <div className="relative h-20 sm:h-24 bg-gradient-to-r from-rose-400/90 via-rose-500/85 to-pink-500/90 overflow-hidden">
+                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.7)_0%,_transparent_70%)]" />
               </div>
 
               {/* Avatar overlapping banner */}
-              <div className="flex flex-col items-center -mt-12 px-6 pb-6">
+              <div className="flex flex-col items-center -mt-10 sm:-mt-12 px-4 sm:px-6 pb-4 sm:pb-6">
                 <div className="relative mb-1">
-                  <div className="relative w-24 h-24 rounded-full shadow-xl border-4 border-white dark:border-slate-800 overflow-hidden group"
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-lg border-4 border-white dark:border-slate-800 overflow-hidden group"
                     style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                     {/* Photo or Initials */}
                     {profilePhoto && profilePhoto !== '' && profilePhoto !== 'null' && profilePhoto !== 'undefined' ? (
                       <img src={profilePhoto} alt="Profile" className="absolute inset-0 w-full h-full object-cover" />
                     ) : (
-                      <span className="absolute inset-0 flex items-center justify-center text-3xl font-extrabold select-none"
+                      <span className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-extrabold select-none"
                         style={{ color: 'var(--text-primary)' }}>
                         {name ? name.charAt(0).toUpperCase() : 'T'}
                       </span>
@@ -563,57 +577,57 @@ export default function ProfilePage() {
                         : 'bg-black/60 opacity-0 group-hover:opacity-100'
                       }`}>
                       {photoStatus?.type === 'uploading' ? (
-                        <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-spin" />
                       ) : (
                         <>
-                          <Edit2 className="h-5 w-5 text-white" />
-                          <span className="text-[9px] text-white font-bold mt-1 uppercase tracking-wider">Change</span>
+                          <Edit2 className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                          <span className="text-[8px] sm:text-[9px] text-white font-bold mt-0.5 uppercase tracking-wider">Change</span>
                         </>
                       )}
                       <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" disabled={photoStatus?.type === 'uploading'} />
                     </label>
                   </div>
                   {/* Mobile Edit Badge */}
-                  <label className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md cursor-pointer border-2 border-white transition-transform hover:scale-110 active:scale-95">
-                    <Edit2 className="h-3.5 w-3.5" />
+                  <label className="absolute -bottom-0.5 -right-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md cursor-pointer border-2 border-white transition-transform hover:scale-110 active:scale-95">
+                    <Edit2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
                   </label>
                 </div>
 
                 {/* Upload hint & inline status */}
-                <div className="flex flex-col items-center mb-2">
+                <div className="flex flex-col items-center mb-1.5 sm:mb-2">
                   {photoStatus ? (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${photoStatus.type === 'uploading' ? 'text-blue-500 bg-blue-50 dark:bg-blue-950/30' :
+                    <span className={`text-[9.5px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full ${photoStatus.type === 'uploading' ? 'text-blue-500 bg-blue-50 dark:bg-blue-950/30' :
                         photoStatus.type === 'success' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30' :
                           'text-rose-500 bg-rose-50 dark:bg-rose-950/30'
                       }`}>
                       {photoStatus.msg}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Hover to change · Max 5 MB</span>
+                    <span className="text-[9.5px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-medium">Hover to change · Max 5 MB</span>
                   )}
                 </div>
 
-                <h2 className="text-xl font-black tracking-tight text-center" style={{ color: 'var(--text-primary)' }}>{name}</h2>
-                <p className="text-xs font-semibold mt-0.5 text-center" style={{ color: 'var(--text-tertiary)' }}>{email}</p>
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-center" style={{ color: 'var(--text-primary)' }}>{name}</h2>
+                <p className="text-[11px] sm:text-xs font-semibold mt-0.5 text-center" style={{ color: 'var(--text-tertiary)' }}>{email}</p>
 
-                <div className="flex items-center justify-center space-x-1.5 mt-3 text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
+                <div className="flex items-center justify-center space-x-1.5 mt-2.5 sm:mt-3 text-[11px] sm:text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
                   <Calendar className="h-3.5 w-3.5 text-blue-500" />
                   <span>{t('joined')} {memberSinceDate}</span>
                 </div>
 
                 {profile?.google_id && (
-                  <span className="inline-block mt-3 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                  <span className="inline-block mt-2.5 sm:mt-3 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold tracking-wide uppercase bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                     {t('google_account_linked')}
                   </span>
                 )}
 
-                <div className="w-full mt-6 pt-5 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                <div className="w-full mt-4 sm:mt-6 pt-4 sm:pt-5 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
                   <button
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="w-full py-2.5 rounded-2xl flex items-center justify-center space-x-2 text-xs font-bold cursor-pointer transition border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 active:scale-95"
+                    className="w-full py-2 sm:py-2.5 rounded-xl sm:rounded-2xl flex items-center justify-center space-x-1.5 sm:space-x-2 text-xs font-bold cursor-pointer transition border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 active:scale-95"
                   >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span>{t('log_out_session')}</span>
                   </button>
                 </div>
@@ -621,52 +635,52 @@ export default function ProfilePage() {
             </div>
 
             {/* Travel Stats Widget */}
-            <div className="rounded-3xl border shadow-md p-6 w-full"
+            <div className="rounded-2xl sm:rounded-3xl border shadow-sm sm:shadow-md p-4 sm:p-6 w-full"
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
 
-              <h3 className="text-[10px] font-black uppercase tracking-widest mb-5" style={{ color: 'var(--text-tertiary)' }}>{t('travel_stats')}</h3>
+              <h3 className="text-[9.5px] sm:text-[10px] font-black uppercase tracking-widest mb-3.5 sm:mb-5" style={{ color: 'var(--text-tertiary)' }}>{t('travel_stats')}</h3>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {/* Trips */}
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-blue-500/5 border border-blue-100 dark:border-blue-900/20">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
-                      <Compass className="h-4 w-4" />
+                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-500/5 border border-blue-100 dark:border-blue-900/20">
+                  <div className="flex items-center space-x-2.5 sm:space-x-3">
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/10 text-blue-500">
+                      <Compass className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                     <div>
                       <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('trips_planned')}</h4>
-                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('total_itineraries')}</p>
+                      <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('total_itineraries')}</p>
                     </div>
                   </div>
-                  <span className="text-xl font-black text-blue-600 dark:text-blue-400">{stats.tripsCount}</span>
+                  <span className="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400">{stats.tripsCount}</span>
                 </div>
 
                 {/* Favorites */}
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-rose-500/5 border border-rose-100 dark:border-rose-900/20">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
-                      <Heart className="h-4 w-4" />
+                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-rose-500/5 border border-rose-100 dark:border-rose-900/20">
+                  <div className="flex items-center space-x-2.5 sm:space-x-3">
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-rose-500/10 text-rose-500">
+                      <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                     <div>
                       <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('favorites')}</h4>
-                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('saved_locations')}</p>
+                      <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('saved_locations')}</p>
                     </div>
                   </div>
-                  <span className="text-xl font-black text-rose-600 dark:text-rose-400">{stats.favoritesCount}</span>
+                  <span className="text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400">{stats.favoritesCount}</span>
                 </div>
 
                 {/* Budget */}
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-500/5 border border-emerald-100 dark:border-emerald-900/20">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
-                      <DollarSign className="h-4 w-4" />
+                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-500/5 border border-emerald-100 dark:border-emerald-900/20">
+                  <div className="flex items-center space-x-2.5 sm:space-x-3">
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                      <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                     <div>
                       <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('total_estimated_budget')}</h4>
-                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('total_spent')}</p>
+                      <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('total_spent')}</p>
                     </div>
                   </div>
-                  <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                  <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">
                     ${stats.totalBudget.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
                 </div>
@@ -679,31 +693,29 @@ export default function ProfilePage() {
           {/* COLUMN 2: Account Details Settings Form */}
           <div className="w-full">
 
-            <div className="rounded-3xl border shadow-md p-6 md:p-8 w-full h-full flex flex-col"
+            <div className="rounded-2xl sm:rounded-3xl border shadow-sm sm:shadow-md p-4 sm:p-6 md:p-8 w-full h-full flex flex-col"
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
 
-
-
-              <form onSubmit={handleUpdateProfile} className="space-y-4 flex-1 flex flex-col justify-between">
-                <div className="space-y-4 flex-1">
-                  <h3 className="text-base font-black mb-4 flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
-                    <Edit2 className="h-4 w-4 text-blue-500" />
+              <form onSubmit={handleUpdateProfile} className="space-y-3 sm:space-y-4 flex-1 flex flex-col justify-between">
+                <div className="space-y-3 sm:space-y-4 flex-1">
+                  <h3 className="text-sm sm:text-base font-black mb-3 sm:mb-4 flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
+                    <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
                     <span>{t('account_details')}</span>
                   </h3>
 
                   {/* Name Input - Safe inline paddings to prevent overlapping */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>{t('full_name')}</label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>{t('full_name')}</label>
                     <div className="relative" style={{ position: 'relative' }}>
                       <User
                         style={{
                           position: 'absolute',
-                          left: '14px',
+                          left: '12px',
                           top: '50%',
                           transform: 'translateY(-50%)',
                           color: 'var(--text-tertiary)',
-                          width: '16px',
-                          height: '16px',
+                          width: '15px',
+                          height: '15px',
                           zIndex: 10
                         }}
                       />
@@ -712,31 +724,31 @@ export default function ProfilePage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Tanish"
-                        className="w-full py-2.5 rounded-2xl border text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                        className="w-full py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border text-xs sm:text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                         style={{
                           borderColor: 'var(--border-primary)',
                           color: 'var(--text-primary)',
                           backgroundColor: 'var(--bg-tertiary)',
-                          paddingLeft: '42px',
-                          paddingRight: '16px'
+                          paddingLeft: '38px',
+                          paddingRight: '14px'
                         }}
                       />
                     </div>
                   </div>
 
                   {/* Email Input - Safe inline paddings to prevent overlapping */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>{t('email_address')}</label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>{t('email_address')}</label>
                     <div className="relative" style={{ position: 'relative' }}>
                       <Mail
                         style={{
                           position: 'absolute',
-                          left: '14px',
+                          left: '12px',
                           top: '50%',
                           transform: 'translateY(-50%)',
                           color: 'var(--text-tertiary)',
-                          width: '16px',
-                          height: '16px',
+                          width: '15px',
+                          height: '15px',
                           zIndex: 10
                         }}
                       />
@@ -745,34 +757,34 @@ export default function ProfilePage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="tanish@example.com"
-                        className="w-full py-2.5 rounded-2xl border text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                        className="w-full py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border text-xs sm:text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                         style={{
                           borderColor: 'var(--border-primary)',
                           color: 'var(--text-primary)',
                           backgroundColor: 'var(--bg-tertiary)',
-                          paddingLeft: '42px',
-                          paddingRight: '16px'
+                          paddingLeft: '38px',
+                          paddingRight: '14px'
                         }}
                       />
                     </div>
                   </div>
 
                   {/* Password Fields */}
-                  <div className="pt-4 border-t space-y-4" style={{ borderColor: 'var(--border-secondary)' }}>
-                    <h4 className="text-xs font-extrabold uppercase tracking-wide mb-2 flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
-                      <Key className="h-3.5 w-3.5 text-blue-500" />
+                  <div className="pt-3 sm:pt-4 border-t space-y-3 sm:space-y-4" style={{ borderColor: 'var(--border-secondary)' }}>
+                    <h4 className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wide mb-1 sm:mb-2 flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      <Key className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500" />
                       <span>{t('change_password_label')}</span>
                     </h4>
 
                     {/* New Password */}
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('new_password_label')}</label>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <label className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('new_password_label')}</label>
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Min. 6 characters"
-                        className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border text-xs sm:text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                         style={{
                           borderColor: 'var(--border-primary)',
                           color: 'var(--text-primary)',
@@ -782,14 +794,14 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Confirm Password */}
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('confirm_new_password_label')}</label>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <label className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>{t('confirm_new_password_label')}</label>
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Repeat new password"
-                        className="w-full px-4 py-2.5 rounded-2xl border text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border text-xs sm:text-sm font-semibold transition focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                         style={{
                           borderColor: 'var(--border-primary)',
                           color: 'var(--text-primary)',
@@ -799,24 +811,24 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Account Security Checklist (Fills empty vertical space beautifully) */}
-                  <div className="pt-6 border-t space-y-3" style={{ borderColor: 'var(--border-secondary)' }}>
-                    <h4 className="text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
-                      <ShieldCheck className="h-3.5 w-3.5 text-blue-500" style={{ width: '14px', height: '14px' }} />
+                  {/* Account Security Checklist */}
+                  <div className="pt-4 sm:pt-6 border-t space-y-2.5 sm:space-y-3" style={{ borderColor: 'var(--border-secondary)' }}>
+                    <h4 className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500" style={{ width: '14px', height: '14px' }} />
                       <span>{t('security_checklist')}</span>
                     </h4>
 
-                    <div className="space-y-2 pt-1">
-                      <div className="flex items-center space-x-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                        <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" style={{ width: '16px', height: '16px' }} />
+                    <div className="space-y-1.5 sm:space-y-2 pt-0.5 sm:pt-1">
+                      <div className="flex items-center space-x-2 text-[11px] sm:text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 shrink-0" />
                         <span>Verified Email Address</span>
                       </div>
-                      <div className="flex items-center space-x-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                        <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" style={{ width: '16px', height: '16px' }} />
+                      <div className="flex items-center space-x-2 text-[11px] sm:text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 shrink-0" />
                         <span>Secure Password Configured</span>
                       </div>
-                      <div className="flex items-center space-x-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                        <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" style={{ width: '16px', height: '16px' }} />
+                      <div className="flex items-center space-x-2 text-[11px] sm:text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 shrink-0" />
                         <span>OAuth Provider: {profile?.google_id ? 'Google OAuth' : 'Standard Email'}</span>
                       </div>
                     </div>
@@ -825,18 +837,18 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-end pt-4 mt-auto">
+                <div className="flex justify-end pt-3 sm:pt-4 mt-auto">
                   <button
                     type="submit"
                     disabled={updating}
-                    className="px-6 py-3 rounded-full text-white font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center space-x-2 active:scale-95 shadow-md disabled:opacity-50"
+                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-full text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center space-x-2 active:scale-95 shadow-md disabled:opacity-50"
                     style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
                   >
                     {updating ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                         <span>Updating...</span>
                       </>
                     ) : (
@@ -854,17 +866,15 @@ export default function ProfilePage() {
           {/* COLUMN 3: Travel Preferences Card */}
           <div className="w-full">
 
-            <div className="rounded-3xl border shadow-md p-6 md:p-8 w-full h-full flex flex-col"
+            <div className="rounded-2xl sm:rounded-3xl border shadow-sm sm:shadow-md p-4 sm:p-6 md:p-8 w-full h-full flex flex-col"
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
 
-              <div className="space-y-4 flex-1 flex flex-col justify-between w-full">
-                <div className="space-y-4 flex-1 w-full">
-                  <h3 className="text-base font-black mb-4 flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
-                    <Compass className="h-4 w-4 text-blue-500" />
+              <div className="space-y-3 sm:space-y-4 flex-1 flex flex-col justify-between w-full">
+                <div className="space-y-3 sm:space-y-4 flex-1 w-full">
+                  <h3 className="text-sm sm:text-base font-black mb-3 sm:mb-4 flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
+                    <Compass className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
                     <span>{t('travel_preferences_title')}</span>
                   </h3>
-
-
 
                   {/* Travel Style Selector */}
                   {(() => {
@@ -878,8 +888,8 @@ export default function ProfilePage() {
                     const activeStyle = stylesList.find(s => s.value === preferences.travelStyle) || stylesList[2];
 
                     return (
-                      <div className="space-y-2 relative style-select-container">
-                        <label className="text-xs font-extrabold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>{t('preferred_style')}</label>
+                      <div className="space-y-1.5 sm:space-y-2 relative style-select-container">
+                        <label className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>{t('preferred_style')}</label>
 
                         <button
                           type="button"
@@ -887,7 +897,7 @@ export default function ProfilePage() {
                             setIsStyleOpen(!isStyleOpen);
                             setIsCurrencyOpen(false);
                           }}
-                          className="w-full py-2.5 px-4 rounded-2xl border text-sm font-semibold flex items-center justify-between cursor-pointer focus:outline-none transition-all duration-200"
+                          className="w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl border text-xs sm:text-sm font-semibold flex items-center justify-between cursor-pointer focus:outline-none transition-all duration-200"
                           style={{
                             borderColor: 'var(--border-primary)',
                             color: 'var(--text-primary)',
@@ -895,7 +905,7 @@ export default function ProfilePage() {
                           }}
                         >
                           <span>{activeStyle.label}</span>
-                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isStyleOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
+                          <ChevronDown className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-200 ${isStyleOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
                         </button>
 
                         <AnimatePresence>
@@ -904,7 +914,7 @@ export default function ProfilePage() {
                               initial={{ opacity: 0, y: -4 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -4 }}
-                              className="absolute left-0 right-0 mt-1 rounded-2xl border shadow-xl overflow-hidden z-[100]"
+                              className="absolute left-0 right-0 mt-1 rounded-xl sm:rounded-2xl border shadow-xl overflow-hidden z-[100]"
                               style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}
                             >
                               {stylesList.map((item) => (
@@ -915,7 +925,7 @@ export default function ProfilePage() {
                                     setPreferences({ ...preferences, travelStyle: item.value });
                                     setIsStyleOpen(false);
                                   }}
-                                  className="w-full text-left px-4 py-2.5 text-sm font-semibold flex items-center justify-between transition cursor-pointer"
+                                  className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold flex items-center justify-between transition cursor-pointer"
                                   style={{
                                     color: preferences.travelStyle === item.value ? 'var(--rose-500)' : 'var(--text-secondary)',
                                     backgroundColor: preferences.travelStyle === item.value ? 'rgba(244,63,94,0.08)' : 'transparent'
@@ -954,8 +964,8 @@ export default function ProfilePage() {
                     const activeCurrency = currenciesList.find(c => c.value === preferences.currency) || currenciesList[0];
 
                     return (
-                      <div className="space-y-2 relative currency-select-container">
-                        <label className="text-xs font-extrabold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>{t('preferred_currency')}</label>
+                      <div className="space-y-1.5 sm:space-y-2 relative currency-select-container">
+                        <label className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wide block" style={{ color: 'var(--text-secondary)' }}>{t('preferred_currency')}</label>
 
                         <button
                           type="button"
@@ -963,15 +973,15 @@ export default function ProfilePage() {
                             setIsCurrencyOpen(!isCurrencyOpen);
                             setIsStyleOpen(false);
                           }}
-                          className="w-full py-2.5 px-4 rounded-2xl border text-sm font-semibold flex items-center justify-between cursor-pointer focus:outline-none transition-all duration-200"
+                          className="w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl border text-xs sm:text-sm font-semibold flex items-center justify-between cursor-pointer focus:outline-none transition-all duration-200"
                           style={{
                             borderColor: 'var(--border-primary)',
                             color: 'var(--text-primary)',
                             backgroundColor: 'var(--bg-tertiary)'
                           }}
                         >
-                          <span>{activeCurrency.label}</span>
-                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCurrencyOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
+                          <span className="truncate">{activeCurrency.label}</span>
+                          <ChevronDown className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-200 shrink-0 ${isCurrencyOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
                         </button>
 
                         <AnimatePresence>
@@ -980,7 +990,7 @@ export default function ProfilePage() {
                               initial={{ opacity: 0, y: -4 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -4 }}
-                              className="absolute left-0 right-0 mt-1 rounded-2xl border shadow-xl overflow-hidden z-[100]"
+                              className="absolute left-0 right-0 mt-1 rounded-xl sm:rounded-2xl border shadow-xl overflow-hidden z-[100]"
                               style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}
                             >
                               {currenciesList.map((item) => (
@@ -991,7 +1001,7 @@ export default function ProfilePage() {
                                     setPreferences({ ...preferences, currency: item.value });
                                     setIsCurrencyOpen(false);
                                   }}
-                                  className="w-full text-left px-4 py-2.5 text-sm font-semibold flex items-center justify-between transition cursor-pointer"
+                                  className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold flex items-center justify-between transition cursor-pointer"
                                   style={{
                                     color: preferences.currency === item.value ? 'var(--rose-500)' : 'var(--text-secondary)',
                                     backgroundColor: preferences.currency === item.value ? 'rgba(244,63,94,0.08)' : 'transparent'
@@ -1007,8 +1017,8 @@ export default function ProfilePage() {
                                     }
                                   }}
                                 >
-                                  <span>{item.label}</span>
-                                  {preferences.currency === item.value && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />}
+                                  <span className="truncate">{item.label}</span>
+                                  {preferences.currency === item.value && <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />}
                                 </button>
                               ))}
                             </motion.div>
@@ -1019,12 +1029,12 @@ export default function ProfilePage() {
                   })()}
 
                   {/* Locale & Settings */}
-                  <div className="space-y-4 pt-6 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
-                    <h4 className="text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
+                  <div className="space-y-3 sm:space-y-4 pt-4 sm:pt-6 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                    <h4 className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wide flex items-center space-x-1.5" style={{ color: 'var(--text-secondary)' }}>
                       <span>Locale & Display Settings</span>
                     </h4>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {/* Timezone */}
                       {(() => {
                         const timezones = [
@@ -1037,8 +1047,8 @@ export default function ProfilePage() {
                         const activeTz = timezones.find(t => t.value === localeSettings.timezone) || timezones[3];
 
                         return (
-                          <div className="space-y-1.5 relative timezone-select-container">
-                            <label className="text-[10px] font-extrabold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>Timezone</label>
+                          <div className="space-y-1 sm:space-y-1.5 relative timezone-select-container">
+                            <label className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>Timezone</label>
                             <button
                               type="button"
                               onClick={() => {
@@ -1104,8 +1114,8 @@ export default function ProfilePage() {
                         const activeFormat = formats.find(f => f.value === localeSettings.dateFormat) || formats[0];
 
                         return (
-                          <div className="space-y-1.5 relative dateformat-select-container">
-                            <label className="text-[10px] font-extrabold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>Date Format</label>
+                          <div className="space-y-1 sm:space-y-1.5 relative dateformat-select-container">
+                            <label className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>Date Format</label>
                             <button
                               type="button"
                               onClick={() => {
@@ -1163,20 +1173,20 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Temp Unit */}
-                    <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
                       <div>
-                        <h5 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>Temperature Unit</h5>
-                        <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Preferred temperature scale</p>
+                        <h5 className="text-[11px] sm:text-xs font-black" style={{ color: 'var(--text-primary)' }}>Temperature Unit</h5>
+                        <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Preferred temperature scale</p>
                       </div>
-                      <div className="flex space-x-1 bg-slate-200 dark:bg-slate-800 p-0.5 rounded-xl">
+                      <div className="flex space-x-1 bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg sm:rounded-xl">
                         {['C', 'F'].map((unit) => (
                           <button
                             key={unit}
                             type="button"
                             onClick={() => setLocaleSettings({ ...localeSettings, tempUnit: unit })}
-                            className={`px-3 py-1 rounded-lg text-xs font-bold transition select-none cursor-pointer ${localeSettings.tempUnit === unit
+                            className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold transition select-none cursor-pointer ${localeSettings.tempUnit === unit
                                 ? 'bg-blue-500 text-white shadow-sm'
-                                : 'text-slate-555 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-350'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                               }`}
                           >
                             °{unit}
@@ -1187,36 +1197,34 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Toggle Options */}
-                  <div className="space-y-4 pt-6 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                  <div className="space-y-3 sm:space-y-4 pt-4 sm:pt-6 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
 
                     {/* Notifications Toggle */}
-                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
                       <div>
-                        <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('email_notifications')}</h4>
-                        <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('recommendations_desc')}</p>
+                        <h4 className="text-[11px] sm:text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('email_notifications')}</h4>
+                        <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('recommendations_desc')}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => setPreferences({ ...preferences, notifications: !preferences.notifications })}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer shrink-0 ${preferences.notifications ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
+                        className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full transition-colors duration-200 cursor-pointer shrink-0 ${preferences.notifications ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
                           }`}
                       >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${preferences.notifications ? 'translate-x-6' : 'translate-x-1'
+                        <span className={`inline-block h-3.5 w-3.5 sm:h-4 sm:w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${preferences.notifications ? 'translate-x-4 sm:translate-x-6' : 'translate-x-1'
                           }`} />
                       </button>
                     </div>
-
-
 
                   </div>
 
                 </div>
 
                 {/* Submit Button aligned with Column 2 */}
-                <div className="flex justify-end pt-4 mt-auto">
+                <div className="flex justify-end pt-3 sm:pt-4 mt-auto">
                   <button
                     onClick={handleSavePreferences}
-                    className="px-6 py-3 rounded-full text-white font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center space-x-2 active:scale-95 shadow-md"
+                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-full text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center space-x-2 active:scale-95 shadow-md"
                     style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
@@ -1234,35 +1242,35 @@ export default function ProfilePage() {
         </div>
 
         {/* TRAVEL LOGS & EMERGENCY GRID */}
-        <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+        <div className="mt-6 sm:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 w-full">
           {/* Travel History Logs listing */}
-          <div className="rounded-3xl border shadow-md p-6 md:p-8 flex flex-col justify-between"
+          <div className="rounded-2xl sm:rounded-3xl border shadow-sm sm:shadow-md p-4 sm:p-6 md:p-8 flex flex-col justify-between"
             style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
             <div>
-              <div className="flex items-center justify-between gap-4 mb-6">
+              <div className="flex items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div>
-                  <h3 className="text-xl font-black flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
-                    <Calendar className="h-5 w-5 text-indigo-500" />
+                  <h3 className="text-base sm:text-xl font-black flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
                     <span>Travel Logs & History</span>
                   </h3>
-                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Keep track of your past adventures and destinations.</p>
+                  <p className="text-[11px] sm:text-xs" style={{ color: 'var(--text-tertiary)' }}>Keep track of your past adventures and destinations.</p>
                 </div>
                 <button
                   onClick={() => setShowLogPastModal(true)}
-                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-indigo-700 active:scale-95 shadow-md shrink-0"
+                  className="flex items-center space-x-1 sm:space-x-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-indigo-700 active:scale-95 shadow-md shrink-0"
                   style={{ backgroundColor: '#4f46e5' }}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Log Trip</span>
                 </button>
               </div>
 
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+              <div className="space-y-3 sm:space-y-4 max-h-[300px] overflow-y-auto pr-1 sm:pr-2">
                 {travelHistory.length === 0 ? (
-                  <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-8 text-center dark:bg-indigo-950/10 dark:border-indigo-900/30">
-                    <Compass className="h-8 w-8 text-indigo-300 mx-auto mb-3" />
-                    <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No past trips logged yet</p>
-                    <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Add a past trip to map your adventures.</p>
+                  <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center dark:bg-indigo-950/10 dark:border-indigo-900/30">
+                    <Compass className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-300 mx-auto mb-2 sm:mb-3" />
+                    <p className="text-xs sm:text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No past trips logged yet</p>
+                    <p className="text-[10px] sm:text-xs" style={{ color: 'var(--text-tertiary)' }}>Add a past trip to map your adventures.</p>
                   </div>
                 ) : (
                   travelHistory.map((trip) => {
@@ -1272,27 +1280,27 @@ export default function ProfilePage() {
                         key={trip.id}
                         onMouseEnter={() => setHoveredPastTripId(trip.id)}
                         onMouseLeave={() => setHoveredPastTripId(null)}
-                        className={`rounded-2xl border p-4 relative transition-all duration-200 group flex flex-col justify-between ${isHovered
+                        className={`rounded-xl sm:rounded-2xl border p-3 sm:p-4 relative transition-all duration-200 group flex flex-col justify-between ${isHovered
                             ? 'border-rose-450 bg-rose-50/10 shadow-md'
                             : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40'
                           }`}
                       >
                         <div className="flex items-start justify-between gap-2 pr-6">
-                          <h4 className="text-sm font-bold truncate pr-6" style={{ color: 'var(--text-primary)' }}>{trip.destination}</h4>
+                          <h4 className="text-xs sm:text-sm font-bold truncate pr-4 sm:pr-6" style={{ color: 'var(--text-primary)' }}>{trip.destination}</h4>
                           <button
                             onClick={() => handleRemovePastTrip(trip.id)}
-                            className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0 absolute top-4 right-4"
+                            className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer shrink-0 absolute top-3 sm:top-4 right-3 sm:right-4"
                             title="Remove past trip"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                        <div className="flex items-center space-x-1 text-[9px] font-bold text-indigo-650 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-0.5 rounded-full w-fit mb-2 mt-1">
-                          <Calendar className="h-3 w-3" />
+                        <div className="flex items-center space-x-1 text-[8.5px] sm:text-[9px] font-bold text-indigo-650 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2 sm:px-2.5 py-0.5 rounded-full w-fit mb-1.5 sm:mb-2 mt-1">
+                          <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                           <span>{trip.dates}</span>
                         </div>
                         {trip.notes && (
-                          <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{trip.notes}</p>
+                          <p className="text-[11px] sm:text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{trip.notes}</p>
                         )}
                       </div>
                     );
@@ -1303,31 +1311,31 @@ export default function ProfilePage() {
           </div>
 
           {/* Emergency Info & Documents Vault Section */}
-          <div className="rounded-3xl border shadow-md p-6 md:p-8 flex flex-col justify-between"
+          <div className="rounded-2xl sm:rounded-3xl border shadow-sm sm:shadow-md p-4 sm:p-6 md:p-8 flex flex-col justify-between"
             style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
             <div>
-              <h3 className="text-xl font-black flex items-center space-x-2 mb-1" style={{ color: 'var(--text-primary)' }}>
-                <Activity className="h-5 w-5 text-rose-500" />
+              <h3 className="text-base sm:text-xl font-black flex items-center space-x-2 mb-1" style={{ color: 'var(--text-primary)' }}>
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-rose-500" />
                 <span>Emergency Profile & Documents</span>
               </h3>
-              <p className="text-xs mb-6" style={{ color: 'var(--text-tertiary)' }}>Keep emergency contact info and documents accessible.</p>
+              <p className="text-[11px] sm:text-xs mb-4 sm:mb-6" style={{ color: 'var(--text-tertiary)' }}>Keep emergency contact info and documents accessible.</p>
 
               {emergencyContacts.length > 0 && (
-                <div className="mb-6 grid grid-cols-1 gap-3 max-h-[160px] overflow-y-auto pr-2">
+                <div className="mb-4 sm:mb-6 grid grid-cols-1 gap-2.5 sm:gap-3 max-h-[160px] overflow-y-auto pr-1 sm:pr-2">
                   {emergencyContacts.map((contact) => (
-                    <div key={contact.id} className="rounded-xl border p-3 flex items-center justify-between bg-rose-50/30 dark:bg-rose-950/20"
+                    <div key={contact.id} className="rounded-xl border p-2.5 sm:p-3 flex items-center justify-between bg-rose-50/30 dark:bg-rose-950/20"
                          style={{ borderColor: 'var(--border-primary)' }}>
                       <div>
-                        <h4 className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{contact.name}</h4>
-                        <p className="text-[10px] text-rose-500 font-semibold">{contact.relation} • {contact.bloodGroup}</p>
-                        <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{contact.phone}</p>
+                        <h4 className="text-[11px] sm:text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{contact.name}</h4>
+                        <p className="text-[9.5px] sm:text-[10px] text-rose-500 font-semibold">{contact.relation} • {contact.bloodGroup}</p>
+                        <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{contact.phone}</p>
                       </div>
                       <button
                         onClick={() => handleRemoveEmergencyContact(contact.id)}
-                        className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                        className="p-1 sm:p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition cursor-pointer"
                         title="Remove contact"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     </div>
                   ))}
@@ -1335,56 +1343,56 @@ export default function ProfilePage() {
               )}
 
               {emergencyContacts.length < 5 ? (
-                <form onSubmit={handleAddEmergencyContact} className="space-y-4 pt-4 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Contact Name</label>
+                <form onSubmit={handleAddEmergencyContact} className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-1 sm:space-y-1.5">
+                        <label className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Contact Name</label>
                         <input
                           type="text"
                           value={newEmergencyContact.name}
                           onChange={(e) => setNewEmergencyContact({ ...newEmergencyContact, name: e.target.value })}
                           placeholder="Jane Doe"
                           required
-                          className="w-full px-4 py-2.5 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                           style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
                         />
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Relationship</label>
+                      <div className="space-y-1 sm:space-y-1.5">
+                        <label className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Relationship</label>
                         <input
                           type="text"
                           value={newEmergencyContact.relation}
                           onChange={(e) => setNewEmergencyContact({ ...newEmergencyContact, relation: e.target.value })}
                           placeholder="Spouse / Parent"
                           required
-                          className="w-full px-4 py-2.5 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                           style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Phone Number</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-1 sm:space-y-1.5">
+                        <label className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Phone Number</label>
                         <input
                           type="text"
                           value={newEmergencyContact.phone}
                           onChange={(e) => setNewEmergencyContact({ ...newEmergencyContact, phone: e.target.value })}
                           placeholder="+91 9999999999"
                           required
-                          className="w-full px-4 py-2.5 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                           style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
                         />
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Blood Group</label>
+                      <div className="space-y-1 sm:space-y-1.5">
+                        <label className="text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Blood Group</label>
                         <select
                           value={newEmergencyContact.bloodGroup}
                           onChange={(e) => setNewEmergencyContact({ ...newEmergencyContact, bloodGroup: e.target.value })}
-                          className="w-full px-4 py-2.5 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                           style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-tertiary)' }}
                         >
                           <option value="">Select Group</option>
@@ -1401,19 +1409,19 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-2">
+                  <div className="flex justify-end pt-1.5 sm:pt-2">
                     <button
                       type="submit"
-                      className="px-5 py-2.5 rounded-xl text-white text-xs font-bold transition hover:bg-rose-700 active:scale-95 shadow-md cursor-pointer flex items-center space-x-1.5"
+                      className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-white text-xs font-bold transition hover:bg-rose-700 active:scale-95 shadow-md cursor-pointer flex items-center justify-center space-x-1.5"
                       style={{ backgroundColor: '#e11d48' }}
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span>Add Contact</span>
                     </button>
                   </div>
                 </form>
               ) : (
-                <div className="pt-4 border-t text-center text-xs font-semibold" style={{ borderColor: 'var(--border-secondary)', color: 'var(--text-tertiary)' }}>
+                <div className="pt-3 sm:pt-4 border-t text-center text-xs font-semibold" style={{ borderColor: 'var(--border-secondary)', color: 'var(--text-tertiary)' }}>
                   Maximum limit of 5 emergency contacts reached.
                 </div>
               )}
@@ -1421,7 +1429,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* OTP Verification Modal (For Password Changes) */}
       {showOtpModal && (

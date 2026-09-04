@@ -127,18 +127,18 @@ export default function BudgetsListPage() {
 
       <Navbar activeTab="budgets" />
 
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 min-h-[85vh] pb-24">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 min-h-[85vh] pb-24">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 sm:mb-12 text-left">
           <div>
-            <div className="flex items-center space-x-2.5 mb-3">
-              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                <TrendingUp className="h-5 w-5" />
+            <div className="flex items-center space-x-2.5 mb-2.5">
+              <div className="p-2 sm:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                <TrendingUp className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               </div>
-              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('financial_overview')}</span>
+              <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">{t('financial_overview')}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('my_saved_budgets')}</h1>
-            <p className="text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>{t('budgets_desc')}</p>
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>{t('my_saved_budgets')}</h1>
+            <p className="text-xs sm:text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>{t('budgets_desc')}</p>
           </div>
         </div>
 
@@ -148,23 +148,23 @@ export default function BudgetsListPage() {
             <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{t('aggregating_budgets')}</p>
           </div>
         ) : tripsWithBudgets.length === 0 ? (
-          <div className="p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed shadow-sm" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
-            <div className="h-16 w-16 rounded-2xl flex items-center justify-center mb-6 border" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
-              <DollarSign className="h-8 w-8 text-emerald-500" />
+          <div className="p-10 sm:p-16 rounded-2xl sm:rounded-3xl text-center flex flex-col items-center justify-center border border-dashed shadow-sm" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl flex items-center justify-center mb-5 sm:mb-6 border" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
+              <DollarSign className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-500" />
             </div>
-            <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{t('no_budgets')}</h2>
-            <p className="max-w-sm text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            <h2 className="text-lg sm:text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{t('no_budgets')}</h2>
+            <p className="max-w-sm text-xs sm:text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               {t('no_budgets_desc')}
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-3 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
+              className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition cursor-pointer shadow-sm"
             >
               {t('start_planning')}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             {tripsWithBudgets.map((trip) => {
               const parts = (trip.travelStyle || '').split('|');
               const style = parts[0] || 'Adventure';
@@ -180,11 +180,11 @@ export default function BudgetsListPage() {
                 <div
                   key={trip.id}
                   onClick={() => navigate(`/trips/${trip.id}/budget`)}
-                  className="group relative rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl hover:border-rose-500"
+                  className="group relative rounded-2xl sm:rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl hover:border-rose-500"
                   style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
                 >
                   {/* Trip Cover Image (Flush Top) */}
-                  <div className="relative h-44 overflow-hidden">
+                  <div className="relative h-36 sm:h-44 overflow-hidden">
                     <img
                       src={getTripImage(trip.destination)}
                       alt={trip.destination}
@@ -193,55 +193,55 @@ export default function BudgetsListPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                     
                     {/* Style Badge floating on top-left of image */}
-                    <span className="absolute top-4 left-4 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-rose-650 backdrop-blur-sm border border-white/20 shadow-sm">
+                    <span className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold bg-white/95 text-rose-650 backdrop-blur-sm border border-white/20 shadow-sm">
                       {t('style_' + style.toLowerCase()) || style}
                     </span>
                     
                     {/* Currency floating on top-right of image */}
-                    <div className="absolute top-4 right-4 flex items-center space-x-1 font-bold text-white bg-black/40 backdrop-blur-sm border border-white/10 px-2.5 py-1 rounded-lg text-[10px]">
+                    <div className="absolute top-2.5 sm:top-4 right-2.5 sm:right-4 flex items-center space-x-1 font-bold text-white bg-black/40 backdrop-blur-sm border border-white/10 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[9px] sm:text-[10px]">
                       <span>{tripCurrency.symbol} {tripCurrencyCode}</span>
                     </div>
                   </div>
 
                   {/* Content Container (Padded) */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="text-lg font-extrabold mb-1 group-hover:text-rose-500 transition-colors truncate" style={{ color: 'var(--text-primary)' }}>
+                      <h3 className="text-base sm:text-lg font-extrabold mb-1 group-hover:text-rose-500 transition-colors truncate" style={{ color: 'var(--text-primary)' }}>
                         {trip.destination}
                       </h3>
 
-                      <div className="flex items-center space-x-2 text-[11px] mb-4" style={{ color: 'var(--text-tertiary)' }}>
-                        <Calendar className="h-3.5 w-3.5 text-rose-500" />
+                      <div className="flex items-center space-x-1.5 text-[10.5px] sm:text-[11px] mb-3 sm:mb-4" style={{ color: 'var(--text-tertiary)' }}>
+                        <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500" />
                         <span>
                           {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
                         </span>
                       </div>
 
                       {/* Stats metrics */}
-                      <div className="grid grid-cols-2 gap-3 mb-4 py-3 border-y" style={{ borderColor: 'var(--border-secondary)' }}>
+                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-3 sm:mb-4 py-2.5 sm:py-3 border-y" style={{ borderColor: 'var(--border-secondary)' }}>
                         <div>
-                          <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('budget_limit')}</span>
-                          <span className="text-sm font-extrabold" style={{ color: 'var(--text-primary)' }}>
+                          <span className="text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('budget_limit')}</span>
+                          <span className="text-xs sm:text-sm font-extrabold" style={{ color: 'var(--text-primary)' }}>
                             {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('budget_spent')}</span>
-                          <span className="text-sm font-extrabold text-rose-500">
+                          <span className="text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('budget_spent')}</span>
+                          <span className="text-xs sm:text-sm font-extrabold text-rose-500">
                             {tripCurrency.symbol}{Number(totalActual).toLocaleString(tripCurrency.locale)}
                           </span>
                         </div>
                       </div>
 
                       {/* Progress Bar */}
-                      <div className="space-y-1 mb-4">
-                        <div className="flex justify-between text-[10px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+                      <div className="space-y-1 mb-3 sm:mb-4">
+                        <div className="flex justify-between text-[9.5px] sm:text-[10px] font-bold" style={{ color: 'var(--text-secondary)' }}>
                           <span>{t('budget_utilization')}</span>
                           <span className={utilizationPercent > 80 ? 'text-rose-500' : 'text-emerald-500'}>
                             {Math.round(utilizationPercent)}%
                           </span>
                         </div>
-                        <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                        <div className="w-full h-1.5 sm:h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${utilizationPercent > 80 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                             style={{ width: `${Math.min(utilizationPercent, 100)}%` }}
@@ -251,11 +251,11 @@ export default function BudgetsListPage() {
 
                       {/* Expected Allocation */}
                       {trip.budgetData?.categoryBreakdown && trip.budgetData.categoryBreakdown.length > 0 && (
-                        <div className="mb-4 pt-3 border-t space-y-1.5" style={{ borderColor: 'var(--border-secondary)' }}>
-                          <span className="text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('allocation_breakdown')}</span>
-                          <div className="flex flex-wrap gap-1.5">
+                        <div className="mb-3 sm:mb-4 pt-2.5 sm:pt-3 border-t space-y-1.5" style={{ borderColor: 'var(--border-secondary)' }}>
+                          <span className="text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider block" style={{ color: 'var(--text-tertiary)' }}>{t('allocation_breakdown')}</span>
+                          <div className="flex flex-wrap gap-1 sm:gap-1.5">
                             {trip.budgetData.categoryBreakdown.map((cat, cIdx) => (
-                              <span key={cIdx} className="inline-flex items-center text-[9px] font-bold border px-2 py-0.5 rounded-md" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}>
+                              <span key={cIdx} className="inline-flex items-center text-[8.5px] sm:text-[9px] font-bold border px-1.5 sm:px-2 py-0.5 rounded-md" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}>
                                 {t('category_' + cat.category.toLowerCase().replace(/[^a-z0-9]+/g, '_')) || cat.category}: <span className="font-extrabold ml-1" style={{ color: 'var(--text-primary)' }}>{tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</span>
                               </span>
                             ))}
@@ -265,12 +265,12 @@ export default function BudgetsListPage() {
                     </div>
 
                     {/* Call to action bar */}
-                    <div className="flex items-center justify-between text-xs font-extrabold pt-3 border-t group-hover:text-rose-500 transition-colors" style={{ borderColor: 'var(--border-secondary)', color: 'var(--text-secondary)' }}>
+                    <div className="flex items-center justify-between text-[11px] sm:text-xs font-extrabold pt-2.5 sm:pt-3 border-t group-hover:text-rose-500 transition-colors" style={{ borderColor: 'var(--border-secondary)', color: 'var(--text-secondary)' }}>
                       <span className="flex items-center space-x-1.5">
-                        <Edit className="h-3.5 w-3.5 text-rose-500" />
+                        <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500" />
                         <span>{t('edit_log_expenses')}</span>
                       </span>
-                      <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 transform group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>

@@ -391,19 +391,31 @@ export default function CommunityFeedPage() {
       <Navbar activeTab="community" />
 
       {/* Main Container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full flex-1 py-12 space-y-8 min-h-[85vh] pb-24">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 py-8 sm:py-12 space-y-6 sm:space-y-8 min-h-[85vh] pb-24">
         
         {/* Title Block */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-2">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2.5 mb-3">
-              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                <Users className="h-5 w-5" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 pb-1 sm:pb-2 text-left">
+          <div className="w-full md:w-auto">
+            <div className="flex items-center justify-between md:justify-start space-x-2.5 mb-2 sm:mb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 sm:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                  <Users className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                </div>
+                <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">{t('community')}</span>
               </div>
-              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('community')}</span>
+              <button
+                onClick={() => {
+                  setEditPostId(null);
+                  setShowFormModal(true);
+                }}
+                className="md:hidden flex items-center justify-center space-x-1 text-xs font-extrabold px-3.5 py-2 rounded-xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm active:scale-95 transition-all duration-200 select-none cursor-pointer dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
+              >
+                <Plus className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" />
+                <span>{t('share_experience')}</span>
+              </button>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('community_feed')}</h1>
-            <p className="text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>{t('community_feed')}</h1>
+            <p className="text-xs sm:text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
               {t('community_subtitle')}
             </p>
           </div>
@@ -413,7 +425,7 @@ export default function CommunityFeedPage() {
               setEditPostId(null);
               setShowFormModal(true);
             }}
-            className="flex items-center justify-center space-x-2.5 text-sm font-extrabold px-6 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer self-start md:self-auto dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
+            className="hidden md:flex items-center justify-center space-x-2.5 text-sm font-extrabold px-6 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer self-start md:self-auto dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
           >
             <Plus className="h-5 w-5 text-rose-500 dark:text-rose-400" />
             <span>{t('share_experience')}</span>
@@ -428,14 +440,14 @@ export default function CommunityFeedPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('search_posts_placeholder')}
-              className="w-full py-3.5 pl-11 pr-4 rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition"
+              className="w-full py-3 sm:py-3.5 pl-10 sm:pl-11 pr-4 rounded-xl sm:rounded-2xl border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition"
               style={{ 
                 backgroundColor: 'var(--bg-secondary)',
                 borderColor: 'var(--border-primary)',
                 color: 'var(--text-primary)'
               }}
             />
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-tertiary)' }} />
+            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: 'var(--text-tertiary)' }} />
           </div>
         </div>
 
@@ -446,7 +458,7 @@ export default function CommunityFeedPage() {
             <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{t('loading_social_logs')}</p>
           </div>
         ) : filteredPosts.length === 0 ? (
-          <div className="text-center py-20 border rounded-3xl p-6" 
+          <div className="text-center py-20 border rounded-2xl sm:rounded-3xl p-6" 
                style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
             <Users className="h-12 w-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
             <h3 className="text-base font-extrabold">{t('no_stories_title')}</h3>
@@ -465,7 +477,7 @@ export default function CommunityFeedPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 animate-fade-in">
             {filteredPosts.map((post) => {
               const isLikedByUser = post.liked_by?.includes(user?.id);
               const postPhotos = parsePhotos(post.photo_content);
@@ -475,14 +487,14 @@ export default function CommunityFeedPage() {
                 <div 
                   key={post.id}
                   onClick={() => handleOpenDetailModal(post)}
-                  className="rounded-3xl border overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer group"
+                  className="rounded-2xl sm:rounded-3xl border overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer group"
                   style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
                 >
                   {/* Photo Gallery Section */}
                   {postPhotos.length > 0 && (
                     <div className="w-full relative border-b" style={{ borderColor: 'var(--border-secondary)' }}>
                       {postPhotos.length === 1 ? (
-                        <div className="w-full h-52 overflow-hidden">
+                        <div className="w-full h-40 sm:h-52 overflow-hidden">
                           <img 
                             src={postPhotos[0]} 
                             alt={post.title} 
@@ -490,7 +502,7 @@ export default function CommunityFeedPage() {
                           />
                         </div>
                       ) : (
-                        <div className="w-full h-52 overflow-x-auto flex snap-x snap-mandatory scrollbar-thin">
+                        <div className="w-full h-40 sm:h-52 overflow-x-auto flex snap-x snap-mandatory scrollbar-thin">
                           {postPhotos.map((photo, idx) => (
                             <div key={idx} className="w-full h-full shrink-0 snap-center relative">
                               <img 
@@ -498,7 +510,7 @@ export default function CommunityFeedPage() {
                                 alt={`${post.title} - ${idx + 1}`} 
                                 className="w-full h-full object-cover" 
                               />
-                              <div className="absolute bottom-3 right-3 bg-black/60 text-[9px] font-black tracking-wider text-white px-2 py-0.5 rounded-full">
+                              <div className="absolute bottom-2.5 right-2.5 bg-black/60 text-[8.5px] sm:text-[9px] font-black tracking-wider text-white px-2 py-0.5 rounded-full">
                                 {idx + 1} / {postPhotos.length}
                               </div>
                             </div>
@@ -509,16 +521,16 @@ export default function CommunityFeedPage() {
                   )}
 
                   {/* Body Content */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 sm:space-y-4">
                     {/* Header info */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 font-black border border-rose-500/20 flex items-center justify-center text-xs tracking-wider">
+                      <div className="flex items-center space-x-2.5 sm:space-x-3">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-500/10 text-rose-500 font-black border border-rose-500/20 flex items-center justify-center text-[11px] sm:text-xs tracking-wider">
                           {post.username.charAt(0).toUpperCase()}
                         </div>
                         <div className="text-left">
-                          <h4 className="text-[11px] font-black text-slate-800 dark:text-slate-100">{post.username}</h4>
-                          <p className="text-[9px]" style={{ color: 'var(--text-tertiary)' }}>
+                          <h4 className="text-[10.5px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100">{post.username}</h4>
+                          <p className="text-[8.5px] sm:text-[9px]" style={{ color: 'var(--text-tertiary)' }}>
                             {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
                         </div>
@@ -526,7 +538,7 @@ export default function CommunityFeedPage() {
 
                       {/* Edit / Delete Buttons for Own Posts */}
                       {isOwnPost && (
-                        <div className="flex items-center space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center space-x-1 sm:space-x-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => handleOpenEditModal(post)}
                             className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
@@ -545,18 +557,18 @@ export default function CommunityFeedPage() {
                       )}
                     </div>
 
-                    <h3 className="text-sm font-black text-left tracking-tight group-hover:text-rose-500 transition line-clamp-2 leading-snug">
+                    <h3 className="text-xs sm:text-sm font-black text-left tracking-tight group-hover:text-rose-500 transition line-clamp-2 leading-snug">
                       {post.title}
                     </h3>
 
                     {/* Interactions Footer */}
-                    <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
+                    <div className="flex items-center justify-between pt-2.5 sm:pt-3 border-t" style={{ borderColor: 'var(--border-secondary)' }}>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleLikePost(post.id);
                         }}
-                        className="flex items-center space-x-2 text-xs font-bold transition hover:scale-105 active:scale-95 cursor-pointer"
+                        className="flex items-center space-x-1.5 sm:space-x-2 text-[11px] sm:text-xs font-bold transition hover:scale-105 active:scale-95 cursor-pointer"
                         style={{ color: isLikedByUser ? '#f43f5e' : 'var(--text-secondary)' }}
                       >
                         <Heart className={`h-4 w-4 transition-colors ${isLikedByUser ? 'fill-rose-500 text-rose-500' : ''}`} />

@@ -107,6 +107,7 @@ const translations = {
     deleting_action: 'Deleting...',
 
     // Profile Page
+    account_settings: 'Account & Preferences',
     profile_title: 'User Profile',
     profile_desc: 'Manage your account settings, preferences, and view your stats.',
     back_to_dashboard: 'Back to Dashboard',
@@ -427,6 +428,7 @@ const translations = {
     deleting_action: 'Eliminando...',
 
     // Profile Page
+    account_settings: 'Cuenta y Preferencias',
     profile_title: 'Perfil de Usuario',
     profile_desc: 'Administra la configuración de tu cuenta, preferencias y estadísticas.',
     back_to_dashboard: 'Volver al Panel',
@@ -747,6 +749,7 @@ const translations = {
     deleting_action: 'Suppression...',
 
     // Profile Page
+    account_settings: 'Compte & Préférences',
     profile_title: 'Profil Utilisateur',
     profile_desc: 'Gérer les paramètres du compte, les préférences et les statistiques.',
     back_to_dashboard: 'Retour au Tableau de Bord',
@@ -1067,6 +1070,7 @@ const translations = {
     deleting_action: 'Löschen...',
 
     // Profile Page
+    account_settings: 'Konto & Einstellungen',
     profile_title: 'Benutzerprofil',
     profile_desc: 'Verwalten Sie Ihre Kontoeinstellungen, Präferenzen und Statistiken.',
     back_to_dashboard: 'Zurück zum Dashboard',
@@ -1387,6 +1391,7 @@ const translations = {
     deleting_action: 'हटाया जा रहा है...',
 
     // Profile Page
+    account_settings: 'खाता और प्राथमिकताएँ',
     profile_title: 'उपयोगकर्ता प्रोफ़ाइल',
     profile_desc: 'अपनी खाता सेटिंग, प्राथमिकताएं और आंकड़े प्रबंधित करें।',
     back_to_dashboard: 'डैशबोर्ड पर वापस जाएं',
@@ -1707,6 +1712,7 @@ const translations = {
     deleting_action: 'جاري الحذف...',
 
     // Profile Page
+    account_settings: 'الحساب والتفضيلات',
     profile_title: 'ملف المستخدم',
     profile_desc: 'إدارة إعدادات حسابك، وتفضيلاتك، وعرض إحصائياتك.',
     back_to_dashboard: 'العودة إلى لوحة القيادة',
@@ -2026,6 +2032,7 @@ const translations = {
     deleting_action: 'Excluindo...',
 
     // Profile Page
+    account_settings: 'Conta e Preferências',
     profile_title: 'Perfil do Usuário',
     profile_desc: 'Gerencie as configurações da sua conta, preferências e veja suas estatísticas.',
     back_to_dashboard: 'Voltar ao Painel',

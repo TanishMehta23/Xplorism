@@ -486,21 +486,35 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen flex flex-col font-sans relative overflow-x-clip transition-colors duration-300" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      {/* Decorative Ambient Blur Overlays */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
       <Navbar activeTab="profile" />
 
       {/* Main Container */}
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-10">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 min-h-[85vh] pb-24 space-y-8">
 
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('profile_title')}</h1>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('profile_desc')}</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2.5 mb-3">
+              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                <User className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('account_settings')}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
+              {t('profile_title')}
+            </h1>
+            <p className="text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
+              {t('profile_desc')}
+            </p>
           </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border transition-all select-none self-start md:self-auto cursor-pointer"
+            className="flex items-center space-x-2 text-xs font-bold px-4 py-2.5 rounded-xl border transition-all select-none self-start md:self-auto cursor-pointer shadow-sm hover:-translate-y-0.5 active:scale-95"
             style={{
               borderColor: 'var(--border-primary)',
               backgroundColor: 'var(--bg-secondary)',

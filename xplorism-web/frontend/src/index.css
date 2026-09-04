@@ -5,6 +5,7 @@
 @layer base {
   :root {
     --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
+    --font-heading: 'Urbanist', sans-serif;
     --bg-primary: #f8fafc;
     --bg-secondary: #ffffff;
     --bg-tertiary: #f1f5f9;
@@ -47,6 +48,11 @@
     color: var(--text-primary);
     font-family: var(--font-sans);
     overflow-x: clip;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
   }
 
   /* Dark mode overrides for common Tailwind color utilities */

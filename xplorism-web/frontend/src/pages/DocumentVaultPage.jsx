@@ -342,10 +342,10 @@ export default function DocumentVaultPage() {
       <Navbar activeTab="vault" />
 
       {/* Main Container */}
-      <div className="relative z-10 flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8 min-h-[85vh] pb-24">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full flex-1 py-12 space-y-8 min-h-[85vh] pb-24">
         
         {/* Title Block */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-6" style={{ borderColor: 'var(--border-primary)' }}>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-2">
           <div className="space-y-1">
             <div className="flex items-center space-x-2.5 mb-3">
               <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">

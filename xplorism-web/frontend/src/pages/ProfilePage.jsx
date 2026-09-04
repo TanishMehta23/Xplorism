@@ -842,8 +842,8 @@ export default function ProfilePage() {
             <div className="rounded-3xl border shadow-md p-6 md:p-8 w-full h-full flex flex-col"
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
 
-              <div className="space-y-6 flex-1 flex flex-col justify-between w-full">
-                <div className="space-y-6 flex-1 w-full">
+              <div className="space-y-4 flex-1 flex flex-col justify-between w-full">
+                <div className="space-y-4 flex-1 w-full">
                   <h3 className="text-base font-black mb-4 flex items-center space-x-2" style={{ color: 'var(--text-primary)' }}>
                     <Compass className="h-4 w-4 text-blue-500" />
                     <span>{t('travel_preferences_title')}</span>
@@ -1195,18 +1195,19 @@ export default function ProfilePage() {
 
                   </div>
 
-                  <div className="flex justify-end pt-4 mt-auto">
-                    <button
-                      onClick={handleSavePreferences}
-                      className="px-6 py-3 rounded-full text-white font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center space-x-2 active:scale-95 shadow-md"
-                      style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
-                    >
-                      <span>{t('save_preferences')}</span>
-                    </button>
-                  </div>
+                </div>
 
+                {/* Submit Button aligned with Column 2 */}
+                <div className="flex justify-end pt-4 mt-auto">
+                  <button
+                    onClick={handleSavePreferences}
+                    className="px-6 py-3 rounded-full text-white font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center space-x-2 active:scale-95 shadow-md"
+                    style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
+                  >
+                    <span>{t('save_preferences')}</span>
+                  </button>
                 </div>
 
               </div>

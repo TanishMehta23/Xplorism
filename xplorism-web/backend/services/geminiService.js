@@ -206,7 +206,10 @@ export const getGeminiModels = () => {
     const custom = process.env.AI_MODEL.replace(/^gemini\//, '').trim();
     if (custom) models.push(custom);
   }
-  // Active supported official Gemini models
+  // Active supported official Gemini models (both v1 and v1beta)
+  models.push('gemini-2.5-flash');
+  models.push('gemini-2.0-flash');
+  models.push('gemini-1.5-flash-latest');
   models.push('gemini-1.5-flash');
   models.push('gemini-1.5-pro');
   return [...new Set(models)];

@@ -72,14 +72,21 @@ export default function Navbar({ activeTab }) {
     }
   };
 
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
   const handleEmailReminder = async (tripId) => {
     setEmailingTripId(tripId);
     try {
       await api.post('/notifications/email-reminder', { tripId });
-      alert('Trip reminder details sent to your email!');
+      showToast('Trip reminder details sent to your email!', 'success');
     } catch (err) {
       console.error(err);
-      alert('Failed to send email reminders.');
+      showToast('Failed to send email reminders.', 'error');
     } finally {
       setEmailingTripId(null);
     }
@@ -99,7 +106,7 @@ export default function Navbar({ activeTab }) {
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to respond to invitation.');
+      showToast('Failed to respond to invitation.', 'error');
     } finally {
       setRespondingInvitationTripId(null);
     }
@@ -590,6 +597,31 @@ export default function Navbar({ activeTab }) {
           </div>
         </div>
       )}
+
+      {/* In-App Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-20 right-6 z-[120] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border border-white/20 text-white font-medium text-sm"
+            style={{
+              backgroundColor: toastMessage.type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'rgba(16, 185, 129, 0.95)',
+              boxShadow: toastMessage.type === 'error' ? '0 10px 25px -5px rgba(239, 68, 68, 0.4)' : '0 10px 25px -5px rgba(16, 185, 129, 0.4)'
+            }}
+          >
+            <span className="text-base">{toastMessage.type === 'error' ? '⚠️' : '✅'}</span>
+            <span>{toastMessage.message}</span>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="ml-2 hover:opacity-80 transition cursor-pointer text-xs bg-white/20 rounded-full w-5 h-5 flex items-center justify-center"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

@@ -71,7 +71,7 @@ const tryBrevoApi = async (email, name, subject, htmlContent) => {
 };
 
 export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
-  const subject = '🔑 Your Xplorism Verification Code';
+  const subject = 'Your Xplorism Verification Code';
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
       <h2 style="color: #0d9488; text-align: center;">Welcome to Xplorism</h2>
@@ -86,11 +86,7 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
     </div>
   `;
 
-  // 1. PRIMARY: Try Brevo HTTP API (over HTTPS / Port 443)
-  const sentViaBrevo = await tryBrevoApi(email, name, subject, htmlContent);
-  if (sentViaBrevo) return;
-
-  // 2. SECONDARY: Use SMTP (Gmail) for reliable delivery - avoids spam folder
+  // 1. PRIMARY: Use Gmail SMTP (Ensures delivery directly from Gmail and shows in Sent folder)
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     const mailOptions = {
       from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,
@@ -117,6 +113,10 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
       console.error('❌ Failed to send OTP via SMTP:', error.message);
     }
   }
+
+  // 2. SECONDARY: Try Brevo HTTP API (over HTTPS / Port 443)
+  const sentViaBrevo = await tryBrevoApi(email, name, subject, htmlContent);
+  if (sentViaBrevo) return;
 
   // 2. FALLBACK: Resend API (only if SMTP not configured)
   if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
@@ -147,14 +147,11 @@ export const sendOtpEmail = async (email, otp, name = 'Valued Traveler') => {
   }
 
   // 3. LAST RESORT: Fallback to console simulation
-  logSimulation(email, otp);
+  logSimulation(email);
 };
 
-const logSimulation = (email, otp) => {
-  console.log('====================================');
-  console.log(`✉️  EMAIL SIMULATION FOR: ${email}`);
-  console.log(`🔑  OTP CODE: ${otp}`);
-  console.log('====================================');
+const logSimulation = (email) => {
+  console.log(`✉️  [SIMULATION] Email service simulated for: ${email}`);
 };
 
 export const sendTripReminderEmail = async (email, trip, notifications, name = 'Traveler') => {
@@ -188,7 +185,7 @@ export const sendTripReminderEmail = async (email, trip, notifications, name = '
       </div>
 
       <p style="margin-top: 25px; text-align: center;">
-        <a href="https://xplorism.com" style="background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Itinerary on Xplorism</a>
+        <a href="${process.env.CLIENT_URL || 'https://xplorism.vercel.app'}" style="background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Itinerary on Xplorism</a>
       </p>
 
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
@@ -196,11 +193,7 @@ export const sendTripReminderEmail = async (email, trip, notifications, name = '
     </div>
   `;
 
-  // 1. PRIMARY: Try Brevo HTTP API (over HTTPS / Port 443)
-  const sentViaBrevo = await tryBrevoApi(email, name, subject, htmlContent);
-  if (sentViaBrevo) return;
-
-  // 2. SECONDARY: Use SMTP (Gmail) for reliable delivery
+  // 1. PRIMARY: Use Gmail SMTP for reliable delivery
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     const mailOptions = {
       from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,
@@ -227,6 +220,10 @@ export const sendTripReminderEmail = async (email, trip, notifications, name = '
       console.error('❌ Failed to send trip reminder via SMTP:', error.message);
     }
   }
+
+  // 2. SECONDARY: Try Brevo HTTP API (over HTTPS / Port 443)
+  const sentViaBrevo = await tryBrevoApi(email, name, subject, htmlContent);
+  if (sentViaBrevo) return;
 
   // 2. FALLBACK: Resend API (only if SMTP not configured)
   if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
@@ -294,11 +291,7 @@ export const sendTripInvitationEmail = async (email, trip, hostName, inviteLinkA
     </div>
   `;
 
-  // 1. PRIMARY: Try Brevo HTTP API (over HTTPS / Port 443)
-  const sentViaBrevo = await tryBrevoApi(email, null, subject, htmlContent);
-  if (sentViaBrevo) return;
-
-  // 2. SECONDARY: Use SMTP (Gmail) for reliable delivery
+  // 1. PRIMARY: Use Gmail SMTP for reliable delivery
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     const mailOptions = {
       from: `"Xplorism" <${process.env.SMTP_USER || 'xplorism1@gmail.com'}>`,
@@ -325,6 +318,10 @@ export const sendTripInvitationEmail = async (email, trip, hostName, inviteLinkA
       console.error('❌ Failed to send trip invitation via SMTP:', error.message);
     }
   }
+
+  // 2. SECONDARY: Try Brevo HTTP API (over HTTPS / Port 443)
+  const sentViaBrevo = await tryBrevoApi(email, null, subject, htmlContent);
+  if (sentViaBrevo) return;
 
   // 2. FALLBACK: Resend API (only if SMTP not configured)
   if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {

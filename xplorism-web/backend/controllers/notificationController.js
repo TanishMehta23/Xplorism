@@ -136,12 +136,48 @@ export const getNotifications = async (req, res) => {
       });
     });
 
-    // Mark these notifications as read so they don't repeat on next API call
-    if (dbCollabNotifs.rows.length > 0) {
-      await query(
-        `UPDATE workspace_notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE`,
-        [userId]
-      );
+    // Check if user has enabled Email Notifications in Travel Preferences
+    const userRes = await query('SELECT email, name, preferences FROM users WHERE id = $1', [userId]);
+    const user = userRes.rows[0];
+    const userPrefs = user?.preferences || {};
+    const emailNotifsEnabled = userPrefs.notifications?.emailNotifications ?? true;
+
+    // If email notifications are enabled and there are active trip notifications, send an email summary (rate limited per day)
+    if (emailNotifsEnabled && user?.email && notifications.length > 0) {
+      const nowTs = Date.now();
+      const lastSentTs = userPrefs._lastReminderEmailSent || 0;
+      const hoursSinceLast = (nowTs - lastSentTs) / (1000 * 60 * 60);
+
+      // Only auto-send at most once every 12 hours to avoid inbox spamming
+      if (hoursSinceLast >= 12) {
+        const upcomingTrips = trips.filter(t => {
+          const s = new Date(t.start_date);
+          s.setHours(0, 0, 0, 0);
+          const diff = Math.ceil((s - now) / (1000 * 60 * 60 * 24));
+          return diff >= 0 && diff <= 7;
+        });
+
+        if (upcomingTrips.length > 0) {
+          const primaryTrip = upcomingTrips[0];
+          const relevantAlerts = notifications
+            .filter(n => n.tripId === primaryTrip.id && n.type !== 'invitation')
+            .map(n => ({ title: n.title, message: n.message }));
+
+          if (relevantAlerts.length > 0) {
+            sendTripReminderEmail(user.email, {
+              destination: primaryTrip.destination,
+              startDate: primaryTrip.start_date,
+              endDate: primaryTrip.end_date,
+              travelers: primaryTrip.travelers,
+              budget: primaryTrip.budget
+            }, relevantAlerts, user.name).catch(err => console.error('Error auto-sending reminder email:', err));
+
+            // Record timestamp in user preferences
+            const updatedPrefs = { ...userPrefs, _lastReminderEmailSent: nowTs };
+            query('UPDATE users SET preferences = $1 WHERE id = $2', [JSON.stringify(updatedPrefs), userId]).catch(() => {});
+          }
+        }
+      }
     }
 
     res.json(notifications);

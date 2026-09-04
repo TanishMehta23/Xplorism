@@ -4,57 +4,139 @@ import { callGeminiAPI, getGeminiModels } from './geminiService.js';
 dotenv.config();
 
 /**
- * Helper to call Groq API chat completion endpoint
+ * Helper to call Groq API chat completion endpoint with verified active models
  */
 async function callGroqAPI(prompt) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('GROQ_API_KEY is not defined');
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: process.env.GROQ_MODEL || 'qwen/qwen3.6-27b',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a precise real-time travel search API engine. Return ONLY valid, complete, syntactically correct raw JSON array or object. DO NOT output any reasoning, explanations, internal thoughts, or <think> tags.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.1,
-      max_tokens: 4096
-    })
-  });
+  // Exact active models available on this Groq organization
+  const models = [
+    'openai/gpt-oss-20b',
+    'openai/gpt-oss-120b',
+    'qwen/qwen3.8-27b',
+    'qwen/qwen3.6-27b',
+    'groq/compound'
+  ];
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Groq API error HTTP ${response.status}: ${errText}`);
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a precise real-time travel search API engine. Return ONLY valid, complete, syntactically correct raw JSON array or object. Every key and string value MUST be double-quoted. DO NOT output any reasoning, explanations, internal thoughts, or <think> tags.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 2048
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0]?.message?.content || '';
+      if (content) return content;
+    } catch (err) {
+      lastError = err;
+      console.warn(`Groq model ${model} failed: ${err.message}`);
+    }
   }
 
-  const data = await response.json();
-  return data.choices[0]?.message?.content || '';
+  throw lastError || new Error('All Groq models failed');
 }
 
 /**
- * Execute AI completion using Groq AI first, falling back to Gemini
+ * Helper to call OpenRouter API
+ */
+async function callOpenRouterAPI(prompt) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not defined');
+
+  const models = [
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'google/gemini-2.0-flash-exp:free',
+    'qwen/qwen-2.5-72b-instruct:free',
+    'openrouter/free'
+  ];
+
+  for (const model of models) {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a precise real-time travel search API engine. Return ONLY valid, complete, syntactically correct raw JSON array or object.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 1500
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+        if (content) return content;
+      }
+    } catch (err) {
+      console.warn(`OpenRouter model ${model} failed:`, err.message);
+    }
+  }
+  throw new Error('All OpenRouter models failed');
+}
+
+/**
+ * Execute AI completion using Groq AI first, falling back to OpenRouter then Gemini
  */
 async function generateTravelData(prompt) {
   let rawResponse = '';
 
-  // 1. Try Groq AI
+  // 1. Try Groq AI (Ultra Fast & Free Tier)
   if (process.env.GROQ_API_KEY) {
     try {
       console.log('Querying Groq AI for travel search data...');
       rawResponse = await callGroqAPI(prompt);
     } catch (err) {
-      console.warn('Groq AI call failed, falling back to Gemini:', err.message);
+      console.warn('Groq AI call failed, falling back:', err.message);
+    }
+  }
+
+  // 2. Try OpenRouter AI
+  if (!rawResponse && process.env.OPENROUTER_API_KEY) {
+    try {
+      console.log('Querying OpenRouter for travel search data...');
+      rawResponse = await callOpenRouterAPI(prompt);
+    } catch (err) {
+      console.warn('OpenRouter call failed:', err.message);
     }
   }
 
@@ -95,7 +177,19 @@ async function generateTravelData(prompt) {
     }
     return [];
   } catch (err) {
-    // Robust extraction for truncated or partial JSON strings
+    // 1. First attempt: Fix unquoted property names e.g. { id: "1" } -> { "id": "1" }
+    try {
+      const quoteFixed = jsonStr
+        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+        .replace(/,\s*([\]}])/g, '$1');
+      const parsed = JSON.parse(quoteFixed);
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed && Array.isArray(parsed.results)) return parsed.results;
+      if (parsed && Array.isArray(parsed.flights)) return parsed.flights;
+      if (parsed && Array.isArray(parsed.hotels)) return parsed.hotels;
+    } catch (eFix) {}
+
+    // 2. Second attempt: Robust extraction for truncated or partial JSON arrays
     const firstBracket = jsonStr.indexOf('[');
     if (firstBracket !== -1) {
       let arraySub = jsonStr.substring(firstBracket);
@@ -106,6 +200,7 @@ async function generateTravelData(prompt) {
 
       // Clean common trailing commas or incomplete elements before parsing
       let sanitized = arraySub
+        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
         .replace(/,\s*\.\.\.\s*([\]}])/g, '$1')
         .replace(/\.\.\./g, '')
         .replace(/,\s*([\]}])/g, '$1');

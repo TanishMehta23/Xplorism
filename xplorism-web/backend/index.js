@@ -45,9 +45,31 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" } // Allows resource sharing for assets/uploads
 }));
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'https://xplorism.vercel.app',
+  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : [])
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*', // Restrict to specific client domain in production
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+    // In local development or Vercel preview environments, allow vercel preview URLs and localhost
+    if (origin.includes('localhost') || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Fallback allow to prevent blocking valid clients
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));

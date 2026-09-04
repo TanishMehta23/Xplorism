@@ -92,15 +92,20 @@ export default function SharedTripsWorkspace() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tripToDelete, setTripToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDeleteTrip = async (tripId) => {
-    if (!window.confirm('Are you sure you want to delete this shared workspace? This action will permanently remove the trip and all co-traveler collaborations.')) return;
+  const confirmDeleteTrip = async () => {
+    if (!tripToDelete) return;
     try {
-      await api.delete(`/trips/${tripId}`);
-      setTrips(prev => prev.filter(t => t.id !== tripId));
+      setIsDeleting(true);
+      await api.delete(`/trips/${tripToDelete.id}`);
+      setTrips(prev => prev.filter(t => t.id !== tripToDelete.id));
+      setTripToDelete(null);
     } catch (err) {
       console.error('Failed to delete shared workspace:', err);
-      alert(err.message || 'Failed to delete workspace.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -215,7 +220,7 @@ export default function SharedTripsWorkspace() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteTrip(trip.id);
+                            setTripToDelete(trip);
                           }}
                           className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white/90 hover:bg-rose-600 text-slate-700 hover:text-white transition-all duration-200 shadow-md cursor-pointer border border-slate-200/50 flex items-center justify-center active:scale-90 z-20"
                           title="Delete Workspace"
@@ -290,6 +295,52 @@ export default function SharedTripsWorkspace() {
           </div>
         )}
       </main>
+
+      {/* Custom Delete Shared Workspace Modal */}
+      <AnimatePresence>
+        {tripToDelete && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay, rgba(15,23,42,0.65))', backdropFilter: 'blur(8px)' }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="rounded-3xl border p-6 max-w-md w-full shadow-2xl relative bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+            >
+              <div className="flex items-center space-x-3 text-rose-500 mb-3">
+                <div className="p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                  <Trash2 className="h-5 w-5 text-rose-500" />
+                </div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">Delete Shared Workspace</h3>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed font-medium">
+                Are you sure you want to delete <span className="font-extrabold text-slate-900 dark:text-white">"{tripToDelete.destination}"</span>? This action will permanently remove the trip and all co-traveler collaborations.
+              </p>
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setTripToDelete(null)}
+                  disabled={isDeleting}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteTrip}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition cursor-pointer shadow-lg shadow-rose-600/25 active:scale-95 disabled:opacity-50 flex items-center space-x-1.5"
+                >
+                  {isDeleting ? (
+                    <span>Deleting...</span>
+                  ) : (
+                    <span>Delete Workspace</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       
       <Footer />
     </div>

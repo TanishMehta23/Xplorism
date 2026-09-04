@@ -2338,13 +2338,6 @@ export default function DashboardStub() {
           </div>
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
             <button
-              onClick={() => navigate('/hotels')}
-              className="px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-primary)] font-extrabold text-xs transition-all duration-200 shadow-sm active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer"
-            >
-              <Hotel className="h-3.5 w-3.5 text-rose-500" />
-              <span>Book Stays & Flights</span>
-            </button>
-            <button
               onClick={() => setIsWizardOpen(true)}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-extrabold text-xs transition-all duration-200 shadow-md shadow-rose-500/10 active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer"
             >

@@ -210,11 +210,12 @@
     color: #38bdf8 !important;
   }
 
-  /* Dark mode skeleton/animate states */
-  .dark .animate-pulse {
+  /* Dark mode skeleton/animate states (only for non-SVG skeleton placeholders) */
+  .dark div.animate-pulse,
+  .dark span.animate-pulse:not([class*="rounded-full"]) {
     background-color: #334155 !important;
   }
-  .dark .bg-slate-100\.animate-pulse {
+  .dark .bg-slate-100.animate-pulse {
     background-color: #334155 !important;
   }
 
@@ -600,6 +601,8 @@
 
 /* Fix floating chat button svg square background issue */
 .fixed.bottom-6.right-6 button svg,
+.fixed.bottom-6.right-6 button *,
+.dark .fixed.bottom-6.right-6 button svg,
 .darkreader-keep,
 svg.darkreader-keep {
   background: transparent !important;

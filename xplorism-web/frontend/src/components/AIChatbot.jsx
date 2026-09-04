@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import {
   MessageCircle, X, Send, Trash2, Copy, RotateCcw,
@@ -11,6 +12,7 @@ import { Link } from 'react-router-dom';
 export default function AIChatbot() {
   const { isAuthenticated, user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const isDark = theme === 'dark';
 
   const [isOpen, setIsOpen] = useState(false);
@@ -269,7 +271,7 @@ export default function AIChatbot() {
           } bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-slate-900/10 dark:shadow-black/50`}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-        <span>Ask Xplorism AI</span>
+        <span>{t('ask_xplorism_ai')}</span>
         {/* Tooltip Arrow */}
         <div className="absolute bottom-[-5px] right-[24px] w-2.5 h-2.5 border-r border-b rotate-45 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" />
       </div>
@@ -315,7 +317,7 @@ export default function AIChatbot() {
               <h3 className="font-extrabold text-sm tracking-wide">Xplorism AI</h3>
               <span className="text-[10px] text-rose-100 flex items-center space-x-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                <span>Online Assistant</span>
+                <span>{t('online_assistant')}</span>
               </span>
             </div>
           </div>
@@ -341,16 +343,16 @@ export default function AIChatbot() {
           /* Guest login request state */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/50 dark:bg-slate-900/50">
             <Sparkles className="h-12 w-12 text-rose-500 mb-3 animate-bounce" />
-            <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm mb-1.5">Ask Xplorism AI!</h4>
+            <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm mb-1.5">{t('ask_xplorism_ai')}!</h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mb-6">
-              Your AI travel guide is waiting to suggest customized itineraries, plan routes, and share current destination insights.
+              {t('chat_guest_desc')}
             </p>
             <Link
               to="/login"
               onClick={() => setIsOpen(false)}
               className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition flex items-center space-x-2 shadow-md shadow-rose-500/20"
             >
-              <span>Login to Start Chatting</span>
+              <span>{t('login_to_chat')}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -362,9 +364,9 @@ export default function AIChatbot() {
                 /* Empty / Welcome State */
                 <div className="h-full flex flex-col justify-center items-center py-6 text-center">
                   <Sparkles className="h-10 w-10 text-rose-500 mb-2.5 animate-pulse" />
-                  <h4 className="font-black text-sm text-slate-800 dark:text-slate-100">Hi {user?.name || 'there'}!</h4>
+                  <h4 className="font-black text-sm text-slate-800 dark:text-slate-100">{t('chat_welcome_title')} {user?.name || 'there'}!</h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mt-1 mb-6">
-                    I can create trip itineraries, look up weather/hotels, search destinations, and fetch preferences. Ask me anything!
+                    {t('chat_welcome_subtitle')}
                   </p>
                   <div className="w-full max-w-[320px] space-y-2">
                     {starterPrompts.map((p, idx) => (
@@ -421,7 +423,7 @@ export default function AIChatbot() {
               {loading && (
                 <div className="flex items-center space-x-2 text-slate-400">
                   <Loader2 className="h-4 w-4 animate-spin text-rose-500" />
-                  <span className="text-xs font-semibold animate-pulse">Thinking...</span>
+                  <span className="text-xs font-semibold animate-pulse">{t('thinking')}</span>
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -435,7 +437,7 @@ export default function AIChatbot() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ask Xplorism AI..."
+                    placeholder={t('chat_placeholder')}
                     disabled={loading}
                     rows={1}
                     className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-150 dark:border-slate-700 rounded-2xl text-xs text-slate-850 dark:text-slate-100 placeholder-slate-450 dark:placeholder-slate-400 focus:outline-none focus:border-rose-500/40 resize-none max-h-[100px] font-sans leading-normal"
@@ -461,7 +463,7 @@ export default function AIChatbot() {
                     className="text-[10px] text-slate-400 hover:text-slate-655 dark:hover:text-slate-200 font-bold flex items-center space-x-1 cursor-pointer bg-transparent border-none p-0 outline-none"
                   >
                     <RotateCcw className="h-3 w-3" />
-                    <span>Regenerate response</span>
+                    <span>{t('regenerate_response')}</span>
                   </button>
                   <button
                     onClick={handleClearChat}
@@ -469,7 +471,7 @@ export default function AIChatbot() {
                     className="text-[10px] text-rose-450 hover:text-rose-600 font-bold flex items-center space-x-1 cursor-pointer bg-transparent border-none p-0 outline-none"
                   >
                     <Trash2 className="h-3 w-3" />
-                    <span>Clear conversation</span>
+                    <span>{t('clear_conversation')}</span>
                   </button>
                 </div>
               )}
@@ -482,9 +484,9 @@ export default function AIChatbot() {
           <div className="absolute inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-sm">
             <div className={`border rounded-3xl p-6 max-w-xs w-full shadow-2xl relative transition-all duration-200 ${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-800'
               }`}>
-              <h3 className="text-sm font-black uppercase tracking-wider mb-2.5 text-rose-500">Delete Chat</h3>
+              <h3 className="text-sm font-black uppercase tracking-wider mb-2.5 text-rose-500">{t('delete_chat_title')}</h3>
               <p className="text-[11px] text-slate-500 leading-relaxed mb-6">
-                Are you sure you want to permanently delete this chat? This action cannot be undone.
+                {t('delete_chat_confirm')}
               </p>
               <div className="flex space-x-3 justify-end">
                 <button
@@ -493,7 +495,7 @@ export default function AIChatbot() {
                   onClick={() => setShowConfirmDelete(false)}
                   className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded-xl transition cursor-pointer border-none"
                 >
-                  Cancel
+                  {t('cancel_action')}
                 </button>
                 <button
                   type="button"
@@ -516,10 +518,10 @@ export default function AIChatbot() {
                   {deleting ? (
                     <>
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      <span>Deleting...</span>
+                      <span>{t('deleting_action')}</span>
                     </>
                   ) : (
-                    <span>Delete</span>
+                    <span>{t('delete_action')}</span>
                   )}
                 </button>
               </div>

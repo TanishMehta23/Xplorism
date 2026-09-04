@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plane, Globe, Compass, ArrowLeft, Search, RefreshCw, 
+import {
+  Plane, Globe, Compass, ArrowLeft, Search, RefreshCw,
   MapPin, ShieldAlert, Navigation, Cloud, Radio, Activity,
-  ChevronLeft, ChevronRight 
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -172,7 +172,7 @@ export default function TrackerPage() {
     const map = mapInstanceRef.current;
 
     // Filter flights based on search query
-    const filtered = flights.filter(f => 
+    const filtered = flights.filter(f =>
       f.callsign.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.originCountry.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -258,13 +258,13 @@ export default function TrackerPage() {
     const latestFlight = flights.find(f => f.icao24 === selectedFlight.icao24) || selectedFlight;
 
     if (
-      latestFlight.departure && 
+      latestFlight.departure &&
       latestFlight.destination &&
-      latestFlight.departure.lat !== undefined && 
+      latestFlight.departure.lat !== undefined &&
       latestFlight.departure.lon !== undefined &&
-      latestFlight.destination.lat !== undefined && 
+      latestFlight.destination.lat !== undefined &&
       latestFlight.destination.lon !== undefined &&
-      latestFlight.latitude !== undefined && 
+      latestFlight.latitude !== undefined &&
       latestFlight.longitude !== undefined
     ) {
       const departurePos = [latestFlight.departure.lat, latestFlight.departure.lon];
@@ -279,12 +279,12 @@ export default function TrackerPage() {
         const midLon = (lon1 + lon2) / 2;
         const dLat = lat2 - lat1;
         const dLon = lon2 - lon1;
-        
+
         // Offset perpendicular to the line to create a curve
         const curvature = 0.15;
         const controlLat = midLat - dLon * curvature;
         const controlLon = midLon + dLat * curvature;
-        
+
         const points = [];
         for (let i = 0; i <= numPoints; i++) {
           const t = i / numPoints;
@@ -413,7 +413,7 @@ export default function TrackerPage() {
         const marker = L.marker(position, { icon: createAirportHubIcon(a.code) })
           .addTo(map)
           .bindPopup(popupContent, { closeButton: false });
-        
+
         airportMarkersRef.current[a.code] = marker;
       }
     });
@@ -431,7 +431,7 @@ export default function TrackerPage() {
     }
   };
 
-  const filteredFlights = flights.filter(f => 
+  const filteredFlights = flights.filter(f =>
     f.callsign.toLowerCase().includes(searchQuery.toLowerCase()) ||
     f.originCountry.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -447,7 +447,7 @@ export default function TrackerPage() {
 
       {/* Main Container (Full screen below navbar) */}
       <div className="flex-1 relative overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
-        
+
         {/* Map canvas container (Full screen background) */}
         <div ref={mapRef} className="w-full h-full z-0" style={{ height: '100%', width: '100%', position: 'absolute', top: 0, left: 0 }} />
 
@@ -457,7 +457,7 @@ export default function TrackerPage() {
             <p className={`text-sm font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading Radar Maps...</p>
           </div>
         )}
-             {/* Sidebar Toggle Button */}
+        {/* Sidebar Toggle Button */}
         <button
           onClick={() => {
             const nextState = !sidebarOpen;
@@ -468,9 +468,8 @@ export default function TrackerPage() {
               }
             }, 300);
           }}
-          className={`absolute top-4 z-20 p-2.5 rounded-xl shadow-xl border backdrop-blur-md transition active:scale-95 flex items-center justify-center cursor-pointer ${
-            sidebarOpen ? 'hidden md:flex' : 'flex'
-          } ${isDark ? 'bg-slate-900/95 text-white border-slate-700 hover:bg-slate-800' : 'bg-white/95 text-slate-800 border-slate-200 hover:bg-slate-50'}`}
+          className={`absolute top-4 z-20 p-2.5 rounded-xl shadow-xl border backdrop-blur-md transition active:scale-95 flex items-center justify-center cursor-pointer ${sidebarOpen ? 'hidden md:flex' : 'flex'
+            } ${isDark ? 'bg-slate-900/95 text-white border-slate-700 hover:bg-slate-800' : 'bg-white/95 text-slate-800 border-slate-200 hover:bg-slate-50'}`}
           style={{ left: sidebarOpen ? '396px' : '16px', transition: 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' }}
           title={sidebarOpen ? "Hide Radar List" : "Show Radar List"}
         >
@@ -480,7 +479,7 @@ export default function TrackerPage() {
         {/* Floating Sidebar Panel (Overlay) */}
         <AnimatePresence>
           {sidebarOpen && (
-            <motion.div 
+            <motion.div
               initial={{ x: -380, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -380, opacity: 0 }}
@@ -491,24 +490,26 @@ export default function TrackerPage() {
               {/* Header & Search */}
               <div className={`p-5 border-b ${isDark ? 'border-slate-800/80' : 'border-slate-200'}`}>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <Radio className="h-5 w-5 text-rose-500 animate-pulse" />
-                    <h1 className="text-xl font-black tracking-tight">{t('sky_radar')}</h1>
+                  <div>
+                    <div className="flex items-center space-x-2 mb-1.5">
+                      <div className="p-1.5 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                        <Radio className="h-4 w-4 animate-pulse" />
+                      </div>
+                      <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{t('live_tracker') || 'Live Aviation Radar'}</span>
+                    </div>
+                    <h1 className="text-2xl font-black tracking-tight">{t('sky_radar')}</h1>
                   </div>
                   <div className="flex items-center space-x-2 text-xs font-bold text-slate-400">
-                    <span className={`px-2 py-0.5 rounded-full ${dataSource === 'opensky' ? (isDark ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border border-emerald-200') : (isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-amber-50 text-amber-600 border border-amber-200')}`}>
-                      {dataSource === 'opensky' ? t('live_api') : t('simulated_radar')}
-                    </span>
-                    <button 
-                      onClick={fetchFlights} 
+                    <button
+                      onClick={fetchFlights}
                       disabled={loading}
-                      className={`p-1.5 rounded-lg border transition active:scale-95 disabled:opacity-50 cursor-pointer ${isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-650'}`}
+                      className={`p-2 rounded-xl border transition active:scale-95 disabled:opacity-50 cursor-pointer ${isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-650'}`}
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setSidebarOpen(false)}
-                      className="p-1.5 rounded-lg border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition active:scale-95 cursor-pointer md:hidden"
+                      className="p-2 rounded-xl border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition active:scale-95 cursor-pointer md:hidden"
                       title="Hide Panel"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
@@ -518,17 +519,17 @@ export default function TrackerPage() {
 
                 {/* Quick Stats Grid */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className={`p-2.5 rounded-xl text-center border ${isDark ? 'border-slate-800 bg-slate-900/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
-                    <p className={`text-[10px] uppercase font-bold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('tracked')}</p>
-                    <p className="text-lg font-black text-rose-500">{totalFlights}</p>
+                  <div className={`p-3 rounded-2xl text-center shadow-sm ${isDark ? 'bg-slate-900/80 text-white' : 'bg-slate-50 text-slate-800'}`}>
+                    <p className={`text-[10px] uppercase font-extrabold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('tracked')}</p>
+                    <p className="text-xl font-black text-rose-500">{totalFlights}</p>
                   </div>
-                  <div className={`p-2.5 rounded-xl text-center border ${isDark ? 'border-slate-800 bg-slate-900/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
-                    <p className={`text-[10px] uppercase font-bold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('avg_speed')}</p>
+                  <div className={`p-3 rounded-2xl text-center shadow-sm ${isDark ? 'bg-slate-900/80 text-white' : 'bg-slate-50 text-slate-800'}`}>
+                    <p className={`text-[10px] uppercase font-extrabold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('avg_speed')}</p>
                     <p className="text-sm font-black">{avgSpeed} <span className="text-[8px] font-normal">kts</span></p>
                   </div>
-                  <div className={`p-2.5 rounded-xl text-center border ${isDark ? 'border-slate-800 bg-slate-900/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-800'}`}>
-                    <p className={`text-[10px] uppercase font-bold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('avg_altitude')}</p>
-                    <p className="text-sm font-black">{Math.round(avgAltitude/1000)}k <span className="text-[8px] font-normal">ft</span></p>
+                  <div className={`p-3 rounded-2xl text-center shadow-sm ${isDark ? 'bg-slate-900/80 text-white' : 'bg-slate-50 text-slate-800'}`}>
+                    <p className={`text-[10px] uppercase font-extrabold tracking-wider mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('avg_altitude')}</p>
+                    <p className="text-sm font-black">{Math.round(avgAltitude / 1000)}k <span className="text-[8px] font-normal">ft</span></p>
                   </div>
                 </div>
 
@@ -571,7 +572,7 @@ export default function TrackerPage() {
                         className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group 
                           ${isSelected ? 'border-rose-500/50 shadow-md scale-[1.01]' : (isDark ? 'border-slate-800 hover:border-slate-700' : 'border-slate-150 hover:border-slate-300')}
                         `}
-                        style={{ 
+                        style={{
                           backgroundColor: isSelected ? (isDark ? 'rgba(244, 63, 94, 0.15)' : 'rgba(244, 63, 94, 0.08)') : (isDark ? 'rgba(15, 23, 42, 0.4)' : 'rgba(241, 245, 249, 0.6)')
                         }}
                       >
@@ -639,8 +640,8 @@ export default function TrackerPage() {
                     </p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedFlight(null)} 
+                <button
+                  onClick={() => setSelectedFlight(null)}
                   className={`p-1 rounded-lg transition cursor-pointer ${isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'}`}
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -723,11 +724,11 @@ export default function TrackerPage() {
         </AnimatePresence>
 
         {/* Map Legend Overlay */}
-        <div 
+        <div
           className={`absolute bottom-6 z-10 p-3.5 rounded-xl shadow-2xl backdrop-blur-md text-[10px] font-bold space-y-1.5 pointer-events-none hidden md:block border ${isDark ? 'bg-slate-900/90 text-white border-slate-800' : 'bg-white/95 text-slate-800 border-slate-200'}`}
-          style={{ 
-            left: sidebarOpen ? '398px' : '24px', 
-            transition: 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' 
+          style={{
+            left: sidebarOpen ? '398px' : '24px',
+            transition: 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
           }}
         >
           <p className={`text-[9px] uppercase tracking-wider mb-1 border-b pb-1 ${isDark ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-150'}`}>{t('legend_title')}</p>

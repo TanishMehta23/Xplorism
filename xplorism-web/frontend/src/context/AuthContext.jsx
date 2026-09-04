@@ -9,13 +9,30 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize and check token from localStorage on load
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       const storedUser = localStorage.getItem('user');
       const storedToken = localStorage.getItem('token');
 
       if (storedUser && storedToken) {
         try {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          
+          // Asynchronously fetch fresh profile from server so profilePhoto is always up to date
+          try {
+            const data = await api.get('/auth/profile');
+            if (data && data.user) {
+              const fullUser = {
+                ...parsedUser,
+                ...data.user,
+                profilePhoto: data.user.profile_photo || data.user.profilePhoto
+              };
+              setUser(fullUser);
+              saveUserToStorage(fullUser);
+            }
+          } catch (fetchErr) {
+            console.warn("Could not refresh user profile on init", fetchErr);
+          }
         } catch (e) {
           console.error("Failed to parse stored user", e);
           localStorage.removeItem('user');

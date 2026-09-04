@@ -81,7 +81,7 @@ app.use(sqlInjectionSanitizer);
 app.use(globalLimiter);
 
 // Routes
-app.use('/auth', authLimiter, authRoutes);
+app.use('/auth', authRoutes);
 app.use('/trips', tripRoutes);
 app.use('/trips', budgetRoutes);
 app.use('/favorites', favoriteRoutes);

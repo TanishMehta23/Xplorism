@@ -104,6 +104,7 @@ export default function ProfilePage() {
         const photoUrl = data.user.profile_photo || data.user.profilePhoto;
         if (photoUrl && photoUrl !== 'null' && photoUrl !== 'undefined') {
           setProfilePhoto(photoUrl);
+          updateUser({ profilePhoto: photoUrl });
         }
         if (data.user.preferences) {
           setPreferences({

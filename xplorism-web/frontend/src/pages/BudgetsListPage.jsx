@@ -120,19 +120,25 @@ export default function BudgetsListPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans transition-colors duration-300" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen flex flex-col font-sans transition-colors duration-300 relative overflow-x-clip" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      {/* Decorative Ambient Blur Overlays */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
       <Navbar activeTab="budgets" />
 
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 min-h-[85vh] pb-24">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
-            <div className="flex items-center space-x-2 text-rose-500 mb-2">
-              <TrendingUp className="h-5 w-5" />
-              <span className="text-xs font-bold uppercase tracking-wider">{t('financial_overview')}</span>
+            <div className="flex items-center space-x-2.5 mb-3">
+              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('financial_overview')}</span>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('my_saved_budgets')}</h1>
-            <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{t('budgets_desc')}</p>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('my_saved_budgets')}</h1>
+            <p className="text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>{t('budgets_desc')}</p>
           </div>
         </div>
 

@@ -334,20 +334,29 @@ export default function DocumentVaultPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen flex flex-col font-sans relative overflow-x-clip" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      {/* Decorative Ambient Blur Overlays */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
       <Navbar activeTab="vault" />
 
       {/* Main Container */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
+      <div className="relative z-10 flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8 min-h-[85vh] pb-24">
         
         {/* Title Block */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b pb-6" style={{ borderColor: 'var(--border-primary)' }}>
           <div className="space-y-1">
-            <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
-              <FolderLock className="h-8 w-8 text-rose-500" />
+            <div className="flex items-center space-x-2.5 mb-3">
+              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                <FolderLock className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('secure_storage') || 'Encrypted Storage'}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
               <span>{t('vault_title')}</span>
             </h1>
-            <p className="text-sm font-medium text-[var(--text-secondary)]">{t('vault_subtitle')}</p>
+            <p className="text-sm md:text-base font-medium text-[var(--text-secondary)]">{t('vault_subtitle')}</p>
           </div>
           <button
             onClick={handleOpenAddModal}

@@ -11,18 +11,19 @@ import {
   updateProfile
 } from '../controllers/authController.js';
 import authMiddleware from '../middleware/auth.js';
+import { authLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
+router.post('/register', authLimiter, register);
+router.post('/login', authLimiter, login);
 router.post('/google', googleLogin);
-router.post('/verify-otp', verifyOtp);
-router.post('/resend-otp', resendOtp);
-router.post('/forgot-password', requestForgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/verify-otp', authLimiter, verifyOtp);
+router.post('/resend-otp', authLimiter, resendOtp);
+router.post('/forgot-password', authLimiter, requestForgotPassword);
+router.post('/reset-password', authLimiter, resetPassword);
 
-// User profile endpoints (Protected)
+// User profile endpoints (Protected - exempt from authLimiter)
 router.get('/profile', authMiddleware, getProfile);
 router.put('/profile', authMiddleware, updateProfile);
 

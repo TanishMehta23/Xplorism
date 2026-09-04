@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LogOut, Plus, Calendar, Compass as TripIcon,
+  LogOut, Plus, Calendar, Compass as TripIcon, Compass,
   Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
   Maximize2, Minimize2, CheckSquare, Share2, CloudSun, ChevronUp, ChevronDown,
@@ -584,7 +584,7 @@ export default function DashboardStub() {
         uniqueDestinations.add(country);
       }
       totalBudget += Number(t.budget) || 0;
-      
+
       const start = new Date(t.startDate);
       const end = new Date(t.endDate);
       const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) || 1;
@@ -1066,7 +1066,7 @@ export default function DashboardStub() {
 
   const handleDeleteStamp = async (stampId, e) => {
     if (e) e.stopPropagation();
-    
+
     showConfirm({
       title: 'Remove Stamp?',
       message: 'Are you sure you want to remove this stamp from your passport collection? This action cannot be undone.',
@@ -1077,7 +1077,7 @@ export default function DashboardStub() {
         try {
           const updatedStamps = passportStamps.filter(s => s.id !== stampId && s.tripId !== stampId);
           setPassportStamps(updatedStamps);
-          
+
           await api.put('/auth/profile', {
             name: user.name,
             email: user.email,
@@ -2295,7 +2295,11 @@ export default function DashboardStub() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen flex flex-col font-sans relative overflow-x-clip" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      {/* Decorative Ambient Blur Overlays */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
       <style>{`
         .marquee-wrapper {
           overflow-x: auto;
@@ -2333,8 +2337,14 @@ export default function DashboardStub() {
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 text-center md:text-left">
           <div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-1.5">{t('dashboard_title')}</h1>
-            <p className="text-slate-500 text-xs md:text-sm">{t('dashboard_desc')}</p>
+            <div className="flex items-center space-x-2.5 mb-3 justify-center md:justify-start">
+              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                <Compass className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('travel_hub') || 'Personal Travel Hub'}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">{t('dashboard_title')}</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base">{t('dashboard_desc')}</p>
           </div>
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
             <button
@@ -2349,9 +2359,8 @@ export default function DashboardStub() {
 
         {/* Pre-planned Trips Section */}
         <div className="mb-12">
-          <div className="flex items-center space-x-2 text-rose-500 mb-6">
-            <Sparkles className="h-5 w-5 animate-pulse" />
-            <h2 className="text-xl font-bold text-slate-900">{t('recommended_trips')}</h2>
+          <div className="mb-6">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('recommended_trips')}</h2>
           </div>
 
           <div className="relative w-full">
@@ -2435,20 +2444,20 @@ export default function DashboardStub() {
         </div>
         {/* My Saved Itineraries */}
         <div className="mb-6 pt-2 border-t border-slate-200/50 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">{t('my_saved_itineraries')}</h2>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('my_saved_itineraries')}</h2>
 
           <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
             <button
               onClick={() => setDashboardView('grid')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${dashboardView === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 hover:text-slate-800'}`}
             >
-              Grid View
+              {t('grid_view')}
             </button>
             <button
               onClick={() => setDashboardView('map')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${dashboardView === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 hover:text-slate-800'}`}
             >
-              Map View
+              {t('map_view')}
             </button>
           </div>
         </div>
@@ -2582,59 +2591,58 @@ export default function DashboardStub() {
 
       {/* Enhanced Travel Stats & Analytics Section */}
       <section className="max-w-7xl w-full mx-auto px-6 pt-12 pb-4 animate-fade-in">
-        <div className="flex items-center space-x-2 text-rose-500 mb-6">
-          <TrendingUp className="h-6 w-6 animate-pulse" />
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">My Travel Journey</h2>
+        <div className="mb-6">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('my_travel_journey')}</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {/* Card 1: Total Spend */}
-          <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-950 border border-emerald-100/60 dark:border-emerald-950/30 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
+          <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
             <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
               <Coins className="h-7 w-7" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Total Spend</span>
-              <span className="text-xl font-black text-slate-850 dark:text-white mt-1 block">
+              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">{t('total_spend')}</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
                 {activeCurrency.symbol}{travelStats.totalSpend.toLocaleString(activeCurrency.locale)}
               </span>
             </div>
           </div>
 
           {/* Card 2: Regions Visited */}
-          <div className="bg-gradient-to-br from-blue-50 to-white dark:from-slate-900 dark:to-slate-950 border border-blue-100/60 dark:border-blue-950/30 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
+          <div className="bg-gradient-to-br from-blue-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
             <div className="p-4 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
               <Globe className="h-7 w-7" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Regions Visited</span>
-              <span className="text-xl font-black text-slate-850 dark:text-white mt-1 block">
-                {travelStats.countriesVisited} {travelStats.countriesVisited === 1 ? 'Destination' : 'Destinations'}
+              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">{t('regions_visited')}</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+                {travelStats.countriesVisited} {travelStats.countriesVisited === 1 ? t('destination_count') : t('destinations_count')}
               </span>
             </div>
           </div>
 
           {/* Card 3: Days Traveled */}
-          <div className="bg-gradient-to-br from-rose-50 to-white dark:from-slate-900 dark:to-slate-950 border border-rose-100/60 dark:border-rose-955/30 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
+          <div className="bg-gradient-to-br from-rose-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
             <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform duration-300">
               <Calendar className="h-7 w-7" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Days Traveled</span>
-              <span className="text-xl font-black text-slate-850 dark:text-white mt-1 block">
-                {travelStats.totalDays} Days
+              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">{t('days_traveled')}</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+                {travelStats.totalDays} {t('days_unit')}
               </span>
             </div>
           </div>
 
           {/* Card 4: Travel Vibe */}
-          <div className="bg-gradient-to-br from-amber-50 to-white dark:from-slate-900 dark:to-slate-950 border border-amber-100/60 dark:border-amber-955/30 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
+          <div className="bg-gradient-to-br from-amber-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center space-x-4 group">
             <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300">
               <Sparkles className="h-7 w-7" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Travel Vibe</span>
-              <span className="text-xl font-black text-slate-855 dark:text-white mt-1 block">
+              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">{t('travel_vibe')}</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
                 {travelStats.travelVibe}
               </span>
             </div>
@@ -2645,30 +2653,30 @@ export default function DashboardStub() {
         <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Passport Stamp Collection</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Every trip planned adds a stamp to your digital passport.</p>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('passport_stamp_collection')}</h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t('passport_stamp_subtitle')}</p>
             </div>
             <span className="text-[10px] font-black px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              Stamps: {displayStamps.length}
+              {t('stamps_label')}: {displayStamps.length}
             </span>
           </div>
 
           {displayStamps.length === 0 ? (
             <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center">
               <Globe className="h-12 w-12 text-slate-300 dark:text-slate-750 mb-3 animate-bounce" />
-              <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Your passport is empty</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">Add your very first trip to start collecting visual destination stamps!</p>
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{t('passport_empty_title')}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">{t('passport_empty_desc')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center">
-              {displayStamps.map((t, idx) => {
-                const dest = t.destination.split(',')[0].trim().substring(0, 3).toUpperCase();
-                const cityName = t.destination.split(',')[0].trim();
-                const dateObj = t.startDate ? new Date(t.startDate) : null;
+              {displayStamps.map((tItem, idx) => {
+                const dest = tItem.destination.split(',')[0].trim().substring(0, 3).toUpperCase();
+                const cityName = tItem.destination.split(',')[0].trim();
+                const dateObj = tItem.startDate ? new Date(tItem.startDate) : null;
                 const isValidDate = dateObj && !isNaN(dateObj.getTime());
                 const year = isValidDate ? dateObj.getFullYear() : '';
                 const month = isValidDate ? dateObj.toLocaleDateString(undefined, { month: 'short' }).toUpperCase() : '';
-                
+
                 // Rotations and colors for realistic randomized ink stamps look
                 const rotations = ['rotate-3', '-rotate-6', 'rotate-12', '-rotate-3', 'rotate-6', '-rotate-12', 'rotate-9', '-rotate-9'];
                 const borderStyles = [
@@ -2677,13 +2685,13 @@ export default function DashboardStub() {
                   'border-emerald-500 text-emerald-500 bg-emerald-50/15 dark:bg-emerald-950/5',
                   'border-amber-500 text-amber-500 bg-amber-50/15 dark:bg-amber-950/5'
                 ];
-                
+
                 const stampRotation = rotations[idx % rotations.length];
                 const stampColor = borderStyles[idx % borderStyles.length];
-                const isTripActive = trips.some(trip => trip.id === t.tripId || trip.id === t.id);
+                const isTripActive = trips.some(trip => trip.id === tItem.tripId || trip.id === tItem.id);
 
                 return (
-                  <div key={t.id} className={`relative w-24 h-24 rounded-full border-4 border-double flex flex-col items-center justify-center shrink-0 select-none shadow-sm transition-all duration-350 hover:scale-115 hover:shadow-md cursor-default ${stampColor} ${stampRotation} ${!isTripActive ? 'opacity-60 grayscale-[30%]' : ''}`}>
+                  <div key={tItem.id} className={`relative w-24 h-24 rounded-full border-4 border-double flex flex-col items-center justify-center shrink-0 select-none shadow-sm transition-all duration-350 hover:scale-115 hover:shadow-md cursor-default ${stampColor} ${stampRotation} ${!isTripActive ? 'opacity-60 grayscale-[30%]' : ''}`}>
                     {isValidDate && (
                       <span className="text-[8px] font-black tracking-widest opacity-80">{month} {year}</span>
                     )}
@@ -2691,7 +2699,7 @@ export default function DashboardStub() {
                     <span className="text-[7px] font-black tracking-widest opacity-80 uppercase max-w-[70px] truncate">{cityName}</span>
                     {!isTripActive && (
                       <button
-                        onClick={(e) => handleDeleteStamp(t.id || t.tripId, e)}
+                        onClick={(e) => handleDeleteStamp(tItem.id || tItem.tripId, e)}
                         className="absolute -top-1.5 -right-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-0.5 shadow-sm border border-white dark:border-slate-900 transition-colors duration-200 cursor-pointer active:scale-90 flex items-center justify-center"
                         title="Remove Stamp"
                       >
@@ -2709,11 +2717,11 @@ export default function DashboardStub() {
         <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-8 shadow-sm mt-8 animate-fade-in">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Travel Milestones & Achievements</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Explore more to unlock unique travel badges and track your achievements.</p>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('travel_milestones_title')}</h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t('travel_milestones_subtitle')}</p>
             </div>
             <span className="text-[10px] font-black px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-rose-500 uppercase tracking-widest">
-              {travelMilestones.filter(m => m.unlocked).length} / {travelMilestones.length} Unlocked
+              {travelMilestones.filter(m => m.unlocked).length} / {travelMilestones.length} {t('unlocked_label')}
             </span>
           </div>
 
@@ -2724,11 +2732,10 @@ export default function DashboardStub() {
               return (
                 <div
                   key={milestone.id}
-                  className={`relative flex-shrink-0 w-52 rounded-3xl p-5 border overflow-hidden transition-all duration-350 ${
-                    milestone.unlocked
-                      ? `bg-gradient-to-br ${milestone.gradient} ${milestone.border} shadow-md hover:scale-105 hover:shadow-xl cursor-default`
-                      : `bg-gradient-to-br ${milestone.gradient} ${milestone.border} cursor-default`
-                  }`}
+                  className={`relative flex-shrink-0 w-52 rounded-3xl p-5 border overflow-hidden transition-all duration-350 ${milestone.unlocked
+                    ? `bg-gradient-to-br ${milestone.gradient} ${milestone.border} shadow-md hover:scale-105 hover:shadow-xl cursor-default`
+                    : `bg-gradient-to-br ${milestone.gradient} ${milestone.border} cursor-default`
+                    }`}
                 >
                   {/* Blur overlay for locked badges */}
                   {!milestone.unlocked && (
@@ -2736,7 +2743,7 @@ export default function DashboardStub() {
                       <div className="p-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 mb-1.5">
                         <Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                       </div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Locked</span>
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('locked_label')}</span>
                       <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 mt-1 px-2 text-center">{milestone.requirement}</span>
                     </div>
                   )}
@@ -2747,7 +2754,7 @@ export default function DashboardStub() {
                     </div>
                     {milestone.unlocked && (
                       <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
-                        ✓ Unlocked
+                        ✓ {t('unlocked_label')}
                       </span>
                     )}
                   </div>
@@ -2760,7 +2767,7 @@ export default function DashboardStub() {
                   </p>
 
                   <div className="border-t border-slate-200/60 dark:border-slate-700/40 mt-4 pt-2.5 text-[9px] font-bold tracking-wide text-slate-400 dark:text-slate-500">
-                    Goal: {milestone.requirement}
+                    {t('goal_label')}: {milestone.requirement}
                   </div>
                 </div>
               );
@@ -2780,8 +2787,8 @@ export default function DashboardStub() {
               <Quote className="h-6 w-6" />
             </div>
             <div>
-              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block">Daily Vibe</span>
-              <h3 className="text-sm font-black text-slate-850 dark:text-white tracking-tight mt-0.5">Wanderlust Quotes</h3>
+              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest block">{t('daily_vibe')}</span>
+              <h3 className="text-sm font-black text-slate-850 dark:text-white tracking-tight mt-0.5">{t('wanderlust_quotes')}</h3>
             </div>
           </div>
 
@@ -3033,8 +3040,8 @@ export default function DashboardStub() {
                           </div>
                         )}
                       </div>
-                     )}
-                     {selectedTrip.isPrePlanned && (
+                    )}
+                    {selectedTrip.isPrePlanned && (
                       <>
                         <button
                           disabled={isSavingTrip}
@@ -3100,7 +3107,7 @@ export default function DashboardStub() {
                 </div>
 
                 <div className="px-6 py-4 border-b flex items-center space-x-2 overflow-x-auto whitespace-nowrap scrollbar-none"
-                     style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-secondary)' }}>
+                  style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-secondary)' }}>
                   {getDaysArray(selectedTrip).map((day) => (
                     <button
                       key={day}
@@ -3234,63 +3241,63 @@ export default function DashboardStub() {
                           </div>
                         ) : (
                           <>
-                             {/* Summary Card */}
-                             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-                               <div>
-                                 <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Total Trip Budget Limit</span>
-                                 <p className="text-2xl font-extrabold text-emerald-800">
-                                   {formatCurrency(budgetData.totalBudget ?? 0, tripCurrency.code || tripCurrency).formatted}
-                                 </p>
-                                 <p className="text-[10px] text-slate-500 mt-1">This is the total cap allocated for your travel expenses.</p>
-                               </div>
-                               
-                               {/* SVG Donut Chart */}
-                               {budgetData.categoryBreakdown && budgetData.categoryBreakdown.length > 0 && (() => {
-                                 let accumPercent = 0;
-                                 return (
-                                   <div className="relative h-24 w-24 flex items-center justify-center shrink-0 bg-white/40 dark:bg-slate-900/20 rounded-full p-1.5">
-                                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                       <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(16, 185, 129, 0.1)" strokeWidth="3" />
-                                       {budgetData.categoryBreakdown.map((cat, idx) => {
-                                         const percent = budgetData.totalBudget > 0 ? (Number(cat.planned) / Number(budgetData.totalBudget)) * 100 : 0;
-                                         if (percent <= 0) return null;
-                                         
-                                         const colors = [
-                                           '#10b981', // emerald-500
-                                           '#f43f5e', // rose-500
-                                           '#0ea5e9', // sky-500
-                                           '#eab308', // yellow-500
-                                           '#6366f1', // indigo-500
-                                           '#a855f7'  // purple-500
-                                         ];
-                                         const strokeColor = colors[idx % colors.length];
-                                         const dashArray = `${percent} ${100 - percent}`;
-                                         const dashOffset = 100 - accumPercent;
-                                         accumPercent += percent;
-                                         
-                                         return (
-                                           <circle
-                                             key={idx}
-                                             cx="18"
-                                             cy="18"
-                                             r="15.915"
-                                             fill="transparent"
-                                             stroke={strokeColor}
-                                             strokeWidth="3.2"
-                                             strokeDasharray={dashArray}
-                                             strokeDashoffset={dashOffset}
-                                           />
-                                         );
-                                       })}
-                                     </svg>
-                                     <div className="absolute flex flex-col items-center text-center">
-                                       <span className="text-[9px] font-black text-emerald-800 dark:text-emerald-300 leading-none">Limit</span>
-                                       <span className="text-[8px] text-slate-500 leading-none mt-0.5">100%</span>
-                                     </div>
-                                   </div>
-                                 );
-                               })()}
-                             </div>
+                            {/* Summary Card */}
+                            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                              <div>
+                                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Total Trip Budget Limit</span>
+                                <p className="text-2xl font-extrabold text-emerald-800">
+                                  {formatCurrency(budgetData.totalBudget ?? 0, tripCurrency.code || tripCurrency).formatted}
+                                </p>
+                                <p className="text-[10px] text-slate-500 mt-1">This is the total cap allocated for your travel expenses.</p>
+                              </div>
+
+                              {/* SVG Donut Chart */}
+                              {budgetData.categoryBreakdown && budgetData.categoryBreakdown.length > 0 && (() => {
+                                let accumPercent = 0;
+                                return (
+                                  <div className="relative h-24 w-24 flex items-center justify-center shrink-0 bg-white/40 dark:bg-slate-900/20 rounded-full p-1.5">
+                                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                      <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(16, 185, 129, 0.1)" strokeWidth="3" />
+                                      {budgetData.categoryBreakdown.map((cat, idx) => {
+                                        const percent = budgetData.totalBudget > 0 ? (Number(cat.planned) / Number(budgetData.totalBudget)) * 100 : 0;
+                                        if (percent <= 0) return null;
+
+                                        const colors = [
+                                          '#10b981', // emerald-500
+                                          '#f43f5e', // rose-500
+                                          '#0ea5e9', // sky-500
+                                          '#eab308', // yellow-500
+                                          '#6366f1', // indigo-500
+                                          '#a855f7'  // purple-500
+                                        ];
+                                        const strokeColor = colors[idx % colors.length];
+                                        const dashArray = `${percent} ${100 - percent}`;
+                                        const dashOffset = 100 - accumPercent;
+                                        accumPercent += percent;
+
+                                        return (
+                                          <circle
+                                            key={idx}
+                                            cx="18"
+                                            cy="18"
+                                            r="15.915"
+                                            fill="transparent"
+                                            stroke={strokeColor}
+                                            strokeWidth="3.2"
+                                            strokeDasharray={dashArray}
+                                            strokeDashoffset={dashOffset}
+                                          />
+                                        );
+                                      })}
+                                    </svg>
+                                    <div className="absolute flex flex-col items-center text-center">
+                                      <span className="text-[9px] font-black text-emerald-800 dark:text-emerald-300 leading-none">Limit</span>
+                                      <span className="text-[8px] text-slate-500 leading-none mt-0.5">100%</span>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
 
                             {/* Category Breakdown (Allocation) */}
                             {budgetData.categoryBreakdown && budgetData.categoryBreakdown.length > 0 && (
@@ -3572,54 +3579,54 @@ export default function DashboardStub() {
                 </div>
 
                 {selectedTrip.interests && selectedTrip.interests.length > 0 && (
-                      <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 z-10 pb-20 md:pb-4">
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center mr-2">
-                          <Tag className="h-3.5 w-3.5 mr-1 text-rose-400" />
-                          <span>Applied Interests:</span>
-                        </div>
-                        {selectedTrip.interests.map((interest, idx) => (
-                          <span key={idx} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] text-slate-650 font-semibold shadow-sm">
-                            {interest}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Mobile View Toggle */}
-                    <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-55 flex items-center bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-lg border border-slate-800 dark:border-slate-800/80 rounded-full shadow-2xl p-1.5 w-[280px]">
-                      <button
-                        type="button"
-                        onClick={() => setMobileViewMode('list')}
-                        className={`flex-1 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap ${mobileViewMode === 'list' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'text-slate-400 hover:text-slate-200'}`}
-                      >
-                        <TripIcon className="h-4 w-4" />
-                        <span>Timeline</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMobileViewMode('map')}
-                        className={`flex-1 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap ${mobileViewMode === 'map' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'text-slate-400 hover:text-slate-200'}`}
-                      >
-                        <MapPin className="h-4 w-4" />
-                        <span>Map View</span>
-                      </button>
+                  <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 z-10 pb-20 md:pb-4">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center mr-2">
+                      <Tag className="h-3.5 w-3.5 mr-1 text-rose-400" />
+                      <span>Applied Interests:</span>
                     </div>
-                  </motion.div>
-                </div>
-                );
-        })()}
-              </AnimatePresence>
+                    {selectedTrip.interests.map((interest, idx) => (
+                      <span key={idx} className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[10px] text-slate-650 font-semibold shadow-sm">
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-              <TripWizard
-                isOpen={isWizardOpen}
-                onClose={() => {
-                  setIsWizardOpen(false);
-                  setWizardInitialData(null);
-                }}
-                onTripCreated={fetchTrips}
-                currencyCode={currencyCode}
-                initialData={wizardInitialData}
-              />
+                {/* Mobile View Toggle */}
+                <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-55 flex items-center bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-lg border border-slate-800 dark:border-slate-800/80 rounded-full shadow-2xl p-1.5 w-[280px]">
+                  <button
+                    type="button"
+                    onClick={() => setMobileViewMode('list')}
+                    className={`flex-1 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap ${mobileViewMode === 'list' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'text-slate-400 hover:text-slate-200'}`}
+                  >
+                    <TripIcon className="h-4 w-4" />
+                    <span>Timeline</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileViewMode('map')}
+                    className={`flex-1 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 flex items-center justify-center space-x-2 whitespace-nowrap ${mobileViewMode === 'map' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'text-slate-400 hover:text-slate-200'}`}
+                  >
+                    <MapPin className="h-4 w-4" />
+                    <span>Map View</span>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
+      </AnimatePresence>
+
+      <TripWizard
+        isOpen={isWizardOpen}
+        onClose={() => {
+          setIsWizardOpen(false);
+          setWizardInitialData(null);
+        }}
+        onTripCreated={fetchTrips}
+        currencyCode={currencyCode}
+        initialData={wizardInitialData}
+      />
 
       {/* Edit Activity Modal with AI Suggestions */}
       <AnimatePresence>
@@ -3860,297 +3867,295 @@ export default function DashboardStub() {
       </AnimatePresence>
 
       <AnimatePresence>
-                {tripToDelete && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="bg-white rounded-3xl border border-slate-100 p-6 max-w-sm w-full shadow-xl text-slate-800 relative"
-                    >
-                      <div className="flex items-center space-x-3 text-red-500 mb-4">
-                        <Trash2 className="h-5 w-5" />
-                        <h3 className="text-lg font-bold text-slate-900">Delete Trip</h3>
-                      </div>
-                      <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                        Are you sure you want to delete your trip to <strong className="text-slate-800">{tripToDelete.destination}</strong>?
-                      </p>
-                      <div className="flex items-center justify-end space-x-3">
-                        <button
-                          type="button"
-                          disabled={isDeleting}
-                          onClick={() => !isDeleting && setTripToDelete(null)}
-                          className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isDeleting}
-                          onClick={async () => {
-                            if (isDeleting) return;
-                            setIsDeleting(true);
-                            try {
-                              await api.delete(`/trips/${tripToDelete.id}`);
-                              setTrips(trips.filter(t => t.id !== tripToDelete.id));
-                              if (selectedTrip?.id === tripToDelete.id) setSelectedTrip(null);
-                              showToast('Trip deleted successfully.', 'success');
-                              setTripToDelete(null);
-                            } catch (err) {
-                              showToast('Failed to delete trip.', 'error');
-                            } finally {
-                              setIsDeleting(false);
-                            }
-                          }}
-                          className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:bg-rose-400 text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 flex items-center space-x-1.5 disabled:cursor-not-allowed"
-                        >
-                          {isDeleting ? (
-                            <>
-                              <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              <span>Deleting...</span>
-                            </>
-                          ) : (
-                            <span>Delete</span>
-                          )}
-                        </button>
-                      </div>
-                    </motion.div>
-                  </div>
-                )}
-              </AnimatePresence>
+        {tripToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl border border-slate-100 p-6 max-w-sm w-full shadow-xl text-slate-800 relative"
+            >
+              <div className="flex items-center space-x-3 text-red-500 mb-4">
+                <Trash2 className="h-5 w-5" />
+                <h3 className="text-lg font-bold text-slate-900">Delete Trip</h3>
+              </div>
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                Are you sure you want to delete your trip to <strong className="text-slate-800">{tripToDelete.destination}</strong>?
+              </p>
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => !isDeleting && setTripToDelete(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={async () => {
+                    if (isDeleting) return;
+                    setIsDeleting(true);
+                    try {
+                      await api.delete(`/trips/${tripToDelete.id}`);
+                      setTrips(trips.filter(t => t.id !== tripToDelete.id));
+                      if (selectedTrip?.id === tripToDelete.id) setSelectedTrip(null);
+                      showToast('Trip deleted successfully.', 'success');
+                      setTripToDelete(null);
+                    } catch (err) {
+                      showToast('Failed to delete trip.', 'error');
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:bg-rose-400 text-white text-xs font-bold transition cursor-pointer shadow-sm active:scale-95 flex items-center space-x-1.5 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <span>Delete</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-              <AnimatePresence>
-                {toast.show && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 50, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                    className={`fixed bottom-36 right-6 z-[9999] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
-                      ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
-                      : 'bg-rose-50/95 border-rose-200 text-rose-800'
-                      }`}
-                  >
-                    <span className="text-xs font-bold tracking-wide">{toast.message}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className={`fixed bottom-36 right-6 z-[9999] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${toast.type === 'success'
+              ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50/95 border-rose-200 text-rose-800'
+              }`}
+          >
+            <span className="text-xs font-bold tracking-wide">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              <AnimatePresence>
-                {showWeatherPopup && selectedTrip && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
-                    <motion.div
-                      initial={{ scale: 0.95, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.95, opacity: 0 }}
-                      className="w-full max-w-md rounded-3xl border shadow-2xl overflow-hidden flex flex-col"
-                      style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
-                    >
-                      <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-secondary)' }}>
-                        <div className="flex items-center space-x-2">
-                          <CloudSun className="h-5 w-5 text-rose-500" />
-                          <h3 className="text-sm font-extrabold uppercase tracking-wider text-[var(--text-primary)]">Weather Forecast</h3>
-                        </div>
-                        <button
-                          onClick={() => setShowWeatherPopup(false)}
-                          className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-450 hover:text-rose-500 transition cursor-pointer"
-                        >
-                          <X className="h-5 w-5" />
-                        </button>
-                      </div>
+      <AnimatePresence>
+        {showWeatherPopup && selectedTrip && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md rounded-3xl border shadow-2xl overflow-hidden flex flex-col"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+            >
+              <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-secondary)' }}>
+                <div className="flex items-center space-x-2">
+                  <CloudSun className="h-5 w-5 text-rose-500" />
+                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-[var(--text-primary)]">Weather Forecast</h3>
+                </div>
+                <button
+                  onClick={() => setShowWeatherPopup(false)}
+                  className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-450 hover:text-rose-500 transition cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-                      <div className="p-6 space-y-6 text-left overflow-y-auto">
-                        <div className="text-center pb-2">
-                          <h4 className="text-lg font-black text-[var(--text-primary)]">{selectedTrip.destination}</h4>
-                          <p className="text-xs text-[var(--text-secondary)]">3-Day Trip Outlook</p>
-                        </div>
+              <div className="p-6 space-y-6 text-left overflow-y-auto">
+                <div className="text-center pb-2">
+                  <h4 className="text-lg font-black text-[var(--text-primary)]">{selectedTrip.destination}</h4>
+                  <p className="text-xs text-[var(--text-secondary)]">3-Day Trip Outlook</p>
+                </div>
 
-                        <div className="space-y-4">
-                          {get3DayForecast(selectedTrip.destination, selectedTrip.startDate).map((dayForecast, idx) => {
-                            const WeatherIcon = dayForecast.condition === 'Sunny' ? Sun : dayForecast.condition === 'Cloudy' ? Cloud : dayForecast.condition === 'Rainy' ? CloudRain : dayForecast.condition === 'Snowy' ? Snowflake : Wind;
-                            const dateFormatted = dayForecast.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                <div className="space-y-4">
+                  {get3DayForecast(selectedTrip.destination, selectedTrip.startDate).map((dayForecast, idx) => {
+                    const WeatherIcon = dayForecast.condition === 'Sunny' ? Sun : dayForecast.condition === 'Cloudy' ? Cloud : dayForecast.condition === 'Rainy' ? CloudRain : dayForecast.condition === 'Snowy' ? Snowflake : Wind;
+                    const dateFormatted = dayForecast.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 
-                            return (
-                              <div
-                                key={idx}
-                                className="p-4 rounded-2xl border flex items-center justify-between bg-[var(--bg-tertiary)] border-[var(--border-primary)] shadow-sm"
-                              >
-                                <div className="space-y-1">
-                                  <p className="text-xs font-black text-[var(--text-primary)]">{dateFormatted}</p>
-                                  <p className="text-[11px] text-[var(--text-secondary)] italic">{dayForecast.desc}</p>
-                                </div>
-                                <div className="flex items-center space-x-3.5">
-                                  <div className="text-right">
-                                    <p className="text-base font-black text-[var(--text-primary)]">{dayForecast.temp}°C</p>
-                                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">{dayForecast.condition}</p>
-                                  </div>
-                                  <div className="p-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] flex items-center justify-center">
-                                    <WeatherIcon className={`h-5 w-5 ${dayForecast.condition === 'Sunny' ? 'text-amber-500' : dayForecast.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Additional metrics box */}
-                        <div className="grid grid-cols-3 gap-3 pt-2 text-center">
-                          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
-                            <p className="text-[9px] uppercase font-bold text-slate-400">Humidity</p>
-                            <p className="text-xs font-black text-[var(--text-primary)]">65%</p>
-                          </div>
-                          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
-                            <p className="text-[9px] uppercase font-bold text-slate-400">Wind</p>
-                            <p className="text-xs font-black text-[var(--text-primary)]">14 km/h</p>
-                          </div>
-                          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
-                            <p className="text-[9px] uppercase font-bold text-slate-400">UV Index</p>
-                            <p className="text-xs font-black text-[var(--text-primary)]">4 Mod</p>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-                )}
-              </AnimatePresence>
-
-              <AnimatePresence>
-                {showInviteModal && selectedTrip && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-                    <motion.div
-                      initial={{ scale: 0.95, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.95, opacity: 0 }}
-                      className="w-full max-w-sm rounded-3xl border shadow-2xl p-6 relative flex flex-col text-left"
-                      style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
-                    >
-                      <button
-                        onClick={() => setShowInviteModal(false)}
-                        className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-[var(--text-primary)] transition cursor-pointer"
+                    return (
+                      <div
+                        key={idx}
+                        className="p-4 rounded-2xl border flex items-center justify-between bg-[var(--bg-tertiary)] border-[var(--border-primary)] shadow-sm"
                       >
-                        <X className="h-5 w-5" />
-                      </button>
-
-                      <div className="flex items-center space-x-3 mb-4 text-rose-505">
-                        <UserPlus className="h-6 w-6" />
-                        <h3 className="text-lg font-black text-[var(--text-primary)] font-sans">Invite Collaborator</h3>
+                        <div className="space-y-1">
+                          <p className="text-xs font-black text-[var(--text-primary)]">{dateFormatted}</p>
+                          <p className="text-[11px] text-[var(--text-secondary)] italic">{dayForecast.desc}</p>
+                        </div>
+                        <div className="flex items-center space-x-3.5">
+                          <div className="text-right">
+                            <p className="text-base font-black text-[var(--text-primary)]">{dayForecast.temp}°C</p>
+                            <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">{dayForecast.condition}</p>
+                          </div>
+                          <div className="p-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] flex items-center justify-center">
+                            <WeatherIcon className={`h-5 w-5 ${dayForecast.condition === 'Sunny' ? 'text-amber-500' : dayForecast.condition === 'Rainy' ? 'text-blue-500' : 'text-slate-400'}`} />
+                          </div>
+                        </div>
                       </div>
+                    );
+                  })}
+                </div>
 
-                      <p className="text-[var(--text-secondary)] text-xs mb-6 leading-relaxed">
-                        Enter the registered email address of the person you want to invite to this trip.
-                      </p>
-
-                      <form onSubmit={handleAddCollaborator} className="space-y-4 font-sans">
-                        <div>
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">User Email</label>
-                          <input
-                            type="email"
-                            value={inviteEmail}
-                            onChange={(e) => setInviteEmail(e.target.value)}
-                            placeholder="e.g. companion@example.com"
-                            required
-                            disabled={inviteLoading}
-                            className="w-full px-3.5 py-3 rounded-xl text-sm border focus:outline-none focus:border-rose-500/40"
-                            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
-                          />
-                        </div>
-
-                        <div className="flex items-center space-x-3 pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setShowInviteModal(false)}
-                            className="flex-1 py-3 rounded-xl border hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] text-xs font-bold transition cursor-pointer"
-                            style={{ borderColor: 'var(--border-primary)' }}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={inviteLoading || !inviteEmail.trim()}
-                            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
-                          >
-                            {inviteLoading ? 'Adding...' : 'Add Member'}
-                          </button>
-                        </div>
-                      </form>
-                    </motion.div>
+                {/* Additional metrics box */}
+                <div className="grid grid-cols-3 gap-3 pt-2 text-center">
+                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                    <p className="text-[9px] uppercase font-bold text-slate-400">Humidity</p>
+                    <p className="text-xs font-black text-[var(--text-primary)]">65%</p>
                   </div>
-                )}
-              </AnimatePresence>
-
-              {/* Custom Premium Confirmation Modal */}
-              <AnimatePresence>
-                {confirmDialog.isOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0 bg-transparent"
-                      onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-                    />
-                    
-                    <motion.div
-                      initial={{ scale: 0.95, opacity: 0, y: 10 }}
-                      animate={{ scale: 1, opacity: 1, y: 0 }}
-                      exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                      transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                      className="relative w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl p-6 z-10"
-                      style={{ 
-                        backgroundColor: 'var(--bg-secondary)', 
-                        borderColor: 'var(--border-primary)',
-                        color: 'var(--text-primary)'
-                      }}
-                    >
-                      <div className="flex items-start space-x-4">
-                        <div className={`p-3 rounded-2xl flex-shrink-0 ${
-                          confirmDialog.type === 'danger' 
-                            ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500' 
-                            : 'bg-amber-50 dark:bg-amber-950/30 text-amber-500'
-                        }`}>
-                          <Trash2 className="h-6 w-6" />
-                        </div>
-                        
-                        <div className="flex-1">
-                          <h3 className="text-lg font-black tracking-tight mb-2">
-                            {confirmDialog.title}
-                          </h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                            {confirmDialog.message}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-end space-x-3 mt-6">
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-                          className="px-4 py-2.5 rounded-xl border hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] text-xs font-bold transition cursor-pointer"
-                          style={{ borderColor: 'var(--border-primary)' }}
-                        >
-                          {confirmDialog.cancelText}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirmDialog.onConfirm) confirmDialog.onConfirm();
-                            setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-                          }}
-                          className={`px-5 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-lg cursor-pointer ${
-                            confirmDialog.type === 'danger'
-                              ? 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 shadow-rose-500/10'
-                              : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/10'
-                          }`}
-                        >
-                          {confirmDialog.confirmText}
-                        </button>
-                      </div>
-                    </motion.div>
+                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                    <p className="text-[9px] uppercase font-bold text-slate-400">Wind</p>
+                    <p className="text-xs font-black text-[var(--text-primary)]">14 km/h</p>
                   </div>
-                )}
-              </AnimatePresence>
+                  <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1">
+                    <p className="text-[9px] uppercase font-bold text-slate-400">UV Index</p>
+                    <p className="text-xs font-black text-[var(--text-primary)]">4 Mod</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-              <Footer />
-            </div>
-          );
-        }
+      <AnimatePresence>
+        {showInviteModal && selectedTrip && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm rounded-3xl border shadow-2xl p-6 relative flex flex-col text-left"
+              style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+            >
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="absolute top-4 right-4 p-1 rounded-lg text-slate-500 hover:text-[var(--text-primary)] transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="flex items-center space-x-3 mb-4 text-rose-505">
+                <UserPlus className="h-6 w-6" />
+                <h3 className="text-lg font-black text-[var(--text-primary)] font-sans">Invite Collaborator</h3>
+              </div>
+
+              <p className="text-[var(--text-secondary)] text-xs mb-6 leading-relaxed">
+                Enter the registered email address of the person you want to invite to this trip.
+              </p>
+
+              <form onSubmit={handleAddCollaborator} className="space-y-4 font-sans">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5">User Email</label>
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="e.g. companion@example.com"
+                    required
+                    disabled={inviteLoading}
+                    className="w-full px-3.5 py-3 rounded-xl text-sm border focus:outline-none focus:border-rose-500/40"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowInviteModal(false)}
+                    className="flex-1 py-3 rounded-xl border hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] text-xs font-bold transition cursor-pointer"
+                    style={{ borderColor: 'var(--border-primary)' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={inviteLoading || !inviteEmail.trim()}
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-bold transition shadow-lg shadow-rose-500/10 cursor-pointer"
+                  >
+                    {inviteLoading ? 'Adding...' : 'Add Member'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Premium Confirmation Modal */}
+      <AnimatePresence>
+        {confirmDialog.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-transparent"
+              onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+            />
+
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl p-6 z-10"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border-primary)',
+                color: 'var(--text-primary)'
+              }}
+            >
+              <div className="flex items-start space-x-4">
+                <div className={`p-3 rounded-2xl flex-shrink-0 ${confirmDialog.type === 'danger'
+                  ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500'
+                  : 'bg-amber-50 dark:bg-amber-950/30 text-amber-500'
+                  }`}>
+                  <Trash2 className="h-6 w-6" />
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-lg font-black tracking-tight mb-2">
+                    {confirmDialog.title}
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {confirmDialog.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                  className="px-4 py-2.5 rounded-xl border hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] text-xs font-bold transition cursor-pointer"
+                  style={{ borderColor: 'var(--border-primary)' }}
+                >
+                  {confirmDialog.cancelText}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirmDialog.onConfirm) confirmDialog.onConfirm();
+                    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                  }}
+                  className={`px-5 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-lg cursor-pointer ${confirmDialog.type === 'danger'
+                    ? 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 shadow-rose-500/10'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/10'
+                    }`}
+                >
+                  {confirmDialog.confirmText}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <Footer />
+    </div>
+  );
+}
 

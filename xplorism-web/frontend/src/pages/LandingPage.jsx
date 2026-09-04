@@ -829,9 +829,8 @@ export default function LandingPage() {
 
                 {/* Recommended Pre-planned Trips Section */}
                 <div className="mt-2">
-                  <div className="flex items-center space-x-1 text-rose-500 mb-2">
-                    <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <h3 className="text-[8px] sm:text-xs font-bold text-slate-900">Recommended Pre-planned Trips</h3>
+                  <div className="flex items-center space-x-1 mb-2">
+                    <h3 className="text-[8px] sm:text-xs font-bold text-slate-900">{t('recommended_trips')}</h3>
                   </div>
 
                   {/* Cards Grid */}

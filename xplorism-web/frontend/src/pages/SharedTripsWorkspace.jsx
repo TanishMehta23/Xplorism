@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   Users, MapPin, Calendar, Compass, ArrowRight, Sparkles, User, HelpCircle, Trash2
 } from 'lucide-react';
 import { api } from '../services/api';
@@ -137,8 +137,8 @@ export default function SharedTripsWorkspace() {
       <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
 
       <Navbar activeTab="shared-trips" />
-      
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10">
+
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10 min-h-[85vh] pb-24">
         {/* Header */}
         <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
@@ -180,7 +180,7 @@ export default function SharedTripsWorkspace() {
         ) : error ? (
           <div className="py-16 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl text-center p-8 max-w-md mx-auto shadow-2xl">
             <p className="text-rose-500 text-sm font-bold mb-4">{error}</p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md shadow-rose-500/20"
             >
@@ -208,7 +208,7 @@ export default function SharedTripsWorkspace() {
                         className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/10 to-transparent" />
-                      
+
                       {/* Host Tag Overlay */}
                       <div className="absolute top-4 left-4 flex items-center space-x-1.5 z-10 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-900/80 text-white backdrop-blur-md border border-white/10 shadow-lg">
                         <User className="h-3 w-3 text-rose-505" />
@@ -252,14 +252,14 @@ export default function SharedTripsWorkspace() {
                   {/* Card Footer */}
                   <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/20">
                     <div className="flex items-center -space-x-2">
-                      <div 
+                      <div
                         className="h-7 w-7 rounded-full bg-rose-500 text-white border-2 border-white dark:border-slate-900 flex items-center justify-center text-[10px] font-black uppercase shadow-sm select-none"
                         title={`Host: ${trip.ownerName}`}
                       >
                         {trip.ownerName.charAt(0)}
                       </div>
                       {trip.travelers > 1 && (
-                        <div 
+                        <div
                           className="h-7 w-7 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-white dark:border-slate-900 text-slate-650 dark:text-slate-450 flex items-center justify-center text-[9px] font-black shadow-sm select-none"
                           title={`${trip.travelers - 1} co-travelers`}
                         >
@@ -341,7 +341,7 @@ export default function SharedTripsWorkspace() {
           </div>
         )}
       </AnimatePresence>
-      
+
       <Footer />
     </div>
   );

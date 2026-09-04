@@ -153,9 +153,34 @@ export default function WeatherPage() {
     }
     const delayDebounce = setTimeout(async () => {
       try {
-        const data = await api.get(`/geocode?q=${encodeURIComponent(query)}`);
-        if (data && data.length > 0) {
-          setSuggestions(data.slice(0, 6));
+        let results = [];
+        try {
+          const data = await api.get(`/geocode?q=${encodeURIComponent(query)}`);
+          if (data && data.length > 0) {
+            results = data;
+          }
+        } catch (backendErr) {
+          console.warn('Backend autocomplete fallback triggered:', backendErr);
+        }
+
+        // Direct Open-Meteo search fallback if backend was rate-limited
+        if (results.length === 0) {
+          const directGeoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`);
+          if (directGeoRes.ok) {
+            const directGeoData = await directGeoRes.json();
+            if (directGeoData && directGeoData.results) {
+              results = directGeoData.results.map(r => ({
+                place_id: r.id,
+                display_name: [r.name, r.admin1, r.country].filter(Boolean).join(', '),
+                lat: r.latitude,
+                lon: r.longitude
+              }));
+            }
+          }
+        }
+
+        if (results.length > 0) {
+          setSuggestions(results.slice(0, 6));
         }
       } catch (err) {
         console.error('Weather autocomplete error:', err);
@@ -186,13 +211,32 @@ export default function WeatherPage() {
       let lon = lonCoords;
 
       if (!lat || !lon) {
-        // Resolve city name to coordinates
-        const geoData = await api.get(`/geocode?q=${encodeURIComponent(cityName)}`);
-        if (!geoData || geoData.length === 0) {
-          throw new Error('City location details could not be resolved.');
+        // Try backend geocode first, with direct Open-Meteo fallback
+        try {
+          const geoData = await api.get(`/geocode?q=${encodeURIComponent(cityName)}`);
+          if (geoData && geoData.length > 0) {
+            lat = parseFloat(geoData[0].lat);
+            lon = parseFloat(geoData[0].lon);
+          }
+        } catch (backendErr) {
+          console.warn('Backend geocode failed, trying direct Open-Meteo geocode:', backendErr);
         }
-        lat = parseFloat(geoData[0].lat);
-        lon = parseFloat(geoData[0].lon);
+
+        // Direct Open-Meteo fallback if backend was unavailable or rate-limited
+        if (!lat || !lon) {
+          const directGeoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`);
+          if (directGeoRes.ok) {
+            const directGeoData = await directGeoRes.json();
+            if (directGeoData && directGeoData.results && directGeoData.results.length > 0) {
+              lat = directGeoData.results[0].latitude;
+              lon = directGeoData.results[0].longitude;
+            }
+          }
+        }
+
+        if (!lat || !lon) {
+          throw new Error('City location details could not be resolved. Please try a different name.');
+        }
       }
 
       // Query Open-Meteo API
@@ -324,10 +368,13 @@ export default function WeatherPage() {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkTheme ? 'text-white' : 'text-slate-800'} flex flex-col font-sans transition-colors duration-500 relative isolate`}>
+    <div className="min-h-screen flex flex-col font-sans relative overflow-x-clip transition-colors duration-300" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      {/* Decorative Ambient Blur Overlays */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
       
-      {/* Dynamic Animated Atmospheric Background */}
-      <div className={`absolute inset-0 -z-10 bg-gradient-to-br ${getThemeBackground()} transition-all duration-700`} />
+      {/* Dynamic Animated Atmospheric Background Overlay (subtle) */}
+      <div className={`absolute inset-0 -z-10 bg-gradient-to-br ${getThemeBackground()} opacity-30 transition-all duration-700 pointer-events-none`} />
       
       {/* Atmosphere particles layer */}
       <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
@@ -387,28 +434,28 @@ export default function WeatherPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white rounded-3xl shadow-xl w-full max-w-sm px-8 pt-8 pb-7 flex flex-col items-center text-center"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl w-full max-w-sm px-8 pt-8 pb-7 flex flex-col items-center text-center"
             >
               {/* Icon in soft circle */}
-              <div className="w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center mb-5">
+              <div className="w-14 h-14 rounded-full bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center mb-5">
                 <MapPin className="h-6 w-6 text-rose-500" />
               </div>
 
               {/* Title */}
-              <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-1.5">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight mb-1.5">
                 Enable Location
               </h3>
 
               {/* Description */}
-              <p className="text-sm text-slate-500 leading-relaxed max-w-[260px] mb-7">
-                Allow Xplorism to use your location for <span className="font-semibold text-slate-700">real-time weather</span> at your current position.
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-[260px] mb-7">
+                Allow Xplorism to use your location for <span className="font-semibold text-slate-700 dark:text-slate-200">real-time weather</span> at your current position.
               </p>
 
               {/* Side-by-side buttons */}
               <div className="flex items-center gap-3 w-full">
                 <button
                   onClick={handleSkipLocation}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 cursor-pointer transition-all duration-150 hover:bg-slate-50 active:scale-[0.97]"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer transition-all duration-150 hover:bg-slate-50 dark:hover:bg-slate-750 active:scale-[0.97]"
                 >
                   Skip
                 </button>
@@ -424,31 +471,29 @@ export default function WeatherPage() {
         )}
       </AnimatePresence>
 
-
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 flex flex-col items-center justify-start space-y-8">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12 min-h-[85vh] pb-24 space-y-8">
         
-        {/* Page Header (Centered title with absolutely positioned back button on desktop) */}
-        <div className="w-full relative flex flex-col items-center justify-center text-center">
-          <div className="space-y-2">
-            <motion.h1 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center justify-center space-x-2.5"
-            >
-              <Compass className="h-7 w-7 text-rose-500 animate-spin-slow shrink-0" />
-              <span className={isDarkTheme ? 'text-white' : 'text-slate-900'}>{t('global_weather_forecast')}</span>
-            </motion.h1>
-            <p className={isDarkTheme ? 'text-slate-300 text-sm font-semibold' : 'text-slate-500 text-sm font-semibold'}>
+        {/* Page Header (Consistent with all other pages) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2.5 mb-3">
+              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                <Sun className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('climate_radar')}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
+              {t('global_weather_forecast')}
+            </h1>
+            <p className="text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
               {t('weather_desc')}
             </p>
           </div>
         </div>
 
-        {/* Search widget wrapper */}
-        <div className="w-full flex flex-col items-center space-y-6">
-
-          {/* Search bar widget */}
-          <div className="w-full max-w-lg relative search-container">
+        {/* Search widget */}
+        <div className="w-full flex flex-col items-start space-y-4">
+          <div className="w-full relative search-container">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5 pointer-events-none" />
               <input 
@@ -460,7 +505,7 @@ export default function WeatherPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder={t('search_city_placeholder')}
-                className={`w-full pl-12 pr-12 py-3.5 rounded-full outline-none transition text-sm shadow-md ${isDarkTheme ? 'bg-slate-900/80 border-slate-700/80 text-white focus:border-rose-500' : 'bg-white border-slate-200 text-slate-800 focus:border-rose-400'}`}
+                className={`w-full pl-12 pr-12 py-3.5 rounded-2xl outline-none transition text-sm shadow-sm border ${isDarkTheme ? 'bg-slate-900/60 border-slate-800 text-white focus:border-rose-500' : 'bg-white border-slate-200 text-slate-800 focus:border-rose-400'}`}
               />
               <button
                 onClick={() => {
@@ -487,7 +532,7 @@ export default function WeatherPage() {
                     );
                   }
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 hover:text-rose-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition cursor-pointer"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition cursor-pointer"
                 title="Use current location"
               >
                 <MapPin className="h-4.5 w-4.5" />
@@ -501,7 +546,7 @@ export default function WeatherPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute left-0 right-0 mt-2 z-40 max-h-52 overflow-y-auto bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl shadow-xl divide-y divide-slate-100"
+                  className="absolute left-0 right-0 mt-2 z-40 max-h-52 overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl divide-y divide-slate-100 dark:divide-slate-800"
                 >
                   {query.trim() === '' && (
                     <button
@@ -529,7 +574,7 @@ export default function WeatherPage() {
                           );
                         }
                       }}
-                      className="w-full text-left px-5 py-3.5 hover:bg-slate-100/50 transition text-rose-500 text-xs flex items-center space-x-2 font-semibold"
+                      className="w-full text-left px-5 py-3.5 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition text-rose-500 text-xs flex items-center space-x-2 font-semibold"
                     >
                       <MapPin className="h-4 w-4 text-rose-500 shrink-0 animate-bounce-slow" />
                       <span>Use current location</span>
@@ -541,7 +586,7 @@ export default function WeatherPage() {
                       onClick={() => {
                         fetchWeatherForCity(item.display_name, item.lat, item.lon);
                       }}
-                      className="w-full text-left px-5 py-3.5 hover:bg-slate-100/50 transition text-slate-700 text-xs flex items-center space-x-2"
+                      className="w-full text-left px-5 py-3.5 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition text-slate-700 dark:text-slate-300 text-xs flex items-center space-x-2"
                     >
                       <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
                       <span className="truncate font-semibold">{item.display_name}</span>
@@ -554,7 +599,7 @@ export default function WeatherPage() {
         </div>
 
         {error && (
-          <div className="w-full max-w-lg p-4 rounded-2xl bg-red-50/90 backdrop-blur-sm border border-red-200 text-red-700 text-sm flex items-center space-x-2">
+          <div className="w-full p-4 rounded-2xl bg-red-50/90 dark:bg-red-950/40 backdrop-blur-sm border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-sm flex items-center space-x-2">
             <span>{error}</span>
           </div>
         )}
@@ -562,18 +607,18 @@ export default function WeatherPage() {
         {/* Forecast contents */}
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-4">
-            <div className={`h-10 w-10 border-4 border-slate-300 border-t-rose-500 rounded-full animate-spin`} />
-            <p className={`text-sm animate-pulse font-semibold ${isDarkTheme ? 'text-slate-300' : 'text-slate-650'}`}>{t('gathering_forecasts')}</p>
+            <div className="h-10 w-10 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
+            <p className="text-sm animate-pulse font-semibold" style={{ color: 'var(--text-secondary)' }}>{t('gathering_forecasts')}</p>
           </div>
         ) : weatherData ? (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             className="w-full space-y-8"
           >
             
             {/* Dynamic Weather Card matching current atmospheric conditions */}
-            <div className={`border rounded-3xl p-8 shadow-lg flex flex-col md:flex-row items-center md:justify-between gap-8 relative overflow-hidden backdrop-blur-md ${getCardStyles()}`}>
+            <div className={`border rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center md:justify-between gap-8 relative overflow-hidden backdrop-blur-md ${getCardStyles()}`}>
               <div className="space-y-4 text-center md:text-left z-10">
                 <div className="flex items-center justify-center md:justify-start space-x-2 text-rose-500">
                   <MapPin className="h-5 w-5 animate-bounce-slow" />
@@ -616,8 +661,8 @@ export default function WeatherPage() {
 
             {/* 7-Day Forecast Grid */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold flex items-center space-x-2 pl-1">
-                <Calendar className="h-4.5 w-4.5 text-rose-500" />
+              <h3 className="text-xl font-bold flex items-center space-x-2 pl-1" style={{ color: 'var(--text-primary)' }}>
+                <Calendar className="h-5 w-5 text-rose-500" />
                 <span>{t('extended_outlook')}</span>
               </h3>
 
@@ -638,7 +683,7 @@ export default function WeatherPage() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className={`border rounded-2xl p-4 flex flex-col items-center justify-between text-center transition-all duration-300 shadow-md group cursor-pointer active:scale-95 ${isDarkTheme ? 'bg-slate-900/40 hover:bg-slate-900/60 border-white/5' : 'bg-white/50 hover:bg-white/80 border-white/30'}`}
+                      className={`border rounded-2xl p-4 flex flex-col items-center justify-between text-center transition-all duration-300 shadow-sm group cursor-pointer active:scale-95 ${isDarkTheme ? 'bg-slate-900/40 hover:bg-slate-900/60 border-white/5' : 'bg-white/60 hover:bg-white/90 border-slate-200/80'}`}
                     >
                       <span className={`text-[10px] font-bold tracking-wider uppercase ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>
                         {isToday ? t('today') : dateObj.toLocaleDateString(undefined, { weekday: 'short' })}
@@ -667,13 +712,13 @@ export default function WeatherPage() {
         ) : (
           /* Premium Empty State with spinning wireframe Globe */
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="border p-12 rounded-3xl text-center w-full max-w-lg shadow-lg flex flex-col items-center backdrop-blur-md bg-white/85 border-white/30 dark:bg-slate-900/60 dark:border-white/10"
+            className="border p-12 sm:p-16 rounded-3xl text-center w-full shadow-sm flex flex-col items-center justify-center backdrop-blur-md bg-white/70 border-slate-200/80 dark:bg-slate-900/60 dark:border-white/10 min-h-[340px]"
           >
             <GlobeAnimation />
-            <h3 className="text-xl font-extrabold mt-6 text-slate-900 dark:text-white">{t('discover_climates')}</h3>
-            <p className="text-xs mt-2 max-w-xs leading-relaxed text-slate-500 dark:text-slate-300">
+            <h3 className="text-xl sm:text-2xl font-extrabold mt-6 text-slate-900 dark:text-white">{t('discover_climates')}</h3>
+            <p className="text-xs sm:text-sm mt-2 max-w-md leading-relaxed text-slate-500 dark:text-slate-300">
               {t('discover_climates_desc')}
             </p>
           </motion.div>

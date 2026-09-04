@@ -383,46 +383,41 @@ export default function CommunityFeedPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen flex flex-col font-sans relative overflow-x-clip" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      {/* Decorative Ambient Blur Overlays */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
       <Navbar activeTab="community" />
 
       {/* Main Container */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 py-8 space-y-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full flex-1 py-12 space-y-8 min-h-[85vh] pb-24">
         
-        {/* Header Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 border"
-             style={{ 
-               backgroundColor: 'var(--bg-secondary)', 
-               borderColor: 'var(--border-primary)',
-               background: 'linear-gradient(135deg, var(--bg-secondary) 0%, rgba(244, 63, 94, 0.03) 100%)'
-             }}>
-          <div className="absolute right-0 top-0 opacity-10 blur-xl pointer-events-none transform translate-x-12 -translate-y-12">
-            <Users className="h-96 w-96 text-rose-500" />
+        {/* Title Block */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-2">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2.5 mb-3">
+              <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
+                <Users className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-black text-rose-500 uppercase tracking-widest">{t('community')}</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('community_feed')}</h1>
+            <p className="text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
+              {t('community_subtitle')}
+            </p>
           </div>
           
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                <Sparkles className="h-3 w-3" />
-                <span>{t('community')}</span>
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight">{t('community_feed')}</h1>
-              <p className="text-sm max-w-xl" style={{ color: 'var(--text-secondary)' }}>
-                {t('community_subtitle')}
-              </p>
-            </div>
-            
-            <button
-              onClick={() => {
-                setEditPostId(null);
-                setShowFormModal(true);
-              }}
-              className="flex items-center justify-center space-x-2.5 text-sm font-extrabold px-6 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer self-start md:self-auto dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
-            >
-              <Plus className="h-5 w-5 text-rose-500 dark:text-rose-400" />
-              <span>{t('share_experience')}</span>
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setEditPostId(null);
+              setShowFormModal(true);
+            }}
+            className="flex items-center justify-center space-x-2.5 text-sm font-extrabold px-6 py-3 rounded-2xl border bg-white border-rose-200 hover:border-rose-300 text-rose-500 hover:bg-rose-50/50 hover:shadow-sm hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200 select-none cursor-pointer self-start md:self-auto dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800 dark:text-rose-400"
+          >
+            <Plus className="h-5 w-5 text-rose-500 dark:text-rose-400" />
+            <span>{t('share_experience')}</span>
+          </button>
         </div>
 
         {/* Search and Filters */}

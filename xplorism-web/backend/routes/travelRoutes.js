@@ -5,8 +5,24 @@ import {
   searchGoogleTransit
 } from '../services/googleTravelService.js';
 import { searchAirports } from '../data/airports.js';
+import { searchStations } from '../data/stations.js';
 
 const router = express.Router();
+
+// GET /travel/stations?q=delhi
+router.get('/stations', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length === 0) {
+      return res.json([]);
+    }
+    const stations = searchStations(q);
+    res.json(stations);
+  } catch (err) {
+    console.error('Route /travel/stations error:', err);
+    res.status(500).json({ message: 'Failed to search stations' });
+  }
+});
 
 // GET /travel/airports?q=delhi
 router.get('/airports', async (req, res) => {

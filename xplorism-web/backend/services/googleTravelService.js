@@ -10,13 +10,12 @@ async function callGroqAPI(prompt) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('GROQ_API_KEY is not defined');
 
-  // Exact active models available on this Groq organization
+  // Active and verified models on this Groq organization
   const models = [
     'openai/gpt-oss-20b',
     'openai/gpt-oss-120b',
-    'qwen/qwen3.8-27b',
-    'qwen/qwen3.6-27b',
-    'groq/compound'
+    'groq/compound',
+    'canopylabs/orpheus-v1-english'
   ];
 
   let lastError = null;
@@ -34,7 +33,7 @@ async function callGroqAPI(prompt) {
           messages: [
             {
               role: 'system',
-              content: 'You are a precise real-time travel search API engine. Return ONLY valid, complete, syntactically correct raw JSON array or object. Every key and string value MUST be double-quoted. DO NOT output any reasoning, explanations, internal thoughts, or <think> tags.'
+              content: 'You are a real-time travel search data API engine. Output ONLY a valid raw JSON array of objects. Do NOT use markdown fences. Do NOT write any conversational text, explanations, or internal thoughts.'
             },
             {
               role: 'user',
@@ -42,7 +41,7 @@ async function callGroqAPI(prompt) {
             }
           ],
           temperature: 0.1,
-          max_tokens: 2048
+          max_tokens: 3000
         })
       });
 
@@ -192,6 +191,24 @@ async function generateTravelData(prompt) {
     // 2. Second attempt: Robust extraction for truncated or partial JSON arrays
     const firstBracket = jsonStr.indexOf('[');
     if (firstBracket !== -1) {
+      // Find the last complete object close '}' inside jsonStr
+      const lastCurly = jsonStr.lastIndexOf('}');
+      if (lastCurly !== -1 && lastCurly > firstBracket) {
+        try {
+          let sub = jsonStr.substring(firstBracket, lastCurly + 1) + ']';
+          let sanitized = sub
+            .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+            .replace(/,\s*\.\.\.\s*([\]}])/g, '$1')
+            .replace(/\.\.\./g, '')
+            .replace(/,\s*\]$/, ']')
+            .replace(/,\s*([\]}])/g, '$1');
+          const parsed = JSON.parse(sanitized);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch (e2) {
+          console.warn('Truncated array recovery attempt 1 failed:', e2.message);
+        }
+      }
+
       let arraySub = jsonStr.substring(firstBracket);
       const lastBracket = arraySub.lastIndexOf(']');
       if (lastBracket !== -1) {
@@ -208,17 +225,6 @@ async function generateTravelData(prompt) {
       try {
         return JSON.parse(sanitized);
       } catch (e) {
-        // Fallback: slice up to last complete object entry `}` inside truncated array
-        const lastCurly = sanitized.lastIndexOf('}');
-        if (lastCurly !== -1) {
-          try {
-            const closedArray = sanitized.substring(0, lastCurly + 1) + ']';
-            const fixedJson = closedArray.replace(/,\s*\]$/, ']');
-            return JSON.parse(fixedJson);
-          } catch (e2) {
-            console.warn('Truncated array recovery failed:', e2.message);
-          }
-        }
         console.warn('Regex array parse failed:', e.message);
       }
     }
@@ -644,31 +650,36 @@ export const searchGoogleTransit = async ({ origin, destination, date, returnDat
   
   const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
 
-  const prompt = `You are a strict real-world transit search engine for ${isTrain ? 'Trains' : 'Intercity Buses'}.
-Check if ${isTrain ? 'railway routes / train stations' : 'intercity bus routes'} realistically connect "${origin}" and "${destination}".
+  const isINR = currency === 'INR' || currency === '₹';
+  const currencySymbol = isINR ? '₹' : (currency === 'EUR' ? '€' : (currency === 'GBP' ? '£' : '$'));
+
+  const prompt = `You are a strict, real-world transit search engine for ${isTrain ? 'Trains / Railways (such as Indian Railways, Amtrak, DB, Eurostar, etc.)' : 'Intercity Buses'}.
+Origin: "${origin}"
+Destination: "${destination}"
+Departure Date: ${date || 'Upcoming'}
+
 IMPORTANT REAL-WORLD RULES:
-1. If ${isTrain ? 'no direct or major railway connection exists (e.g. mountainous districts like Kinnaur or Hamirpur without train stations)' : 'no bus transport operates between these locations'}, return an empty JSON array [].
-2. Do NOT invent fake schedules for non-existent railway tracks or non-existent bus routes.
+1. Station codes in parentheses like "Delhi (DEC)" (Delhi Cantt), "Delhi (NDLS)" (New Delhi), or "Patiala (PTA)" refer to specific railway stations in those cities.
+2. If both origin and destination have train/rail connections (or are connected via direct express/passenger/superfast/intercity trains in the rail network), provide 6 to 8 realistic, diverse commercial train schedules covering morning, afternoon, and evening departures.
+3. If no railway connection or track exists between these places (e.g. overseas routes across oceans, or remote mountain peaks without train tracks), return an empty JSON array [].
+4. Return realistic pricing in ${currency} (Currency symbol: "${currencySymbol}"). ${isINR ? 'For Indian Railways, ticket prices should be realistic in INR, e.g. ₹180 to ₹850 depending on class (2S/SL/3A/CC).' : ''}
 
-Provide up to 10 realistic ${isTrain ? 'train schedules (e.g. Mangala Lakshadweep Express, Rajdhani Express, Kerala Sampark Kranti, Goa Express, Nizamuddin Duronto, etc.)' : 'bus options'} running from ${origin} to ${destination}${date ? ' on ' + date : ''}.
-Return pricing in ${currency}.
-
-Return a JSON array of objects with this EXACT structure (or [] if no routes exist):
+Return a JSON array of objects with this EXACT structure (or [] if impossible):
 [
   {
     "id": "${mode}_1",
-    "operator": "${isTrain ? 'Vande Bharat Express' : 'HRTC Volvo / RedBus'}",
-    "serviceNumber": "${isTrain ? '20901' : 'BUS-808'}",
+    "operator": "${isTrain ? 'Indian Railways / Express' : 'HRTC Volvo / RedBus'}",
+    "serviceNumber": "${isTrain ? '12457' : 'BUS-808'}",
     "mode": "${isTrain ? 'train' : 'bus'}",
     "departureTime": "06:00 AM",
-    "arrivalTime": "12:30 PM",
-    "duration": "6h 30m",
+    "arrivalTime": "11:45 AM",
+    "duration": "5h 45m",
     "origin": "${origin}",
     "destination": "${destination}",
-    "classOptions": ["${isTrain ? 'Executive CC, AC Chair' : 'AC Sleeper, Seater'}"],
-    "price": 45,
-    "currencySymbol": "$",
-    "rating": 4.6,
+    "classOptions": ["AC Chair Car", "3A", "SL"],
+    "price": ${isINR ? 240 : 15},
+    "currencySymbol": "${currencySymbol}",
+    "rating": 4.5,
     "bookingUrl": "${googleSearchUrl}",
     "provider": "${isTrain ? 'IRCTC / Official Rail' : 'RedBus / Bus Booking'}"
   }
@@ -676,7 +687,10 @@ Return a JSON array of objects with this EXACT structure (or [] if no routes exi
 
   try {
     const transit = await generateTravelData(prompt);
-    if (Array.isArray(transit) && transit.length > 0) {
+    if (Array.isArray(transit)) {
+      // If AI correctly determined no connection exists (or invalid location) and returned []
+      if (transit.length === 0) return [];
+      
       return transit.slice(0, 10).map((t, i) => ({
         ...t,
         id: t.id || `${mode}_${i + 1}`,
@@ -684,222 +698,38 @@ Return a JSON array of objects with this EXACT structure (or [] if no routes exi
       }));
     }
   } catch (err) {
-    console.warn('AI transit search failed or rate-limited, serving smart fallbacks:', err.message);
+    console.warn('AI transit search failed:', err.message);
   }
 
-  // Fallback realistic transit options if AI hits rate limits
-  const isINR = currency === 'INR' || currency === '₹';
-  const sym = isINR ? '₹' : '$';
+  // Geographic feasibility check:
+  // Overseas / Cross-continent routes (e.g. Delhi to Frankfurt/London/New York) have NO trains or buses.
+  const oLower = (origin || '').toLowerCase();
+  const dLower = (destination || '').toLowerCase();
   
-  if (isTrain) {
-    return [
-      {
-        id: `train_1_${Date.now()}`,
-        operator: `Mangala Lakshadweep Express`,
-        serviceNumber: '12618',
-        mode: 'train',
-        departureTime: '05:35 AM',
-        arrivalTime: '05:50 PM (+1 day)',
-        duration: '36h 15m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['Sleeper', '3AC', '2AC', '1AC'],
-        price: isINR ? 913 : 12,
-        currencySymbol: sym,
-        rating: 4.6,
-        bookingUrl: googleSearchUrl,
-        provider: 'IRCTC Direct'
-      },
-      {
-        id: `train_2_${Date.now()}`,
-        operator: `Thiruvananthapuram Rajdhani Express`,
-        serviceNumber: '12432',
-        mode: 'train',
-        departureTime: '06:16 AM',
-        arrivalTime: '08:25 AM (+1 day)',
-        duration: '26h 09m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['1st AC', '2nd AC', '3rd AC'],
-        price: isINR ? 4181 : 52,
-        currencySymbol: sym,
-        rating: 4.8,
-        bookingUrl: googleSearchUrl,
-        provider: 'IRCTC Direct'
-      },
-      {
-        id: `train_3_${Date.now()}`,
-        operator: `Thiruvananthapuram Weekly SF Express`,
-        serviceNumber: '12484',
-        mode: 'train',
-        departureTime: '01:10 PM',
-        arrivalTime: '06:25 PM (+1 day)',
-        duration: '29h 15m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['Sleeper', '3AC', '2AC'],
-        price: isINR ? 893 : 11,
-        currencySymbol: sym,
-        rating: 4.5,
-        bookingUrl: googleSearchUrl,
-        provider: 'IRCTC Direct'
-      },
-      {
-        id: `train_4_${Date.now()}`,
-        operator: `Goa Express`,
-        serviceNumber: '12780',
-        mode: 'train',
-        departureTime: '03:15 PM',
-        arrivalTime: '05:40 AM (+2 days)',
-        duration: '38h 25m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['Sleeper', '3AC', '2AC', '1AC'],
-        price: isINR ? 903 : 11,
-        currencySymbol: sym,
-        rating: 4.6,
-        bookingUrl: googleSearchUrl,
-        provider: 'IRCTC Direct'
-      },
-      {
-        id: `train_5_${Date.now()}`,
-        operator: `Kerala Sampark Kranti Express`,
-        serviceNumber: '12218',
-        mode: 'train',
-        departureTime: '08:10 PM',
-        arrivalTime: '07:15 PM (+1 day)',
-        duration: '23h 05m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['Sleeper', '3AC', '2AC'],
-        price: isINR ? 945 : 12,
-        currencySymbol: sym,
-        rating: 4.7,
-        bookingUrl: googleSearchUrl,
-        provider: 'IRCTC Direct'
-      },
-      {
-        id: `train_6_${Date.now()}`,
-        operator: `Nizamuddin Ernakulam Duronto Express`,
-        serviceNumber: '12284',
-        mode: 'train',
-        departureTime: '09:40 PM',
-        arrivalTime: '11:10 PM (+1 day)',
-        duration: '25h 30m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['1st AC', '2nd AC', '3rd AC'],
-        price: isINR ? 3420 : 42,
-        currencySymbol: sym,
-        rating: 4.8,
-        bookingUrl: googleSearchUrl,
-        provider: 'IRCTC Direct'
-      }
-    ];
-  } else {
-    return [
-      {
-        id: `bus_1_${Date.now()}`,
-        operator: `IntrCity SmartBus Volvo`,
-        serviceNumber: 'VOLVO-99',
-        mode: 'bus',
-        departureTime: '07:00 AM',
-        arrivalTime: '01:30 PM',
-        duration: '6h 30m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['AC Seater', 'Pushback'],
-        price: isINR ? 850 : 12,
-        currencySymbol: sym,
-        rating: 4.5,
-        bookingUrl: googleSearchUrl,
-        provider: 'RedBus Direct'
-      },
-      {
-        id: `bus_2_${Date.now()}`,
-        operator: `Zingbus Luxury Multi-Axle`,
-        serviceNumber: 'ZING-404',
-        mode: 'bus',
-        departureTime: '10:30 AM',
-        arrivalTime: '05:30 PM',
-        duration: '7h 00m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['AC Sleeper 2+1', 'Wi-Fi'],
-        price: isINR ? 1100 : 16,
-        currencySymbol: sym,
-        rating: 4.7,
-        bookingUrl: googleSearchUrl,
-        provider: 'RedBus Direct'
-      },
-      {
-        id: `bus_3_${Date.now()}`,
-        operator: `NueGo Electric AC Sleeper`,
-        serviceNumber: 'NUE-202',
-        mode: 'bus',
-        departureTime: '01:15 PM',
-        arrivalTime: '07:45 PM',
-        duration: '6h 30m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['Premium Electric AC', 'Recliner'],
-        price: isINR ? 920 : 14,
-        currencySymbol: sym,
-        rating: 4.8,
-        bookingUrl: googleSearchUrl,
-        provider: 'RedBus Direct'
-      },
-      {
-        id: `bus_4_${Date.now()}`,
-        operator: `HRTC Super Volvo AC`,
-        serviceNumber: 'HRTC-888',
-        mode: 'bus',
-        departureTime: '04:30 PM',
-        arrivalTime: '11:15 PM',
-        duration: '6h 45m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['State Express Volvo', 'AC Seater'],
-        price: isINR ? 780 : 11,
-        currencySymbol: sym,
-        rating: 4.6,
-        bookingUrl: googleSearchUrl,
-        provider: 'RedBus Direct'
-      },
-      {
-        id: `bus_5_${Date.now()}`,
-        operator: `Orange Tours Scania Multi-Axle`,
-        serviceNumber: 'ORANGE-555',
-        mode: 'bus',
-        departureTime: '08:45 PM',
-        arrivalTime: '03:30 AM',
-        duration: '6h 45m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['Scania AC Sleeper', 'Personal Screen'],
-        price: isINR ? 1350 : 20,
-        currencySymbol: sym,
-        rating: 4.7,
-        bookingUrl: googleSearchUrl,
-        provider: 'RedBus Direct'
-      },
-      {
-        id: `bus_6_${Date.now()}`,
-        operator: `VRL Travels Volvo AC`,
-        serviceNumber: 'VRL-101',
-        mode: 'bus',
-        departureTime: '11:15 PM',
-        arrivalTime: '06:00 AM',
-        duration: '6h 45m',
-        origin: origin,
-        destination: destination,
-        classOptions: ['AC Sleeper 2+1', 'Charging Ports'],
-        price: isINR ? 1050 : 15,
-        currencySymbol: sym,
-        rating: 4.5,
-        bookingUrl: googleSearchUrl,
-        provider: 'RedBus Direct'
-      }
-    ];
+  const extractCountry = (str) => {
+    const parts = str.split(',').map(s => s.trim().toLowerCase());
+    return parts[parts.length - 1] || str;
+  };
+
+  const oCountry = extractCountry(oLower);
+  const dCountry = extractCountry(dLower);
+
+  const isCrossCountryOverseas = oCountry !== dCountry && 
+    (oLower.includes('germany') || dLower.includes('germany') ||
+     oLower.includes('usa') || dLower.includes('usa') ||
+     oLower.includes('uk') || dLower.includes('uk') ||
+     oLower.includes('france') || dLower.includes('france') ||
+     oLower.includes('japan') || dLower.includes('japan') ||
+     oLower.includes('australia') || dLower.includes('australia') ||
+     oLower.includes('canada') || dLower.includes('canada') ||
+     oLower.includes('frankfurt') || dLower.includes('frankfurt') ||
+     oLower.includes('london') || dLower.includes('london') ||
+     oLower.includes('paris') || dLower.includes('paris') ||
+     oLower.includes('new york') || dLower.includes('new york'));
+
+  if (isCrossCountryOverseas) {
+    return []; // Completely not feasible
   }
+
+  return [];
 };

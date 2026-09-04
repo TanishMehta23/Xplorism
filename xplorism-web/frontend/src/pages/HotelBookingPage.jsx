@@ -97,22 +97,36 @@ const HOTEL_TEMPLATES = [
   }
 ];
 
-// Helper to resolve local currency details based on geocoded location string
-const getCurrencyDetails = (destString) => {
-  const ds = (destString || '').toLowerCase();
-  if (ds.includes('india') || ds.includes('haridwar') || ds.includes('delhi') || ds.includes('mumbai') || ds.includes('goa') || ds.includes('bangalore')) {
+// Helper to resolve local currency details based on geocoded location or station string
+const getCurrencyDetails = (destString, origString = '') => {
+  const combined = `${destString || ''} ${origString || ''}`.toLowerCase();
+  
+  // Indian cities, states, station codes, or keywords
+  if (
+    combined.includes('india') || combined.includes('delhi') || combined.includes('mumbai') || 
+    combined.includes('punjab') || combined.includes('patiala') || combined.includes('haryana') ||
+    combined.includes('goa') || combined.includes('karnataka') || combined.includes('bangalore') ||
+    combined.includes('bengaluru') || combined.includes('chennai') || combined.includes('tamil nadu') ||
+    combined.includes('kolkata') || combined.includes('west bengal') || combined.includes('rajasthan') ||
+    combined.includes('jaipur') || combined.includes('uttar pradesh') || combined.includes('agra') ||
+    combined.includes('lucknow') || combined.includes('varanasi') || combined.includes('kerala') ||
+    combined.includes('kochi') || combined.includes('maharashtra') || combined.includes('pune') ||
+    combined.includes('gujarat') || combined.includes('ahmedabad') || combined.includes('hyderabad') ||
+    combined.includes('pta') || combined.includes('dec') || combined.includes('ndls') || combined.includes('dli') ||
+    combined.includes('irctc')
+  ) {
     return { symbol: '₹', rate: 83, code: 'INR' };
   }
-  if (ds.includes('united kingdom') || ds.includes('uk') || ds.includes('london') || ds.includes('scotland')) {
+  if (combined.includes('united kingdom') || combined.includes('uk') || combined.includes('london') || combined.includes('scotland')) {
     return { symbol: '£', rate: 0.78, code: 'GBP' };
   }
-  if (ds.includes('france') || ds.includes('paris') || ds.includes('germany') || ds.includes('italy') || ds.includes('spain') || ds.includes('europe')) {
+  if (combined.includes('france') || combined.includes('paris') || combined.includes('germany') || combined.includes('italy') || combined.includes('spain') || combined.includes('europe')) {
     return { symbol: '€', rate: 0.92, code: 'EUR' };
   }
-  if (ds.includes('japan') || ds.includes('tokyo') || ds.includes('kyoto') || ds.includes('osaka')) {
+  if (combined.includes('japan') || combined.includes('tokyo') || combined.includes('kyoto') || combined.includes('osaka')) {
     return { symbol: '¥', rate: 150, code: 'JPY' };
   }
-  if (ds.includes('australia') || ds.includes('sydney') || ds.includes('melbourne') || ds.includes('brisbane')) {
+  if (combined.includes('australia') || combined.includes('sydney') || combined.includes('melbourne') || combined.includes('brisbane')) {
     return { symbol: 'A$', rate: 1.5, code: 'AUD' };
   }
   return { symbol: '$', rate: 1, code: 'USD' };
@@ -142,7 +156,7 @@ export default function HotelBookingPage() {
   const [showOriginSuggestions, setShowOriginSuggestions] = useState(false);
   const [currency, setCurrency] = useState({ symbol: '$', rate: 1, code: 'USD' });
 
-  // Fetch autocomplete suggestions for destination (Airports for flights, Geocode for hotels/trains/buses)
+  // Fetch autocomplete suggestions for destination (Airports for flights, Stations + Cities for trains, Geocode for hotels/buses)
   useEffect(() => {
     if (destination.trim().length < 1) {
       setSuggestions([]);
@@ -155,8 +169,27 @@ export default function HotelBookingPage() {
           if (data && data.length > 0) {
             setSuggestions(data.slice(0, 8));
           } else {
-            setSuggestions([]);
+            const geo = await api.get(`/geocode?q=${encodeURIComponent(destination)}`);
+            setSuggestions(geo && geo.length > 0 ? geo.slice(0, 6) : []);
           }
+        } else if (activeSearchTab === 'trains') {
+          // 1. First fetch curated railway stations
+          const stations = await api.get(`/travel/stations?q=${encodeURIComponent(destination)}`).catch(() => []);
+          // 2. Fetch general geocoded locations so ANY town, city, or village is suggested
+          const geo = await api.get(`/geocode?q=${encodeURIComponent(destination)}`).catch(() => []);
+          
+          const combined = [...(stations || [])];
+          const existingNames = new Set(combined.map(s => (s.city || s.name || '').toLowerCase()));
+          
+          if (Array.isArray(geo)) {
+            for (const item of geo) {
+              const placeName = (item.name || item.display_name || '').toLowerCase();
+              if (!existingNames.has(placeName)) {
+                combined.push(item);
+              }
+            }
+          }
+          setSuggestions(combined.slice(0, 8));
         } else {
           const data = await api.get(`/geocode?q=${encodeURIComponent(destination)}`);
           if (data && data.length > 0) {
@@ -173,7 +206,7 @@ export default function HotelBookingPage() {
     return () => clearTimeout(delayDebounce);
   }, [destination, activeSearchTab]);
 
-  // Fetch autocomplete suggestions for origin (Airports for flights, Geocode for trains/buses)
+  // Fetch autocomplete suggestions for origin (Airports for flights, Stations + Cities for trains, Geocode for buses)
   useEffect(() => {
     if (origin.trim().length < 1) {
       setOriginSuggestions([]);
@@ -186,8 +219,27 @@ export default function HotelBookingPage() {
           if (data && data.length > 0) {
             setOriginSuggestions(data.slice(0, 8));
           } else {
-            setOriginSuggestions([]);
+            const geo = await api.get(`/geocode?q=${encodeURIComponent(origin)}`);
+            setOriginSuggestions(geo && geo.length > 0 ? geo.slice(0, 6) : []);
           }
+        } else if (activeSearchTab === 'trains') {
+          // 1. First fetch curated railway stations
+          const stations = await api.get(`/travel/stations?q=${encodeURIComponent(origin)}`).catch(() => []);
+          // 2. Fetch general geocoded locations so ANY town, city, or village is suggested
+          const geo = await api.get(`/geocode?q=${encodeURIComponent(origin)}`).catch(() => []);
+          
+          const combined = [...(stations || [])];
+          const existingNames = new Set(combined.map(s => (s.city || s.name || '').toLowerCase()));
+          
+          if (Array.isArray(geo)) {
+            for (const item of geo) {
+              const placeName = (item.name || item.display_name || '').toLowerCase();
+              if (!existingNames.has(placeName)) {
+                combined.push(item);
+              }
+            }
+          }
+          setOriginSuggestions(combined.slice(0, 8));
         } else {
           const data = await api.get(`/geocode?q=${encodeURIComponent(origin)}`);
           if (data && data.length > 0) {
@@ -387,6 +439,22 @@ export default function HotelBookingPage() {
         } catch (e) {
           console.warn('Flight airport destination geocode fallback:', e.message);
         }
+      } else if (activeSearchTab === 'trains') {
+        try {
+          const stationData = await api.get(`/travel/stations?q=${encodeURIComponent(destination)}`);
+          if (Array.isArray(stationData) && stationData.length > 0) {
+            centerCoords = [parseFloat(stationData[0].lat), parseFloat(stationData[0].lon)];
+            resolvedAddress = stationData[0].display_name || destination;
+          } else {
+            const data = await api.get(`/geocode?q=${encodeURIComponent(destination)}`);
+            if (data && data.length > 0) {
+              centerCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+              resolvedAddress = data[0].display_name || destination;
+            }
+          }
+        } catch (e) {
+          console.warn('Train station destination geocode fallback:', e.message);
+        }
       } else {
         const data = await api.get(`/geocode?q=${encodeURIComponent(destination)}`);
         if (data && data.length > 0) {
@@ -410,6 +478,18 @@ export default function HotelBookingPage() {
               } else {
                 setTransitOriginCoords([28.5562, 77.1000]); // Delhi
               }
+            } else if (activeSearchTab === 'trains') {
+              const origStation = await api.get(`/travel/stations?q=${encodeURIComponent(queryOrigin)}`);
+              if (Array.isArray(origStation) && origStation.length > 0) {
+                setTransitOriginCoords([parseFloat(origStation[0].lat), parseFloat(origStation[0].lon)]);
+              } else {
+                const origData = await api.get(`/geocode?q=${encodeURIComponent(queryOrigin)}`);
+                if (origData && origData.length > 0) {
+                  setTransitOriginCoords([parseFloat(origData[0].lat), parseFloat(origData[0].lon)]);
+                } else {
+                  setTransitOriginCoords([centerCoords[0] + 0.1, centerCoords[1] - 0.1]);
+                }
+              }
             } else {
               const origData = await api.get(`/geocode?q=${encodeURIComponent(queryOrigin)}`);
               if (origData && origData.length > 0) {
@@ -425,9 +505,7 @@ export default function HotelBookingPage() {
         }
       }
 
-
-
-      const cur = getCurrencyDetails(resolvedAddress);
+      const cur = getCurrencyDetails(resolvedAddress, origin);
       setCurrency(cur);
       if (cur.code === 'INR') {
         setMaxPrice(50000);
@@ -442,7 +520,7 @@ export default function HotelBookingPage() {
       } else if (activeSearchTab === 'trains' || activeSearchTab === 'buses') {
         const mode = activeSearchTab === 'trains' ? 'train' : 'bus';
         const queryOrigin = origin.trim() || 'Delhi';
-        const transitRes = await api.get(`/travel/transit?origin=${encodeURIComponent(queryOrigin)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(flightDepartureDate)}&mode=${mode}&currency=${cur.code}`);
+        const transitRes = await api.get(`/travel/transit?origin=${encodeURIComponent(queryOrigin)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(flightDepartureDate)}&returnDate=${encodeURIComponent(flightReturnDate)}&tripType=${encodeURIComponent(tripType)}&mode=${mode}&currency=${cur.code}`);
         setTransitData(Array.isArray(transitRes) ? transitRes : []);
       } else {
         // Hotels Search
@@ -644,6 +722,7 @@ export default function HotelBookingPage() {
 
     // Custom modern auto-sized Pin Icons without overflow
     const createCustomIcon = (label, color, isPlane = false) => {
+      const modeEmoji = activeSearchTab === 'flights' ? '✈️' : activeSearchTab === 'trains' ? '🚆' : activeSearchTab === 'buses' ? '🚌' : '📍';
       return window.L.divIcon({
         className: 'custom-transit-pin',
         html: `
@@ -664,7 +743,7 @@ export default function HotelBookingPage() {
             transform: translate(-50%, -50%);
             width: max-content;
           ">
-            <span style="font-size: 12px; line-height: 1;">${isPlane ? '✈️' : '📍'}</span>
+            <span style="font-size: 12px; line-height: 1;">${isPlane ? modeEmoji : '📍'}</span>
             <span style="letter-spacing: 0.2px;">${label}</span>
           </div>
         `,
@@ -718,19 +797,19 @@ export default function HotelBookingPage() {
       ? generateCurvedPath(origCoords, dstCoords) 
       : [origCoords, dstCoords];
 
-    // Create flight route curved path
+    // Create route path line
     const flightPath = window.L.polyline(pathCoordinates, {
-      color: '#e11d48',
+      color: activeSearchTab === 'trains' ? '#4f46e5' : '#e11d48',
       weight: 3.5,
       opacity: 0.85,
-      dashArray: activeSearchTab === 'flights' ? '8, 8' : '0',
+      dashArray: activeSearchTab === 'flights' ? '8, 8' : '4, 4',
       smoothFactor: 1
     }).addTo(map);
 
     newMarkers.push(originPin, destPin, flightPath);
     setTransitMarkersList(newMarkers);
 
-    // Zoom map to fit curved path bounds
+    // Zoom map to fit route path bounds
     try {
       const bounds = window.L.latLngBounds(pathCoordinates);
       map.fitBounds(bounds.pad(0.35));
@@ -738,16 +817,17 @@ export default function HotelBookingPage() {
       console.warn('fitBounds error:', err);
     }
 
-
     // Force map tile recalculation
     const t1 = setTimeout(() => { if (map) map.invalidateSize(); }, 100);
-    const t2 = setTimeout(() => { if (map) map.invalidateSize(); }, 500);
+    const t2 = setTimeout(() => { if (map) map.invalidateSize(); }, 350);
+    const t3 = setTimeout(() => { if (map) map.invalidateSize(); }, 700);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      clearTimeout(t3);
     };
-  }, [isLeafletLoaded, transitOriginCoords, transitDestCoords, hasSearched, activeSearchTab, flightsData]);
+  }, [isLeafletLoaded, transitOriginCoords, transitDestCoords, hasSearched, activeSearchTab, flightsData, transitData]);
 
 
 
@@ -892,7 +972,23 @@ export default function HotelBookingPage() {
                 key={tab.id}
                 type="button"
                 onClick={() => {
-                  setActiveSearchTab(tab.id);
+                  if (activeSearchTab !== tab.id) {
+                    setActiveSearchTab(tab.id);
+                    // Clear inputs and search results on transport mode switch
+                    setOrigin('');
+                    setDestination('');
+                    setSuggestions([]);
+                    setShowSuggestions(false);
+                    setOriginSuggestions([]);
+                    setShowOriginSuggestions(false);
+                    setFlightsData([]);
+                    setTransitData([]);
+                    setHotels([]);
+                    setFilteredHotels([]);
+                    setSelectedHotel(null);
+                    setHasSearched(false);
+                    setSearchLoading(false);
+                  }
                 }}
                 className={`relative flex items-center justify-center space-x-2 h-11 rounded-xl text-xs font-black transition-colors duration-200 cursor-pointer select-none leading-none ${active ? 'text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
               >
@@ -958,7 +1054,13 @@ export default function HotelBookingPage() {
                           setShowOriginSuggestions(true);
                         }}
                         onFocus={() => setShowOriginSuggestions(true)}
-                        placeholder={activeSearchTab === 'flights' ? 'Airport or City (e.g. DEL or Delhi)' : 'Origin City (e.g. Delhi)'}
+                        placeholder={
+                          activeSearchTab === 'flights' 
+                            ? 'Airport or City (e.g. DEL or Delhi)' 
+                            : activeSearchTab === 'trains'
+                            ? 'Railway Station or City (e.g. NDLS, Delhi, Mumbai)'
+                            : 'Origin City (e.g. Delhi)'
+                        }
                         className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
                         style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                         autoComplete="off"
@@ -992,8 +1094,10 @@ export default function HotelBookingPage() {
                               style={{ color: 'var(--text-primary)' }}
                             >
                               <div className="flex items-center space-x-2.5 truncate">
-                                {item.type === 'airport' || item.code ? (
+                                {item.type === 'airport' ? (
                                   <Plane className="h-4 w-4 text-rose-500 shrink-0" />
+                                ) : item.type === 'station' ? (
+                                  <Train className="h-4 w-4 text-indigo-500 shrink-0" />
                                 ) : (
                                   <MapPin className="h-4 w-4 text-rose-500 shrink-0" />
                                 )}
@@ -1009,7 +1113,11 @@ export default function HotelBookingPage() {
                                 </div>
                               </div>
                               {item.code && (
-                                <span className="font-mono text-xs font-extrabold px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+                                <span className={`font-mono text-xs font-extrabold px-2 py-0.5 rounded-lg border shrink-0 ${
+                                  item.type === 'station' 
+                                    ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' 
+                                    : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                }`}>
                                   {item.code}
                                 </span>
                               )}
@@ -1035,7 +1143,13 @@ export default function HotelBookingPage() {
                         setShowSuggestions(true);
                       }}
                       onFocus={() => setShowSuggestions(true)}
-                      placeholder={activeSearchTab === 'flights' ? 'Airport or Destination City (e.g. BOM, DXB, London)' : 'Where are you going? (e.g. Goa, Tokyo, Paris)'}
+                      placeholder={
+                        activeSearchTab === 'flights' 
+                          ? 'Airport or Destination City (e.g. BOM, DXB, London)' 
+                          : activeSearchTab === 'trains'
+                          ? 'Railway Station or City (e.g. NDLS, Mumbai, Agra)'
+                          : 'Where are you going? (e.g. Goa, Tokyo, Paris)'
+                      }
                       className="w-full bg-[var(--bg-primary)] border rounded-2xl px-5 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner"
                       style={{ borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                       autoComplete="off"
@@ -1069,8 +1183,10 @@ export default function HotelBookingPage() {
                             style={{ color: 'var(--text-primary)' }}
                           >
                             <div className="flex items-center space-x-2.5 truncate">
-                              {item.type === 'airport' || item.code ? (
+                              {item.type === 'airport' ? (
                                 <Plane className="h-4 w-4 text-rose-500 shrink-0" />
+                              ) : item.type === 'station' ? (
+                                <Train className="h-4 w-4 text-indigo-500 shrink-0" />
                               ) : (
                                 <MapPin className="h-4 w-4 text-rose-500 shrink-0" />
                               )}
@@ -1086,7 +1202,11 @@ export default function HotelBookingPage() {
                               </div>
                             </div>
                             {item.code && (
-                              <span className="font-mono text-xs font-extrabold px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+                              <span className={`font-mono text-xs font-extrabold px-2 py-0.5 rounded-lg border shrink-0 ${
+                                item.type === 'station' 
+                                  ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' 
+                                  : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                              }`}>
                                 {item.code}
                               </span>
                             )}

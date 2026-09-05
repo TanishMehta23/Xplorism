@@ -36,7 +36,7 @@
 
 The platform leverages **Google Gemini AI** for itinerary generation, budget insights, and an intelligent travel chatbot — with automatic fallback to **Ollama** (local LLM) and **Groq Cloud** when the primary AI is unavailable. Real-time collaboration is powered by **WebSockets** and **RabbitMQ** message streaming, while sensitive documents are protected with **AES-256-GCM encryption**.
 
-### 🌍 Supported Languages
+### Supported Languages
 
 Xplorism ships with full internationalization (i18n) support across **7 languages**:
 
@@ -54,47 +54,47 @@ Xplorism ships with full internationalization (i18n) support across **7 language
 
 ## Key Features
 
-### 🤖 AI Itinerary Generation
+### AI Itinerary Generation
 
 - **Multi-Model AI Engine** — Primary itinerary generation via **Gemini 1.5 Flash**, with automatic failover to local/remote **Ollama** (Llama 3, Qwen 2.5) and **Groq Cloud** (GPT-OSS, Compound).
 - **Smart Customization** — Tailors itineraries based on travelers count, budget, interests (Food, Nature, Architecture, Nightlife, Art, History, Beaches, Shopping, Hiking), and travel style (Adventure, Luxury, Budget, Cultural, Romantic, Relaxing).
 - **Structured Day Planner** — Each day is divided into Morning, Afternoon, and Evening blocks with detailed activity descriptions, precise locations, and itemized cost estimates in the destination's local currency.
 - **Auto-Currency Detection** — Automatically detects the destination country from geocoding and sets the correct local currency (INR, JPY, EUR, GBP, USD, AED, THB, SGD, AUD, CAD, CHF, and more).
 
-### 💬 Xplorism AI Chatbot
+### Xplorism AI Chatbot
 
 - **RAG-Powered Conversations** — Retrieval-Augmented Generation using **pgvector** cosine similarity search over a curated travel knowledge base, combined with Gemini AI for contextually rich responses.
 - **Function Calling / Tool Use** — The chatbot can autonomously invoke tools to search destinations, fetch live weather, retrieve user preferences, and query saved trips — all within the conversation flow.
 - **Multi-Conversation History** — Full conversation persistence with per-user isolated chat threads, rename, and delete functionality.
 - **Scope-Restricted** — Strictly limited to travel-related inquiries; politely declines off-topic requests.
 
-### 🗺️ Interactive Destination Maps
+### Interactive Destination Maps
 
 - **Leaflet Integration** — High-fidelity vector maps with custom marker overlays, smooth panning, and responsive layouts.
 - **Dual Geocoding** — Primary geocoding via **OpenStreetMap Nominatim** with automatic fallback to **Open-Meteo Geocoding API**. Includes intelligent query resolution for composite location names (e.g., "Temple at City").
 - **Dynamic Autocomplete** — City suggestions with descriptive tags (city, district, country) rendered as the user types.
 - **HTML5 Geolocation** — Detects user coordinates, reverse-geocodes the city, and centers the map instantly.
 
-### 🏛️ Attractions & Amenities Discovery
+### Attractions & Amenities Discovery
 
 - **Overpass API** — Queries castles, temples, museums, parks, beaches, and monuments from OpenStreetMap data.
 - **Multi-Mirror Failover** — Cycles through 5 public Overpass mirrors (main, French, LZ4, Kumi, Russian) with 12-second timeouts per endpoint.
 - **Wikipedia Geosearch Fallback** — When all Overpass mirrors are exhausted, Wikipedia's Geosearch API fills in points of interest.
 - **Nearby Amenities** — Click any attraction to discover cafés, restaurants, bars, and parks within a 1 km radius.
 
-### 🌤️ Global Weather Forecasts
+### Global Weather Forecasts
 
 - **Open-Meteo Integration** — Real-time conditions and 5-day daily forecasts (highs/lows, sunrise/sunset, wind speed, humidity).
 - **Dynamic Theming** — Background themes, weather icons (Lucide-React), and badge styling automatically adapt to the destination's live WMO weather code.
 
-### ✈️ Live Aviation Radar (Sky Radar)
+### Live Aviation Radar (Sky Radar)
 
 - **Flight Tracking** — Real-time flight position tracking with interactive Leaflet map overlays, route visualization, and airport markers.
 - **Search & Filter** — Search flights by callsign, airline, or route; toggle between split, map-only, and list views.
 - **Auto-Refresh** — Configurable live polling intervals with countdown timers for continuous position updates.
 
 
-### 👥 Real-Time Collaborative Workspace
+### Real-Time Collaborative Workspace
 
 - **Multi-User Sync** — Live collaborative editing of itineraries, budgets, packing lists, notes, documents, and polls via **Socket.io** WebSockets.
 - **Presence Tracking** — See which co-travelers are currently online and which workspace tab (Itinerary, Budget, Docs, etc.) they're viewing.
@@ -103,13 +103,13 @@ Xplorism ships with full internationalization (i18n) support across **7 language
 - **Invite System** — Email-based trip invitations powered by **Nodemailer** (Gmail SMTP) with **Brevo API** fallback. Invitees receive styled HTML emails with one-click accept/decline links.
 - **Workspace Notifications** — Persistent offline notifications for changes made while you were away.
 
-### 🔒 Secure Document Vault
+### Secure Document Vault
 
 - **AES-256-GCM Encryption** — Documents (passports, visas, tickets, insurance) are encrypted in-memory using per-file random keys, which are themselves wrapped with a master key derived from `VAULT_MASTER_KEY`.
 - **Granular Access Control** — Decryption endpoints verify ownership or approved collaborator status before returning files.
 - **Document Categorization** — Organize by type (Passport, Visa, Ticket, Insurance, Other) with per-trip association.
 
-### 💰 Budget Tracker & AI Insights
+### Budget Tracker & AI Insights
 
 - **Planned vs. Actual** — Track expenses by category (Food & Dining, Accommodation, Transportation, Activities & Tours, Shopping, Miscellaneous) comparing planned budgets against actual spending.
 - **Live Currency Converter** — Real-time exchange rates via the **Open Exchange Rates API** with static fallback rates.
@@ -117,19 +117,19 @@ Xplorism ships with full internationalization (i18n) support across **7 language
 - **AI Financial Insights** — Gemini AI analyzes spending patterns and provides optimization recommendations.
 - **Daily Breakdown** — Expandable accordion-style day-by-day expense breakdowns.
 
-### 👤 User Profile & Preferences
+### User Profile & Preferences
 
 - **Profile Management** — Profile photo upload (with HEIC → JPEG conversion via Sharp), display name, and email management.
 - **Travel Preferences** — Configure preferred travel styles, interests, default currency, and language.
 - **Travel History** — JSONB-backed travel history tracking.
 - **Google SSO** — Sign in with Google OAuth alongside traditional email/password authentication.
 
-### 🌐 Community Feed
+### Community Feed
 
 - **Social Posts** — Share trip stories with photos, destinations, and rich text content.
 - **Engagement** — Like posts, view trip highlights, and discover destinations from other travelers.
 
-### 📡 Shared Trips
+### Shared Trips
 
 - **Public Trip Sharing** — Generate shareable links for trips viewable without authentication.
 - **Shared Trips Workspace** — View all collaborative trips you've been invited to in one place.

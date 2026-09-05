@@ -1,8 +1,13 @@
 const getBackendUrl = () => {
+  // If an explicit API URL is configured (e.g. Render backend in .env or Vercel env), always use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // If running in local Vite development server without VITE_API_URL set
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return 'http://localhost:5000';
   }
-  return import.meta.env.VITE_API_URL || '/api';
+  return '/api';
 };
 
 const BASE_URL = getBackendUrl();
@@ -12,8 +17,10 @@ export const SOCKET_URL = (() => {
   if (envUrl) {
     return envUrl.endsWith('/api') ? envUrl.slice(0, -4) : envUrl;
   }
-  // Fallback for local development
-  return 'http://localhost:5000';
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000';
+  }
+  return window.location.origin;
 })();
 
 

@@ -4,4 +4,5 @@
     <string name="title_activity_main">Xplorism</string>
     <string name="package_name">com.xplorism.app</string>
     <string name="custom_url_scheme">com.xplorism.app</string>
+    <string name="server_client_id">757251321736-9l5f356qjkgjch7huu5kp1ab11hohn0b.apps.googleusercontent.com</string>
 </resources>

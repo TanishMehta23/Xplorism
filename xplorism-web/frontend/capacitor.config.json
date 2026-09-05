@@ -1,5 +1,12 @@
 {
   "appId": "com.xplorism.app",
   "appName": "Xplorism",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "757251321736-9l5f356qjkgjch7huu5kp1ab11hohn0b.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  }
 }

@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import {
-  MessageCircle, X, Send, Trash2, Copy, RotateCcw,
+  MessageCircle, X, Send, Trash2, Copy, Check, RotateCcw,
   Sparkles, CornerDownLeft, Loader2, ArrowRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -24,6 +24,7 @@ export default function AIChatbot() {
   const [conversationsLoading, setConversationsLoading] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState(null);
 
   const messagesEndRef = useRef(null);
   const panelRef = useRef(null);
@@ -193,9 +194,13 @@ export default function AIChatbot() {
     setShowConfirmDelete(true);
   };
 
-  const handleCopyText = (text) => {
+  const handleCopyText = (text, idx) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
-    alert('Message copied to clipboard!');
+    setCopiedIdx(idx);
+    setTimeout(() => {
+      setCopiedIdx((current) => (current === idx ? null : current));
+    }, 2000);
   };
 
   const handleRegenerateResponse = () => {
@@ -408,11 +413,18 @@ export default function AIChatbot() {
                         <div className={`absolute top-1/2 -translate-y-1/2 flex items-center space-x-1.5 opacity-0 group-hover:opacity-100 transition duration-200 ${isMe ? 'right-full mr-2' : 'left-full ml-2'
                           }`}>
                           <button
-                            onClick={() => handleCopyText(msg.content)}
-                            className="p-1 rounded bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-200/50 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 transition cursor-pointer"
-                            title="Copy"
+                            onClick={() => handleCopyText(msg.content, idx)}
+                            className={`p-1 rounded border transition-all duration-200 cursor-pointer ${copiedIdx === idx
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:bg-slate-200/50 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300'
+                              }`}
+                            title={copiedIdx === idx ? 'Copied!' : 'Copy'}
                           >
-                            <Copy className="h-3 w-3" />
+                            {copiedIdx === idx ? (
+                              <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
                           </button>
                         </div>
                       </div>

@@ -273,21 +273,25 @@ export default function WeatherPage() {
       case 'sunny':
         return isDarkMode
           ? 'from-slate-900 via-zinc-900 to-amber-950/40'
-          : 'from-amber-400/90 via-orange-200/70 to-sky-200/60';
+          : 'from-amber-200/40 via-orange-100/30 to-sky-100/20';
       case 'rainy':
-        return 'from-blue-950 via-slate-900 to-indigo-950';
+        return isDarkMode
+          ? 'from-blue-950 via-slate-900 to-indigo-950'
+          : 'from-sky-200/40 via-blue-100/30 to-indigo-100/20';
       case 'snowy':
         return isDarkMode
           ? 'from-slate-900 via-indigo-950/30 to-slate-950'
-          : 'from-sky-300/80 via-indigo-100 to-slate-200';
+          : 'from-sky-200/40 via-indigo-100/30 to-slate-100/20';
       case 'thunder':
-        return 'from-purple-950 via-slate-900/95 to-violet-950';
+        return isDarkMode
+          ? 'from-purple-950 via-slate-900/95 to-violet-950'
+          : 'from-purple-200/40 via-indigo-100/30 to-slate-100/20';
       case 'overcast':
       case 'foggy':
       default:
         return isDarkMode
           ? 'from-slate-900 via-zinc-900 to-slate-950'
-          : 'from-slate-400/80 via-slate-200/60 to-blue-100/50';
+          : 'from-slate-200/40 via-blue-100/30 to-slate-100/20';
     }
   };
 
@@ -297,7 +301,7 @@ export default function WeatherPage() {
       return Array.from({ length: 40 }).map((_, i) => (
         <span 
           key={i} 
-          className="absolute bg-sky-200/40 w-[1.5px] h-[35px] rounded-full animate-rain pointer-events-none"
+          className="absolute bg-sky-400/40 dark:bg-sky-200/40 w-[1.5px] h-[35px] rounded-full animate-rain pointer-events-none"
           style={{
             left: `${Math.random() * 100}%`,
             top: `-${Math.random() * 20}%`,
@@ -311,7 +315,7 @@ export default function WeatherPage() {
       return Array.from({ length: 30 }).map((_, i) => (
         <span 
           key={i} 
-          className="absolute bg-white rounded-full animate-snow pointer-events-none"
+          className="absolute bg-slate-300 dark:bg-white rounded-full animate-snow pointer-events-none"
           style={{
             width: `${2 + Math.random() * 5}px`,
             height: `${2 + Math.random() * 5}px`,
@@ -326,7 +330,7 @@ export default function WeatherPage() {
     }
     if (weatherTheme === 'sunny') {
       return (
-        <div className="absolute inset-0 bg-radial-sun opacity-30 animate-pulse pointer-events-none" style={{ animationDuration: '6s' }} />
+        <div className="absolute inset-0 bg-radial-sun opacity-20 dark:opacity-30 animate-pulse pointer-events-none" style={{ animationDuration: '6s' }} />
       );
     }
     if (weatherTheme === 'thunder') {
@@ -337,33 +341,33 @@ export default function WeatherPage() {
     return null;
   };
 
-  const isDarkTheme = isDarkMode || ['rainy', 'thunder'].includes(weatherTheme);
+  const isDarkTheme = isDarkMode;
 
   const getCardStyles = () => {
     switch (weatherTheme) {
       case 'sunny':
-        return isDarkTheme
-          ? 'bg-gradient-to-br from-amber-950/70 to-yellow-900/50 border-amber-500/30 text-white'
-          : 'bg-gradient-to-br from-amber-100/90 via-orange-50/80 to-sky-50/70 border-amber-300/50 text-slate-900';
+        return isDarkMode
+          ? 'bg-gradient-to-br from-amber-950/80 via-yellow-950/50 to-slate-900/80 border-amber-500/30 text-white'
+          : 'bg-gradient-to-br from-amber-50 via-orange-50/70 to-yellow-50/60 border-amber-200/80 text-slate-900 shadow-sm';
       case 'cloudy':
       case 'overcast':
       case 'foggy':
-        return isDarkTheme
-          ? 'bg-gradient-to-br from-slate-900/80 to-zinc-900/60 border-slate-700/40 text-white'
-          : 'bg-gradient-to-br from-slate-200/95 via-slate-100/90 to-blue-50/80 border-slate-300 text-slate-900 shadow-inner';
+        return isDarkMode
+          ? 'bg-gradient-to-br from-slate-900/90 to-zinc-900/70 border-slate-700/50 text-white'
+          : 'bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-100/70 border-slate-200 text-slate-900 shadow-sm';
       case 'rainy':
       case 'thunder':
-        return isDarkTheme
+        return isDarkMode
           ? 'bg-gradient-to-br from-blue-950/85 to-purple-950/60 border-blue-800/40 text-white'
-          : 'bg-gradient-to-br from-blue-100/90 via-sky-100/80 to-indigo-50/70 border-blue-200/50 text-slate-900';
+          : 'bg-gradient-to-br from-blue-50/90 via-sky-50/80 to-indigo-50/70 border-blue-200/80 text-slate-900 shadow-sm';
       case 'snowy':
-        return isDarkTheme
+        return isDarkMode
           ? 'bg-gradient-to-br from-indigo-950/60 to-slate-900/40 border-indigo-500/30 text-white'
-          : 'bg-gradient-to-br from-blue-50/95 via-indigo-50/80 to-slate-50/70 border-indigo-200/50 text-slate-900';
+          : 'bg-gradient-to-br from-sky-50/90 via-indigo-50/70 to-slate-50 border-indigo-200/80 text-slate-900 shadow-sm';
       default:
-        return isDarkTheme
-          ? 'bg-slate-900/60 border-white/10 text-white'
-          : 'bg-white/80 border-white/40 text-slate-800';
+        return isDarkMode
+          ? 'bg-slate-900/60 border-slate-700 text-white'
+          : 'bg-white border-slate-200 text-slate-900 shadow-sm';
     }
   };
 
@@ -482,10 +486,10 @@ export default function WeatherPage() {
               </div>
               <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">{t('climate_radar')}</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-1.5 sm:mb-2 text-slate-900 dark:text-white">
               {t('global_weather_forecast')}
             </h1>
-            <p className="text-xs sm:text-sm md:text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-xs sm:text-sm md:text-base font-medium text-slate-500 dark:text-slate-400">
               {t('weather_desc')}
             </p>
           </div>
@@ -505,7 +509,7 @@ export default function WeatherPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder={t('search_city_placeholder')}
-                className={`w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl outline-none transition text-xs sm:text-sm shadow-sm border ${isDarkTheme ? 'bg-slate-900/60 border-slate-800 text-white focus:border-rose-500' : 'bg-white border-slate-200 text-slate-800 focus:border-rose-400'}`}
+                className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl outline-none transition text-xs sm:text-sm shadow-sm border bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:border-rose-400 dark:focus:border-rose-500"
               />
               <button
                 onClick={() => {
@@ -637,21 +641,21 @@ export default function WeatherPage() {
               </div>
  
               {/* Climate stats list */}
-              <div className={`grid grid-cols-3 gap-3 sm:gap-6 md:gap-8 p-3.5 sm:p-6 rounded-xl sm:rounded-2xl border shrink-0 w-full md:w-auto z-10 ${isDarkTheme ? 'bg-slate-950/40 border-white/5' : 'bg-slate-50/50 border-slate-200/40'}`}>
+              <div className="grid grid-cols-3 gap-3 sm:gap-6 md:gap-8 p-3.5 sm:p-6 rounded-xl sm:rounded-2xl border shrink-0 w-full md:w-auto z-10 bg-white/80 dark:bg-slate-950/40 border-slate-200/80 dark:border-white/5 backdrop-blur-sm shadow-sm">
                 <div className="flex flex-col items-center space-y-1.5 sm:space-y-2">
                   <Thermometer className="h-4 w-4 sm:h-5 sm:w-5 text-rose-500 animate-pulse" />
-                  <div className={`text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('feels_like')}</div>
-                  <div className="font-extrabold text-xs sm:text-sm">{Math.round(weatherData.current.apparent_temperature)}°C</div>
+                  <div className="text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">{t('feels_like')}</div>
+                  <div className="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white">{Math.round(weatherData.current.apparent_temperature)}°C</div>
                 </div>
                 <div className="flex flex-col items-center space-y-1.5 sm:space-y-2">
-                  <Droplets className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 animate-float" />
-                  <div className={`text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('humidity_label')}</div>
-                  <div className="font-extrabold text-xs sm:text-sm">{weatherData.current.relative_humidity_2m}%</div>
+                  <Droplets className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-float" />
+                  <div className="text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">{t('humidity_label')}</div>
+                  <div className="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white">{weatherData.current.relative_humidity_2m}%</div>
                 </div>
                 <div className="flex flex-col items-center space-y-1.5 sm:space-y-2">
-                  <Wind className="h-4 w-4 sm:h-5 sm:w-5 text-teal-400 animate-float" style={{ animationDelay: '1s' }} />
-                  <div className={`text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>{t('wind_speed_label')}</div>
-                  <div className="font-extrabold text-xs sm:text-sm">{weatherData.current.wind_speed_10m} km/h</div>
+                  <Wind className="h-4 w-4 sm:h-5 sm:w-5 text-teal-500 animate-float" style={{ animationDelay: '1s' }} />
+                  <div className="text-[8.5px] sm:text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">{t('wind_speed_label')}</div>
+                  <div className="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white">{weatherData.current.wind_speed_10m} km/h</div>
                 </div>
               </div>
 
@@ -661,7 +665,7 @@ export default function WeatherPage() {
 
             {/* 7-Day Forecast Grid */}
             <div className="space-y-3 sm:space-y-4">
-              <h3 className="text-base sm:text-xl font-bold flex items-center space-x-2 pl-1" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-base sm:text-xl font-bold flex items-center space-x-2 pl-1 text-slate-900 dark:text-white">
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-rose-500" />
                 <span>{t('extended_outlook')}</span>
               </h3>
@@ -683,9 +687,9 @@ export default function WeatherPage() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className={`border rounded-2xl p-4 flex flex-col items-center justify-between text-center transition-all duration-300 shadow-sm group cursor-pointer active:scale-95 ${isDarkTheme ? 'bg-slate-900/40 hover:bg-slate-900/60 border-white/5' : 'bg-white/60 hover:bg-white/90 border-slate-200/80'}`}
+                      className="bg-white dark:bg-slate-800/80 hover:bg-slate-50/90 dark:hover:bg-slate-750 border border-slate-200/90 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col items-center justify-between text-center transition-all duration-300 shadow-sm hover:shadow-md group cursor-pointer active:scale-95"
                     >
-                      <span className={`text-[10px] font-bold tracking-wider uppercase ${isDarkTheme ? 'text-slate-400' : 'text-slate-400'}`}>
+                      <span className="text-[10px] font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400">
                         {isToday ? t('today') : dateObj.toLocaleDateString(undefined, { weekday: 'short' })}
                       </span>
                       
@@ -693,13 +697,13 @@ export default function WeatherPage() {
                         <DayIcon className="h-6 w-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" />
                       </div>
 
-                      <div className="space-y-1">
-                        <div className={`text-[10px] font-bold truncate w-24 ${isDarkTheme ? 'text-slate-200' : 'text-slate-650'}`}>
+                      <div className="space-y-1 w-full">
+                        <div className="text-[10px] font-bold truncate text-slate-700 dark:text-slate-200">
                           {t(itemConfig.labelKey) || itemConfig.label}
                         </div>
                         <div className="flex justify-center space-x-1.5 text-xs font-extrabold pt-0.5">
-                          <span>{maxTemp}°</span>
-                          <span className={isDarkTheme ? 'text-slate-400' : 'text-slate-400'}>{minTemp}°</span>
+                          <span className="text-slate-900 dark:text-white">{maxTemp}°</span>
+                          <span className="text-slate-400 dark:text-slate-500 font-semibold">{minTemp}°</span>
                         </div>
                       </div>
                     </motion.div>

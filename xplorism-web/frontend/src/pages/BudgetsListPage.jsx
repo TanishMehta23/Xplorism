@@ -286,7 +286,7 @@ export default function BudgetsListPage() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${
+            className={`fixed bottom-24 right-6 z-[10000] flex items-center space-x-3 px-5 py-3.5 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${
               toast.type === 'success'
                 ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
                 : 'bg-rose-50/95 border-rose-200 text-rose-800'

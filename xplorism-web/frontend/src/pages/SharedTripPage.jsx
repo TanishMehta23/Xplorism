@@ -672,7 +672,7 @@ export default function SharedTripPage() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-2.5 border text-sm font-bold ${toast.type === 'success'
+            className={`fixed bottom-24 right-6 z-[10000] px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-2.5 border text-sm font-bold ${toast.type === 'success'
                 ? 'bg-white border-emerald-100 text-emerald-600'
                 : 'bg-white border-rose-100 text-rose-500'
               }`}

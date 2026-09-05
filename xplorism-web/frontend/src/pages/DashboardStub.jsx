@@ -2315,7 +2315,7 @@ export default function DashboardStub() {
           flex-wrap: nowrap;
           gap: 16px;
           width: max-content;
-          animation: marqueeScroll 260s linear infinite;
+          animation: marqueeScroll 500s linear infinite;
         }
         .marquee-track:hover {
           animation-play-state: paused;
@@ -2331,7 +2331,7 @@ export default function DashboardStub() {
         @media (min-width: 768px) {
           .marquee-track {
             gap: 24px;
-            animation-duration: 300s;
+            animation-duration: 600s;
           }
         }
         .marquee-card {

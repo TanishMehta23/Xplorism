@@ -1,5 +1,5 @@
 import { query } from '../config/db.js';
-import { callGeminiChat, sendToolResponse } from '../services/ai/geminiService.js';
+import { callGeminiChat, sendToolResponses, sendToolResponse } from '../services/ai/geminiService.js';
 import { searchKnowledge } from '../services/rag/ragService.js';
 import * as tools from '../services/tools/toolService.js';
 
@@ -139,35 +139,46 @@ export const postChatMessage = async (req, res) => {
       content: row.content
     }));
 
-    // 3. Search RAG context
-    const ragMatches = await searchKnowledge(message, 3);
-    const ragContext = ragMatches.length > 0 
+    // 3. Search RAG context (with 1.5s fast timeout)
+    const ragMatches = await Promise.race([
+      searchKnowledge(message, 3),
+      new Promise(resolve => setTimeout(() => resolve([]), 1500))
+    ]).catch(() => []);
+
+    const ragContext = ragMatches && ragMatches.length > 0 
       ? ragMatches.map(m => `Source: ${m.title} (${m.category}) - ${m.content}`).join('\n\n')
       : '';
 
-    // 4. Call Gemini AI
+    // 4. Call AI
     let geminiResponse = await callGeminiChat(history, message, ragContext);
     let finalMessage = geminiResponse.message;
     let toolCalls = [];
     let toolResults = [];
 
-    // 5. Handle function/tool calling if requested
-    if (geminiResponse.functionCalls) {
-      for (const call of geminiResponse.functionCalls) {
-        const { name, args } = call;
+    // 5. Handle function/tool calling in parallel with single synthesis step
+    if (geminiResponse.functionCalls && geminiResponse.functionCalls.length > 0) {
+      const toolExecutionPromises = geminiResponse.functionCalls.map(async (call) => {
+        const { name, args, id } = call;
         toolCalls.push({ name, args });
-        
         try {
           const result = await executeTool(name, args, userId);
-          toolResults.push({ name, result });
-          
-          // Send tool output back to Gemini to finalize the message response
-          const finalGen = await sendToolResponse(history, message, geminiResponse.rawContent, name, result);
-          finalMessage = finalGen.message;
+          return { name, args, result, id };
         } catch (toolError) {
           console.error(`[Chat Controller] Tool execution failed for ${name}:`, toolError);
-          toolResults.push({ name, error: toolError.message });
+          return { name, args, error: toolError.message, id };
         }
+      });
+
+      const executedTools = await Promise.all(toolExecutionPromises);
+      toolResults = executedTools;
+
+      try {
+        const finalGen = await sendToolResponses(history, message, geminiResponse.rawContent, executedTools);
+        if (finalGen && finalGen.message) {
+          finalMessage = finalGen.message;
+        }
+      } catch (synthErr) {
+        console.error('[Chat Controller] Tool synthesis failed:', synthErr);
       }
     }
 

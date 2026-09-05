@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DollarSign, Plus, Calendar, Compass as TripIcon,
   Trash2, Users, Tag, Edit, Clock, ArrowLeft, AlertCircle, Save,
-  ArrowLeftRight, Coins
+  ArrowLeftRight, Coins, ChevronDown, ChevronUp, Sparkles
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -21,6 +21,7 @@ export default function BudgetPage() {
   const [budgetData, setBudgetData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [budgetLoading, setBudgetLoading] = useState(true);
+  const [expandedDays, setExpandedDays] = useState({ 0: true }); // Default first day open, or users can toggle any day
 
   // Live Currency Rates Converter State
   const [convAmount, setConvAmount] = useState('1');
@@ -77,7 +78,44 @@ export default function BudgetPage() {
   const [expenseForm, setExpenseForm] = useState({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '', paidBy: 'Me' });
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [showTravelersModal, setShowTravelersModal] = useState(false);
+  const [travelerNames, setTravelerNames] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`trip_travelers_${id}`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [editingTravelerNames, setEditingTravelerNames] = useState({});
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const getTravelerDisplayName = (key, defaultFallback) => {
+    if (key === 'Me') return travelerNames['Me'] || 'Me (You)';
+    return travelerNames[key] || defaultFallback || key;
+  };
+
+  const openTravelersModal = () => {
+    const initial = { 'Me': travelerNames['Me'] || '' };
+    const count = Math.max(1, trip?.travelers || 1);
+    for (let i = 0; i < count - 1; i++) {
+      const key = `Co-Traveler ${String.fromCharCode(65 + i)}`;
+      initial[key] = travelerNames[key] || '';
+    }
+    setEditingTravelerNames(initial);
+    setShowTravelersModal(true);
+  };
+
+  const handleSaveTravelerNames = () => {
+    setTravelerNames(editingTravelerNames);
+    try {
+      localStorage.setItem(`trip_travelers_${id}`, JSON.stringify(editingTravelerNames));
+    } catch (e) {
+      console.error(e);
+    }
+    setShowTravelersModal(false);
+    showToast('Traveler names updated successfully!', 'success');
+  };
 
   // AI & OCR States
   const [aiInsights, setAiInsights] = useState([]);
@@ -428,6 +466,22 @@ export default function BudgetPage() {
 
   const slices = getSlices();
 
+  const leftOverviewRef = useRef(null);
+  const [leftOverviewHeight, setLeftOverviewHeight] = useState(null);
+
+  useEffect(() => {
+    if (!leftOverviewRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.target === leftOverviewRef.current) {
+          setLeftOverviewHeight(Math.round(entry.contentRect.height));
+        }
+      }
+    });
+    observer.observe(leftOverviewRef.current);
+    return () => observer.disconnect();
+  }, [budgetData]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-800">
@@ -471,22 +525,23 @@ export default function BudgetPage() {
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans">
       <Navbar activeTab="trips" />
 
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 py-12">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-10">
         {/* Back navigation & header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6 mb-4 sm:mb-8">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <button
-              onClick={() => navigate('/dashboard')}
-              className="p-2 rounded-full hover:bg-slate-200 text-slate-650 hover:text-slate-900 transition-all cursor-pointer border border-slate-200 bg-white"
+              onClick={() => navigate('/budgets')}
+              className="p-2 sm:p-2.5 rounded-full hover:bg-slate-200 text-slate-650 hover:text-slate-900 transition-all cursor-pointer border border-slate-200 bg-white shrink-0 shadow-sm"
+              title="Back to Budgets"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div>
-              <div className="flex items-center space-x-2 text-rose-500 mb-1">
-                <TripIcon className="h-4 w-4" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">{t('style_' + style.toLowerCase()) || style} Mode</span>
+            <div className="min-w-0">
+              <div className="flex items-center space-x-1.5 text-rose-500 mb-0.5">
+                <TripIcon className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[10px] font-bold uppercase tracking-wider truncate">{t('style_' + style.toLowerCase()) || style} Mode</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 truncate">
                 {trip.destination} {t('budget_tracker')}
               </h1>
             </div>
@@ -494,28 +549,44 @@ export default function BudgetPage() {
         </div>
 
         {/* Info Banner */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm mb-8 flex flex-wrap gap-6 items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Calendar className="h-5 w-5 text-emerald-500" />
-            <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('date_schedule')}</p>
-              <p className="text-sm font-bold text-slate-800">
+        <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm mb-4 sm:mb-8 grid grid-cols-2 sm:flex sm:flex-wrap gap-3.5 sm:gap-6 items-start sm:items-center justify-between">
+          <div className="col-span-2 sm:col-span-1 flex items-center space-x-2.5 sm:space-x-3.5">
+            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('date_schedule')}</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 truncate">
                 {new Date(trip.startDate).toLocaleDateString()} to {new Date(trip.endDate).toLocaleDateString()}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <Users className="h-5 w-5 text-emerald-500" />
-            <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('travelers')}</p>
-              <p className="text-sm font-bold text-slate-800">{trip.travelers} {trip.travelers === 1 ? t('traveler') : t('travelers')}</p>
+          <div className="col-span-1 flex items-center space-x-2.5 sm:space-x-3.5">
+            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center space-x-1.5">
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('travelers')}</p>
+                <button
+                  type="button"
+                  onClick={openTravelersModal}
+                  className="p-0.5 rounded hover:bg-slate-100 text-slate-400 hover:text-emerald-600 transition cursor-pointer"
+                  title="Edit Traveler Names"
+                >
+                  <Edit className="h-3 w-3" />
+                </button>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 truncate">{trip.travelers} {trip.travelers === 1 ? t('traveler') : t('travelers')}</p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <DollarSign className="h-5 w-5 text-emerald-500" />
-            <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('starting_budget')}</p>
-              <p className="text-sm font-bold text-slate-800">
+          <div className="col-span-1 flex items-center space-x-2.5 sm:space-x-3.5">
+            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('starting_budget')}</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 truncate">
                 {tripCurrency.symbol}{Number(trip.budget).toLocaleString(tripCurrency.locale)}
               </p>
             </div>
@@ -528,70 +599,73 @@ export default function BudgetPage() {
             <p className="text-slate-500 text-sm">{t('calculating_breakdowns')}</p>
           </div>
         ) : !budgetData ? (
-          <div className="bg-white border border-slate-150 rounded-3xl p-12 text-center shadow-sm">
-            <DollarSign className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-slate-900 mb-2">{t('no_budget_data')}</h2>
-            <p className="text-slate-550 text-sm mb-6 max-w-sm mx-auto">{t('no_budget_data_desc')}</p>
+          <div className="bg-white border border-slate-150 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center shadow-sm">
+            <DollarSign className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 mx-auto mb-4" />
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">{t('no_budget_data')}</h2>
+            <p className="text-slate-550 text-xs sm:text-sm mb-6 max-w-sm mx-auto">{t('no_budget_data_desc')}</p>
             <button onClick={() => navigate('/dashboard')} className="px-6 py-2 bg-slate-900 text-white rounded-full text-xs font-bold hover:bg-slate-800 transition">
               {t('back_to_dashboard')}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
             {/* Left side: Overview, breakdowns */}
-            <div className="lg:col-span-8 space-y-8">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 shadow-sm">
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{t('total_estimated_budget')}</span>
-                  <p className="text-2xl font-extrabold text-emerald-800 mt-2">
-                    {tripCurrency.symbol}{Number(budgetData.totalBudget).toLocaleString(tripCurrency.locale)}
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1">{t('budget_planned')}: {tripCurrency.symbol}{Number(budgetData.totalPlanned).toLocaleString(tripCurrency.locale)}</p>
-                </div>
-                <div className="bg-rose-50 border border-rose-100 rounded-3xl p-5 shadow-sm">
-                  <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">{t('budget_spent')}</span>
-                  <p className="text-2xl font-extrabold text-rose-800 mt-2">
-                    {tripCurrency.symbol}{Number(budgetData.totalActual || budgetData.totalSpent || 0).toLocaleString(tripCurrency.locale)}
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1">{t('tracked_expenses_desc')}</p>
-                </div>
-                <div className={`${(budgetData.remaining || budgetData.remaining === 0) && budgetData.remaining >= 0 ? 'bg-sky-50 border-sky-100' : 'bg-rose-50 border-rose-100'} border rounded-3xl p-5 shadow-sm`}>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('remaining_funds')}</span>
-                  <p className={`text-2xl font-extrabold mt-2 ${(budgetData.remaining || budgetData.remaining === 0) && budgetData.remaining >= 0 ? 'text-sky-800' : 'text-rose-800'}`}>
-                    {tripCurrency.symbol}{Number(budgetData.remaining || 0).toLocaleString(tripCurrency.locale)}
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1">{t('leftover_funds')}</p>
-                </div>
-              </div>
-
-              {/* Progress Utilization */}
-              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900">{t('utilization_progress')}</h3>
-                    <p className="text-xs text-slate-505">{t('utilization_progress_desc')}</p>
+            <div className="lg:col-span-8 space-y-5 sm:space-y-8">
+              {/* Upper Overview Section (Summary Cards + Utilization Progress) */}
+              <div ref={leftOverviewRef} id="budget-overview-top" className="space-y-5 sm:space-y-8">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm col-span-1 flex flex-col justify-between">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 uppercase tracking-wider truncate block">{t('total_estimated_budget')}</span>
+                    <p className="text-lg sm:text-2xl font-extrabold text-emerald-800 mt-1 sm:mt-2 truncate">
+                      {tripCurrency.symbol}{Number(budgetData.totalBudget).toLocaleString(tripCurrency.locale)}
+                    </p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-500 mt-0.5 sm:mt-1 truncate">{t('budget_planned')}: {tripCurrency.symbol}{Number(budgetData.totalPlanned).toLocaleString(tripCurrency.locale)}</p>
                   </div>
-                  <span className={`text-sm font-extrabold ${(budgetData.utilizationPercent || budgetData.percentSpent || 0) > 80 ? 'text-rose-600' : (budgetData.utilizationPercent || budgetData.percentSpent || 0) > 50 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                    {Math.round(budgetData.utilizationPercent || budgetData.percentSpent || 0)}%
-                  </span>
+                  <div className="bg-rose-50 border border-rose-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm col-span-1 flex flex-col justify-between">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-rose-600 uppercase tracking-wider truncate block">{t('budget_spent')}</span>
+                    <p className="text-lg sm:text-2xl font-extrabold text-rose-800 mt-1 sm:mt-2 truncate">
+                      {tripCurrency.symbol}{Number(budgetData.totalActual || budgetData.totalSpent || 0).toLocaleString(tripCurrency.locale)}
+                    </p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-500 mt-0.5 sm:mt-1 truncate">{t('tracked_expenses_desc')}</p>
+                  </div>
+                  <div className={`${(budgetData.remaining || budgetData.remaining === 0) && budgetData.remaining >= 0 ? 'bg-sky-50 border-sky-100' : 'bg-rose-50 border-rose-100'} border rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm col-span-2 sm:col-span-1 flex flex-col justify-between`}>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate block">{t('remaining_funds')}</span>
+                    <p className={`text-lg sm:text-2xl font-extrabold mt-1 sm:mt-2 truncate ${(budgetData.remaining || budgetData.remaining === 0) && budgetData.remaining >= 0 ? 'text-sky-800' : 'text-rose-800'}`}>
+                      {tripCurrency.symbol}{Number(budgetData.remaining || 0).toLocaleString(tripCurrency.locale)}
+                    </p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-500 mt-0.5 sm:mt-1 truncate">{t('leftover_funds')}</p>
+                  </div>
                 </div>
-                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${(budgetData.utilizationPercent || budgetData.percentSpent || 0) > 80 ? 'bg-rose-500' : (budgetData.utilizationPercent || budgetData.percentSpent || 0) > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                    style={{ width: `${Math.min(budgetData.utilizationPercent || budgetData.percentSpent || 0, 100)}%` }}
-                  />
+
+                {/* Progress Utilization */}
+                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm">
+                  <div className="flex justify-between items-center mb-2.5 sm:mb-3">
+                    <div>
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900">{t('utilization_progress')}</h3>
+                      <p className="text-[11px] sm:text-xs text-slate-505">{t('utilization_progress_desc')}</p>
+                    </div>
+                    <span className={`text-xs sm:text-sm font-extrabold ${(budgetData.utilizationPercent || budgetData.percentSpent || 0) > 80 ? 'text-rose-600' : (budgetData.utilizationPercent || budgetData.percentSpent || 0) > 50 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                      {Math.round(budgetData.utilizationPercent || budgetData.percentSpent || 0)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2.5 sm:h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${(budgetData.utilizationPercent || budgetData.percentSpent || 0) > 80 ? 'bg-rose-500' : (budgetData.utilizationPercent || budgetData.percentSpent || 0) > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                      style={{ width: `${Math.min(budgetData.utilizationPercent || budgetData.percentSpent || 0, 100)}%` }}
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Preplanned notice */}
               {budgetData.isPrePlanned && (
-                <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4">
+                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                   <div className="flex items-start space-x-3">
                     <AlertCircle className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
                     <div>
-                      <h4 className="text-sm font-bold text-emerald-800 font-sans">Unsaved Pre-planned Itinerary</h4>
-                      <p className="text-xs text-emerald-705 mt-1 font-sans">
+                      <h4 className="text-xs sm:text-sm font-bold text-emerald-800 font-sans">Unsaved Pre-planned Itinerary</h4>
+                      <p className="text-[11px] sm:text-xs text-emerald-705 mt-1 font-sans">
                         We are currently showing calculated budget estimates based on the pre-planned day itineraries. Save this trip to log actual expenses and tracking details.
                       </p>
                     </div>
@@ -599,7 +673,7 @@ export default function BudgetPage() {
                   <button
                     onClick={handleSavePrePlanned}
                     disabled={isSavingTrip}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shrink-0 shadow-sm flex items-center space-x-2 font-sans"
+                    className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shrink-0 shadow-sm flex items-center justify-center space-x-2 font-sans"
                   >
                     <Save className="h-4 w-4" />
                     <span>{isSavingTrip ? 'Saving...' : 'Save to My Trips'}</span>
@@ -609,18 +683,18 @@ export default function BudgetPage() {
 
               {/* Visual Breakdown Analytics Dashboard */}
               {budgetData.categoryBreakdown && budgetData.categoryBreakdown.length > 0 && (
-                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
-                  <div className="flex justify-between items-center border-b pb-4 border-slate-100">
-                    <h3 className="text-sm font-bold text-slate-900 flex items-center">
-                      <Tag className="h-4.5 w-4.5 mr-2 text-emerald-500" />
+                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 sm:space-y-6">
+                  <div className="flex justify-between items-center border-b pb-3 sm:pb-4 border-slate-100">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center">
+                      <Tag className="h-4 w-4 sm:h-4.5 sm:w-4.5 mr-2 text-emerald-500" />
                       Visual Budget Analytics
                     </h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-center">
                     {/* Doughnut Chart SVG */}
-                    <div className="md:col-span-4 text-center border-r border-slate-50 md:pr-4">
+                    <div className="md:col-span-4 text-center border-b md:border-b-0 md:border-r border-slate-100 pb-3 md:pb-0 md:pr-4">
                       <div className="relative inline-block">
-                        <svg width="120" height="120" viewBox="0 0 36 36" className="transform -rotate-90">
+                        <svg width="110" height="110" viewBox="0 0 36 36" className="transform -rotate-90 sm:w-[120px] sm:h-[120px]">
                           <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
                           {slices.map((slice, i) => slice.pct > 0 && (
                             <circle
@@ -639,8 +713,8 @@ export default function BudgetPage() {
                           ))}
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Spent</span>
-                          <span className="text-sm font-black text-slate-800 mt-0.5">
+                          <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase leading-none">Spent</span>
+                          <span className="text-xs sm:text-sm font-black text-slate-800 mt-0.5">
                             {tripCurrency.symbol}{Math.round(totalSpentVal).toLocaleString()}
                           </span>
                         </div>
@@ -648,7 +722,7 @@ export default function BudgetPage() {
                     </div>
 
                     {/* Comparative Planned vs Actual Bar Chart */}
-                    <div className="md:col-span-8 space-y-3.5">
+                    <div className="md:col-span-8 space-y-2.5 sm:space-y-3.5">
                       {budgetData.categoryBreakdown.map((cat, idx) => {
                         const planned = parseFloat(cat.planned || 0);
                         const actual = parseFloat(cat.actual || 0);
@@ -664,7 +738,7 @@ export default function BudgetPage() {
 
                         return (
                           <div key={idx} className="space-y-1 text-xs">
-                            <div className="flex justify-between font-bold text-slate-700">
+                            <div className="flex justify-between font-bold text-slate-700 text-[11px] sm:text-xs">
                               <span>{getCategoryTranslation(cat.category)}</span>
                               <span>
                                 {tripCurrency.symbol}{Math.round(actual)} <span className="text-slate-400 font-medium">/ {tripCurrency.symbol}{Math.round(planned)}</span>
@@ -687,26 +761,26 @@ export default function BudgetPage() {
                   </div>
 
                   {/* Standard category list grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-5 border-slate-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 border-t pt-4 sm:pt-5 border-slate-100">
                     {budgetData.categoryBreakdown.map((cat, idx) => (
-                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex justify-between items-center">
-                        <div className="flex-1">
-                          <span className="text-xs font-bold text-slate-800">{getCategoryTranslation(cat.category)}</span>
-                          <div className="flex items-center space-x-2 mt-1.5">
-                            <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex justify-between items-center">
+                        <div className="flex-1 min-w-0 pr-2">
+                          <span className="text-[11px] sm:text-xs font-bold text-slate-800 truncate block">{getCategoryTranslation(cat.category)}</span>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <div className="flex-1 h-1.5 sm:h-2 bg-slate-200 rounded-full overflow-hidden">
                               <div
                                 className={`h-full rounded-full ${cat.actual > cat.planned ? 'bg-rose-450' : 'bg-emerald-405'}`}
                                 style={{ width: `${cat.planned > 0 ? Math.min((cat.actual / cat.planned) * 100, 100) : cat.actual > 0 ? 100 : 0}%` }}
                               />
                             </div>
-                            <span className="text-[9px] font-semibold text-slate-400 w-12 text-right">
+                            <span className="text-[8.5px] sm:text-[9px] font-semibold text-slate-400 shrink-0">
                               {cat.count} {cat.count === 1 ? t('item') : t('items')}
                             </span>
                           </div>
                         </div>
-                        <div className="text-right ml-4">
-                          <p className="text-xs font-bold text-slate-900">{tripCurrency.symbol}{Number(cat.actual).toLocaleString(tripCurrency.locale)}</p>
-                          <p className="text-[9px] text-slate-400">{t('of')} {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</p>
+                        <div className="text-right shrink-0">
+                          <p className="text-[11px] sm:text-xs font-bold text-slate-900">{tripCurrency.symbol}{Number(cat.actual).toLocaleString(tripCurrency.locale)}</p>
+                          <p className="text-[8.5px] sm:text-[9px] text-slate-400">{t('of')} {tripCurrency.symbol}{Number(cat.planned).toLocaleString(tripCurrency.locale)}</p>
                         </div>
                       </div>
                     ))}
@@ -714,39 +788,204 @@ export default function BudgetPage() {
                 </div>
               )}
 
+              {/* Form panel / Log Expense (Mobile only: positioned above AI Smart Insights) */}
+              {!budgetData.isPrePlanned ? (
+                <div className="lg:hidden bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-3 sm:space-y-4">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center">
+                    <Plus className="h-4 w-4 mr-2 text-emerald-500" />
+                    {t('add_new_expense')}
+                  </h3>
+
+                  {/* Receipt OCR Scanner */}
+                  <div className="border border-dashed border-slate-200 rounded-xl p-3 bg-slate-50/50 hover:bg-slate-50 transition text-center space-y-2 relative">
+                    {ocrLoading ? (
+                      <div className="flex flex-col items-center justify-center py-2 space-y-1">
+                        <div className="h-4.5 w-4.5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin" />
+                        <span className="text-[10px] text-slate-450 font-bold">Scanning receipt & calculating totals...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center justify-center space-y-1">
+                          <Coins className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-emerald-500 animate-pulse" />
+                          <span className="text-[10px] text-slate-500 font-bold">Log expense faster by scanning a receipt</span>
+                        </div>
+                        <input
+                          type="file"
+                          id="receipt-ocr-uploader"
+                          onChange={handleReceiptOcr}
+                          className="hidden"
+                          accept="image/*"
+                        />
+                        <label
+                          htmlFor="receipt-ocr-uploader"
+                          className="mx-auto px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9px] cursor-pointer transition active:scale-95 block w-max shadow-sm"
+                        >
+                          Scan Receipt File
+                        </label>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('category_label')}</label>
+                      <select
+                        value={expenseForm.category}
+                        onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      >
+                        <option value="Food">{t('category_food_dining')}</option>
+                        <option value="Accommodation">{t('category_accommodation')}</option>
+                        <option value="Transport">{t('category_transportation')}</option>
+                        <option value="Activities">{t('category_activities_tours')}</option>
+                        <option value="Shopping">{t('category_shopping')}</option>
+                        <option value="Other">{t('category_miscellaneous')}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('date_label')}</label>
+                      <input
+                        type="date"
+                        value={expenseForm.date}
+                        onChange={(e) => setExpenseForm({...expenseForm, date: e.target.value})}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('item_name_label')}</label>
+                      <input
+                        type="text"
+                        value={expenseForm.itemName}
+                        onChange={(e) => setExpenseForm({...expenseForm, itemName: e.target.value})}
+                        placeholder={t('item_placeholder')}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('planned_cost')}</label>
+                        <input
+                          type="number"
+                          value={expenseForm.plannedAmount}
+                          onChange={(e) => setExpenseForm({...expenseForm, plannedAmount: e.target.value})}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('actual_spent')}</label>
+                        <input
+                          type="number"
+                          value={expenseForm.actualAmount}
+                          onChange={(e) => setExpenseForm({...expenseForm, actualAmount: e.target.value})}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('notes_label')}</label>
+                      <input
+                        type="text"
+                        value={expenseForm.notes}
+                        onChange={(e) => setExpenseForm({...expenseForm, notes: e.target.value})}
+                        placeholder={t('notes_placeholder')}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Paid By</label>
+                      <select
+                        value={expenseForm.paidBy || 'Me'}
+                        onChange={(e) => setExpenseForm({...expenseForm, paidBy: e.target.value})}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-750 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
+                      >
+                        <option value="Me">{getTravelerDisplayName('Me', 'Me (Current User)')}</option>
+                        {Array.from({ length: Math.max(0, trip.travelers - 1) }).map((_, i) => {
+                          const key = `Co-Traveler ${String.fromCharCode(65 + i)}`;
+                          return (
+                            <option key={i} value={key}>
+                              {getTravelerDisplayName(key)}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+
+                    <div className="pt-1.5 sm:pt-2">
+                      <button
+                        onClick={handleAddExpense}
+                        className="w-full py-2.5 sm:py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
+                      >
+                        {t('save_expense')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="lg:hidden bg-white border border-slate-105 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm text-center">
+                  <DollarSign className="h-8 w-8 sm:h-10 sm:w-10 text-emerald-500 mx-auto mb-2 sm:mb-3" />
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 mb-1.5 sm:mb-2 font-sans">Save Trip to Log Spending</h4>
+                  <p className="text-[11px] sm:text-xs text-slate-505 leading-relaxed mb-3 sm:mb-4 font-sans">
+                    To add dynamic expenses, log actual amounts, and manage your travel budget, you'll need to save this pre-planned trip itinerary to your personal account.
+                  </p>
+                  <button
+                    onClick={handleSavePrePlanned}
+                    disabled={isSavingTrip}
+                    className="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center space-x-2 font-sans"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>{isSavingTrip ? 'Saving trip...' : 'Save & Enable Budgeting'}</span>
+                  </button>
+                </div>
+              )}
+
               {/* AI Smart Assistant Card */}
               {!budgetData.isPrePlanned && (
-                <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute -top-16 -right-16 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl group-hover:scale-125 transition duration-500" />
-                  <h3 className="text-sm font-extrabold flex items-center gap-2 mb-3">
-                    <span className="text-rose-500">🤖</span> Xplorism AI Smart Insights
-                  </h3>
+                <div className="bg-gradient-to-br from-rose-50/70 via-white to-orange-50/50 border border-rose-100/90 text-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm relative overflow-hidden group">
+                  <div className="absolute -top-16 -right-16 w-32 h-32 bg-rose-200/40 rounded-full blur-2xl group-hover:scale-125 transition duration-500" />
+                  <div className="flex items-center justify-between mb-3 relative z-10">
+                    <h3 className="text-xs sm:text-sm font-extrabold flex items-center gap-2 text-slate-900">
+                      <span className="p-1 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                        <Sparkles className="h-3.5 w-3.5" />
+                      </span>
+                      Xplorism AI Smart Insights
+                    </h3>
+                    <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                      Smart Assistant
+                    </span>
+                  </div>
                   {aiInsightsLoading ? (
-                    <div className="flex items-center space-x-2 text-xs py-4 text-slate-400 font-bold">
-                      <div className="h-4.5 w-4.5 border-2 border-slate-700 border-t-rose-500 rounded-full animate-spin" />
-                      <span>Consulting Gemini for destination cost-saving recommendations...</span>
+                    <div className="flex items-center space-x-2 text-xs py-4 text-slate-500 font-bold relative z-10">
+                      <div className="h-4.5 w-4.5 border-2 border-slate-200 border-t-rose-500 rounded-full animate-spin" />
+                      <span>Consulting Xplorism AI for destination cost-saving recommendations...</span>
                     </div>
                   ) : aiInsights.length > 0 ? (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2.5 relative z-10">
                       {aiInsights.map((insight, idx) => (
-                        <div key={idx} className="flex items-start space-x-2 text-xs bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/80">
+                        <div key={idx} className="flex items-start space-x-2 text-xs bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-rose-100 shadow-2xs">
                           <span className="text-rose-500 font-bold shrink-0 mt-0.5">•</span>
-                          <p className="font-semibold text-slate-350 leading-relaxed">{insight}</p>
+                          <p className="font-semibold text-slate-700 leading-relaxed text-[11px] sm:text-xs">{insight}</p>
                         </div>
                       ))}
                       <button
                         onClick={handleFetchInsights}
-                        className="text-[10px] font-black text-rose-400 uppercase tracking-wider hover:text-rose-300 mt-2 block cursor-pointer transition"
+                        className="text-[10px] font-black text-rose-600 hover:text-rose-700 uppercase tracking-wider mt-2 inline-block cursor-pointer transition underline underline-offset-4"
                       >
                         Recalculate Tips
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <p className="text-xs text-slate-400 font-medium max-w-md">Let Gemini analyze your current category expenses and recommend hyper-localized savings for this trip.</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 relative z-10">
+                      <p className="text-[11px] sm:text-xs text-slate-600 font-medium max-w-md">Let Xplorism AI analyze your current category expenses and recommend hyper-localized savings for this trip.</p>
                       <button
                         onClick={handleFetchInsights}
-                        className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 font-black text-xs text-white transition active:scale-95 cursor-pointer shadow-md"
+                        className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 font-bold text-xs text-white transition active:scale-95 cursor-pointer shadow-sm text-center"
                       >
                         Get AI Coach Tips
                       </button>
@@ -757,44 +996,306 @@ export default function BudgetPage() {
 
               {/* Daily breakdown */}
               {budgetData.dailyBreakdown && budgetData.dailyBreakdown.length > 0 && (
-                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                  <h3 className="text-sm font-bold text-slate-900 mb-6 flex items-center">
+                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 mb-3 sm:mb-6 flex items-center">
                     <Clock className="h-4 w-4 mr-2 text-emerald-500" />
                     {t('budget_tracker')}
                   </h3>
-                  <div className="space-y-4">
-                    {budgetData.dailyBreakdown.map((day, idx) => (
-                      <div key={idx} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/50">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-bold text-slate-800">{t('day')} {day.day || 'N/A'}</span>
-                          <span className="text-xs font-bold text-slate-700">
-                            {t('budget_spent')}: {tripCurrency.symbol}{Number(day.actual).toLocaleString(tripCurrency.locale)} / {t('budget_limit')}: {tripCurrency.symbol}{Number(day.planned).toLocaleString(tripCurrency.locale)}
-                          </span>
-                        </div>
-                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-3">
-                          <div className={`h-full rounded-full ${day.actual > day.planned ? 'bg-rose-400' : 'bg-emerald-400'}`}
-                            style={{ width: `${day.planned > 0 ? Math.min((day.actual / day.planned) * 100, 100) : day.actual > 0 ? 100 : 0}%` }} />
-                        </div>
-                        <div className="pl-4 border-l-2 border-slate-200 space-y-1.5 mt-2">
-                          {day.items.map((it, iIdx) => (
-                            <div key={iIdx} className="flex justify-between items-center text-[10px] text-slate-500">
-                              <span>{it.name} <span className="text-slate-400">({it.type === 'itinerary' ? t('budget_planned') : t('budget_spent')})</span></span>
-                              <span className="font-semibold">{tripCurrency.symbol}{Number(it.actual || it.planned || 0).toLocaleString(tripCurrency.locale)}</span>
+                  <div className="space-y-3 sm:space-y-4">
+                    {budgetData.dailyBreakdown.map((day, idx) => {
+                      const isExpanded = !!expandedDays[idx];
+                      const toggleDay = () => {
+                        setExpandedDays(prev => ({ ...prev, [idx]: !prev[idx] }));
+                      };
+
+                      return (
+                        <div key={idx} className="border border-slate-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 bg-slate-50/50 transition-all">
+                          <div
+                            onClick={toggleDay}
+                            className="flex justify-between items-center cursor-pointer select-none group/day"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs sm:text-sm font-bold text-slate-800 group-hover/day:text-emerald-600 transition">
+                                {t('day')} {day.day || 'N/A'}
+                              </span>
+                              <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-600 font-semibold">
+                                {day.items?.length || 0} {day.items?.length === 1 ? 'item' : 'items'}
+                              </span>
                             </div>
-                          ))}
+
+                            <div className="flex items-center space-x-2 sm:space-x-3">
+                              <span className="text-[11px] sm:text-xs font-bold text-slate-700">
+                                {t('budget_spent')}: {tripCurrency.symbol}{Number(day.actual).toLocaleString(tripCurrency.locale)} / <span className="text-slate-500">{t('budget_limit')}: {tripCurrency.symbol}{Number(day.planned).toLocaleString(tripCurrency.locale)}</span>
+                              </span>
+                              <button
+                                type="button"
+                                className="p-1 rounded-lg hover:bg-slate-200/70 text-slate-500 hover:text-slate-800 transition"
+                                title={isExpanded ? "Collapse" : "Expand"}
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="w-full h-1.5 sm:h-2 bg-slate-100 rounded-full overflow-hidden my-2.5">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${day.actual > day.planned ? 'bg-rose-400' : 'bg-emerald-400'}`}
+                              style={{ width: `${day.planned > 0 ? Math.min((day.actual / day.planned) * 100, 100) : day.actual > 0 ? 100 : 0}%` }}
+                            />
+                          </div>
+
+                          {isExpanded && (
+                            <div className="pl-3 sm:pl-4 border-l-2 border-slate-200 space-y-2.5 mt-2 pt-1 animate-fadeIn">
+                              {day.items.map((it, iIdx) => (
+                                <div key={iIdx} className="flex items-start justify-between gap-3 text-[11px] sm:text-xs text-slate-600 hover:text-slate-900 transition py-0.5">
+                                  <p className="leading-relaxed flex-1">
+                                    <span>{it.name}</span>
+                                    <span className="text-slate-400 text-[10px] ml-1.5 font-medium">({it.type === 'itinerary' ? t('budget_planned') : t('budget_spent')})</span>
+                                  </p>
+                                  <span className="font-bold text-slate-800 shrink-0 whitespace-nowrap pt-0.5">
+                                    {tripCurrency.symbol}{Number(it.actual || it.planned || 0).toLocaleString(tripCurrency.locale)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
+            </div>
 
-              {/* Co-Traveler Split Ledger */}
+            {/* Right side: Expense History & Currency Converter */}
+            <div className="lg:col-span-4 space-y-5 sm:space-y-8">
+
+              {/* Expense history */}
+              <div
+                style={leftOverviewHeight ? { height: `${leftOverviewHeight}px` } : undefined}
+                className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm lg:h-[224px] flex flex-col justify-between"
+              >
+                <div className="flex-1 flex flex-col min-h-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 mb-2 sm:mb-3 flex items-center shrink-0">
+                    <Clock className="h-4 w-4 mr-2 text-emerald-500" />
+                    {t('expense_history')} ({budgetData.expenses?.length || 0})
+                  </h3>
+                  {(!budgetData.expenses || budgetData.expenses.length === 0) ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-4 text-center text-slate-400">
+                      <Clock className="h-5 w-5 text-slate-300 mb-1 opacity-60" />
+                      <p className="text-[11px] font-medium">{t('no_expenses_logged')}</p>
+                    </div>
+                  ) : (
+                    <div className="flex-1 divide-y divide-slate-100 overflow-y-auto pr-1">
+                      {budgetData.expenses.map((exp, idx) => (
+                        <div key={exp.id || idx} className="flex items-start justify-between py-2 group/exp">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-1.5 mb-0.5">
+                              <span className="text-xs font-bold text-slate-800 truncate">{exp.item_name || 'Expense'}</span>
+                              <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold uppercase shrink-0">{getCategoryTranslation(exp.category)}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 truncate">
+                              {exp.date ? new Date(exp.date).toLocaleDateString() : ''}
+                              {exp.notes ? ` • ${exp.notes}` : ''}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2 shrink-0 ml-3 sm:ml-4">
+                            <span className="text-xs font-extrabold text-rose-600">
+                              {tripCurrency.symbol}{Number(exp.actual_amount || 0).toLocaleString(tripCurrency.locale)}
+                            </span>
+                            {!budgetData.isPrePlanned && (
+                              <>
+                                <button
+                                  onClick={() => startEditExpense(exp)}
+                                  className="opacity-100 md:opacity-0 group-hover/exp:opacity-100 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                                  title="Edit Expense"
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteExpense(exp.id)}
+                                  className="opacity-100 md:opacity-0 group-hover/exp:opacity-100 p-1 rounded hover:bg-red-50 text-slate-455 hover:text-red-500 transition cursor-pointer"
+                                  title="Delete Expense"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Form panel / Log Expense (Desktop only: positioned on the right side) */}
+              {!budgetData.isPrePlanned ? (
+                <div className="hidden lg:block bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-3 sm:space-y-4">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center">
+                    <Plus className="h-4 w-4 mr-2 text-emerald-500" />
+                    {t('add_new_expense')}
+                  </h3>
+
+                  {/* Receipt OCR Scanner */}
+                  <div className="border border-dashed border-slate-200 rounded-xl p-3 bg-slate-50/50 hover:bg-slate-50 transition text-center space-y-2 relative">
+                    {ocrLoading ? (
+                      <div className="flex flex-col items-center justify-center py-2 space-y-1">
+                        <div className="h-4.5 w-4.5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin" />
+                        <span className="text-[10px] text-slate-450 font-bold">Scanning receipt & calculating totals...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center justify-center space-y-1">
+                          <Coins className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-emerald-500 animate-pulse" />
+                          <span className="text-[10px] text-slate-500 font-bold">Log expense faster by scanning a receipt</span>
+                        </div>
+                        <input
+                          type="file"
+                          id="receipt-ocr-uploader-desktop"
+                          onChange={handleReceiptOcr}
+                          className="hidden"
+                          accept="image/*"
+                        />
+                        <label
+                          htmlFor="receipt-ocr-uploader-desktop"
+                          className="mx-auto px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9px] cursor-pointer transition active:scale-95 block w-max shadow-sm"
+                        >
+                          Scan Receipt File
+                        </label>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('category_label')}</label>
+                      <select
+                        value={expenseForm.category}
+                        onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      >
+                        <option value="Food">{t('category_food_dining')}</option>
+                        <option value="Accommodation">{t('category_accommodation')}</option>
+                        <option value="Transport">{t('category_transportation')}</option>
+                        <option value="Activities">{t('category_activities_tours')}</option>
+                        <option value="Shopping">{t('category_shopping')}</option>
+                        <option value="Other">{t('category_miscellaneous')}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('date_label')}</label>
+                      <input
+                        type="date"
+                        value={expenseForm.date}
+                        onChange={(e) => setExpenseForm({...expenseForm, date: e.target.value})}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('item_name_label')}</label>
+                      <input
+                        type="text"
+                        value={expenseForm.itemName}
+                        onChange={(e) => setExpenseForm({...expenseForm, itemName: e.target.value})}
+                        placeholder={t('item_placeholder')}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('planned_cost')}</label>
+                        <input
+                          type="number"
+                          value={expenseForm.plannedAmount}
+                          onChange={(e) => setExpenseForm({...expenseForm, plannedAmount: e.target.value})}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('actual_spent')}</label>
+                        <input
+                          type="number"
+                          value={expenseForm.actualAmount}
+                          onChange={(e) => setExpenseForm({...expenseForm, actualAmount: e.target.value})}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{t('notes_label')}</label>
+                      <input
+                        type="text"
+                        value={expenseForm.notes}
+                        onChange={(e) => setExpenseForm({...expenseForm, notes: e.target.value})}
+                        placeholder={t('notes_placeholder')}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Paid By</label>
+                      <select
+                        value={expenseForm.paidBy || 'Me'}
+                        onChange={(e) => setExpenseForm({...expenseForm, paidBy: e.target.value})}
+                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
+                      >
+                        <option value="Me">{getTravelerDisplayName('Me', 'Me (Current User)')}</option>
+                        {Array.from({ length: Math.max(0, trip.travelers - 1) }).map((_, i) => {
+                          const key = `Co-Traveler ${String.fromCharCode(65 + i)}`;
+                          return (
+                            <option key={i} value={key}>
+                              {getTravelerDisplayName(key)}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+
+                    <div className="pt-1.5 sm:pt-2">
+                      <button
+                        onClick={handleAddExpense}
+                        className="w-full py-2.5 sm:py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
+                      >
+                        {t('save_expense')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="hidden lg:block bg-white border border-slate-105 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm text-center">
+                  <DollarSign className="h-8 w-8 sm:h-10 sm:w-10 text-emerald-500 mx-auto mb-2 sm:mb-3" />
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 mb-1.5 sm:mb-2 font-sans">Save Trip to Log Spending</h4>
+                  <p className="text-[11px] sm:text-xs text-slate-505 leading-relaxed mb-3 sm:mb-4 font-sans">
+                    To add dynamic expenses, log actual amounts, and manage your travel budget, you'll need to save this pre-planned trip itinerary to your personal account.
+                  </p>
+                  <button
+                    onClick={handleSavePrePlanned}
+                    disabled={isSavingTrip}
+                    className="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center space-x-2 font-sans"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>{isSavingTrip ? 'Saving trip...' : 'Save & Enable Budgeting'}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Co-Traveler Split Ledger (Right side above Live Currency Converter) */}
               {!budgetData.isPrePlanned && (
-                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
-                  <h3 className="text-sm font-bold text-slate-900 flex items-center">
-                    <Users className="h-4.5 w-4.5 mr-2 text-emerald-500" />
-                    👥 Co-Traveler Split Share Ledger
+                <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-sm space-y-2.5">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center">
+                    <Users className="h-4 w-4 mr-2 text-emerald-500" />
+                    Split Share Ledger
                   </h3>
                   
                   {(() => {
@@ -818,18 +1319,19 @@ export default function BudgetPage() {
                     });
                     
                     return (
-                      <div className="space-y-4 text-xs">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-2">
+                      <div className="space-y-2 text-xs">
+                        <div className="grid grid-cols-1 gap-1.5 pt-0.5">
                           {Object.entries(payments).map(([person, paid]) => {
                             const balance = paid - targetShare;
                             const isCreditor = balance >= 0;
+                            const displayName = getTravelerDisplayName(person);
                             return (
-                              <div key={person} className="p-3.5 rounded-2xl border bg-slate-50/65 flex flex-col justify-between">
-                                <div>
-                                  <p className="text-[10px] text-slate-400 font-bold uppercase">{person === 'Me' ? 'Me (You)' : person}</p>
-                                  <p className="text-sm font-black text-slate-800 mt-1">{tripCurrency.symbol}{paid.toLocaleString()}</p>
+                              <div key={person} className="px-3 py-1.5 rounded-lg border border-slate-100 bg-slate-50/70 flex items-center justify-between">
+                                <div className="flex items-center space-x-2 truncate pr-2">
+                                  <p className="text-[10px] text-slate-500 font-bold uppercase truncate">{displayName}:</p>
+                                  <p className="text-xs font-black text-slate-800 shrink-0">{tripCurrency.symbol}{paid.toLocaleString()}</p>
                                 </div>
-                                <span className={`text-[9px] font-black uppercase mt-2.5 px-2.5 py-0.5 rounded-full w-max ${
+                                <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${
                                   isCreditor ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
                                 }`}>
                                   {isCreditor ? `Owed: +${tripCurrency.symbol}${balance.toFixed(2)}` : `Owes: -${tripCurrency.symbol}${Math.abs(balance).toFixed(2)}`}
@@ -839,22 +1341,22 @@ export default function BudgetPage() {
                           })}
                         </div>
                         
-                        <div className="p-3.5 rounded-2xl bg-slate-900 text-white text-[11px] font-semibold space-y-1.5">
-                          <p className="text-[10px] text-rose-400 font-black uppercase tracking-wider">Settlement Plan</p>
+                        <div className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-[10px] font-semibold space-y-1">
+                          <p className="text-[9px] text-rose-600 font-extrabold uppercase tracking-wider">Settlement Plan</p>
                           {Object.entries(payments)
                             .filter(([_, paid]) => paid < targetShare)
                             .map(([debtor, paid]) => {
                               const debt = targetShare - paid;
                               const creditor = Object.entries(payments).find(([_, pPaid]) => pPaid > targetShare)?.[0] || 'Me';
                               return (
-                                <p key={debtor} className="flex justify-between items-center text-slate-300">
-                                  <span>{debtor === 'Me' ? 'You' : debtor} should pay {creditor === 'Me' ? 'You' : creditor}:</span>
-                                  <span className="font-bold text-emerald-400">{tripCurrency.symbol}{debt.toFixed(2)}</span>
+                                <p key={debtor} className="flex justify-between items-center text-slate-600">
+                                  <span className="truncate pr-2">{getTravelerDisplayName(debtor)} → {getTravelerDisplayName(creditor)}:</span>
+                                  <span className="font-bold text-emerald-600 shrink-0">{tripCurrency.symbol}{debt.toFixed(2)}</span>
                                 </p>
                               );
                             })}
                           {Object.values(payments).every(p => Math.abs(p - targetShare) < 1) && (
-                            <p className="text-emerald-400 font-bold">All traveler shares are perfectly balanced!</p>
+                            <p className="text-emerald-600 font-bold">All traveler shares are perfectly balanced!</p>
                           )}
                         </div>
                       </div>
@@ -862,242 +1364,34 @@ export default function BudgetPage() {
                   })()}
                 </div>
               )}
-            </div>
-
-            {/* Right side: Add expense form & Expense History */}
-            <div className="lg:col-span-4 space-y-8">
-              {/* Form panel */}
-              {!budgetData.isPrePlanned ? (
-                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
-                  <h3 className="text-sm font-bold text-slate-900 flex items-center">
-                    <Plus className="h-4 w-4 mr-2 text-emerald-500" />
-                    {t('add_new_expense')}
-                  </h3>
-
-                  {/* Receipt OCR Scanner */}
-                  <div className="border border-dashed border-slate-200 rounded-xl p-3 bg-slate-50/50 hover:bg-slate-50 transition text-center space-y-2 relative">
-                    {ocrLoading ? (
-                      <div className="flex flex-col items-center justify-center py-2 space-y-1">
-                        <div className="h-4.5 w-4.5 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin" />
-                        <span className="text-[10px] text-slate-450 font-bold">Scanning receipt & calculating totals...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex flex-col items-center justify-center space-y-1">
-                          <Coins className="h-5 w-5 text-emerald-500 animate-pulse" />
-                          <span className="text-[10px] text-slate-500 font-bold">Log expense faster by scanning a receipt</span>
-                        </div>
-                        <input
-                          type="file"
-                          id="receipt-ocr-uploader"
-                          onChange={handleReceiptOcr}
-                          className="hidden"
-                          accept="image/*"
-                        />
-                        <label
-                          htmlFor="receipt-ocr-uploader"
-                          className="mx-auto px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9px] cursor-pointer transition active:scale-95 block w-max shadow-sm"
-                        >
-                          Scan Receipt File
-                        </label>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('category_label')}</label>
-                      <select
-                        value={expenseForm.category}
-                        onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
-                      >
-                        <option value="Food">{t('category_food_dining')}</option>
-                        <option value="Accommodation">{t('category_accommodation')}</option>
-                        <option value="Transport">{t('category_transportation')}</option>
-                        <option value="Activities">{t('category_activities_tours')}</option>
-                        <option value="Shopping">{t('category_shopping')}</option>
-                        <option value="Other">{t('category_miscellaneous')}</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('date_label')}</label>
-                      <input
-                        type="date"
-                        value={expenseForm.date}
-                        onChange={(e) => setExpenseForm({...expenseForm, date: e.target.value})}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('item_name_label')}</label>
-                      <input
-                        type="text"
-                        value={expenseForm.itemName}
-                        onChange={(e) => setExpenseForm({...expenseForm, itemName: e.target.value})}
-                        placeholder={t('item_placeholder')}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('planned_cost')}</label>
-                        <input
-                          type="number"
-                          value={expenseForm.plannedAmount}
-                          onChange={(e) => setExpenseForm({...expenseForm, plannedAmount: e.target.value})}
-                          placeholder="0.00"
-                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('actual_spent')}</label>
-                        <input
-                          type="number"
-                          value={expenseForm.actualAmount}
-                          onChange={(e) => setExpenseForm({...expenseForm, actualAmount: e.target.value})}
-                          placeholder="0.00"
-                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">{t('notes_label')}</label>
-                      <input
-                        type="text"
-                        value={expenseForm.notes}
-                        onChange={(e) => setExpenseForm({...expenseForm, notes: e.target.value})}
-                        placeholder={t('notes_placeholder')}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Paid By</label>
-                      <select
-                        value={expenseForm.paidBy || 'Me'}
-                        onChange={(e) => setExpenseForm({...expenseForm, paidBy: e.target.value})}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-750 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
-                      >
-                        <option value="Me">Me (Current User)</option>
-                        {Array.from({ length: Math.max(0, trip.travelers - 1) }).map((_, i) => (
-                          <option key={i} value={`Co-Traveler ${String.fromCharCode(65 + i)}`}>
-                            Co-Traveler {String.fromCharCode(65 + i)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="pt-2">
-                      <button
-                        onClick={handleAddExpense}
-                        className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
-                      >
-                        {t('save_expense')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white border border-slate-105 rounded-3xl p-6 shadow-sm text-center">
-                  <DollarSign className="h-10 w-10 text-emerald-500 mx-auto mb-3" />
-                  <h4 className="text-sm font-bold text-slate-900 mb-2 font-sans">Save Trip to Log Spending</h4>
-                  <p className="text-xs text-slate-505 leading-relaxed mb-4 font-sans">
-                    To add dynamic expenses, log actual amounts, and manage your travel budget, you'll need to save this pre-planned trip itinerary to your personal account.
-                  </p>
-                  <button
-                    onClick={handleSavePrePlanned}
-                    disabled={isSavingTrip}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center justify-center space-x-2 font-sans"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>{isSavingTrip ? 'Saving trip...' : 'Save & Enable Budgeting'}</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Expense history */}
-              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center">
-                  <Clock className="h-4 w-4 mr-2 text-emerald-500" />
-                  {t('expense_history')} ({budgetData.expenses?.length || 0})
-                </h3>
-                {(!budgetData.expenses || budgetData.expenses.length === 0) ? (
-                  <p className="text-xs text-slate-400 py-4 text-center">{t('no_expenses_logged')}</p>
-                ) : (
-                  <div className="divide-y divide-slate-100 max-h-[350px] overflow-y-auto pr-1">
-                    {budgetData.expenses.map((exp, idx) => (
-                      <div key={exp.id || idx} className="flex items-start justify-between py-3 group/exp">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-1.5 mb-1">
-                            <span className="text-xs font-bold text-slate-800 truncate">{exp.item_name || 'Expense'}</span>
-                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold uppercase shrink-0">{getCategoryTranslation(exp.category)}</span>
-                          </div>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            {exp.date ? new Date(exp.date).toLocaleDateString() : ''}
-                            {exp.notes ? ` • ${exp.notes}` : ''}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2 shrink-0 ml-4">
-                          <span className="text-xs font-extrabold text-rose-600">
-                            {tripCurrency.symbol}{Number(exp.actual_amount || 0).toLocaleString(tripCurrency.locale)}
-                          </span>
-                          {!budgetData.isPrePlanned && (
-                            <>
-                              <button
-                                onClick={() => startEditExpense(exp)}
-                                className="opacity-100 md:opacity-0 group-hover/exp:opacity-100 p-1.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                                title="Edit Expense"
-                              >
-                                <Edit className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteExpense(exp.id)}
-                                className="opacity-100 md:opacity-0 group-hover/exp:opacity-100 p-1.5 rounded hover:bg-red-50 text-slate-455 hover:text-red-500 transition cursor-pointer"
-                                title="Delete Expense"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               {/* Currency Converter Panel */}
-              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 className="text-sm font-bold text-slate-900 flex items-center">
-                  <Coins className="h-4.5 w-4.5 mr-2 text-emerald-500" />
+              <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-3 sm:space-y-3.5">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center">
+                  <Coins className="h-4 w-4 mr-2 text-emerald-500" />
                   Live Currency Converter
                 </h3>
 
-                <div className="space-y-3.5 font-semibold text-xs text-slate-600">
+                <div className="space-y-2.5 sm:space-y-3 font-semibold text-xs text-slate-600">
                   {/* Amount Input */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-450 uppercase mb-1.5 block">Amount</label>
+                    <label className="text-[10px] font-bold text-slate-450 uppercase mb-1 block">Amount</label>
                     <input
                       type="number"
                       value={convAmount}
                       onChange={(e) => setConvAmount(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
                     />
                   </div>
 
                   {/* Currencies Dropdowns with Swap Button */}
                   <div className="flex items-center space-x-2">
                     <div className="flex-1">
-                      <label className="text-[10px] font-bold text-slate-450 uppercase mb-1.5 block">From</label>
+                      <label className="text-[10px] font-bold text-slate-450 uppercase mb-1 block">From</label>
                       <select
                         value={fromCurr}
                         onChange={(e) => setFromCurr(e.target.value)}
-                        className="w-full px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
                       >
                         {['USD', 'EUR', 'GBP', 'INR', 'AED', 'CAD', 'AUD', 'JPY', 'SGD'].map(curr => (
                           <option key={curr} value={curr}>{curr}</option>
@@ -1108,18 +1402,18 @@ export default function BudgetPage() {
                     <button
                       type="button"
                       onClick={handleSwapCurrencies}
-                      className="mt-5 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-95 transition text-slate-500 hover:text-emerald-500 cursor-pointer shadow-sm flex items-center justify-center"
+                      className="mt-4 p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 active:scale-95 transition text-slate-500 hover:text-emerald-500 cursor-pointer shadow-sm flex items-center justify-center shrink-0"
                       title="Swap Currencies"
                     >
                       <ArrowLeftRight className="h-3.5 w-3.5" />
                     </button>
 
                     <div className="flex-1">
-                      <label className="text-[10px] font-bold text-slate-450 uppercase mb-1.5 block">To</label>
+                      <label className="text-[10px] font-bold text-slate-450 uppercase mb-1 block">To</label>
                       <select
                         value={toCurr}
                         onChange={(e) => setToCurr(e.target.value)}
-                        className="w-full px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
                       >
                         {['USD', 'EUR', 'GBP', 'INR', 'AED', 'CAD', 'AUD', 'JPY', 'SGD'].map(curr => (
                           <option key={curr} value={curr}>{curr}</option>
@@ -1129,16 +1423,16 @@ export default function BudgetPage() {
                   </div>
 
                   {/* Output Display */}
-                  <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-100/60 text-center space-y-1">
-                    <p className="text-[10px] font-bold text-slate-450 uppercase">Converted Value</p>
+                  <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-50/50 border border-emerald-100/60 text-center space-y-1">
+                    <p className="text-[9px] font-bold text-slate-450 uppercase">Converted Value</p>
                     {ratesLoading ? (
                       <div className="flex items-center justify-center space-x-1.5 py-1">
-                        <div className="h-3 w-3 border-2 border-emerald-250 border-t-emerald-500 rounded-full animate-spin" />
+                        <div className="h-3.5 w-3.5 border-2 border-emerald-250 border-t-emerald-500 rounded-full animate-spin" />
                         <span className="text-xs text-slate-400 font-semibold">Updating rates...</span>
                       </div>
                     ) : (
                       <>
-                        <p className="text-xl font-extrabold text-emerald-800">
+                        <p className="text-lg sm:text-xl font-extrabold text-emerald-800">
                           {toCurr} {convertedValue}
                         </p>
                         {rates[toCurr] && (
@@ -1242,6 +1536,25 @@ export default function BudgetPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Paid By</label>
+                  <select
+                    value={editingExpense.paidBy || editingExpense.paid_by || 'Me'}
+                    onChange={(e) => setEditingExpense({...editingExpense, paidBy: e.target.value, paid_by: e.target.value})}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition cursor-pointer"
+                  >
+                    <option value="Me">{getTravelerDisplayName('Me', 'Me (Current User)')}</option>
+                    {Array.from({ length: Math.max(0, (trip?.travelers || 1) - 1) }).map((_, i) => {
+                      const key = `Co-Traveler ${String.fromCharCode(65 + i)}`;
+                      return (
+                        <option key={i} value={key}>
+                          {getTravelerDisplayName(key)}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
                 <div className="pt-2 flex gap-3">
                   <button
                     type="button"
@@ -1252,11 +1565,79 @@ export default function BudgetPage() {
                   </button>
                   <button
                     onClick={() => handleUpdateExpense(editingExpense.id)}
-                    className="flex-[2] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
+                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
                   >
                     {t('save_expense')}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Travelers Name Customization Modal */}
+        {showTravelersModal && (
+          <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-xl p-5 sm:p-6 relative text-slate-800"
+            >
+              <div className="flex items-center space-x-3 text-emerald-600 mb-4">
+                <Users className="h-5 w-5" />
+                <h3 className="text-base font-extrabold">Edit Traveler Names</h3>
+              </div>
+              <p className="text-xs text-slate-500 mb-4 leading-relaxed font-medium">
+                Set custom names for yourself and your co-travelers to personalize expense splits and settlement reports.
+              </p>
+
+              <div className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Primary Traveler (You)</label>
+                  <input
+                    type="text"
+                    value={editingTravelerNames['Me'] || ''}
+                    onChange={(e) => setEditingTravelerNames({ ...editingTravelerNames, 'Me': e.target.value })}
+                    placeholder="Me (You)"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                  />
+                </div>
+
+                {Array.from({ length: Math.max(0, (trip?.travelers || 1) - 1) }).map((_, i) => {
+                  const key = `Co-Traveler ${String.fromCharCode(65 + i)}`;
+                  return (
+                    <div key={key}>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">
+                        Co-Traveler {String.fromCharCode(65 + i)}
+                      </label>
+                      <input
+                        type="text"
+                        value={editingTravelerNames[key] || ''}
+                        onChange={(e) => setEditingTravelerNames({ ...editingTravelerNames, [key]: e.target.value })}
+                        placeholder={`e.g. Alex, Sam, etc.`}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-emerald-400 focus:bg-white transition"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="pt-4 mt-2 flex gap-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowTravelersModal(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-650 hover:bg-slate-100 text-xs font-bold transition shadow-sm cursor-pointer"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveTravelerNames}
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
+                >
+                  Save Names
+                </button>
               </div>
             </motion.div>
           </div>
@@ -1267,7 +1648,7 @@ export default function BudgetPage() {
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed bottom-6 right-6 z-[100] flex items-center space-x-3 px-5 py-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${
+            className={`fixed bottom-24 right-6 z-[10000] flex items-center space-x-3 px-5 py-3.5 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 ${
               toast.type === 'success'
                 ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
                 : 'bg-rose-50/95 border-rose-200 text-rose-800'

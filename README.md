@@ -1,236 +1,276 @@
 <p align="center">
-  <img src="./xplorism-web/frontend/public/logo-removebg.png" alt="Xplorism Logo" width="140">
+  <img src="./xplorism-web/frontend/public/logo-removebg.png" alt="Xplorism Logo" width="130" />
 </p>
 
-<h1 align="center">Xplorism</h1>
+<h1 align="center">Xplorism — AI-Powered Travel Planning Platform</h1>
 
 <p align="center">
-  <strong>AI-Powered Premium Travel Planner &amp; Collaborative Trip Workspace</strong>
-</p>
-
-<p align="center">
-  <a href="#key-features">Features</a> •
-  <a href="#tech-stack">Tech Stack</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#api-reference">API</a> •
-  <a href="#deployment">Deployment</a>
+  <strong>Plan. Collaborate. Explore. — The all-in-one travel companion engineered for the modern explorer.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19">
-  <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white" alt="Vite 8">
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
-  <img src="https://img.shields.io/badge/Node.js-ES_Modules-339933?logo=node.js&logoColor=white" alt="Node.js">
-  <img src="https://img.shields.io/badge/PostgreSQL-UUID-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
-  <img src="https://img.shields.io/badge/Gemini_AI-Powered-8E75B2?logo=google&logoColor=white" alt="Gemini AI">
-  <img src="https://img.shields.io/badge/Socket.io-Real--time-010101?logo=socket.io&logoColor=white" alt="Socket.io">
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Gemini_AI-Primary-8B5CF6?style=for-the-badge&logo=google&logoColor=white" />
+  <img src="https://img.shields.io/badge/Socket.io-Real--Time-010101?style=for-the-badge&logo=socket.io" />
+  <img src="https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
 </p>
 
 ---
 
 ## Overview
 
-**Xplorism** is a full-stack, AI-powered travel planning platform that combines intelligent itinerary generation, real-time collaboration, interactive maps, budget management, and secure document storage into a single, premium experience. Instead of hopping between search engines, spreadsheets, and messaging apps, Xplorism provides a centralized hub where travelers can plan, track, and share every aspect of their journey.
+**Xplorism** is a next-generation, AI-powered travel planning web and desktop application. It eliminates the tedious back-and-forth between search engines, maps, and spreadsheets by providing one premium, intelligent hub for every stage of a journey — from initial destination discovery to final payment checkout.
 
-The platform leverages **Google Gemini AI** for itinerary generation, budget insights, and an intelligent travel chatbot — with automatic fallback to **Ollama** (local LLM) and **Groq Cloud** when the primary AI is unavailable. Real-time collaboration is powered by **WebSockets** and **RabbitMQ** message streaming, while sensitive documents are protected with **AES-256-GCM encryption**.
+Using a multi-model AI engine (Gemini + Groq + OpenRouter + Ollama), real-time geocoding, interactive Leaflet maps, live aviation radar, collaborative workspaces, encrypted document vaults, and global weather forecasts, Xplorism transforms travel planning into a seamless, delightful experience.
 
-### Supported Languages
-
-Xplorism ships with full internationalization (i18n) support across **7 languages**:
-
-| Language | Code |
-|----------|------|
-| 🇬🇧 English | `en` |
-| 🇪🇸 Spanish | `es` |
-| 🇫🇷 French | `fr` |
-| 🇩🇪 German | `de` |
-| 🇮🇳 Hindi | `hi` |
-| 🇸🇦 Arabic | `ar` |
-| 🇧🇷 Portuguese | `pt` |
+### The Mission
+To deliver a visually stunning and fully interactive travel companion that guides explorers from wanderlust to booking checkout. Every feature is designed to save time, reduce anxiety, and make every trip unforgettable.
 
 ---
 
-## Key Features
+## ✨ Feature Showcase
 
-### AI Itinerary Generation
+### 🤖 Multi-Model AI Itinerary Generator
+- **Multi-Model AI Pipeline**: Generates rich, structured travel itineraries using **Google Gemini 1.5 Flash** as the primary engine, with **Groq** and **OpenRouter** (Llama 3.3 70B, Gemini 2.0 Flash) as secondary engines, and a fully offline **Ollama** (Qwen 2.5 / Llama 3) fallback for maximum reliability.
+- **Smart Trip Wizard**: A multi-step, animated wizard (Framer Motion) gathers destination, travel dates or custom duration, budget, number of travelers, travel style (Adventure, Luxury, Budget, Cultural, Romantic, Relaxing), and interests (Food, Nature, Architecture, Nightlife, Art, History, Beaches, Shopping, Hiking).
+- **Currency-Aware Budgeting**: Auto-detects the destination country from geocoding results and applies the correct currency (INR, USD, EUR, GBP, JPY, AUD, SGD, and more) with contextual budget presets (backpacker vs. comfort).
+- **Structured Daily Schedules**: Each itinerary day is divided into **Morning**, **Afternoon**, and **Evening** blocks with rich activity descriptions, precise attraction names, and estimated costs. A strict no-repeat policy ensures completely unique attractions every day.
+- **Pre-Planned Recommended Trips**: A curated selection of popular destination itineraries ready to be saved with one click.
+- **Itinerary Geocoding**: Every saved itinerary activity is geocoded via a smart multi-strategy resolver (direct query → Open-Meteo fallback → Mandir↔Temple swap → phrase splitters) and pinned on an interactive Leaflet map.
 
-- **Multi-Model AI Engine** — Primary itinerary generation via **Gemini 1.5 Flash**, with automatic failover to local/remote **Ollama** (Llama 3, Qwen 2.5) and **Groq Cloud** (GPT-OSS, Compound).
-- **Smart Customization** — Tailors itineraries based on travelers count, budget, interests (Food, Nature, Architecture, Nightlife, Art, History, Beaches, Shopping, Hiking), and travel style (Adventure, Luxury, Budget, Cultural, Romantic, Relaxing).
-- **Structured Day Planner** — Each day is divided into Morning, Afternoon, and Evening blocks with detailed activity descriptions, precise locations, and itemized cost estimates in the destination's local currency.
-- **Auto-Currency Detection** — Automatically detects the destination country from geocoding and sets the correct local currency (INR, JPY, EUR, GBP, USD, AED, THB, SGD, AUD, CAD, CHF, and more).
+### 🗺️ Interactive Destination Map & Attractions
+- **Leaflet Maps with Custom Markers**: High-fidelity vector maps with animated marker overlays, smooth panning, and custom popups.
+- **Live Geocoding Proxy**: Nominatim (OpenStreetMap) is proxied through the backend with server-side caching and a 2-stage fallback to the **Open-Meteo Geocoding API** to handle rate limits.
+- **Dynamic City Autocomplete**: City suggestions appear in real-time as the user types, with address type tags (`city`, `district`, `country`).
+- **HTML5 Geolocation**: Auto-detects device coordinates, reverse-geocodes to city name, and instantly centers the map.
+- **OSM Attractions via Overpass API**: Fetches castles, temples, museums, parks, beaches, and historic monuments from OpenStreetMap via a backend proxy with round-robin failover across 4 public Overpass mirrors.
+- **Wikipedia Geosearch Fallback**: Automatically queries Wikipedia's Geosearch API if all Overpass mirrors are unavailable.
+- **Nearby Amenities Sidebar**: Clicking any tourist attraction shows cafes, restaurants, bars, and parks within a **1km radius** in a live detail sidebar.
+- **Favorites & Wishlist**: Save any attraction, hotel, or POI to a personal wishlist with one click.
 
-### Xplorism AI Chatbot
+### ✈️ Live Aviation Radar (Sky Tracker)
+- **Real-Time Flight Map**: Fetches up to 700 live aircraft positions from the **OpenSky Network ADS-B API** and renders them on an interactive Leaflet radar map with altitude-based color coding (Cruising, Transition, Approach).
+- **Intelligent Fallback Grid**: Falls back to a deterministically generated pool of **450 simulated flights** spread globally across 10 major airlines when OpenSky is unavailable or rate-limited.
+- **Enriched Flight Data**: Every aircraft state vector is enriched with airline name, aircraft type (Boeing 777-300ER, Airbus A350-900, etc.), and realistic departure/destination airport pairs resolved from heading vectors against a 12-airport database.
+- **Gemini-Powered Flight Search**: Search by callsign or country — if the flight isn't in the live feed, Gemini AI resolves real route details dynamically and places an interpolated position track on the map.
+- **Real-Time Auto-Refresh**: Automatically refreshes every 10 seconds with a visible countdown timer.
 
-- **RAG-Powered Conversations** — Retrieval-Augmented Generation using **pgvector** cosine similarity search over a curated travel knowledge base, combined with Gemini AI for contextually rich responses.
-- **Function Calling / Tool Use** — The chatbot can autonomously invoke tools to search destinations, fetch live weather, retrieve user preferences, and query saved trips — all within the conversation flow.
-- **Multi-Conversation History** — Full conversation persistence with per-user isolated chat threads, rename, and delete functionality.
-- **Scope-Restricted** — Strictly limited to travel-related inquiries; politely declines off-topic requests.
+### 🌦️ Global Weather Forecasts
+- **Open-Meteo Integration**: Real-time weather including temperature, feels-like, relative humidity, wind speed, and WMO weather code interpretation.
+- **7-Day Extended Outlook**: Daily high/low temperatures with sunrise/sunset times for any city worldwide.
+- **Dynamic Weather Themes**: Background panels, Lucide React icons, and badge styling automatically adapt to the current WMO weather code (clear, cloudy, rain, snow, thunderstorm, fog, drizzle).
+- **No API Key Required**: Entirely powered by the free, open-access Open-Meteo API.
 
-### Interactive Destination Maps
+### 🏨 AI Hotel Search & Bookings
+- **Dual Hotel Search Engines**: A fast `/hotels/search` endpoint powered by Gemini AI generating 20 real hotels with ratings, stars, amenities, and price estimates; plus a full `/travel/hotels` endpoint via Groq + OpenRouter for date-aware, guest-count hotel queries.
+- **Interactive Hotel Map**: Hotels plotted with custom Leaflet marker pins; clicking a marker highlights the matching hotel card and auto-scrolls to it.
+- **Real-Time Sidebar Filters**: Filter by star rating, maximum nightly price, and specific amenities (WiFi, Pool, Gym, Spa, Breakfast, AC) — all applied client-side in real-time.
+- **Razorpay Checkout**: Full simulated payment lifecycle with the official **Razorpay Checkout SDK**, returning a mock success screen with a transaction ID.
+- **Booking Persistence**: Confirmed bookings (hotel name, room type, dates, guest info, Razorpay payment ID, confirmation number) stored in the `bookings` PostgreSQL table.
+- **Amadeus API Integration (Optional)**: Geocode-based hotel lookup via the **Amadeus Hotel Search GDS** when `AMADEUS_CLIENT_ID` and `AMADEUS_CLIENT_SECRET` are set.
 
-- **Leaflet Integration** — High-fidelity vector maps with custom marker overlays, smooth panning, and responsive layouts.
-- **Dual Geocoding** — Primary geocoding via **OpenStreetMap Nominatim** with automatic fallback to **Open-Meteo Geocoding API**. Includes intelligent query resolution for composite location names (e.g., "Temple at City").
-- **Dynamic Autocomplete** — City suggestions with descriptive tags (city, district, country) rendered as the user types.
-- **HTML5 Geolocation** — Detects user coordinates, reverse-geocodes the city, and centers the map instantly.
+### 🚆 AI Flight & Transit Search
+- **Groq/OpenRouter/Gemini Flight Query**: Search one-way or round-trip flights by IATA airport code (e.g. DEL→BOM), departure date, and traveler count.
+- **Train & Bus Transit Search**: Ground transport search between any two cities by route, date, and travel mode.
+- **Airport & Station Autocomplete**: Powered by a local database of 3,000+ global airports and railway stations — instant suggestions with zero API rate limits.
 
-### Attractions & Amenities Discovery
+### 👥 Real-Time Collaborative Workspace
+- **WebSocket Sync via Socket.io**: Multi-user real-time editing of itineraries, budgets, packing lists, notes, documents, and polls — all changes broadcast instantly to every collaborator in the trip room.
+- **Presence Tracking**: Displays which users are online and which workspace tab (Itinerary, Budget, Packing, Notes, Docs, Polls) each collaborator is currently viewing.
+- **RabbitMQ Group Chat**: Topic-based trip chat powered by **RabbitMQ** (CloudAMQP), with a transparent in-memory `EventEmitter` fallback. Chat history is persisted in the `trip_messages` table.
+- **Collaborator Invites**: Invite co-travelers by email; they receive a branded HTML email with an accept/decline link.
+- **Trip Polls**: Democratic voting polls within the workspace — each collaborator can vote once; vote counts sync in real-time via Socket.io.
+- **Workspace Offline Notifications**: Events (joins, edits, poll results) are persisted in `workspace_notifications` and delivered to offline users on their next login.
+- **Shareable Public Link**: Every trip has a read-only public URL (`/shared-trip/:id`) requiring no login.
 
-- **Overpass API** — Queries castles, temples, museums, parks, beaches, and monuments from OpenStreetMap data.
-- **Multi-Mirror Failover** — Cycles through 5 public Overpass mirrors (main, French, LZ4, Kumi, Russian) with 12-second timeouts per endpoint.
-- **Wikipedia Geosearch Fallback** — When all Overpass mirrors are exhausted, Wikipedia's Geosearch API fills in points of interest.
-- **Nearby Amenities** — Click any attraction to discover cafés, restaurants, bars, and parks within a 1 km radius.
+### 🔐 Encrypted Document Vault
+- **AES-256-GCM with Key Wrapping**: Travel documents (Passports, Visas, Tickets, Hotel Vouchers, Insurance) are encrypted at rest. A unique file key encrypts each file; the file key itself is encrypted by a master key derived from `VAULT_MASTER_KEY`.
+- **Zero-Plaintext Storage**: Decryption happens entirely in memory at download time — plaintext never touches disk.
+- **Ownership Access Control**: Download endpoints verify document ownership or approved collaborator status.
+- **HEIC / HEIF Support**: Profile photos and uploaded HEIC images are auto-converted to JPEG via `heic-convert` + `sharp`.
 
-### Global Weather Forecasts
+### 💰 Expense Tracker & AI Budget Insights
+- **Planned vs. Actual Tracking**: Log expenses per trip, per day, per category (Accommodation, Food, Activities, Transportation, Shopping, Misc) with both planned and actual amounts.
+- **AI Financial Insights**: Gemini analyzes expense categories and spending patterns, returning personalized savings recommendations.
+- **OCR Receipt Scanning**: Upload a receipt photo; Gemini Vision extracts line items, categories, and totals automatically.
+- **Bill Splitting**: The `paid_by` field enables fair cost tracking across co-travelers.
+- **Budget Utilization Charts**: Visual progress bar and category breakdown for at-a-glance budget health.
 
-- **Open-Meteo Integration** — Real-time conditions and 5-day daily forecasts (highs/lows, sunrise/sunset, wind speed, humidity).
-- **Dynamic Theming** — Background themes, weather icons (Lucide-React), and badge styling automatically adapt to the destination's live WMO weather code.
+### 🌐 Community Social Feed
+- **Travel Posts & Stories**: Share trip narratives with up to 5 highlight photos (Base64, max 8MB each).
+- **Hashtag System**: Tag posts with custom keywords for discovery.
+- **Like / Unlike**: Toggle-like system with per-user idempotency tracking.
+- **Post Search**: Real-time search by hashtags, username, or destination.
+- **Edit & Delete**: Full CRUD for authors.
+- **Destination Passport Stamps**: Each trip planned earns a visual destination stamp shown on the user's profile.
 
-### Live Aviation Radar (Sky Radar)
+### 🌍 Multi-Language & Theming
+- **Full i18n**: `LanguageContext` provides complete UI translations for **English** and **Spanish**, covering all pages, toast notifications, error states, and dynamic labels (2,282-line translation file).
+- **Dark / Light Mode**: System-wide theme toggle via `ThemeContext`, persisted across sessions.
+- **Global Currency Preference**: `CurrencyContext` propagates a preferred currency through budget presets and expense forms.
 
-- **Flight Tracking** — Real-time flight position tracking with interactive Leaflet map overlays, route visualization, and airport markers.
-- **Search & Filter** — Search flights by callsign, airline, or route; toggle between split, map-only, and list views.
-- **Auto-Refresh** — Configurable live polling intervals with countdown timers for continuous position updates.
+### 👤 User Profile & Preferences
+- **Rich Profile Dashboard**: Travel stats (trips, itinerary entries, spend, destinations, days), passport stamp gallery, and gamified travel milestones/badges.
+- **OTP-Based Auth**: 6-digit OTP (10-minute TTL) sent via Nodemailer SMTP → Brevo API fallback → console log (dev).
+- **Google OAuth 2.0**: Sign-in with Google — no password required for SSO users.
+- **Password Reset**: Time-limited OTP via email for secure credential recovery.
+- **JWT Authorization**: Bearer tokens (30-day TTL) on all protected API routes.
 
+### 📱 Mobile & Desktop Apps
+- **Android (Capacitor v8)**: Native Android APK build via `npx cap sync android` + Android Studio.
+- **Desktop (Electron v43)**: Cross-platform desktop app with `electron-builder`. Windows NSIS installer via `npm run dist`.
 
-### Real-Time Collaborative Workspace
-
-- **Multi-User Sync** — Live collaborative editing of itineraries, budgets, packing lists, notes, documents, and polls via **Socket.io** WebSockets.
-- **Presence Tracking** — See which co-travelers are currently online and which workspace tab (Itinerary, Budget, Docs, etc.) they're viewing.
-- **RabbitMQ Group Chat** — Topic-based trip messaging through **RabbitMQ** with fanout exchanges (automatic fallback to an in-memory `EventEmitter` broker when RabbitMQ is unavailable).
-- **Trip Polls** — Create polls, vote on options, and see real-time results synced across all collaborators.
-- **Invite System** — Email-based trip invitations powered by **Nodemailer** (Gmail SMTP) with **Brevo API** fallback. Invitees receive styled HTML emails with one-click accept/decline links.
-- **Workspace Notifications** — Persistent offline notifications for changes made while you were away.
-
-### Secure Document Vault
-
-- **AES-256-GCM Encryption** — Documents (passports, visas, tickets, insurance) are encrypted in-memory using per-file random keys, which are themselves wrapped with a master key derived from `VAULT_MASTER_KEY`.
-- **Granular Access Control** — Decryption endpoints verify ownership or approved collaborator status before returning files.
-- **Document Categorization** — Organize by type (Passport, Visa, Ticket, Insurance, Other) with per-trip association.
-
-### Budget Tracker & AI Insights
-
-- **Planned vs. Actual** — Track expenses by category (Food & Dining, Accommodation, Transportation, Activities & Tours, Shopping, Miscellaneous) comparing planned budgets against actual spending.
-- **Live Currency Converter** — Real-time exchange rates via the **Open Exchange Rates API** with static fallback rates.
-- **Split Share Ledger** — Track who paid what across co-travelers for bill splitting.
-- **AI Financial Insights** — Gemini AI analyzes spending patterns and provides optimization recommendations.
-- **Daily Breakdown** — Expandable accordion-style day-by-day expense breakdowns.
-
-### User Profile & Preferences
-
-- **Profile Management** — Profile photo upload (with HEIC → JPEG conversion via Sharp), display name, and email management.
-- **Travel Preferences** — Configure preferred travel styles, interests, default currency, and language.
-- **Travel History** — JSONB-backed travel history tracking.
-- **Google SSO** — Sign in with Google OAuth alongside traditional email/password authentication.
-
-### Community Feed
-
-- **Social Posts** — Share trip stories with photos, destinations, and rich text content.
-- **Engagement** — Like posts, view trip highlights, and discover destinations from other travelers.
-
-### Shared Trips
-
-- **Public Trip Sharing** — Generate shareable links for trips viewable without authentication.
-- **Shared Trips Workspace** — View all collaborative trips you've been invited to in one place.
-- **Trip Invite Response** — Accept or decline invitations directly from email links.
-
----
-
-## Tech Stack
-
-### Frontend
-
-| Technology | Version | Purpose |
-|---|---|---|
-| [React](https://react.dev/) | 19 | UI framework |
-| [Vite](https://vitejs.dev/) | 8 | Build tool & dev server |
-| [Tailwind CSS](https://tailwindcss.com/) | 4 | Utility-first styling |
-| [Framer Motion](https://www.framer.com/motion/) | 12 | Animations & transitions |
-| [Lucide React](https://lucide.dev/) | 1.26 | Icon library |
-| [React Router DOM](https://reactrouter.com/) | 7 | Client-side routing |
-| [Leaflet](https://leafletjs.com/) | Dynamic | Interactive maps (CDN-loaded for React 19 compatibility) |
-| [Socket.io Client](https://socket.io/) | 4.8 | Real-time WebSocket communication |
-| [Capacitor](https://capacitorjs.com/) | 8.5 | Native mobile builds (Android) |
-
-### Backend
-
-| Technology | Version | Purpose |
-|---|---|---|
-| [Node.js](https://nodejs.org/) & [Express](https://expressjs.com/) | ES Modules | API server |
-| [PostgreSQL](https://www.postgresql.org/) | Native `pg` | Relational database |
-| [Socket.io Server](https://socket.io/) | 4.8 | Real-time WebSocket server |
-| [RabbitMQ](https://www.rabbitmq.com/) | `amqplib` | Message broker for group chat |
-| [@google/generative-ai](https://ai.google.dev/) | 0.24 | Gemini AI SDK |
-| [Nodemailer](https://nodemailer.com/) | 9.0 | SMTP email delivery |
-| [Sharp](https://sharp.pixelplumbing.com/) | 0.35 | Image processing (HEIC conversion) |
-| [Helmet](https://helmetjs.github.io/) | 8.3 | HTTP security headers |
-| [BcryptJS](https://github.com/dcodeIO/bcrypt.js) | — | Password hashing |
-| [JSON Web Tokens](https://jwt.io/) | — | Authentication |
-
-### Desktop
-
-| Technology | Purpose |
-|---|---|
-| [Electron](https://www.electronjs.org/) 43 | Desktop application wrapper |
-| [electron-builder](https://www.electron.build/) | Windows NSIS installer packaging |
+### 🔒 Security & Production Hardiness
+- **Helmet.js**: XSS protection, HSTS, Clickjacking prevention, MIME sniffing protection applied globally.
+- **Rate Limiting**: Global + auth-specific rate limits via `express-rate-limit`.
+- **SQL Injection Sanitizer**: Custom middleware scrubs all request bodies and query strings.
+- **Reverse Proxy Trust**: Correct client IP extraction behind Cloudflare/Nginx/Vercel.
+- **Fingerprint Hiding**: `x-powered-by` disabled to prevent technology-specific exploits.
+- **CORS Whitelist**: Strict origin control covering localhost, Vercel preview URLs, and production domains.
 
 ---
 
-## Architecture
+## 🏗️ Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        CLIENT LAYER                         │
-│                                                             │
-│  React 19 + Vite 8 + Tailwind CSS 4 + Framer Motion        │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────────┐  │
-│  │ Dashboard │ │ Weather  │ │ Budgets  │ │ Collaborative │  │
-│  │ + Wizard  │ │ + Radar  │ │ Tracker  │ │  Workspace    │  │
-│  └──────────┘ └──────────┘ └──────────┘ └───────────────┘  │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────────┐  │
-│  │  Vault   │ │Community │ │ Profile  │ │  AI Chatbot   │  │
-│  │  (Docs)  │ │  Feed    │ │ + Prefs  │ │  (Floating)   │  │
-│  └──────────┘ └──────────┘ └──────────┘ └───────────────┘  │
-│       │              │            │              │          │
-│       └──────────────┴────────────┴──────────────┘          │
-│                 REST API  +  WebSocket                      │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────┴───────────────────────────────────┐
-│                       SERVER LAYER                          │
-│                                                             │
-│  Node.js + Express (ES Modules) + Socket.io Server          │
-│                                                             │
-│  ┌─────────────┐ ┌──────────────┐ ┌──────────────────────┐  │
-│  │   Security  │ │   Services   │ │     AI Pipeline      │  │
-│  │ ─────────── │ │ ──────────── │ │ ──────────────────── │  │
-│  │ Helmet      │ │ Encryption   │ │ Gemini (Primary)     │  │
-│  │ CORS        │ │ Email (SMTP) │ │ Ollama (Fallback)    │  │
-│  │ Rate Limit  │ │ Storage      │ │ Groq  (Fallback)     │  │
-│  │ SQL Sanitiz │ │ RabbitMQ     │ │ OpenRouter (Fallback)│  │
-│  │ JWT + Bcrypt│ │ Google Travel│ │ RAG + pgvector       │  │
-│  └─────────────┘ └──────────────┘ │ Tool Calling         │  │
-│                                   └──────────────────────┘  │
-│                          │                                  │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-┌──────────────────────────┴──────────────────────────────────┐
-│                      DATA LAYER                             │
-│                                                             │
-│  PostgreSQL  +  pgvector  +  RabbitMQ                       │
-│  ┌────────┐ ┌────────┐ ┌──────────┐ ┌──────────────────┐   │
-│  │ Users  │ │ Trips  │ │ Expenses │ │ Itinerary        │   │
-│  │ Posts  │ │ Docs   │ │ Messages │ │ Collaborators    │   │
-│  │ Polls  │ │  Favs  │ │ Favorites│ │ Notifications    │   │
-│  └────────┘ └────────┘ └──────────┘ │ Travel Knowledge │   │
-│                                     └──────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           CLIENT LAYER                                  │
+│   React 19 + Vite │ Tailwind CSS v4 │ Framer Motion │ Leaflet Maps      │
+│   Socket.io Client │ Capacitor (Android) │ Electron (Desktop)           │
+└──────────────────────────────┬──────────────────────────────────────────┘
+                               │  HTTP/REST + WebSocket (Socket.io)
+┌──────────────────────────────▼──────────────────────────────────────────┐
+│                          API GATEWAY (Express.js)                       │
+│   Helmet │ CORS │ Rate Limiter │ SQL Sanitizer │ JWT Auth Middleware     │
+│                                                                         │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐  │
+│  │  /auth/* │ │ /trips/* │ │ /docs/*  │ │ /posts/* │ │ /travel/*    │  │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────────┘  │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  Proxy: /geocode │ /overpass │ /nearby │ /hotels/search │ /flights │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────┬──────────────────────────────────────────┘
+                               │
+          ┌────────────────────┼──────────────────────┐
+          │                    │                       │
+┌─────────▼─────────┐ ┌───────▼────────┐ ┌──────────▼──────────────────┐
+│   AI Services     │ │  PostgreSQL     │ │  Message Broker             │
+│  Gemini 1.5 Flash │ │  (Neon DB)      │ │  RabbitMQ (CloudAMQP)       │
+│  Groq API         │ │  13 Tables      │ │  + In-Memory EventEmitter   │
+│  OpenRouter       │ └────────────────┘ └─────────────────────────────┘
+│  Ollama (local)   │
+└───────────────────┘
+          │
+┌─────────▼─────────────────────────────────────────────────────────────┐
+│  External APIs                                                         │
+│  OpenSky (flights) │ Open-Meteo (weather) │ Nominatim (geocoding)      │
+│  Overpass (OSM)    │ Wikipedia Geosearch  │ Amadeus (optional GDS)     │
+│  Brevo (email)     │ Razorpay (payments)  │ RabbitMQ (chat)            │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Database Schema
+## 🗂️ Repository Structure
+
+```text
+Xplorism/
+├── xplorism-web/
+│   ├── frontend/                         # Vite + React 19 Client App
+│   │   ├── public/                       # Static assets, logo, icons
+│   │   ├── android/                      # Capacitor Android project
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   │   ├── AIChatbot.jsx         # Floating AI assistant panel
+│   │   │   │   ├── AuthModal.jsx         # Login / Register modal (OTP)
+│   │   │   │   ├── Navbar.jsx            # Navigation bar
+│   │   │   │   ├── Footer.jsx            # Site footer
+│   │   │   │   └── TripWizard.jsx        # Multi-step trip creation wizard
+│   │   │   ├── context/
+│   │   │   │   ├── AuthContext.jsx       # JWT auth state management
+│   │   │   │   ├── LanguageContext.jsx   # i18n (English + Spanish)
+│   │   │   │   └── ThemeContext.jsx      # Dark / Light mode
+│   │   │   ├── contexts/
+│   │   │   │   └── CurrencyContext.jsx   # Global currency preference
+│   │   │   ├── pages/
+│   │   │   │   ├── LandingPage.jsx       # Marketing homepage
+│   │   │   │   ├── DashboardStub.jsx     # Main dashboard + map + wizard
+│   │   │   │   ├── CollaborativeTripPage.jsx  # Real-time collab workspace
+│   │   │   │   ├── HotelBookingPage.jsx  # Hotel search + Razorpay booking
+│   │   │   │   ├── WeatherPage.jsx       # 7-day weather + map
+│   │   │   │   ├── TrackerPage.jsx       # Live aviation radar
+│   │   │   │   ├── BudgetPage.jsx        # Per-trip expense tracker
+│   │   │   │   ├── BudgetsListPage.jsx   # All-trips budget overview
+│   │   │   │   ├── DocumentVaultPage.jsx # Encrypted document manager
+│   │   │   │   ├── CommunityFeedPage.jsx # Social travel feed
+│   │   │   │   ├── ProfilePage.jsx       # User profile, stats, badges
+│   │   │   │   ├── TravelPreferencesPage.jsx  # Travel style preferences
+│   │   │   │   ├── SharedTripPage.jsx    # Public read-only trip view
+│   │   │   │   ├── SharedTripsWorkspace.jsx   # Collaborative workspace list
+│   │   │   │   ├── TripInviteRespondPage.jsx  # Accept / decline invite
+│   │   │   │   ├── MockPaymentPage.jsx   # Razorpay checkout page
+│   │   │   │   ├── LoginPage.jsx         # Auth redirect handler
+│   │   │   │   ├── RegisterPage.jsx      # Auth redirect handler
+│   │   │   │   └── NotFoundPage.jsx      # 404 fallback
+│   │   │   ├── services/                 # Axios API client wrappers
+│   │   │   ├── App.jsx                   # Root router + context providers
+│   │   │   ├── index.css                 # Tailwind v4 + global styles
+│   │   │   └── main.jsx                  # React DOM mount point
+│   │   ├── capacitor.config.json         # Capacitor native config
+│   │   ├── vercel.json                   # Vercel SPA routing rewrites
+│   │   ├── vite.config.js                # Vite + /api proxy config
+│   │   └── package.json
+│   │
+│   ├── backend/                          # Node.js + Express API (ESM)
+│   │   ├── config/db.js                  # PostgreSQL pool connection
+│   │   ├── controllers/
+│   │   │   ├── authController.js         # Register, Login, OTP, Google SSO
+│   │   │   ├── tripController.js         # CRUD, AI generate, share, packing
+│   │   │   ├── tripCollaboratorController.js  # Invites, workspace, polls
+│   │   │   ├── budgetController.js       # Expenses, AI insights, OCR
+│   │   │   ├── chatController.js         # Trip chat via RabbitMQ
+│   │   │   ├── favoriteController.js     # Wishlist CRUD
+│   │   │   ├── notificationController.js # Workspace notifications
+│   │   │   ├── postController.js         # Community feed + likes
+│   │   │   ├── preferencesController.js  # Travel preferences
+│   │   │   └── bookingsController.js     # Hotel booking persistence
+│   │   ├── middleware/
+│   │   │   ├── auth.js                   # JWT verification
+│   │   │   ├── rateLimiter.js            # Global + auth rate limits
+│   │   │   └── sqlInjectionSanitizer.js  # Input sanitization guard
+│   │   ├── routes/                       # Express routing tables (11 files)
+│   │   ├── services/
+│   │   │   ├── geminiService.js          # Gemini + Ollama (itinerary, hotels, flights)
+│   │   │   ├── googleTravelService.js    # Groq + OpenRouter travel search
+│   │   │   ├── emailService.js           # Nodemailer + Brevo dual-send
+│   │   │   ├── encryptionService.js      # AES-256-GCM encrypt / decrypt
+│   │   │   ├── rabbitmqService.js        # RabbitMQ + in-memory fallback
+│   │   │   ├── storageService.js         # Local vault_storage manager
+│   │   │   └── ai/geminiService.js       # Standalone Gemini helper
+│   │   ├── data/
+│   │   │   ├── airports.js               # 3,000+ global airport database
+│   │   │   └── stations.js               # Global railway station database
+│   │   ├── vault_storage/                # Encrypted document binary files
+│   │   ├── schema.sql                    # PostgreSQL DDL (13 tables)
+│   │   ├── index.js                      # Entrypoint, routes, Socket.io, proxies
+│   │   └── package.json
+│   │
+│   └── electron/                         # Electron Desktop App
+│       ├── main.js                       # BrowserWindow entrypoint
+│       └── logo.ico                      # Desktop app icon
+│
+├── API.md                                # Full API reference
+├── .gitignore
+└── README.md
+```
+
+---
+
+## 🗄️ Database Schema
+
+Xplorism uses PostgreSQL with 13 relational tables:
 
 ```mermaid
 erDiagram
@@ -251,13 +291,14 @@ erDiagram
     users ||--o{ trip_poll_votes : "votes"
     trips ||--o{ workspace_notifications : "has"
     users ||--o{ workspace_notifications : "receives"
-
+    trips ||--o{ bookings : "links"
+    users ||--o{ bookings : "makes"
 
     users {
         UUID id PK
         VARCHAR name
         VARCHAR email UK
-        VARCHAR password
+        VARCHAR password "nullable for SSO"
         VARCHAR google_id UK
         TEXT profile_photo
         JSONB preferences
@@ -286,7 +327,7 @@ erDiagram
         UUID trip_id FK
         INTEGER day
         TEXT activity
-        VARCHAR time
+        VARCHAR time "Morning/Afternoon/Evening"
         VARCHAR location
         DOUBLE_PRECISION estimated_cost
     }
@@ -314,6 +355,7 @@ erDiagram
         VARCHAR type
         TEXT description
         VARCHAR location
+        VARCHAR distance
         VARCHAR category
         TEXT image_url
         VARCHAR destination
@@ -328,7 +370,7 @@ erDiagram
         VARCHAR title
         VARCHAR type
         VARCHAR file_name
-        TEXT encrypted_file_key
+        TEXT encrypted_file_key "AES-256-GCM wrapped key"
         TEXT iv
         TEXT auth_tag
         TIMESTAMP created_at
@@ -341,7 +383,7 @@ erDiagram
         VARCHAR trip_destination
         VARCHAR title
         TEXT content
-        TEXT photo_content
+        TEXT photo_content "Base64 images"
         INTEGER likes
         TEXT_ARRAY liked_by
         TIMESTAMP created_at
@@ -351,7 +393,7 @@ erDiagram
         UUID id PK
         UUID trip_id FK
         UUID user_id FK
-        VARCHAR status
+        VARCHAR status "pending/accepted/declined"
         TIMESTAMP created_at
     }
 
@@ -391,255 +433,326 @@ erDiagram
         TIMESTAMP created_at
     }
 
-
+    bookings {
+        UUID id PK
+        UUID user_id FK
+        UUID trip_id FK
+        VARCHAR hotel_name
+        VARCHAR room_type
+        INTEGER guests
+        DATE check_in
+        DATE check_out
+        DOUBLE_PRECISION price
+        VARCHAR payment_id
+        VARCHAR confirmation_number
+        TIMESTAMP created_at
+    }
 ```
 
 ---
 
-## Repository Structure
+## 🛠️ Tech Stack
 
-```text
-Xplorism/
-├── xplorism-web/
-│   ├── frontend/                      # Vite + React 19 Client
-│   │   ├── public/                    # Static assets & logos
-│   │   ├── src/
-│   │   │   ├── components/
-│   │   │   │   ├── AIChatbot.jsx      # Floating AI travel assistant
-│   │   │   │   ├── AuthModal.jsx      # Login/Register modal (Google SSO + Email)
-│   │   │   │   ├── Footer.jsx         # Global footer
-│   │   │   │   ├── Navbar.jsx         # Global navigation bar
-│   │   │   │   └── TripWizard.jsx     # Multi-step trip creation wizard
-│   │   │   ├── context/
-│   │   │   │   ├── AuthContext.jsx     # Authentication state & JWT management
-│   │   │   │   ├── LanguageContext.jsx # i18n translations (7 languages)
-│   │   │   │   └── ThemeContext.jsx    # Light/Dark theme toggle
-│   │   │   ├── contexts/
-│   │   │   │   └── CurrencyContext.jsx # Global currency state
-│   │   │   ├── pages/
-│   │   │   │   ├── LandingPage.jsx          # Public landing & marketing page
-│   │   │   │   ├── LoginPage.jsx            # Auth redirect handler
-│   │   │   │   ├── RegisterPage.jsx         # Auth redirect handler
-│   │   │   │   ├── DashboardStub.jsx        # Main trip dashboard & itinerary viewer
-│   │   │   │   ├── WeatherPage.jsx          # Global weather forecasts
-│   │   │   │   ├── TrackerPage.jsx          # Live aviation radar (Sky Radar)
+### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| [React](https://react.dev/) | 19 | UI Framework |
+| [Vite](https://vitejs.dev/) | 8 | Build Tool & Dev Server |
+| [Tailwind CSS](https://tailwindcss.com/) | v4 | Utility-First Styling |
+| [Framer Motion](https://www.framer.com/motion/) | 12 | Animations & Transitions |
+| [Lucide React](https://lucide.dev/) | 1.26 | Icon Library |
+| [React Router DOM](https://reactrouter.com/) | v7 | Client-Side Routing |
+| [Leaflet](https://leafletjs.com/) | — | Interactive Maps |
+| [Socket.io Client](https://socket.io/) | 4.8 | Real-Time Collaboration |
+| [Capacitor](https://capacitorjs.com/) | v8 | Android Native Wrapper |
+| [Electron](https://www.electronjs.org/) | 43 | Desktop App Wrapper |
+| Razorpay Checkout SDK | — | Payment Checkout |
+| oxlint | 1.71 | Fast JS Linter |
 
-│   │   │   │   ├── BudgetPage.jsx           # Per-trip budget tracker
-│   │   │   │   ├── BudgetsListPage.jsx      # All budgets overview
-│   │   │   │   ├── DocumentVaultPage.jsx    # Encrypted document vault
-│   │   │   │   ├── CommunityFeedPage.jsx    # Social travel feed
-│   │   │   │   ├── ProfilePage.jsx          # User profile & settings
-│   │   │   │   ├── TravelPreferencesPage.jsx # Travel preferences editor
-│   │   │   │   ├── CollaborativeTripPage.jsx # Real-time collaboration workspace
-│   │   │   │   ├── SharedTripsWorkspace.jsx  # Shared trips overview
-│   │   │   │   ├── SharedTripPage.jsx        # Public shared trip viewer
-│   │   │   │   ├── TripInviteRespondPage.jsx # Email invite accept/decline
-│   │   │   │   └── NotFoundPage.jsx          # 404 page
-│   │   │   ├── services/              # Axios API client & itinerary generator
-│   │   │   ├── App.jsx                # Router, protected routes, providers
-│   │   │   ├── index.css              # Tailwind v4 directives & global styles
-│   │   │   └── main.jsx               # ReactDOM root mount
-│   │   ├── package.json
-│   │   └── vite.config.js             # Dev proxy, port 3000
-│   │
-│   ├── backend/                       # Node.js + Express API
-│   │   ├── config/
-│   │   │   └── db.js                  # PostgreSQL connection pool
-│   │   ├── controllers/
-│   │   │   ├── authController.js      # Register, login, Google SSO, profile
-│   │   │   ├── tripController.js      # CRUD trips, itinerary management
-│   │   │   ├── budgetController.js    # Budget computation & expense CRUD
-│   │   │   ├── chatController.js      # AI chatbot conversations & tool execution
+### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| [Node.js](https://nodejs.org/) | ≥18 | Runtime (ES Modules) |
+| [Express.js](https://expressjs.com/) | 4.19 | HTTP API Framework |
+| [PostgreSQL (pg)](https://www.postgresql.org/) | 8.22 | Primary Database |
+| [Socket.io Server](https://socket.io/) | 4.8 | WebSocket Server |
+| [amqplib](https://github.com/amqp-node/amqplib) | 0.10 | RabbitMQ AMQP Client |
+| [@google/generative-ai](https://ai.google.dev/) | 0.24 | Gemini API Client |
+| [bcryptjs](https://github.com/dcodeIO/bcrypt.js) | 2.4 | Password Hashing |
+| [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) | 9.0 | JWT Auth Tokens |
+| [nodemailer](https://nodemailer.com/) | 9.0 | SMTP Email Sending |
+| [helmet](https://helmetjs.github.io/) | 8.3 | HTTP Security Headers |
+| [express-rate-limit](https://github.com/express-rate-limit/express-rate-limit) | 8.6 | Rate Limiting |
+| [sharp](https://sharp.pixelplumbing.com/) | 0.35 | Image Processing / Optimization |
+| [heic-convert](https://github.com/catdad-experiments/heic-convert) | 2.1 | HEIC to JPEG Conversion |
+| [uuid](https://github.com/uuidjs/uuid) | 14 | UUID Generation |
+| Node.js `crypto` | built-in | AES-256-GCM Encryption |
+| nodemon | 3.1 | Dev Auto-Restart |
 
-│   │   │   ├── favoriteController.js  # Favorites / wishlist management
-│   │   │   ├── notificationController.js # Workspace notifications
-│   │   │   ├── postController.js      # Community feed posts
-│   │   │   ├── preferencesController.js # User travel preferences
-│   │   │   └── tripCollaboratorController.js # Collaboration & invites
-│   │   ├── middleware/
-│   │   │   ├── auth.js                # JWT verification guard
-│   │   │   ├── rateLimiter.js         # Express rate limiting
-│   │   │   └── sqlInjectionSanitizer.js # Request body/query SQL injection detection
-│   │   ├── routes/                    # Express route definitions
-│   │   ├── services/
-│   │   │   ├── geminiService.js       # Itinerary, nearby places AI
-│   │   │   ├── encryptionService.js   # AES-256-GCM encrypt/decrypt with key wrapping
-│   │   │   ├── emailService.js        # SMTP + Brevo API email delivery
-│   │   │   ├── googleTravelService.js # Multi-provider travel search
-│   │   │   ├── rabbitmqService.js     # RabbitMQ + in-memory fallback broker
-│   │   │   ├── storageService.js      # File system storage for vault
-│   │   │   ├── ai/
-│   │   │   │   └── geminiService.js   # Chatbot AI (RAG, tool calling, embeddings)
-│   │   │   ├── rag/
-│   │   │   │   └── ragService.js      # pgvector knowledge base (add & search)
-│   │   │   └── tools/
-│   │   │       └── toolService.js     # Chatbot tool implementations
-│   │   ├── schema.sql                 # Complete database schema
-│   │   ├── .env.example               # Environment variable template
-│   │   ├── index.js                   # App entrypoint, Socket.io, geocoding proxy
-│   │   └── package.json
-│   │
-│   └── electron/                      # Electron desktop wrapper
-│       ├── main.js                    # Electron main process
-│       └── logo.ico                   # Windows application icon
-│
-├── API.md                             # REST API reference documentation
-├── .gitignore
-└── README.md
-```
+### AI Providers (Priority Order)
+| Provider | Models Used | Role |
+|---|---|---|
+| Google Gemini | `gemini-1.5-flash` | Primary — itinerary, hotels, flights, chat, OCR |
+| Groq | `openai/gpt-oss-20b`, `gpt-oss-120b` | Secondary — travel search |
+| OpenRouter | `llama-3.3-70b-instruct:free`, `gemini-2.0-flash-exp:free` | Tertiary — travel search |
+| Ollama (local) | `qwen2.5`, `llama3` | Offline fallback — itinerary generation |
+
+### External APIs & Services
+| Service | Purpose | API Key |
+|---|---|---|
+| OpenSky Network | Live ADS-B flight tracking | ❌ Free |
+| Open-Meteo | Weather forecasts + geocoding fallback | ❌ Free |
+| Nominatim (OSM) | City geocoding + autocomplete | ❌ Free |
+| Overpass API | OSM tourist attractions & POIs | ❌ Free |
+| Wikipedia Geosearch | POI fallback data | ❌ Free |
+| Razorpay | Payment checkout SDK | ✅ Optional |
+| Brevo | Transactional email (cloud) | ✅ Optional |
+| CloudAMQP / RabbitMQ | Chat message broker | ✅ Optional |
+| Amadeus | GDS hotel geocode search | ✅ Optional |
 
 ---
 
-## Getting Started
+## 🚀 Installation & Quick Start
 
 ### Prerequisites
+- **Node.js** v18.0.0 or higher
+- **PostgreSQL** (local, Docker, or [Neon DB](https://neon.tech/) cloud)
+- **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/)
 
-| Requirement | Minimum Version |
-|---|---|
-| **Node.js** | v18.0.0+ |
-| **PostgreSQL** | 14+ (with `uuid-ossp` extension) |
-| **Gemini API Key** | [Google AI Studio](https://aistudio.google.com/apikey) |
-
-**Optional:**
-- **RabbitMQ** — For production-grade group chat messaging (falls back to in-memory)
-- **Ollama** — For local LLM fallback (`llama3`, `qwen2.5`)
-- **Groq API Key** — For cloud LLM fallback
-- **SMTP Credentials** — For email invitations (Gmail App Password or Brevo)
+---
 
 ### 1. Database Setup
 
-Create a PostgreSQL database and run the schema:
+The backend auto-initializes tables on startup via `initDatabase()`. For manual setup:
 
 ```bash
-createdb xplorism
-psql -U your_user -d xplorism -f xplorism-web/backend/schema.sql
+psql -U your_postgres_user -d xplorism -f xplorism-web/backend/schema.sql
 ```
 
-> **Note:** The backend will also auto-initialize tables via `initDatabase()` on first startup.
+Or use a cloud PostgreSQL URL (e.g., Neon) directly in your `.env`.
 
-### 2. Backend
+---
+
+### 2. Backend Setup
 
 ```bash
 cd xplorism-web/backend
-cp .env.example .env    # Edit with your credentials
-npm install
-npm run dev             # Starts on http://localhost:5000
+cp .env.example .env
 ```
 
-**Required `.env` variables:**
+Edit `.env`:
 
 ```env
 PORT=5000
-DATABASE_URL="postgresql://user:pass@localhost:5432/xplorism?sslmode=disable"
-JWT_SECRET="your_secure_jwt_secret"
-GEMINI_API_KEY="AIza..."
-```
+DATABASE_URL="postgresql://username:password@localhost:5432/xplorism?sslmode=disable"
 
-**Optional `.env` variables:**
+JWT_SECRET="generate_a_long_secure_random_string"
+VAULT_MASTER_KEY="generate_a_secure_64_char_hex_key_min_32_chars"
 
-```env
-VAULT_MASTER_KEY="your_32_char_vault_key"
+# Google OAuth (Optional)
 GOOGLE_CLIENT_ID="your_google_oauth_client_id"
+
+# AI Providers
+GEMINI_API_KEY="your_gemini_api_key"
 OLLAMA_BASE_URL="http://localhost:11434"
 OLLAMA_MODEL="qwen2.5"
-GROQ_API_KEY="gsk_..."
-OPENROUTER_API_KEY="sk-or-..."
-RABBITMQ_URL="amqp://localhost:5672"
+OLLAMA_API_KEY=""
+GROQ_API_KEY="your_groq_api_key"
+OPENROUTER_API_KEY="your_openrouter_api_key"
+
+# Email (Optional — falls back to console)
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
+SMTP_SECURE="false"
 SMTP_USER="your-email@gmail.com"
-SMTP_PASS="your-app-password"
+SMTP_PASS="your-gmail-app-password"
 SMTP_FROM="noreply@xplorism.com"
+BREVO_API_KEY="your_brevo_api_key"
+SENDER_EMAIL="your-sender@gmail.com"
+
+# Message Broker (Optional — falls back to in-memory)
+RABBITMQ_URL="amqps://user:pass@host/vhost"
+
+# Amadeus Hotel GDS (Optional)
+AMADEUS_CLIENT_ID="your_amadeus_client_id"
+AMADEUS_CLIENT_SECRET="your_amadeus_client_secret"
 ```
 
-### 3. Frontend
+```bash
+npm install
+npm run dev
+```
+
+> Backend listens on `http://localhost:5000`
+
+---
+
+### 3. Frontend Setup
 
 ```bash
 cd xplorism-web/frontend
-npm install
-npm run dev             # Starts on http://localhost:3000
 ```
 
-Create a `.env` file if using Google Sign-In:
-
+Create `.env`:
 ```env
-VITE_GOOGLE_CLIENT_ID="your_google_client_id"
+VITE_GOOGLE_CLIENT_ID="your_google_oauth_client_id"
 ```
 
-> **Proxy:** The Vite dev server proxies `/api/*` requests to `http://127.0.0.1:5000` automatically.
+```bash
+npm install
+npm run dev
+```
 
-### 4. Desktop App (Optional)
+> Frontend at `http://localhost:3000`. `vite.config.js` proxies all `/api/*` calls to `http://localhost:5000`.
+
+---
+
+### 4. (Optional) Electron Desktop App
 
 ```bash
 cd xplorism-web
 npm install
-npm run electron        # Launch Electron desktop app
-npm run dist            # Build Windows installer (NSIS)
+npm run electron         # Launch desktop window
+npm run dist             # Build Windows NSIS installer → release/
+```
+
+### 5. (Optional) Android Build
+
+```bash
+cd xplorism-web/frontend
+npm run build
+npx cap sync android
+npx cap open android     # Opens Android Studio
 ```
 
 ---
 
-## API Reference
+## 🌐 Application Routes
 
-For detailed documentation on all backend endpoints, request/response schemas, and authentication flows, see the **[API Reference Guide](API.md)**.
-
-### Route Summary
-
-| Prefix | Module | Description |
+| Route | Auth | Description |
 |---|---|---|
-| `/auth` | Authentication | Register, login, Google SSO, profile management |
-| `/trips` | Trips | CRUD operations, itinerary generation, packing lists |
-| `/trips` | Budgets | Budget computation, expense tracking |
-| `/chat` | AI Chatbot | Conversations, messages, RAG-enhanced responses |
-| `/favorites` | Favorites | Save/unsave attractions & points of interest |
-| `/documents` | Vault | Encrypted document upload, download, delete |
-| `/posts` | Community | Social feed posts, likes |
-| `/notifications` | Notifications | Workspace change notifications |
-| `/preferences` | Preferences | Travel preferences CRUD |
-
-| `/travel` | Travel Search | Destination search via AI providers |
-| `/nearby` | Nearby Places | Gemini-powered POI discovery |
-| `/overpass` | Map Proxy | CORS proxy for Overpass API queries |
-| `/geocode` | Geocoding | Nominatim + Open-Meteo geocoding proxy |
+| `/` | Public | Landing page |
+| `/login` | Public | Redirects with auth modal (login) |
+| `/register` | Public | Redirects with auth modal (register) |
+| `/dashboard` | **Protected** | Main trips dashboard + AI trip wizard |
+| `/hotels` | **Protected** | Hotel search, filters, booking |
+| `/weather` | **Protected** | Global weather forecasts |
+| `/tracker` | **Protected** | Live aviation radar (Sky Tracker) |
+| `/trips/:id/budget` | **Protected** | Expense tracker for a trip |
+| `/budgets` | **Protected** | All-trips budget overview |
+| `/profile` | **Protected** | User profile, stats, badges |
+| `/preferences` | **Protected** | Travel style preferences |
+| `/vault` | **Protected** | Encrypted document vault |
+| `/community` | **Protected** | Social travel feed |
+| `/shared-trips` | **Protected** | Collaborative workspace list |
+| `/trips/:id/collaborate` | **Protected** | Real-time collaborative workspace |
+| `/shared-trip/:id` | Public | Read-only shared trip view |
+| `/trip-invite/respond` | Public | Accept/decline collaboration invite |
+| `/mock-payment` | **Protected** | Razorpay mock checkout |
 
 ---
 
-## Security
+## 📡 API Quick Reference
 
-Xplorism implements multiple layers of security:
+See [**API.md**](API.md) for full documentation including request/response schemas.
 
-| Layer | Implementation |
+| Category | Base Path | Methods |
+|---|---|---|
+| Auth & Profile | `/auth/*` | POST, GET, PUT |
+| Trips & Itinerary | `/trips/*` | GET, POST, PUT, DELETE |
+| Collaborative Workspace | `/trips/:id/collaborators`, `/trips/:id/polls` | GET, POST, PUT, DELETE |
+| Budget & Expenses | `/trips/:id/budget`, `/trips/:id/expenses` | GET, POST, PUT, DELETE |
+| Document Vault | `/documents/*` | GET, POST, PUT, DELETE |
+| Community Feed | `/posts/*` | GET, POST, PUT, DELETE |
+| Favorites | `/favorites/*` | GET, POST, DELETE |
+| Notifications | `/notifications/*` | GET, PATCH |
+| Bookings | `/bookings/*` | GET, POST |
+| Hotel Search | `/hotels/search`, `/travel/hotels` | GET |
+| Flight Search | `/travel/flights` | GET |
+| Transit Search | `/travel/transit` | GET |
+| Airport Autocomplete | `/travel/airports` | GET |
+| Station Autocomplete | `/travel/stations` | GET |
+| Aviation Tracker | `/flights` | GET |
+| Geocoding Proxy | `/geocode` | GET |
+| Overpass Proxy | `/overpass` | GET |
+| Nearby Places AI | `/nearby` | GET |
+| Health Check | `/health` | GET |
+
+---
+
+## 🔌 Real-Time WebSocket Events (Socket.io)
+
+| Client → Server | Payload | Description |
+|---|---|---|
+| `join-user-room` | `{ userId }` | Subscribe to personal notification room |
+| `join-trip-room` | `{ tripId, userName }` | Enter collaborative trip room |
+| `itinerary-changed` | `{ tripId, action, data }` | Broadcast itinerary edit |
+| `budget-changed` | `{ tripId, action, data }` | Broadcast budget/expense change |
+| `packing-changed` | `{ tripId, action, data }` | Broadcast packing list update |
+| `poll-changed` | `{ tripId, action, data }` | Broadcast poll create/vote |
+| `notes-changed` | `{ tripId, data }` | Broadcast notes update |
+| `documents-changed` | `{ tripId, action, data }` | Broadcast document change |
+| `presence-changed` | `{ tripId, userName, activeTab }` | Broadcast current active tab |
+
+| Server → Client | Description |
 |---|---|
-| **Authentication** | JWT tokens + BcryptJS password hashing |
-| **Authorization** | Route-level middleware guards (ownership verification) |
-| **HTTP Headers** | Helmet.js (XSS protection, HSTS, clickjacking prevention) |
-| **Rate Limiting** | `express-rate-limit` on all routes + stricter auth limits |
-| **SQL Injection** | Custom middleware scanning `req.body`, `req.query`, `req.params` against known injection patterns |
-| **Encryption** | AES-256-GCM with per-file key wrapping for document vault |
-| **CORS** | Whitelist-based origin validation |
-| **Fingerprint Prevention** | `x-powered-by` header disabled |
+| `collaborators-list` | Full list of active users in the trip room |
+| `collaborator-joined` | New collaborator connected |
+| `collaborator-left` | Collaborator disconnected |
+| `itinerary-updated` | Forwarded itinerary change |
+| `budget-updated` | Forwarded budget/expense change |
+| `packing-updated` | Forwarded packing list change |
+| `poll-updated` | Forwarded poll change |
+| `notes-updated` | Forwarded notes change |
+| `documents-updated` | Forwarded document change |
+| `presence-updated` | Co-traveler active tab update |
+| `chat-message` | New chat message bridged from RabbitMQ |
 
 ---
 
-## Data Sources & Integrations
+## 🔐 Security Details
 
-| Service | Provider | Purpose |
-|---|---|---|
-| AI Generation | [Google Gemini](https://deepmind.google/technologies/gemini/) | Itinerary, budget insights, chatbot |
-| AI Fallback | [Ollama](https://ollama.com/) (Local), [Groq](https://groq.com/), [OpenRouter](https://openrouter.ai/) | Multi-provider LLM redundancy |
-| Weather | [Open-Meteo](https://open-meteo.com/) | Real-time weather & forecasts (no API key) |
-| Geocoding | [Nominatim](https://nominatim.org/) + [Open-Meteo Geo](https://open-meteo.com/) | Location resolution & autocomplete |
-| Attractions | [Overpass API](https://overpass-api.de/) (5 mirrors) | OpenStreetMap POI queries |
-| POI Fallback | [Wikipedia Geosearch](https://www.mediawiki.org/wiki/API:Geosearch) | Backup point-of-interest data |
-| Exchange Rates | [Open Exchange Rates API](https://open.er-api.com/) | Live currency conversion |
-| Email | [Gmail SMTP](https://support.google.com/mail/answer/7126229) + [Brevo API](https://www.brevo.com/) | Trip invitation emails |
+### AES-256-GCM Document Encryption (Key Wrapping)
 
-| Messaging | [RabbitMQ](https://www.rabbitmq.com/) | Group chat message broker |
-| Embeddings | [Gemini text-embedding-004](https://ai.google.dev/) | RAG vector embeddings |
+```
+File Data ──► AES-256-GCM(fileKey, fileIv) ──► encryptedData + fileAuthTag
+fileKey   ──► AES-256-GCM(masterKey, wrapperIv) ──► wrappedKey + keyAuthTag
+
+Stored in DB: { wrappedKey, iv (fileIv), authTag (fileAuthTag) }
+Stored on disk: { encryptedData binary }
+
+Download: wrappedKey ──► Unwrap(masterKey) ──► fileKey
+          encryptedData ──► Decrypt(fileKey, iv, authTag) ──► plaintext (in-memory only)
+```
+
+### OTP Authentication Flow
+
+```
+Registration / Login Request
+    │
+    ▼
+Generate 6-digit OTP → store in-memory Map (TTL: 10 minutes)
+    │
+    ▼
+Send via Nodemailer SMTP (primary)
+    │── fail ──► Brevo REST API (cloud fallback)
+    │                │── fail ──► Log to console (dev fallback)
+    ▼
+User submits OTP → Verify cache → Issue JWT (30-day TTL)
+```
 
 ---
 
-## Deployment
+## ☁️ Deployment
+
+### Backend — Azure App Service (`xplorism-api`)
+
+1. Add all `.env` values as **Application Settings** in Azure Portal.
+2. Set `WEBSITE_NODE_DEFAULT_VERSION` → `~22`.
+3. CI/CD via **GitHub Actions** (`.github/workflows/main_xplorism-api.yml`):
+   - Node.js 22.x build environment
+   - Artifact packaging
+   - Deployment via `azure/webapps-deploy` action
 
 ### Frontend — Vercel
 
@@ -649,28 +762,33 @@ Xplorism implements multiple layers of security:
 | Root Directory | `xplorism-web/frontend` |
 | Build Command | `npm run build` |
 | Output Directory | `dist` |
-| Environment Variable | `VITE_API_URL` → your backend URL |
+| `VITE_API_URL` | `https://xplorism-api.azurewebsites.net` |
+| `VITE_GOOGLE_CLIENT_ID` | Your Google OAuth Client ID |
 
-### Backend — Render / Azure / Railway
+The `vercel.json` at the frontend root configures SPA routing rewrites so all paths resolve to `index.html`.
 
-Deploy the `xplorism-web/backend` directory as a Node.js service with the environment variables from `.env.example`.
+---
 
-### Desktop — Electron
+## 📦 Data Sources & Integrations
 
-```bash
-cd xplorism-web && npm run dist
-```
-
-Outputs a Windows NSIS installer to the `release/` directory.
+| Source | Purpose | Auth Required |
+|---|---|---|
+| [Open-Meteo](https://open-meteo.com/) | Weather forecasts + geocoding fallback | ❌ Free |
+| [Nominatim (OSM)](https://nominatim.org/) | City geocoding + autocomplete proxy | ❌ Free |
+| [Overpass API](https://overpass-api.de/) | Tourist attractions (OSM data) | ❌ Free |
+| [Wikipedia Geosearch](https://www.mediawiki.org/wiki/API:Geosearch) | POI fallback | ❌ Free |
+| [OpenSky Network](https://opensky-network.org/) | Live ADS-B flight positions | ❌ Free |
+| [Google Gemini 1.5 Flash](https://ai.google.dev/) | Primary AI engine | ✅ Required |
+| [Groq API](https://console.groq.com/) | Secondary AI + travel search | ✅ Optional |
+| [OpenRouter](https://openrouter.ai/) | Tertiary AI + travel search | ✅ Optional |
+| [Ollama](https://ollama.com/) | Offline AI fallback | ❌ Self-hosted |
+| [Razorpay](https://razorpay.com/) | Payment checkout SDK | ✅ Optional |
+| [Brevo](https://www.brevo.com/) | Cloud transactional email | ✅ Optional |
+| [CloudAMQP / RabbitMQ](https://www.cloudamqp.com/) | Chat message broker | ✅ Optional |
+| [Amadeus](https://developers.amadeus.com/) | GDS hotel geocode search | ✅ Optional |
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
-
-<p align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/TanishMehta23">Tanish Mehta</a> & <a href="https://github.com/Vans30m">Vansh Thakur</a></sub>
-</p>
+This project is licensed under the **MIT License** — see the `LICENSE` file for details.

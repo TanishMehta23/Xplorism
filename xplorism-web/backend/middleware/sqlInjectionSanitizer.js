@@ -3,15 +3,19 @@
  * Provides an additional layer of validation on top of parameterized database queries.
  */
 
-// Regular expressions to detect typical SQL injection payloads
+// Targeted regular expressions to detect genuine SQL injection syntax and tautology payloads
+// Avoid matching standard English words like "create", "update", or hashtags "#"
 const SQL_INJECTION_PATTERNS = [
-  /(\b(SELECT|INSERT|UPDATE|DELETE|UNION|DROP|ALTER|CREATE|TRUNCATE|DATABASE|GRANT|REVOKE)\b)/i,
-  /(--|#|\/\*|\*\/)/, // SQL comment markers
-  /(\bor\b\s+['"]?\d+['"]?\s*=\s*['"]?\d+['"]?)/i, // OR '1'='1' style bypasses
-  /(\band\b\s+['"]?\d+['"]?\s*=\s*['"]?\d+['"]?)/i, // AND '1'='1' style logic
   /UNION\s+(ALL\s+)?SELECT/i,
-  /WAITFOR\s+DELAY/i, // Time-based injection
-  /BENCHMARK\(/i      // Heavy execution injection
+  /WAITFOR\s+DELAY\s+['"]\d+/i,
+  /BENCHMARK\s*\(\s*\d+\s*,/i,
+  /;\s*(DROP|TRUNCATE|ALTER)\s+(TABLE|DATABASE)\b/i,
+  /;\s*DELETE\s+FROM\b/i,
+  /(\bor\b\s+['"]?\d+['"]?\s*=\s*['"]?\d+['"]?)/i, // OR '1'='1' style bypass
+  /(\band\b\s+['"]?\d+['"]?\s*=\s*['"]?\d+['"]?)/i, // AND '1'='1' style bypass
+  /(\bor\b\s+['"][a-zA-Z0-9]+['"]\s*=\s*['"][a-zA-Z0-9]+['"])/i, // OR 'a'='a'
+  /(\bEXEC(\s+XP_|\s+SP_))/i,
+  /\bCAST\s*\([^)]+\s+AS\s+(VARCHAR|INTEGER|CHAR)\b/i
 ];
 
 // Fields that are known to contain binary/base64/JWT token data and should be skipped

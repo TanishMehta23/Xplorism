@@ -21,18 +21,18 @@
 
 ## Overview
 
-**Xplorism** is a next-generation, AI-powered travel planning web and desktop application. It eliminates the tedious back-and-forth between search engines, maps, and spreadsheets by providing one premium, intelligent hub for every stage of a journey — from initial destination discovery to final payment checkout.
+**Xplorism** is a next-generation, AI-powered travel planning web and desktop application. It eliminates the tedious back-and-forth between search engines, maps, and spreadsheets by providing one premium, intelligent hub for every stage of a journey — from initial destination discovery to daily schedule execution.
 
 Using a multi-model AI engine (Gemini + Groq + OpenRouter + Ollama), real-time geocoding, interactive Leaflet maps, live aviation radar, collaborative workspaces, encrypted document vaults, and global weather forecasts, Xplorism transforms travel planning into a seamless, delightful experience.
 
 ### The Mission
-To deliver a visually stunning and fully interactive travel companion that guides explorers from wanderlust to booking checkout. Every feature is designed to save time, reduce anxiety, and make every trip unforgettable.
+To deliver a visually stunning and fully interactive travel companion that guides explorers from initial wanderlust to daily schedule execution. Every feature is designed to save time, reduce anxiety, and make every trip unforgettable.
 
 ---
 
-## ✨ Feature Showcase
+## Feature Showcase
 
-### 🤖 Multi-Model AI Itinerary Generator
+### Multi-Model AI Itinerary Generator
 - **Multi-Model AI Pipeline**: Generates rich, structured travel itineraries using **Google Gemini 1.5 Flash** as the primary engine, with **Groq** and **OpenRouter** (Llama 3.3 70B, Gemini 2.0 Flash) as secondary engines, and a fully offline **Ollama** (Qwen 2.5 / Llama 3) fallback for maximum reliability.
 - **Smart Trip Wizard**: A multi-step, animated wizard (Framer Motion) gathers destination, travel dates or custom duration, budget, number of travelers, travel style (Adventure, Luxury, Budget, Cultural, Romantic, Relaxing), and interests (Food, Nature, Architecture, Nightlife, Art, History, Beaches, Shopping, Hiking).
 - **Currency-Aware Budgeting**: Auto-detects the destination country from geocoding results and applies the correct currency (INR, USD, EUR, GBP, JPY, AUD, SGD, and more) with contextual budget presets (backpacker vs. comfort).
@@ -40,7 +40,7 @@ To deliver a visually stunning and fully interactive travel companion that guide
 - **Pre-Planned Recommended Trips**: A curated selection of popular destination itineraries ready to be saved with one click.
 - **Itinerary Geocoding**: Every saved itinerary activity is geocoded via a smart multi-strategy resolver (direct query → Open-Meteo fallback → Mandir↔Temple swap → phrase splitters) and pinned on an interactive Leaflet map.
 
-### 🗺️ Interactive Destination Map & Attractions
+### Interactive Destination Map & Attractions
 - **Leaflet Maps with Custom Markers**: High-fidelity vector maps with animated marker overlays, smooth panning, and custom popups.
 - **Live Geocoding Proxy**: Nominatim (OpenStreetMap) is proxied through the backend with server-side caching and a 2-stage fallback to the **Open-Meteo Geocoding API** to handle rate limits.
 - **Dynamic City Autocomplete**: City suggestions appear in real-time as the user types, with address type tags (`city`, `district`, `country`).
@@ -48,35 +48,27 @@ To deliver a visually stunning and fully interactive travel companion that guide
 - **OSM Attractions via Overpass API**: Fetches castles, temples, museums, parks, beaches, and historic monuments from OpenStreetMap via a backend proxy with round-robin failover across 4 public Overpass mirrors.
 - **Wikipedia Geosearch Fallback**: Automatically queries Wikipedia's Geosearch API if all Overpass mirrors are unavailable.
 - **Nearby Amenities Sidebar**: Clicking any tourist attraction shows cafes, restaurants, bars, and parks within a **1km radius** in a live detail sidebar.
-- **Favorites & Wishlist**: Save any attraction, hotel, or POI to a personal wishlist with one click.
+- **Favorites & Wishlist**: Save any attraction or POI to a personal wishlist with one click.
 
-### ✈️ Live Aviation Radar (Sky Tracker)
+### Live Aviation Radar (Sky Tracker)
 - **Real-Time Flight Map**: Fetches up to 700 live aircraft positions from the **OpenSky Network ADS-B API** and renders them on an interactive Leaflet radar map with altitude-based color coding (Cruising, Transition, Approach).
 - **Intelligent Fallback Grid**: Falls back to a deterministically generated pool of **450 simulated flights** spread globally across 10 major airlines when OpenSky is unavailable or rate-limited.
 - **Enriched Flight Data**: Every aircraft state vector is enriched with airline name, aircraft type (Boeing 777-300ER, Airbus A350-900, etc.), and realistic departure/destination airport pairs resolved from heading vectors against a 12-airport database.
 - **Gemini-Powered Flight Search**: Search by callsign or country — if the flight isn't in the live feed, Gemini AI resolves real route details dynamically and places an interpolated position track on the map.
 - **Real-Time Auto-Refresh**: Automatically refreshes every 10 seconds with a visible countdown timer.
 
-### 🌦️ Global Weather Forecasts
+### Global Weather Forecasts
 - **Open-Meteo Integration**: Real-time weather including temperature, feels-like, relative humidity, wind speed, and WMO weather code interpretation.
 - **7-Day Extended Outlook**: Daily high/low temperatures with sunrise/sunset times for any city worldwide.
 - **Dynamic Weather Themes**: Background panels, Lucide React icons, and badge styling automatically adapt to the current WMO weather code (clear, cloudy, rain, snow, thunderstorm, fog, drizzle).
 - **No API Key Required**: Entirely powered by the free, open-access Open-Meteo API.
 
-### 🏨 AI Hotel Search & Bookings
-- **Dual Hotel Search Engines**: A fast `/hotels/search` endpoint powered by Gemini AI generating 20 real hotels with ratings, stars, amenities, and price estimates; plus a full `/travel/hotels` endpoint via Groq + OpenRouter for date-aware, guest-count hotel queries.
-- **Interactive Hotel Map**: Hotels plotted with custom Leaflet marker pins; clicking a marker highlights the matching hotel card and auto-scrolls to it.
-- **Real-Time Sidebar Filters**: Filter by star rating, maximum nightly price, and specific amenities (WiFi, Pool, Gym, Spa, Breakfast, AC) — all applied client-side in real-time.
-- **Razorpay Checkout**: Full simulated payment lifecycle with the official **Razorpay Checkout SDK**, returning a mock success screen with a transaction ID.
-- **Booking Persistence**: Confirmed bookings (hotel name, room type, dates, guest info, Razorpay payment ID, confirmation number) stored in the `bookings` PostgreSQL table.
-- **Amadeus API Integration (Optional)**: Geocode-based hotel lookup via the **Amadeus Hotel Search GDS** when `AMADEUS_CLIENT_ID` and `AMADEUS_CLIENT_SECRET` are set.
-
-### 🚆 AI Flight & Transit Search
+### AI Flight & Transit Search
 - **Groq/OpenRouter/Gemini Flight Query**: Search one-way or round-trip flights by IATA airport code (e.g. DEL→BOM), departure date, and traveler count.
 - **Train & Bus Transit Search**: Ground transport search between any two cities by route, date, and travel mode.
 - **Airport & Station Autocomplete**: Powered by a local database of 3,000+ global airports and railway stations — instant suggestions with zero API rate limits.
 
-### 👥 Real-Time Collaborative Workspace
+### Real-Time Collaborative Workspace
 - **WebSocket Sync via Socket.io**: Multi-user real-time editing of itineraries, budgets, packing lists, notes, documents, and polls — all changes broadcast instantly to every collaborator in the trip room.
 - **Presence Tracking**: Displays which users are online and which workspace tab (Itinerary, Budget, Packing, Notes, Docs, Polls) each collaborator is currently viewing.
 - **RabbitMQ Group Chat**: Topic-based trip chat powered by **RabbitMQ** (CloudAMQP), with a transparent in-memory `EventEmitter` fallback. Chat history is persisted in the `trip_messages` table.
@@ -85,20 +77,20 @@ To deliver a visually stunning and fully interactive travel companion that guide
 - **Workspace Offline Notifications**: Events (joins, edits, poll results) are persisted in `workspace_notifications` and delivered to offline users on their next login.
 - **Shareable Public Link**: Every trip has a read-only public URL (`/shared-trip/:id`) requiring no login.
 
-### 🔐 Encrypted Document Vault
-- **AES-256-GCM with Key Wrapping**: Travel documents (Passports, Visas, Tickets, Hotel Vouchers, Insurance) are encrypted at rest. A unique file key encrypts each file; the file key itself is encrypted by a master key derived from `VAULT_MASTER_KEY`.
+### Encrypted Document Vault
+- **AES-256-GCM with Key Wrapping**: Travel documents (Passports, Visas, Tickets, Boarding Passes, Insurance) are encrypted at rest. A unique file key encrypts each file; the file key itself is encrypted by a master key derived from `VAULT_MASTER_KEY`.
 - **Zero-Plaintext Storage**: Decryption happens entirely in memory at download time — plaintext never touches disk.
 - **Ownership Access Control**: Download endpoints verify document ownership or approved collaborator status.
 - **HEIC / HEIF Support**: Profile photos and uploaded HEIC images are auto-converted to JPEG via `heic-convert` + `sharp`.
 
-### 💰 Expense Tracker & AI Budget Insights
+### Expense Tracker & AI Budget Insights
 - **Planned vs. Actual Tracking**: Log expenses per trip, per day, per category (Accommodation, Food, Activities, Transportation, Shopping, Misc) with both planned and actual amounts.
 - **AI Financial Insights**: Gemini analyzes expense categories and spending patterns, returning personalized savings recommendations.
 - **OCR Receipt Scanning**: Upload a receipt photo; Gemini Vision extracts line items, categories, and totals automatically.
 - **Bill Splitting**: The `paid_by` field enables fair cost tracking across co-travelers.
 - **Budget Utilization Charts**: Visual progress bar and category breakdown for at-a-glance budget health.
 
-### 🌐 Community Social Feed
+### Community Social Feed
 - **Travel Posts & Stories**: Share trip narratives with up to 5 highlight photos (Base64, max 8MB each).
 - **Hashtag System**: Tag posts with custom keywords for discovery.
 - **Like / Unlike**: Toggle-like system with per-user idempotency tracking.
@@ -106,23 +98,23 @@ To deliver a visually stunning and fully interactive travel companion that guide
 - **Edit & Delete**: Full CRUD for authors.
 - **Destination Passport Stamps**: Each trip planned earns a visual destination stamp shown on the user's profile.
 
-### 🌍 Multi-Language & Theming
+### Multi-Language & Theming
 - **Full i18n**: `LanguageContext` provides complete UI translations for **English** and **Spanish**, covering all pages, toast notifications, error states, and dynamic labels (2,282-line translation file).
 - **Dark / Light Mode**: System-wide theme toggle via `ThemeContext`, persisted across sessions.
 - **Global Currency Preference**: `CurrencyContext` propagates a preferred currency through budget presets and expense forms.
 
-### 👤 User Profile & Preferences
+### User Profile & Preferences
 - **Rich Profile Dashboard**: Travel stats (trips, itinerary entries, spend, destinations, days), passport stamp gallery, and gamified travel milestones/badges.
 - **OTP-Based Auth**: 6-digit OTP (10-minute TTL) sent via Nodemailer SMTP → Brevo API fallback → console log (dev).
 - **Google OAuth 2.0**: Sign-in with Google — no password required for SSO users.
 - **Password Reset**: Time-limited OTP via email for secure credential recovery.
 - **JWT Authorization**: Bearer tokens (30-day TTL) on all protected API routes.
 
-### 📱 Mobile & Desktop Apps
+### Mobile & Desktop Apps
 - **Android (Capacitor v8)**: Native Android APK build via `npx cap sync android` + Android Studio.
 - **Desktop (Electron v43)**: Cross-platform desktop app with `electron-builder`. Windows NSIS installer via `npm run dist`.
 
-### 🔒 Security & Production Hardiness
+### Security & Production Hardiness
 - **Helmet.js**: XSS protection, HSTS, Clickjacking prevention, MIME sniffing protection applied globally.
 - **Rate Limiting**: Global + auth-specific rate limits via `express-rate-limit`.
 - **SQL Injection Sanitizer**: Custom middleware scrubs all request bodies and query strings.
@@ -132,7 +124,7 @@ To deliver a visually stunning and fully interactive travel companion that guide
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -149,7 +141,7 @@ To deliver a visually stunning and fully interactive travel companion that guide
 │  │  /auth/* │ │ /trips/* │ │ /docs/*  │ │ /posts/* │ │ /travel/*    │  │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────────┘  │
 │  ┌────────────────────────────────────────────────────────────────────┐  │
-│  │  Proxy: /geocode │ /overpass │ /nearby │ /hotels/search │ /flights │  │
+│  │  Proxy: /geocode │ /overpass │ /nearby │ /flights                │  │
 │  └────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────┬──────────────────────────────────────────┘
                                │
@@ -158,7 +150,7 @@ To deliver a visually stunning and fully interactive travel companion that guide
 ┌─────────▼─────────┐ ┌───────▼────────┐ ┌──────────▼──────────────────┐
 │   AI Services     │ │  PostgreSQL     │ │  Message Broker             │
 │  Gemini 1.5 Flash │ │  (Neon DB)      │ │  RabbitMQ (CloudAMQP)       │
-│  Groq API         │ │  13 Tables      │ │  + In-Memory EventEmitter   │
+│  Groq API         │ │  12 Tables      │ │  + In-Memory EventEmitter   │
 │  OpenRouter       │ └────────────────┘ └─────────────────────────────┘
 │  Ollama (local)   │
 └───────────────────┘
@@ -166,14 +158,14 @@ To deliver a visually stunning and fully interactive travel companion that guide
 ┌─────────▼─────────────────────────────────────────────────────────────┐
 │  External APIs                                                         │
 │  OpenSky (flights) │ Open-Meteo (weather) │ Nominatim (geocoding)      │
-│  Overpass (OSM)    │ Wikipedia Geosearch  │ Amadeus (optional GDS)     │
-│  Brevo (email)     │ Razorpay (payments)  │ RabbitMQ (chat)            │
+│  Overpass (OSM)    │ Wikipedia Geosearch                               │
+│  Brevo (email)     │ RabbitMQ (chat)                                   │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🗂️ Repository Structure
+## Repository Structure
 
 ```text
 Xplorism/
@@ -198,7 +190,6 @@ Xplorism/
 │   │   │   │   ├── LandingPage.jsx       # Marketing homepage
 │   │   │   │   ├── DashboardStub.jsx     # Main dashboard + map + wizard
 │   │   │   │   ├── CollaborativeTripPage.jsx  # Real-time collab workspace
-│   │   │   │   ├── HotelBookingPage.jsx  # Hotel search + Razorpay booking
 │   │   │   │   ├── WeatherPage.jsx       # 7-day weather + map
 │   │   │   │   ├── TrackerPage.jsx       # Live aviation radar
 │   │   │   │   ├── BudgetPage.jsx        # Per-trip expense tracker
@@ -210,7 +201,6 @@ Xplorism/
 │   │   │   │   ├── SharedTripPage.jsx    # Public read-only trip view
 │   │   │   │   ├── SharedTripsWorkspace.jsx   # Collaborative workspace list
 │   │   │   │   ├── TripInviteRespondPage.jsx  # Accept / decline invite
-│   │   │   │   ├── MockPaymentPage.jsx   # Razorpay checkout page
 │   │   │   │   ├── LoginPage.jsx         # Auth redirect handler
 │   │   │   │   ├── RegisterPage.jsx      # Auth redirect handler
 │   │   │   │   └── NotFoundPage.jsx      # 404 fallback
@@ -235,14 +225,13 @@ Xplorism/
 │   │   │   ├── notificationController.js # Workspace notifications
 │   │   │   ├── postController.js         # Community feed + likes
 │   │   │   ├── preferencesController.js  # Travel preferences
-│   │   │   └── bookingsController.js     # Hotel booking persistence
 │   │   ├── middleware/
 │   │   │   ├── auth.js                   # JWT verification
 │   │   │   ├── rateLimiter.js            # Global + auth rate limits
 │   │   │   └── sqlInjectionSanitizer.js  # Input sanitization guard
 │   │   ├── routes/                       # Express routing tables (11 files)
 │   │   ├── services/
-│   │   │   ├── geminiService.js          # Gemini + Ollama (itinerary, hotels, flights)
+│   │   │   ├── geminiService.js          # Gemini + Ollama (itinerary, flights)
 │   │   │   ├── googleTravelService.js    # Groq + OpenRouter travel search
 │   │   │   ├── emailService.js           # Nodemailer + Brevo dual-send
 │   │   │   ├── encryptionService.js      # AES-256-GCM encrypt / decrypt
@@ -253,7 +242,7 @@ Xplorism/
 │   │   │   ├── airports.js               # 3,000+ global airport database
 │   │   │   └── stations.js               # Global railway station database
 │   │   ├── vault_storage/                # Encrypted document binary files
-│   │   ├── schema.sql                    # PostgreSQL DDL (13 tables)
+│   │   ├── schema.sql                    # PostgreSQL DDL (12 tables)
 │   │   ├── index.js                      # Entrypoint, routes, Socket.io, proxies
 │   │   └── package.json
 │   │
@@ -268,9 +257,9 @@ Xplorism/
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
-Xplorism uses PostgreSQL with 13 relational tables:
+Xplorism uses PostgreSQL with 12 relational tables:
 
 ```mermaid
 erDiagram
@@ -291,8 +280,6 @@ erDiagram
     users ||--o{ trip_poll_votes : "votes"
     trips ||--o{ workspace_notifications : "has"
     users ||--o{ workspace_notifications : "receives"
-    trips ||--o{ bookings : "links"
-    users ||--o{ bookings : "makes"
 
     users {
         UUID id PK
@@ -433,25 +420,11 @@ erDiagram
         TIMESTAMP created_at
     }
 
-    bookings {
-        UUID id PK
-        UUID user_id FK
-        UUID trip_id FK
-        VARCHAR hotel_name
-        VARCHAR room_type
-        INTEGER guests
-        DATE check_in
-        DATE check_out
-        DOUBLE_PRECISION price
-        VARCHAR payment_id
-        VARCHAR confirmation_number
-        TIMESTAMP created_at
-    }
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 | Technology | Version | Purpose |
@@ -466,7 +439,6 @@ erDiagram
 | [Socket.io Client](https://socket.io/) | 4.8 | Real-Time Collaboration |
 | [Capacitor](https://capacitorjs.com/) | v8 | Android Native Wrapper |
 | [Electron](https://www.electronjs.org/) | 43 | Desktop App Wrapper |
-| Razorpay Checkout SDK | — | Payment Checkout |
 | oxlint | 1.71 | Fast JS Linter |
 
 ### Backend
@@ -492,7 +464,7 @@ erDiagram
 ### AI Providers (Priority Order)
 | Provider | Models Used | Role |
 |---|---|---|
-| Google Gemini | `gemini-1.5-flash` | Primary — itinerary, hotels, flights, chat, OCR |
+| Google Gemini | `gemini-1.5-flash` | Primary — itinerary, flights, chat, OCR |
 | Groq | `openai/gpt-oss-20b`, `gpt-oss-120b` | Secondary — travel search |
 | OpenRouter | `llama-3.3-70b-instruct:free`, `gemini-2.0-flash-exp:free` | Tertiary — travel search |
 | Ollama (local) | `qwen2.5`, `llama3` | Offline fallback — itinerary generation |
@@ -500,19 +472,17 @@ erDiagram
 ### External APIs & Services
 | Service | Purpose | API Key |
 |---|---|---|
-| OpenSky Network | Live ADS-B flight tracking | ❌ Free |
-| Open-Meteo | Weather forecasts + geocoding fallback | ❌ Free |
-| Nominatim (OSM) | City geocoding + autocomplete | ❌ Free |
-| Overpass API | OSM tourist attractions & POIs | ❌ Free |
-| Wikipedia Geosearch | POI fallback data | ❌ Free |
-| Razorpay | Payment checkout SDK | ✅ Optional |
-| Brevo | Transactional email (cloud) | ✅ Optional |
-| CloudAMQP / RabbitMQ | Chat message broker | ✅ Optional |
-| Amadeus | GDS hotel geocode search | ✅ Optional |
+| OpenSky Network | Live ADS-B flight tracking | No |
+| Open-Meteo | Weather forecasts + geocoding fallback | No |
+| Nominatim (OSM) | City geocoding + autocomplete | No |
+| Overpass API | OSM tourist attractions & POIs | No |
+| Wikipedia Geosearch | POI fallback data | No |
+| Brevo | Transactional email (cloud) | Optional |
+| CloudAMQP / RabbitMQ | Chat message broker | Optional |
 
 ---
 
-## 🚀 Installation & Quick Start
+## Installation & Quick Start
 
 ### Prerequisites
 - **Node.js** v18.0.0 or higher
@@ -573,9 +543,6 @@ SENDER_EMAIL="your-sender@gmail.com"
 # Message Broker (Optional — falls back to in-memory)
 RABBITMQ_URL="amqps://user:pass@host/vhost"
 
-# Amadeus Hotel GDS (Optional)
-AMADEUS_CLIENT_ID="your_amadeus_client_id"
-AMADEUS_CLIENT_SECRET="your_amadeus_client_secret"
 ```
 
 ```bash
@@ -627,7 +594,7 @@ npx cap open android     # Opens Android Studio
 
 ---
 
-## 🌐 Application Routes
+## Application Routes
 
 | Route | Auth | Description |
 |---|---|---|
@@ -635,7 +602,6 @@ npx cap open android     # Opens Android Studio
 | `/login` | Public | Redirects with auth modal (login) |
 | `/register` | Public | Redirects with auth modal (register) |
 | `/dashboard` | **Protected** | Main trips dashboard + AI trip wizard |
-| `/hotels` | **Protected** | Hotel search, filters, booking |
 | `/weather` | **Protected** | Global weather forecasts |
 | `/tracker` | **Protected** | Live aviation radar (Sky Tracker) |
 | `/trips/:id/budget` | **Protected** | Expense tracker for a trip |
@@ -648,11 +614,10 @@ npx cap open android     # Opens Android Studio
 | `/trips/:id/collaborate` | **Protected** | Real-time collaborative workspace |
 | `/shared-trip/:id` | Public | Read-only shared trip view |
 | `/trip-invite/respond` | Public | Accept/decline collaboration invite |
-| `/mock-payment` | **Protected** | Razorpay mock checkout |
 
 ---
 
-## 📡 API Quick Reference
+## API Quick Reference
 
 See [**API.md**](API.md) for full documentation including request/response schemas.
 
@@ -666,8 +631,6 @@ See [**API.md**](API.md) for full documentation including request/response schem
 | Community Feed | `/posts/*` | GET, POST, PUT, DELETE |
 | Favorites | `/favorites/*` | GET, POST, DELETE |
 | Notifications | `/notifications/*` | GET, PATCH |
-| Bookings | `/bookings/*` | GET, POST |
-| Hotel Search | `/hotels/search`, `/travel/hotels` | GET |
 | Flight Search | `/travel/flights` | GET |
 | Transit Search | `/travel/transit` | GET |
 | Airport Autocomplete | `/travel/airports` | GET |
@@ -680,7 +643,7 @@ See [**API.md**](API.md) for full documentation including request/response schem
 
 ---
 
-## 🔌 Real-Time WebSocket Events (Socket.io)
+## Real-Time WebSocket Events (Socket.io)
 
 | Client → Server | Payload | Description |
 |---|---|---|
@@ -710,7 +673,7 @@ See [**API.md**](API.md) for full documentation including request/response schem
 
 ---
 
-## 🔐 Security Details
+## Security Details
 
 ### AES-256-GCM Document Encryption (Key Wrapping)
 
@@ -743,7 +706,7 @@ User submits OTP → Verify cache → Issue JWT (30-day TTL)
 
 ---
 
-## ☁️ Deployment
+## Deployment
 
 ### Backend — Azure App Service (`xplorism-api`)
 
@@ -769,26 +732,24 @@ The `vercel.json` at the frontend root configures SPA routing rewrites so all pa
 
 ---
 
-## 📦 Data Sources & Integrations
+## Data Sources & Integrations
 
 | Source | Purpose | Auth Required |
 |---|---|---|
-| [Open-Meteo](https://open-meteo.com/) | Weather forecasts + geocoding fallback | ❌ Free |
-| [Nominatim (OSM)](https://nominatim.org/) | City geocoding + autocomplete proxy | ❌ Free |
-| [Overpass API](https://overpass-api.de/) | Tourist attractions (OSM data) | ❌ Free |
-| [Wikipedia Geosearch](https://www.mediawiki.org/wiki/API:Geosearch) | POI fallback | ❌ Free |
-| [OpenSky Network](https://opensky-network.org/) | Live ADS-B flight positions | ❌ Free |
-| [Google Gemini 1.5 Flash](https://ai.google.dev/) | Primary AI engine | ✅ Required |
-| [Groq API](https://console.groq.com/) | Secondary AI + travel search | ✅ Optional |
-| [OpenRouter](https://openrouter.ai/) | Tertiary AI + travel search | ✅ Optional |
-| [Ollama](https://ollama.com/) | Offline AI fallback | ❌ Self-hosted |
-| [Razorpay](https://razorpay.com/) | Payment checkout SDK | ✅ Optional |
-| [Brevo](https://www.brevo.com/) | Cloud transactional email | ✅ Optional |
-| [CloudAMQP / RabbitMQ](https://www.cloudamqp.com/) | Chat message broker | ✅ Optional |
-| [Amadeus](https://developers.amadeus.com/) | GDS hotel geocode search | ✅ Optional |
+| [Open-Meteo](https://open-meteo.com/) | Weather forecasts + geocoding fallback | No |
+| [Nominatim (OSM)](https://nominatim.org/) | City geocoding + autocomplete proxy | No |
+| [Overpass API](https://overpass-api.de/) | Tourist attractions (OSM data) | No |
+| [Wikipedia Geosearch](https://www.mediawiki.org/wiki/API:Geosearch) | POI fallback | No |
+| [OpenSky Network](https://opensky-network.org/) | Live ADS-B flight positions | No |
+| [Google Gemini 1.5 Flash](https://ai.google.dev/) | Primary AI engine | Required |
+| [Groq API](https://console.groq.com/) | Secondary AI + travel search | Optional |
+| [OpenRouter](https://openrouter.ai/) | Tertiary AI + travel search | Optional |
+| [Ollama](https://ollama.com/) | Offline AI fallback | No (Self-hosted) |
+| [Brevo](https://www.brevo.com/) | Cloud transactional email | Optional |
+| [CloudAMQP / RabbitMQ](https://www.cloudamqp.com/) | Chat message broker | Optional |
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License** — see the `LICENSE` file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.

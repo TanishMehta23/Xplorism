@@ -14,8 +14,19 @@ const SQL_INJECTION_PATTERNS = [
   /BENCHMARK\(/i      // Heavy execution injection
 ];
 
-// Fields that are known to contain binary/base64 data and should be skipped
-const SKIP_FIELDS = new Set(['profilePhoto', 'profile_photo', 'document', 'fileData', 'imageData']);
+// Fields that are known to contain binary/base64/JWT token data and should be skipped
+const SKIP_FIELDS = new Set([
+  'profilePhoto', 
+  'profile_photo', 
+  'document', 
+  'fileData', 
+  'imageData', 
+  'credential', 
+  'idToken', 
+  'token', 
+  'resetToken', 
+  'refreshToken'
+]);
 
 function containsSqlInjection(value, key = null) {
   // Skip known binary/base64 fields
@@ -42,13 +53,18 @@ function containsSqlInjection(value, key = null) {
 }
 
 export const sqlInjectionSanitizer = (req, res, next) => {
+  // Auth endpoints receiving Google ID tokens or credentials
+  if (req.path === '/auth/google' || req.originalUrl?.includes('/auth/google')) {
+    return next();
+  }
+
   // Scan request parameters, query string, and body
   if (
     containsSqlInjection(req.body) ||
     containsSqlInjection(req.query) ||
     containsSqlInjection(req.params)
   ) {
-    console.warn(`[SECURITY WARNING]: Blocked potential SQL Injection attack from IP: ${req.ip}`);
+    console.warn(`[SECURITY WARNING]: Blocked potential SQL Injection attack from IP: ${req.ip} path: ${req.originalUrl}`);
     return res.status(400).json({
       status: 400,
       message: 'Suspicious input detected. Request rejected for security purposes.'

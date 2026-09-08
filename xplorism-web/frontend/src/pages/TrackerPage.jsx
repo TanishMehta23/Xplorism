@@ -138,8 +138,8 @@ export default function TrackerPage() {
 
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      // Google Maps Tile Layer (no API key required for these public tiles)
-      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      // Google Maps Tile Layer (forced English language)
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
         attribution: '&copy; Google Maps',
         maxZoom: 20
       }).addTo(map);

@@ -5,7 +5,7 @@
 @layer base {
   :root {
     --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
-    --font-heading: 'Urbanist', sans-serif;
+    --font-heading: 'Outfit', 'Urbanist', sans-serif;
     --bg-primary: #f8fafc;
     --bg-secondary: #ffffff;
     --bg-tertiary: #f1f5f9;
@@ -50,6 +50,23 @@
     overflow-x: clip;
   }
 
+  /* Global selection styling across the entire website */
+  ::selection,
+  *::selection,
+  .dark ::selection,
+  .dark *::selection {
+    background-color: #ffe4e6 !important;
+    color: #e11d48 !important;
+  }
+
+  ::-moz-selection,
+  *::-moz-selection,
+  .dark ::-moz-selection,
+  .dark *::-moz-selection {
+    background-color: #ffe4e6 !important;
+    color: #e11d48 !important;
+  }
+
   h1, h2, h3, h4, h5, h6, .font-heading {
     font-family: var(--font-heading);
     letter-spacing: -0.02em;
@@ -59,29 +76,29 @@
   .dark .text-slate-900,
   .dark .text-slate-955,
   .dark .text-slate-950 {
-    color: #f1f5f9 !important;
+    color: #f8fafc !important;
   }
   .dark .text-slate-800,
   .dark .text-slate-850 {
-    color: #e2e8f0 !important;
+    color: #f1f5f9 !important;
   }
   .dark .text-slate-700 {
-    color: #cbd5e1 !important;
+    color: #e2e8f0 !important;
   }
   .dark .text-slate-600,
   .dark .text-slate-650 {
-    color: #94a3b8 !important;
+    color: #cbd5e1 !important;
   }
   .dark .text-slate-500,
   .dark .text-slate-550 {
-    color: #64748b !important;
+    color: #94a3b8 !important;
   }
   .dark .text-slate-400,
   .dark .text-slate-450 {
-    color: #475569 !important;
+    color: #cbd5e1 !important;
   }
   .dark .text-slate-300 {
-    color: #334155 !important;
+    color: #e2e8f0 !important;
   }
   /* Custom light mode utility classes */
   .text-rose-455,
@@ -249,10 +266,6 @@
     background-color: rgba(0, 0, 0, 0.7) !important;
   }
 
-  /* Dark mode Google button container */
-  .dark #modal-google-signin-btn iframe {
-    filter: invert(0.85) hue-rotate(180deg) !important;
-  }
 
   /* Dark mode badge backgrounds */
   .dark .bg-rose-50\/50 {
@@ -618,10 +631,7 @@ svg.darkreader-keep {
   outline: none !important;
 }
 
-/* Leaflet Map Dark Mode Filter */
-.dark .leaflet-tile-pane {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-}
+/* Leaflet Map Styling */
 .dark .leaflet-container {
-  background: #0f172a !important;
+  background: #f8fafc !important;
 }

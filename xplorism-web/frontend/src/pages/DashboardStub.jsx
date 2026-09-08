@@ -906,8 +906,8 @@ export default function DashboardStub() {
     });
     mapInstanceRef.current = map;
 
-    // Google Maps Tile Layer (no API key required for these public tiles)
-    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    // Google Maps Tile Layer (forced English language)
+    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
       attribution: '&copy; Google Maps',
       maxZoom: 19
     }).addTo(map);
@@ -1714,7 +1714,7 @@ export default function DashboardStub() {
     const map = window.L.map('map-container', { zoomControl: false }).setView(mapCoords, zoom);
     window.mapInstance = map;
 
-    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
       attribution: '© Google Maps'
     }).addTo(map);
 

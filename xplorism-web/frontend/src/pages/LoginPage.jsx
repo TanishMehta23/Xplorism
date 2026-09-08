@@ -21,13 +21,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [view, setView] = useState('login'); // 'login' | 'forgot' | 'otp' | 'reset-password'
-  
+
   // OTP states
   const [otp, setOtp] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpType, setOtpType] = useState('login'); // 'login' | 'register' | 'forgot'
   const [pendingEmail, setPendingEmail] = useState('');
-  
+
   // Forgot password & reset password states
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
@@ -153,7 +153,7 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
@@ -162,7 +162,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const data = await login(email, password);
-      
+
       // Store email if rememberMe is checked
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email);
@@ -295,10 +295,10 @@ export default function LoginPage() {
         {/* Logo Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-3 text-3xl font-extrabold tracking-tight">
-            <img 
-              src="/logo.png" 
-              alt="Xplorism Logo" 
-              className="h-10 w-10 object-contain rounded-full shadow-sm" 
+            <img
+              src="/logo.png"
+              alt="Xplorism Logo"
+              className="h-10 w-10 object-contain rounded-full shadow-sm"
             />
             <span className="text-white font-extrabold tracking-tight">
               Xplorism

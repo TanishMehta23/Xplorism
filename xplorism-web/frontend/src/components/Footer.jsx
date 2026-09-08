@@ -248,7 +248,11 @@ export default function Footer() {
                           value={helpForm.email}
                           onChange={(e) => setHelpForm({ ...helpForm, email: e.target.value })}
                           placeholder="you@example.com"
-                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${isDark
+                          readOnly={Boolean(user?.email)}
+                          disabled={Boolean(user?.email)}
+                          className={`w-full p-2.5 text-xs rounded-xl focus:outline-none focus:ring-1 transition ${
+                            user?.email ? 'opacity-70 cursor-not-allowed select-none ' : ''
+                          }${isDark
                               ? 'bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-slate-700 focus:ring-slate-700'
                               : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-400'
                             }`}

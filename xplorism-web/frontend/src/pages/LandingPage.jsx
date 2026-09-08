@@ -390,8 +390,9 @@ export default function LandingPage() {
       scrollWheelZoom: true
     }).setView([lat, lon], zoom);
 
-    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-      attribution: '&copy; Google Maps'
+    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Google Maps',
+      maxZoom: 19
     }).addTo(mapRef.current);
   };
 
@@ -558,35 +559,42 @@ export default function LandingPage() {
       <div className="absolute top-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Navigation */}
-      <nav className={`relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between border-b flex-nowrap ${isDark ? 'border-slate-900' : 'border-slate-100'}`}>
-        <Link to="/" className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-          <img
-            src="/logo.png"
-            alt="Xplorism Logo"
-            className="h-10 sm:h-14 w-10 sm:w-14 object-contain rounded-full shadow-sm"
-          />
-          <span className={`font-extrabold tracking-tight text-lg sm:text-2xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            Xplorism
-          </span>
-        </Link>
+      {/* Navigation (Sticky Glassmorphic Navbar) */}
+      <nav className={`sticky top-0 z-50 w-full backdrop-blur-md transition-colors duration-300 border-b ${
+        isDark 
+          ? 'bg-slate-950/70 border-slate-800/60' 
+          : 'bg-white/70 border-slate-100/60'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-nowrap">
+          <Link to="/" className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            <img
+              src="/logo-removebg.png"
+              alt="Xplorism Logo"
+              className="h-10 sm:h-12 w-10 sm:w-12 object-contain rounded-full shadow-sm"
+            />
+            <span className={`font-extrabold tracking-tight text-xl sm:text-2xl ${
+              isDark ? 'text-white' : 'text-slate-900'
+            }`}>
+              Xplorism
+            </span>
+          </Link>
 
         <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
           {/* Language Selector */}
           <div className="relative lang-selector-container">
             <button
               onClick={() => setIsLangOpen(!isLangOpen)}
-              className={`p-2 rounded-xl border flex items-center space-x-1.5 text-xs font-semibold cursor-pointer transition ${
-                isDark ? 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-950'
+              className={`p-2 rounded-xl border flex items-center space-x-1.5 text-xs font-bold cursor-pointer transition ${
+                isDark ? 'bg-slate-900/80 border-slate-800 text-white hover:bg-slate-800' : 'bg-white border-slate-200 text-slate-700 hover:text-slate-950'
               }`}
             >
-              <Globe className="h-4 w-4" />
-              <span className="uppercase">{language}</span>
+              <Globe className={`h-4 w-4 ${isDark ? 'text-white' : 'text-slate-600'}`} />
+              <span className={`uppercase font-extrabold ${isDark ? 'text-white' : 'text-slate-700'}`}>{language}</span>
             </button>
             <div className={`absolute right-0 mt-2 w-32 rounded-2xl shadow-xl border p-1.5 z-50 transition-all ${
               isLangOpen ? 'block' : 'hidden'
             } ${
-              isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-700'
+              isDark ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-slate-100 text-slate-700'
             }`}>
               {[
                 { code: 'en', label: 'English' },
@@ -606,7 +614,7 @@ export default function LandingPage() {
                   className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                     language === lang.code
                       ? 'bg-rose-500 text-white'
-                      : isDark ? 'hover:bg-slate-800 hover:text-white' : 'hover:bg-slate-50 hover:text-slate-950'
+                      : isDark ? 'hover:bg-slate-800 hover:text-white text-slate-200' : 'hover:bg-slate-50 hover:text-slate-950'
                   }`}
                 >
                   {lang.label}
@@ -619,7 +627,7 @@ export default function LandingPage() {
           <button
             onClick={toggleTheme}
             className={`p-2 rounded-xl border cursor-pointer transition ${
-              isDark ? 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-950'
+              isDark ? 'bg-slate-900/80 border-slate-800 text-white hover:bg-slate-800' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-950'
             }`}
             title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
@@ -641,7 +649,7 @@ export default function LandingPage() {
                   setIsAuthModalOpen(true);
                 }}
                 className={`px-2 sm:px-4 py-2 font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                  isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  isDark ? 'text-white hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {t('sign_in')}
@@ -658,21 +666,35 @@ export default function LandingPage() {
             </div>
           )}
         </div>
+        </div>
       </nav>
 
-      {/* Hero Section */}
-      <header className="relative z-10 max-w-5xl mx-auto px-6 pt-20 pb-8 text-center flex flex-col items-center">
-        {/* Category Pill Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm mb-6"
+      {/* Hero Section with Seamlessly Mixed Travel Background Image */}
+      <div className="relative">
+        {/* Background Image with smooth feathered gradient blending */}
+        <div 
+          className="absolute inset-x-0 top-0 bottom-0 pointer-events-none z-0 overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)'
+          }}
         >
-          <Sparkles className="h-4 w-4 text-rose-500" />
-          <span className="text-xs font-black uppercase tracking-widest">AI-POWERED TRIP PLANNER</span>
-        </motion.div>
+          <img
+            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2400&q=85"
+            alt="Travel Adventure Background"
+            className={`w-full h-full object-cover object-center transition-all duration-700 ${
+              isDark ? 'opacity-80 brightness-95 saturate-135 contrast-110' : 'opacity-75 saturate-135 contrast-105'
+            }`}
+          />
+          {/* Multi-stage color blend gradient */}
+          <div className={`absolute inset-0 bg-gradient-to-b ${
+            isDark
+              ? 'from-slate-950/40 via-transparent to-slate-950/90'
+              : 'from-white/50 via-white/10 to-white/95'
+          }`} />
+        </div>
 
+        <header className="relative z-10 max-w-5xl mx-auto px-6 pt-16 sm:pt-20 pb-12 text-center flex flex-col items-center">
         <motion.h1
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -723,10 +745,15 @@ export default function LandingPage() {
           )}
         </motion.div>
       </header>
+      </div>
 
       {/* Interactive 3D Laptop Showcase */}
       <section className="relative max-w-6xl mx-auto px-6 pt-10 pb-10 flex flex-col items-center overflow-hidden">
-        <div className={`text-xs font-semibold uppercase tracking-widest mt-12 mb-14 animate-pulse ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+        <div className={`text-xs font-black uppercase tracking-widest mt-6 mb-12 px-5 py-2 rounded-full border shadow-md backdrop-blur-md transition-all duration-300 ${
+          isDark 
+            ? 'bg-slate-900 border-slate-700 text-slate-100 shadow-slate-950/50' 
+            : 'bg-white border-slate-200 text-slate-700 shadow-slate-200/50'
+        }`}>
           {t('scroll_down_planner')}
         </div>
 
@@ -750,50 +777,54 @@ export default function LandingPage() {
             </div>
 
             {/* Inner Screen Mockup Content */}
-            <div className="absolute inset-0 bg-white overflow-hidden text-slate-800 p-3 md:p-6 select-none font-sans text-[10px] md:text-xs">
+            <div className={`absolute inset-0 overflow-hidden p-3 md:p-5 select-none font-sans text-[10px] md:text-xs transition-colors duration-300 ${
+              isDark ? 'bg-[#0b1329] text-slate-100' : 'bg-white text-slate-800'
+            }`}>
 
-              {/* Mock Screen Header (Matches our real website) */}
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-nowrap gap-1">
+              {/* Mock Screen Header (Matches our real website Navbar) */}
+              <div className={`flex items-center justify-between pb-2.5 border-b flex-nowrap gap-1 ${
+                isDark ? 'border-slate-800' : 'border-slate-100'
+              }`}>
                 <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
                   <img
                     src="/logo.png"
                     alt="Xplorism Logo"
-                    className="h-5 w-5 sm:h-7 sm:w-7 object-contain rounded-full"
+                    className="h-5 w-5 sm:h-6 sm:w-6 object-contain rounded-full shadow-sm"
                   />
-                  <span className="font-extrabold text-slate-900 tracking-tight text-[8px] sm:text-xs">Xplorism</span>
+                  <span className={`font-extrabold tracking-tight text-[9px] sm:text-xs ${isDark ? 'text-white' : 'text-slate-900'}`}>Xplorism</span>
                 </div>
                 
                 {/* Real Website Nav Links Mimic */}
-                <div className="hidden md:flex items-center space-x-2 text-[7px] font-bold text-slate-500">
+                <div className="hidden md:flex items-center space-x-2 text-[7px] font-bold">
                   <span className="flex items-center space-x-0.5 text-rose-500">
                     <Compass className="h-2 w-2 text-rose-500" />
                     <span>Trips</span>
                   </span>
-                  <span className="flex items-center space-x-0.5">
+                  <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Users className="h-2 w-2 text-slate-400" />
                     <span>Shared Trips</span>
                   </span>
-                  <span className="flex items-center space-x-0.5">
+                  <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Sun className="h-2 w-2 text-slate-400" />
                     <span>Weather</span>
                   </span>
-                  <span className="flex items-center space-x-0.5">
+                  <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Navigation className="h-2 w-2 text-slate-400 rotate-45" />
                     <span>Tracker</span>
                   </span>
-                  <span className="flex items-center space-x-0.5">
+                  <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <Building className="h-2 w-2 text-slate-400" />
                     <span>Hotels</span>
                   </span>
-                  <span className="flex items-center space-x-0.5">
+                  <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <DollarSign className="h-2 w-2 text-slate-400" />
                     <span>Budgets</span>
                   </span>
-                  <span className="flex items-center space-x-0.5">
+                  <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <FolderLock className="h-2 w-2 text-slate-400" />
                     <span>Vault</span>
                   </span>
-                  <span className="flex items-center space-x-0.5">
+                  <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <MessageSquare className="h-2 w-2 text-slate-400" />
                     <span>Community</span>
                   </span>
@@ -801,32 +832,42 @@ export default function LandingPage() {
 
                 <div className="flex items-center space-x-1.5 shrink-0">
                   {/* Bell Icon Mock */}
-                  <div className="h-4.5 w-4.5 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 cursor-pointer">
+                  <div className={`h-4.5 w-4.5 rounded-full flex items-center justify-center cursor-pointer ${
+                    isDark ? 'text-slate-400 hover:bg-slate-800' : 'text-slate-400 hover:bg-slate-50'
+                  }`}>
                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                   </div>
-                  {/* User Avatar Circle Mock (matches the "T" user profile avatar from screenshot) */}
-                  <div className="h-4.5 w-4.5 sm:h-6 sm:w-6 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-[7px] sm:text-[10px] shrink-0">
+                  {/* User Avatar Circle Mock */}
+                  <div className={`h-4.5 w-4.5 sm:h-5.5 sm:w-5.5 rounded-full flex items-center justify-center font-bold text-[7px] sm:text-[9px] shrink-0 border ${
+                    isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'
+                  }`}>
                     T
                   </div>
                 </div>
               </div>
 
               {/* Mock Dashboard Body */}
-              <div className="mt-4 flex-1 flex flex-col justify-between overflow-y-auto no-scrollbar max-h-[85%] pr-0.5">
-                {/* Dashboard Title & Action Button */}
-                <div className="flex items-center justify-between pb-3">
+              <div className="mt-3 flex-1 flex flex-col justify-between overflow-y-auto no-scrollbar max-h-[88%] pr-0.5">
+                {/* Dashboard Title & Action Button with Travel Hub badge */}
+                <div className="flex items-center justify-between pb-2">
                   <div>
-                    <h2 className="text-xs sm:text-sm font-black text-slate-900 leading-tight">My Trips Dashboard</h2>
-                    <p className="text-[6px] sm:text-[9px] text-slate-400 mt-0.5 font-semibold">Create and manage your customized itineraries.</p>
+                    <div className="flex items-center space-x-1 mb-0.5">
+                      <div className="p-0.5 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                        <Compass className="h-2 w-2" />
+                      </div>
+                      <span className="text-[6px] font-black text-rose-500 uppercase tracking-wider">Personal Travel Hub</span>
+                    </div>
+                    <h2 className={`text-xs sm:text-sm font-black leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>My Trips Dashboard</h2>
+                    <p className={`text-[6px] sm:text-[8px] font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Create and manage your customized itineraries.</p>
                   </div>
                   <button
                     onClick={() => {
                       setAuthModalMode('login');
                       setIsAuthModalOpen(true);
                     }}
-                    className="px-2 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-bold text-[6px] sm:text-[9px] flex items-center space-x-1 cursor-pointer transition shadow-sm"
+                    className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-bold text-[6px] sm:text-[9px] flex items-center space-x-1 cursor-pointer transition shadow-sm"
                   >
                     <Plus className="h-2 w-2" />
                     <span>Create New Trip</span>
@@ -834,74 +875,82 @@ export default function LandingPage() {
                 </div>
 
                 {/* Recommended Pre-planned Trips Section */}
-                <div className="mt-2">
-                  <div className="flex items-center space-x-1 mb-2">
-                    <h3 className="text-[8px] sm:text-xs font-bold text-slate-900">{t('recommended_trips')}</h3>
+                <div className="mt-1">
+                  <div className="flex items-center space-x-1 mb-1.5">
+                    <h3 className={`text-[8px] sm:text-[10px] font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('recommended_trips')}</h3>
                   </div>
 
                   {/* Cards Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     
                     {/* Card 1: Tokyo */}
-                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white p-1.5 flex flex-col justify-between shadow-sm">
-                      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-50">
+                    <div className={`border rounded-2xl overflow-hidden p-1.5 flex flex-col justify-between shadow-sm transition ${
+                      isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-100'
+                    }`}>
+                      <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-100">
                         <img src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=300&q=80" alt="Tokyo" className="w-full h-full object-cover" />
-                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 text-rose-550 shadow-sm">Adventure</span>
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 dark:bg-slate-900/90 text-rose-550 shadow-sm">Adventure</span>
                       </div>
                       <div className="mt-1.5">
-                        <h4 className="font-extrabold text-[7px] sm:text-[9px] text-slate-900 leading-tight">Tokyo, Japan</h4>
-                        <p className="text-[5px] sm:text-[7px] text-slate-400 font-semibold mt-0.5">3 Days Custom Schedule</p>
-                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] text-slate-550 font-bold">
-                          <span className="flex items-center space-x-0.5"><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
-                          <span className="text-slate-800">¥120,000</span>
+                        <h4 className={`font-extrabold text-[7px] sm:text-[9px] leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Tokyo, Japan</h4>
+                        <p className={`text-[5px] sm:text-[7px] font-semibold mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>3 Days Custom Schedule</p>
+                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] font-bold">
+                          <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
+                          <span className={isDark ? 'text-rose-400' : 'text-slate-800'}>¥120,000</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Card 2: Paris */}
-                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white p-1.5 flex flex-col justify-between shadow-sm">
-                      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-50">
+                    <div className={`border rounded-2xl overflow-hidden p-1.5 flex flex-col justify-between shadow-sm transition ${
+                      isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-100'
+                    }`}>
+                      <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-100">
                         <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=300&q=80" alt="Paris" className="w-full h-full object-cover" />
-                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 text-rose-550 shadow-sm">Romantic & Art</span>
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 dark:bg-slate-900/90 text-rose-550 shadow-sm">Romantic & Art</span>
                       </div>
                       <div className="mt-1.5">
-                        <h4 className="font-extrabold text-[7px] sm:text-[9px] text-slate-900 leading-tight">Paris, France</h4>
-                        <p className="text-[5px] sm:text-[7px] text-slate-400 font-semibold mt-0.5">4 Days Custom Schedule</p>
-                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] text-slate-550 font-bold">
-                          <span className="flex items-center space-x-0.5"><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
-                          <span className="text-slate-800">€1,800</span>
+                        <h4 className={`font-extrabold text-[7px] sm:text-[9px] leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Paris, France</h4>
+                        <p className={`text-[5px] sm:text-[7px] font-semibold mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>4 Days Custom Schedule</p>
+                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] font-bold">
+                          <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
+                          <span className={isDark ? 'text-rose-400' : 'text-slate-800'}>€1,800</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Card 3: New York */}
-                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white p-1.5 flex flex-col justify-between shadow-sm">
-                      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-50">
+                    <div className={`border rounded-2xl overflow-hidden p-1.5 flex flex-col justify-between shadow-sm transition ${
+                      isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-100'
+                    }`}>
+                      <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-100">
                         <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=300&q=80" alt="New York" className="w-full h-full object-cover" />
-                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 text-rose-550 shadow-sm">Urban Adventure</span>
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 dark:bg-slate-900/90 text-rose-550 shadow-sm">Urban Adventure</span>
                       </div>
                       <div className="mt-1.5">
-                        <h4 className="font-extrabold text-[7px] sm:text-[9px] text-slate-900 leading-tight">New York, USA</h4>
-                        <p className="text-[5px] sm:text-[7px] text-slate-400 font-semibold mt-0.5">5 Days Custom Schedule</p>
-                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] text-slate-550 font-bold">
-                          <span className="flex items-center space-x-0.5"><Users className="h-1.5 w-1.5 text-slate-400" /><span>1 Travelers</span></span>
-                          <span className="text-slate-800">$2,500</span>
+                        <h4 className={`font-extrabold text-[7px] sm:text-[9px] leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>New York, USA</h4>
+                        <p className={`text-[5px] sm:text-[7px] font-semibold mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>5 Days Custom Schedule</p>
+                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] font-bold">
+                          <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}><Users className="h-1.5 w-1.5 text-slate-400" /><span>1 Travelers</span></span>
+                          <span className={isDark ? 'text-rose-400' : 'text-slate-800'}>$2,500</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Card 4: London */}
-                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white p-1.5 flex flex-col justify-between shadow-sm">
-                      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-50">
+                    <div className={`border rounded-2xl overflow-hidden p-1.5 flex flex-col justify-between shadow-sm transition ${
+                      isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-100'
+                    }`}>
+                      <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-100">
                         <img src="https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=600&q=80" alt="London" className="w-full h-full object-cover" />
-                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 text-rose-550 shadow-sm">Cultural</span>
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[5px] font-bold bg-white/95 dark:bg-slate-900/90 text-rose-550 shadow-sm">Cultural</span>
                       </div>
                       <div className="mt-1.5">
-                        <h4 className="font-extrabold text-[7px] sm:text-[9px] text-slate-900 leading-tight">London, UK</h4>
-                        <p className="text-[5px] sm:text-[7px] text-slate-400 font-semibold mt-0.5">3 Days Custom Schedule</p>
-                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] text-slate-550 font-bold">
-                          <span className="flex items-center space-x-0.5"><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
-                          <span className="text-slate-800">$1,800</span>
+                        <h4 className={`font-extrabold text-[7px] sm:text-[9px] leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>London, UK</h4>
+                        <p className={`text-[5px] sm:text-[7px] font-semibold mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>3 Days Custom Schedule</p>
+                        <div className="flex items-center justify-between mt-1 text-[5px] sm:text-[7px] font-bold">
+                          <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}><Users className="h-1.5 w-1.5 text-slate-400" /><span>2 Travelers</span></span>
+                          <span className={isDark ? 'text-rose-400' : 'text-slate-800'}>$1,800</span>
                         </div>
                       </div>
                     </div>
@@ -910,9 +959,11 @@ export default function LandingPage() {
                 </div>
 
                 {/* My Saved Itineraries header */}
-                <div className="mt-3 pt-3 border-t border-slate-100">
-                  <h3 className="text-[8px] sm:text-xs font-bold text-slate-900 mb-1">My Saved Itineraries</h3>
-                  <div className="border border-dashed border-slate-200 rounded-xl py-3 text-center text-[7px] sm:text-[9px] text-slate-400 bg-slate-50/50">
+                <div className={`mt-2.5 pt-2 border-t ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+                  <h3 className={`text-[8px] sm:text-[10px] font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>My Saved Itineraries</h3>
+                  <div className={`border border-dashed rounded-xl py-2 text-center text-[6px] sm:text-[8px] ${
+                    isDark ? 'border-slate-800 text-slate-500 bg-slate-900/30' : 'border-slate-200 text-slate-400 bg-slate-50/50'
+                  }`}>
                     No trips created yet. Click "Create New Trip" to get started.
                   </div>
                 </div>

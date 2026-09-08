@@ -605,7 +605,7 @@ export default function HotelBookingPage() {
         scrollWheelZoom: true
       }).setView(mapCoords, 14);
 
-      window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
         attribution: '© Google Maps'
       }).addTo(map);
 
@@ -705,7 +705,7 @@ export default function HotelBookingPage() {
       }).setView(dstCoords, 3);
 
       // Google Maps Standard Terrain / Street Layer
-      window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
         attribution: '&copy; Google Maps',
         maxZoom: 20
       }).addTo(map);

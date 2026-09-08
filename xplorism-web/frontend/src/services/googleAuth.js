@@ -1,12 +1,14 @@
-import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-
 let isGoogleAuthInitialized = false;
+
+const isNativePlatform = () => {
+  return typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
+};
 
 export const initGoogleAuth = async () => {
   if (isGoogleAuthInitialized) return;
-  if (Capacitor.isNativePlatform()) {
+  if (isNativePlatform()) {
     try {
+      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
       await GoogleAuth.initialize({
         clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         scopes: ['profile', 'email'],
@@ -23,6 +25,7 @@ export const nativeGoogleSignIn = async () => {
   if (!isGoogleAuthInitialized) {
     await initGoogleAuth();
   }
+  const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
   const googleUser = await GoogleAuth.signIn();
   // Return the idToken credential string
   const idToken = googleUser?.authentication?.idToken || googleUser?.idToken;

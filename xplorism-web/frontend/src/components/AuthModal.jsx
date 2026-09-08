@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, AlertCircle, ArrowRight, Eye, EyeOff, ChevronLeft, CheckCircle, ShieldCheck, Mail as MailAlert } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { api } from '../services/api';
@@ -42,7 +41,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
 
   const handleNativeGoogleSignIn = async () => {
     setError('');

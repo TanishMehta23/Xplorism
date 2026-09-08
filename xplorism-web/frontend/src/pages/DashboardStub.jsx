@@ -2357,9 +2357,6 @@ export default function DashboardStub() {
           <div className="w-full md:w-auto">
             <div className="flex items-center justify-between md:justify-start space-x-2.5 mb-2.5">
               <div className="flex items-center space-x-2.5">
-                <div className="p-2 md:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                  <Compass className="h-4.5 w-4.5 md:h-5 md:w-5" />
-                </div>
                 <span className="text-[11px] md:text-xs font-black text-rose-500 uppercase tracking-widest">{t('travel_hub') || 'Personal Travel Hub'}</span>
               </div>
               <button
@@ -2625,9 +2622,6 @@ export default function DashboardStub() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
           {/* Card 1: Total Spend */}
           <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-350 flex flex-col sm:flex-row items-start sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4 group">
-            <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-              <Coins className="h-5 w-5 sm:h-7 sm:w-7" />
-            </div>
             <div className="min-w-0 flex-1">
               <span className="text-[9.5px] sm:text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block truncate">{t('total_spend')}</span>
               <span className="text-sm sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 block truncate">
@@ -2638,9 +2632,6 @@ export default function DashboardStub() {
 
           {/* Card 2: Regions Visited */}
           <div className="bg-gradient-to-br from-blue-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-350 flex flex-col sm:flex-row items-start sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4 group">
-            <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
-              <Globe className="h-5 w-5 sm:h-7 sm:w-7" />
-            </div>
             <div className="min-w-0 flex-1">
               <span className="text-[9.5px] sm:text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block truncate">{t('regions_visited')}</span>
               <span className="text-sm sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 block truncate">
@@ -2651,9 +2642,6 @@ export default function DashboardStub() {
 
           {/* Card 3: Days Traveled */}
           <div className="bg-gradient-to-br from-rose-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-350 flex flex-col sm:flex-row items-start sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4 group">
-            <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform duration-300">
-              <Calendar className="h-5 w-5 sm:h-7 sm:w-7" />
-            </div>
             <div className="min-w-0 flex-1">
               <span className="text-[9.5px] sm:text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block truncate">{t('days_traveled')}</span>
               <span className="text-sm sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 block truncate">
@@ -2664,9 +2652,6 @@ export default function DashboardStub() {
 
           {/* Card 4: Travel Vibe */}
           <div className="bg-gradient-to-br from-amber-50 to-white dark:from-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-350 flex flex-col sm:flex-row items-start sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4 group">
-            <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300">
-              <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" />
-            </div>
             <div className="min-w-0 flex-1">
               <span className="text-[9.5px] sm:text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block truncate">{t('travel_vibe')}</span>
               <span className="text-sm sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 block truncate">
@@ -2808,11 +2793,8 @@ export default function DashboardStub() {
           <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-rose-500/5 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-12 -right-12 w-32 h-32 rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />
 
-          {/* Left Block: Icon and title */}
+          {/* Left Block: Title */}
           <div className="flex items-center space-x-3 sm:space-x-4 shrink-0">
-            <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-rose-500/10 text-rose-500 dark:text-rose-400">
-              <Quote className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
             <div>
               <span className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest block">{t('daily_vibe')}</span>
               <h3 className="text-xs sm:text-sm font-black text-slate-850 dark:text-white tracking-tight mt-0.5">{t('wanderlust_quotes')}</h3>

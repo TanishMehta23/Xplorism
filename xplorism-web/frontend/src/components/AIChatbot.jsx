@@ -315,9 +315,6 @@ export default function AIChatbot() {
         {/* Header */}
         <div className="bg-rose-500 p-4 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
-            <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-white animate-spin-slow" />
-            </div>
             <div>
               <h3 className="font-extrabold text-sm tracking-wide">Xplorism AI</h3>
               <span className="text-[10px] text-rose-100 flex items-center space-x-1">

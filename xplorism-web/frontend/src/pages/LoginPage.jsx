@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff, ChevronLeft, CheckCircle, ShieldCheck } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { nativeGoogleSignIn, initGoogleAuth } from '../services/googleAuth';
@@ -15,7 +13,7 @@ export default function LoginPage() {
   const { login, loginWithGoogle, verifyOtp } = useAuth();
   const navigate = useNavigate();
 
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
 
   // New States
   const [showPassword, setShowPassword] = useState(false);

@@ -555,10 +555,6 @@ export default function LandingPage() {
 
   return (
     <div className={`min-h-screen font-sans relative overflow-x-clip selection:bg-rose-100 selection:text-rose-600 transition-colors duration-300 ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-800'}`}>
-      {/* Decorative Ambient Blur Overlays */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
-
       {/* Navigation (Sticky Glassmorphic Navbar) */}
       <nav className={`sticky top-0 z-50 w-full backdrop-blur-md transition-colors duration-300 border-b ${
         isDark 

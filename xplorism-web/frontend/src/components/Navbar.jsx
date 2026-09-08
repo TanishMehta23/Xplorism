@@ -360,19 +360,19 @@ export default function Navbar({ activeTab }) {
                   {/* Language Selector Dropdown */}
                   {(() => {
                     const languagesList = [
-                      { code: 'en', label: 'English', flag: '🇬🇧' },
-                      { code: 'es', label: 'Español', flag: '🇪🇸' },
-                      { code: 'fr', label: 'Français', flag: '🇫🇷' },
-                      { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-                      { code: 'hi', label: 'हिन्दी (Hindi)', flag: '🇮🇳' },
-                      { code: 'ar', label: 'العربية (Arabic)', flag: '🇦🇪' },
-                      { code: 'pt', label: 'Português', flag: '🇵🇹' }
+                      { code: 'en', label: 'English' },
+                      { code: 'es', label: 'Español' },
+                      { code: 'fr', label: 'Français' },
+                      { code: 'de', label: 'Deutsch' },
+                      { code: 'hi', label: 'हिन्दी' },
+                      { code: 'ar', label: 'العربية' },
+                      { code: 'pt', label: 'Português' }
                     ];
                     const currentLangObj = languagesList.find(l => l.code === language) || languagesList[0];
 
                     return (
                       <div className="px-4 py-2 border-b relative" style={{ borderColor: 'var(--border-secondary)' }}>
-                        <p className="text-[9px] uppercase font-bold tracking-wider mb-1.5" style={{ color: 'var(--text-tertiary)' }}>Language / Idioma</p>
+                        <p className="text-[9px] uppercase font-bold tracking-wider mb-1.5" style={{ color: 'var(--text-tertiary)' }}>Language</p>
 
                         <button
                           onClick={() => setIsLangOpen(!isLangOpen)}
@@ -380,7 +380,6 @@ export default function Navbar({ activeTab }) {
                           style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
                         >
                           <span className="flex items-center space-x-1.5">
-                            <span className="text-sm leading-none">{currentLangObj.flag}</span>
                             <span>{currentLangObj.label}</span>
                           </span>
                           <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
@@ -419,7 +418,6 @@ export default function Navbar({ activeTab }) {
                                   }}
                                 >
                                   <span className="flex items-center space-x-2">
-                                    <span className="text-sm leading-none">{lang.flag}</span>
                                     <span>{lang.label}</span>
                                   </span>
                                   {language === lang.code && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />}

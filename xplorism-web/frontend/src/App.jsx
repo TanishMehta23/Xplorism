@@ -23,10 +23,6 @@ import CollaborativeTripPage from './pages/CollaborativeTripPage';
 import TripInviteRespondPage from './pages/TripInviteRespondPage';
 import MockPaymentPage from './pages/MockPaymentPage';
 import AIChatbot from './components/AIChatbot';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
-
-
 import { CurrencyProvider } from './contexts/CurrencyContext';
 
 // Protected Route component
@@ -267,8 +263,6 @@ export default function App() {
               <ScrollToTop />
               <AppRoutes />
               <AIChatbot />
-              <Analytics />
-              <SpeedInsights />
             </Router>
           </CurrencyProvider>
         </LanguageProvider>

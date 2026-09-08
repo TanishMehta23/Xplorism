@@ -349,9 +349,6 @@ export default function DocumentVaultPage() {
           <div className="w-full md:w-auto">
             <div className="flex items-center justify-between md:justify-start space-x-2.5 mb-2 sm:mb-3">
               <div className="flex items-center space-x-2.5">
-                <div className="p-2 sm:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                  <FolderLock className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-                </div>
                 <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">{t('secure_storage') || 'Encrypted Storage'}</span>
               </div>
               <button
@@ -429,7 +426,6 @@ export default function DocumentVaultPage() {
                 }`}
                 style={{ color: isActive ? '#ffffff' : 'var(--text-secondary)' }}
               >
-                <span className="shrink-0">{getTypeIcon(filter)}</span>
                 <span className="capitalize">{filter === 'all' ? 'All' : t(filter)}</span>
               </button>
             );

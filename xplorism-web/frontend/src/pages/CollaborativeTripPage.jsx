@@ -1591,7 +1591,6 @@ export default function CollaborativeTripPage() {
                       onClick={handleAddActivityClick}
                       className="px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
                     >
-                      <Sparkles className="h-3.5 w-3.5" />
                       <span>Add Activity</span>
                     </button>
                   </div>
@@ -1680,7 +1679,6 @@ export default function CollaborativeTripPage() {
                     </div>
                   ) : (
                     <div className="flex-1 flex flex-col items-center justify-center py-12 text-slate-450 border border-dashed border-slate-200 rounded-2xl">
-                      <Sparkles className="h-9 w-9 text-rose-300 animate-pulse mb-2" />
                       <p className="text-xs font-bold text-slate-500">Packing checklist is empty.</p>
                       <p className="text-[10px] text-slate-400 mt-1 max-w-[250px] text-center leading-normal">Add custom categories and items to coordinate packing collaboratively with your group.</p>
                     </div>
@@ -2087,7 +2085,7 @@ export default function CollaborativeTripPage() {
             {/* Online/Presence indicator */}
             {onlineCollaborators.length > 0 && (
               <div className="mb-4 p-3 bg-slate-50 border border-slate-100 rounded-2xl flex items-center space-x-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
                 <span className="text-[11px] font-bold text-emerald-500">
                   Active online: {onlineCollaborators.join(', ')}
                 </span>
@@ -2107,7 +2105,7 @@ export default function CollaborativeTripPage() {
                           {c.name.charAt(0)}
                         </div>
                         <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border border-white ${
-                          isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-350'
+                          isOnline ? 'bg-emerald-500' : 'bg-slate-350'
                         }`} />
                       </div>
                       <div>
@@ -2858,7 +2856,6 @@ export default function CollaborativeTripPage() {
             </button>
 
             <div className="flex items-center space-x-3 mb-5 text-rose-500">
-              <Sparkles className="h-6 w-6 animate-pulse" />
               <h3 className="text-lg font-black text-slate-900 font-sans">{packingModal.title}</h3>
             </div>
 
@@ -3115,7 +3112,6 @@ export default function CollaborativeTripPage() {
                 : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200'
             }`}
           >
-            <Sparkles className="h-4.5 w-4.5 shrink-0" />
             <span>{toast.message}</span>
           </motion.div>
         )}

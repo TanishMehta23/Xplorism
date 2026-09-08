@@ -2957,7 +2957,6 @@ export default function DashboardStub() {
                 <div className="pt-14 pb-5 px-5 md:pt-16 md:pb-6 md:px-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between">
                   <div className="flex-1 md:pr-[420px]">
                     <div className="flex items-center space-x-2 text-rose-500 mb-1">
-                      <Sparkles className="h-4.5 w-4.5" />
                       <span className="text-xs font-bold uppercase tracking-wider">{style} Mode</span>
                     </div>
                     <h2 className="text-xl md:text-2xl font-extrabold text-slate-955 leading-tight">{selectedTrip.destination}</h2>
@@ -3709,7 +3708,6 @@ export default function DashboardStub() {
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black text-rose-500 uppercase tracking-wider flex items-center">
-                        <Sparkles className="h-4 w-4 mr-1 animate-pulse" />
                         <span>AI Alternatives (Xplorism AI)</span>
                       </span>
                       <button
@@ -3725,7 +3723,6 @@ export default function DashboardStub() {
                           </>
                         ) : (
                           <>
-                            <Sparkles className="h-3 w-3" />
                             <span>Ask Xplorism AI</span>
                           </>
                         )}

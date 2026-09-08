@@ -233,7 +233,7 @@ export default function Navbar({ activeTab }) {
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {theme === 'dark' ? (
-                <Sun className="h-5 w-5 text-amber-500 animate-pulse" />
+                <Sun className="h-5 w-5 text-amber-500" />
               ) : (
                 <Moon className="h-5 w-5 text-slate-600" />
               )}
@@ -250,7 +250,7 @@ export default function Navbar({ activeTab }) {
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 h-4 w-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black animate-pulse">
+                    <span className="absolute top-1 right-1 h-4 w-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black">
                       {unreadCount}
                     </span>
                   )}

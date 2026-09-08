@@ -611,7 +611,7 @@ export default function TrackerPage() {
               {/* Countdown Refresh Footer */}
               <div className={`p-3.5 border-t text-center text-[10px] font-semibold ${isDark ? 'border-slate-800/80 text-slate-400 bg-slate-900/50' : 'border-slate-200 text-slate-550 bg-slate-50'}`}>
                 <span className="flex items-center justify-center space-x-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   <span>Next update in <strong className="text-rose-500 font-black">{countdown}s</strong></span>
                 </span>
               </div>

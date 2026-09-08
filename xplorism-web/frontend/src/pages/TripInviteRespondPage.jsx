@@ -131,8 +131,7 @@ export default function TripInviteRespondPage() {
               <p className="text-slate-500 text-sm leading-relaxed">
                 {successMsg}
               </p>
-              <div className="flex items-center justify-center space-x-2 text-slate-400 text-xs font-semibold animate-pulse">
-                <Sparkles className="h-4.5 w-4.5 text-rose-500" />
+              <div className="flex items-center justify-center space-x-2 text-slate-400 text-xs font-semibold">
                 <span>Redirecting you shortly...</span>
               </div>
             </div>

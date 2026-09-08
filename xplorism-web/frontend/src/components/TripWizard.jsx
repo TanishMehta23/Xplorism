@@ -325,7 +325,6 @@ export default function TripWizard({ isOpen, onClose, onTripCreated, currencyCod
         {/* Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center space-x-2 text-rose-500">
-            <Sparkles className="h-5 w-5 animate-pulse" />
             <h3 className="font-bold text-lg text-slate-900">Create Custom Trip</h3>
           </div>
           {!generating && (
@@ -645,7 +644,7 @@ export default function TripWizard({ isOpen, onClose, onTripCreated, currencyCod
               >
                 <div className="relative">
                   <div className="h-16 w-16 border-4 border-rose-100 border-t-rose-500 rounded-full animate-spin" />
-                  <Compass className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-rose-500 animate-pulse" />
+                  <Compass className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-rose-500" />
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-lg font-extrabold text-slate-900">Generating Itinerary</h4>
@@ -685,7 +684,6 @@ export default function TripWizard({ isOpen, onClose, onTripCreated, currencyCod
                 onClick={handleGenerate}
                 className="px-6 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-sm font-bold text-white shadow-md shadow-rose-150 transition flex items-center space-x-2 cursor-pointer"
               >
-                <Sparkles className="h-4.5 w-4.5" />
                 <span>Generate Itinerary</span>
               </button>
             )}

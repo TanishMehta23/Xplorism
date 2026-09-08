@@ -510,7 +510,6 @@ export default function SharedTripPage() {
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-rose-500/5 blur-[50px]" />
 
             <div className="flex items-center space-x-2 text-rose-505 mb-2">
-              <Sparkles className="h-4 w-4" />
               <span className="text-xs font-bold uppercase tracking-wider">{style} Mode</span>
             </div>
 
@@ -677,7 +676,6 @@ export default function SharedTripPage() {
                 : 'bg-white border-rose-100 text-rose-500'
               }`}
           >
-            <Sparkles className="h-4.5 w-4.5" />
             <span>{toast.message}</span>
           </motion.div>
         )}

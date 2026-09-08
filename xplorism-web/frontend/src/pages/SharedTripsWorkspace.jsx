@@ -143,9 +143,6 @@ export default function SharedTripsWorkspace() {
         <div className="mb-6 sm:mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 text-left">
           <div>
             <div className="flex items-center space-x-2.5 mb-2.5">
-              <div className="p-2 sm:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                <Users className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-              </div>
               <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">Collaborative Space</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Shared Trips Workspace</h1>
@@ -160,7 +157,7 @@ export default function SharedTripsWorkspace() {
           <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-rose-500/5 to-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="flex items-start space-x-3 sm:space-x-4 w-full relative">
             <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/30 text-rose-500 shrink-0 mt-0.5 sm:mt-1 shadow-inner">
-              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Users className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div className="flex-1">
               <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100">How Shared Workspace Works</h3>

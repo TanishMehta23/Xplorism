@@ -769,7 +769,7 @@ export default function LandingPage() {
             {/* Webcam / Notch */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-4 bg-slate-900 rounded-b-md z-30 flex items-center justify-center">
               <div className="h-1.5 w-1.5 rounded-full bg-slate-800 mr-2" />
-              <div className="h-1 w-1 rounded-full bg-green-500/80 animate-pulse" />
+              <div className="h-1 w-1 rounded-full bg-green-500/80" />
             </div>
 
             {/* Inner Screen Mockup Content */}
@@ -1330,11 +1330,6 @@ export default function LandingPage() {
           <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
             isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
           }`}>
-            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
-              isDark ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-rose-50 text-rose-500'
-            }`}>
-              <Zap className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            </div>
             <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Custom Itinerary Builder</h3>
             <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Enter your budget, dates, and styles. Get customized day-by-day plans, dining recommendations, and travel markers.
@@ -1345,11 +1340,6 @@ export default function LandingPage() {
           <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
             isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
           }`}>
-            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
-              isDark ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-teal-50 text-teal-600'
-            }`}>
-              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            </div>
             <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Interactive Mapping</h3>
             <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Map out destinations on Leaflet OpenStreetMap. Keep coordinates of all sights, hotels, and restaurants in one place.
@@ -1360,11 +1350,6 @@ export default function LandingPage() {
           <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
             isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
           }`}>
-            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
-              isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-amber-50 text-amber-600'
-            }`}>
-              <CloudRain className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            </div>
             <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Weather Forecasting</h3>
             <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Check real-time 5-day forecasts and suggestions on clothing to optimize your daily activity selection.
@@ -1375,11 +1360,6 @@ export default function LandingPage() {
           <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
             isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
           }`}>
-            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
-              isDark ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-emerald-50 text-emerald-600'
-            }`}>
-              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            </div>
             <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Expense & Budget Tracker</h3>
             <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Keep tabs on your travel expenses, set budget caps, and categorize your spending in real-time.
@@ -1390,11 +1370,6 @@ export default function LandingPage() {
           <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
             isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
           }`}>
-            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
-              isDark ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-blue-50 text-blue-600'
-            }`}>
-              <FolderLock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            </div>
             <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Secure Document Vault</h3>
             <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Store your passports, visas, boarding passes, and booking confirmations securely and access them anywhere.
@@ -1405,11 +1380,6 @@ export default function LandingPage() {
           <motion.div variants={itemVariants} className={`border p-3.5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl hover:shadow-md transition-all duration-200 ${
             isDark ? 'bg-slate-900/30 border-slate-900/80 text-white' : 'bg-slate-5/50 border-slate-100'
           }`}>
-            <div className={`h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 md:mb-6 ${
-              isDark ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-purple-50 text-purple-600'
-            }`}>
-              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-            </div>
             <h3 className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Community Feed & Sharing</h3>
             <p className={`text-[10px] sm:text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Share your travel diaries and itineraries with other travelers, or discover exciting recommendations.

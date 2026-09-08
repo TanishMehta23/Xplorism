@@ -275,7 +275,7 @@ export default function AIChatbot() {
         className={`absolute bottom-16 right-0 whitespace-nowrap text-[10px] font-black px-3.5 py-1.5 rounded-2xl shadow-xl flex items-center space-x-1.5 transition-all duration-500 origin-bottom-right border pointer-events-none select-none z-10 ${isOpen ? 'scale-0 opacity-0 translate-y-5' : 'scale-100 opacity-100 translate-y-0'
           } bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-slate-900/10 dark:shadow-black/50`}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
         <span>{t('ask_xplorism_ai')}</span>
         {/* Tooltip Arrow */}
         <div className="absolute bottom-[-5px] right-[24px] w-2.5 h-2.5 border-r border-b rotate-45 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" />
@@ -344,7 +344,6 @@ export default function AIChatbot() {
         {!isAuthenticated ? (
           /* Guest login request state */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/50 dark:bg-slate-900/50">
-            <Sparkles className="h-12 w-12 text-rose-500 mb-3 animate-bounce" />
             <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm mb-1.5">{t('ask_xplorism_ai')}!</h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mb-6">
               {t('chat_guest_desc')}
@@ -365,7 +364,6 @@ export default function AIChatbot() {
               {messages.length === 0 ? (
                 /* Empty / Welcome State */
                 <div className="h-full flex flex-col justify-center items-center py-6 text-center">
-                  <Sparkles className="h-10 w-10 text-rose-500 mb-2.5 animate-pulse" />
                   <h4 className="font-black text-sm text-slate-800 dark:text-slate-100">{t('chat_welcome_title')} {user?.name || 'there'}!</h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mt-1 mb-6">
                     {t('chat_welcome_subtitle')}

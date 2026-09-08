@@ -481,9 +481,6 @@ export default function WeatherPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 pb-1 sm:pb-2 text-left">
           <div className="space-y-1">
             <div className="flex items-center space-x-2.5 mb-2 sm:mb-3">
-              <div className="p-2 sm:p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-sm">
-                <Sun className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-              </div>
               <span className="text-[11px] sm:text-xs font-black text-rose-500 uppercase tracking-widest">{t('climate_radar')}</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-1.5 sm:mb-2 text-slate-900 dark:text-white">

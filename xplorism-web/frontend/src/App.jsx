@@ -21,6 +21,7 @@ import SharedTripPage from './pages/SharedTripPage';
 import SharedTripsWorkspace from './pages/SharedTripsWorkspace';
 import CollaborativeTripPage from './pages/CollaborativeTripPage';
 import TripInviteRespondPage from './pages/TripInviteRespondPage';
+import MockPaymentPage from './pages/MockPaymentPage';
 import AIChatbot from './components/AIChatbot';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';

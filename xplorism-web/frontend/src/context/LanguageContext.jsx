@@ -93,7 +93,7 @@ const translations = {
     ask_xplorism_ai: 'Ask Xplorism AI',
     online_assistant: 'Online Assistant',
     chat_welcome_title: 'Hi',
-    chat_welcome_subtitle: 'I can create trip itineraries, look up weather/hotels, search destinations, and fetch preferences. Ask me anything!',
+    chat_welcome_subtitle: 'I can create trip itineraries, look up weather, search destinations, and fetch preferences. Ask me anything!',
     chat_placeholder: 'Ask Xplorism AI...',
     regenerate_response: 'Regenerate response',
     clear_conversation: 'Clear conversation',

@@ -809,10 +809,6 @@ export default function LandingPage() {
                     <span>Tracker</span>
                   </span>
                   <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    <Building className="h-2 w-2 text-slate-400" />
-                    <span>Hotels</span>
-                  </span>
-                  <span className={`flex items-center space-x-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     <DollarSign className="h-2 w-2 text-slate-400" />
                     <span>Budgets</span>
                   </span>

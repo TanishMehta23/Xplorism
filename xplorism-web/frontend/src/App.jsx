@@ -10,7 +10,6 @@ import DashboardStub from './pages/DashboardStub';
 import WeatherPage from './pages/WeatherPage';
 import BudgetPage from './pages/BudgetPage';
 import BudgetsListPage from './pages/BudgetsListPage';
-import HotelBookingPage from './pages/HotelBookingPage';
 import ProfilePage from './pages/ProfilePage';
 import TravelPreferencesPage from './pages/TravelPreferencesPage';
 import TrackerPage from './pages/TrackerPage';
@@ -21,7 +20,6 @@ import SharedTripPage from './pages/SharedTripPage';
 import SharedTripsWorkspace from './pages/SharedTripsWorkspace';
 import CollaborativeTripPage from './pages/CollaborativeTripPage';
 import TripInviteRespondPage from './pages/TripInviteRespondPage';
-import MockPaymentPage from './pages/MockPaymentPage';
 import AIChatbot from './components/AIChatbot';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 
@@ -123,24 +121,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <TrackerPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/hotels"
-        element={
-          <ProtectedRoute>
-            <HotelBookingPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/mock-payment"
-        element={
-          <ProtectedRoute>
-            <MockPaymentPage />
           </ProtectedRoute>
         }
       />

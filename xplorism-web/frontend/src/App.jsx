@@ -4,8 +4,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
 import DashboardStub from './pages/DashboardStub';
 import WeatherPage from './pages/WeatherPage';
 import BudgetPage from './pages/BudgetPage';

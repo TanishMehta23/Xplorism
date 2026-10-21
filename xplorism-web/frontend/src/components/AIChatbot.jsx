@@ -307,9 +307,9 @@ export default function AIChatbot() {
       {/* Main Chat Panel */}
       <div
         ref={panelRef}
-        className={`absolute bottom-0 right-0 w-[90vw] sm:w-[450px] h-[600px] max-h-[85vh] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden border transition-all duration-300 origin-bottom-right ${isOpen
+        className={`fixed sm:absolute bottom-0 right-0 left-0 sm:left-auto sm:right-0 w-full sm:w-[450px] h-[85vh] sm:h-[600px] max-h-[92vh] sm:max-h-[85vh] rounded-t-3xl sm:rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden border transition-all duration-300 origin-bottom sm:origin-bottom-right ${isOpen
           ? 'scale-100 opacity-100 pointer-events-auto translate-y-0'
-          : 'scale-75 opacity-0 pointer-events-none translate-y-10'
+          : 'scale-90 sm:scale-75 opacity-0 pointer-events-none translate-y-10'
           } bg-white/95 dark:bg-slate-900/95 border-slate-200/80 dark:border-slate-800 backdrop-blur-xl`}
       >
         {/* Header */}

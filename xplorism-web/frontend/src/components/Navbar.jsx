@@ -262,7 +262,7 @@ export default function Navbar({ activeTab }) {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-[-60px] sm:right-0 mt-3 w-[calc(100vw-32px)] sm:w-80 max-w-xs rounded-2xl shadow-xl p-4 z-50 border max-h-[400px] overflow-y-auto"
+                      className="fixed left-4 right-4 sm:left-auto sm:right-0 mt-3 sm:w-80 rounded-2xl shadow-xl p-4 z-50 border max-h-[400px] overflow-y-auto"
                       style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
                     >
                       <div className="flex items-center justify-between border-b pb-3 mb-3" style={{ borderColor: 'var(--border-secondary)' }}>
@@ -541,6 +541,25 @@ export default function Navbar({ activeTab }) {
                   <Users className="h-4 w-4" />
                   <span>{t('community')}</span>
                 </button>
+
+                {/* Mobile Profile & Logout links */}
+                <div className="pt-2 mt-2 border-t flex flex-col space-y-1.5" style={{ borderColor: 'var(--border-secondary)' }}>
+                  <button
+                    onClick={() => { navigate('/profile'); setIsMobileMenuOpen(false); }}
+                    className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'profile' ? 'bg-blue-500/10 text-blue-500' : 'text-slate-400'}`}
+                    style={{ color: activeTab === 'profile' ? '' : 'var(--text-secondary)' }}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>{t('profile')}</span>
+                  </button>
+                  <button
+                    onClick={() => { setIsMobileMenuOpen(false); setShowLogoutConfirm(true); }}
+                    className="py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>{t('logout')}</span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}

@@ -744,8 +744,8 @@ export default function LandingPage() {
       </div>
 
       {/* Interactive 3D Laptop Showcase */}
-      <section className="relative max-w-6xl mx-auto px-6 pt-10 pb-10 flex flex-col items-center overflow-hidden">
-        <div className={`text-xs font-black uppercase tracking-widest mt-6 mb-12 px-5 py-2 rounded-full border shadow-md backdrop-blur-md transition-all duration-300 ${
+      <section className="relative max-w-6xl mx-auto px-3 sm:px-6 pt-6 sm:pt-10 pb-10 flex flex-col items-center overflow-hidden">
+        <div className={`text-[10px] sm:text-xs font-black uppercase tracking-widest mt-4 sm:mt-6 mb-8 sm:mb-12 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full border shadow-md backdrop-blur-md transition-all duration-300 ${
           isDark 
             ? 'bg-slate-900 border-slate-700 text-slate-100 shadow-slate-950/50' 
             : 'bg-white border-slate-200 text-slate-700 shadow-slate-200/50'
@@ -764,7 +764,7 @@ export default function LandingPage() {
               transformOrigin: 'bottom',
               transformStyle: 'preserve-3d',
             }}
-            className="w-[90%] md:w-[85%] max-w-[800px] aspect-[16/10] bg-[#0c111d] border-[10px] md:border-[14px] border-slate-900 rounded-t-3xl relative shadow-[0_-20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
+            className="w-[96%] sm:w-[90%] md:w-[85%] max-w-[800px] aspect-[16/10] bg-[#0c111d] border-[6px] sm:border-[10px] md:border-[14px] border-slate-900 rounded-t-2xl sm:rounded-t-3xl relative shadow-[0_-20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
           >
             {/* Webcam / Notch */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-4 bg-slate-900 rounded-b-md z-30 flex items-center justify-center">
@@ -999,7 +999,7 @@ export default function LandingPage() {
 
           {/* Map Search Form */}
           <div className="max-w-md mx-auto relative z-30">
-            <form onSubmit={handleMapSearch} className={`flex items-center p-1.5 rounded-2xl border shadow-sm gap-1 ${
+            <form onSubmit={handleMapSearch} className={`flex items-center p-1 sm:p-1.5 rounded-2xl border shadow-sm gap-1 ${
               isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
             }`}>
               <button
@@ -1007,7 +1007,7 @@ export default function LandingPage() {
                 onClick={handleGeolocationSearch}
                 title="Use My Current Location"
                 disabled={mapLoading}
-                className={`px-3 py-2 rounded-xl border transition duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                className={`p-2 sm:px-3 sm:py-2 rounded-xl border transition duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   isDark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-rose-450 hover:bg-rose-950/20' : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600'
                 }`}
               >
@@ -1023,8 +1023,8 @@ export default function LandingPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                placeholder="Search city (e.g. Honolulu, Paris, Tokyo...)"
-                className={`flex-1 px-2 py-2.5 outline-none text-xs font-sans bg-transparent ${
+                placeholder="Search city (e.g. Honolulu, Paris...)"
+                className={`flex-1 px-2 py-2 outline-none text-xs font-sans bg-transparent min-w-0 ${
                   isDark ? 'text-white placeholder-slate-500' : 'text-slate-800 placeholder-slate-400'
                 }`}
                 required
@@ -1032,7 +1032,7 @@ export default function LandingPage() {
               <button
                 type="submit"
                 disabled={mapLoading || !leafletLoaded}
-                className={`px-5 py-2.5 rounded-xl font-semibold text-xs transition cursor-pointer disabled:opacity-50 ${
+                className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold text-xs transition cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap ${
                   isDark ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white'
                 }`}
               >

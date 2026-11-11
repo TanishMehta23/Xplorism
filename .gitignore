@@ -16,6 +16,9 @@ yarn-error.log*
 # Frontend build outputs
 frontend/dist/
 frontend/build/
+xplorism-web/frontend/dist/
+xplorism-web/frontend/build/
+xplorism-web/frontend/scratch/
 
 # Android / Gradle
 frontend/android/.gradle/
@@ -23,12 +26,19 @@ frontend/android/local.properties/
 frontend/android/.idea/
 frontend/android/build/
 frontend/android/app/build/
+xplorism-web/frontend/android/.gradle/
+xplorism-web/frontend/android/local.properties/
+xplorism-web/frontend/android/.idea/
+xplorism-web/frontend/android/build/
+xplorism-web/frontend/android/app/build/
 
 # Capacitor generated files
 frontend/android/capacitor-cordova-android-plugins/
+xplorism-web/frontend/android/capacitor-cordova-android-plugins/
 
 # Electron build outputs
 release/
+electron/release/
 electron-builder.yml
 builder-effective-config.yaml
 *.blockmap
@@ -43,3 +53,5 @@ Thumbs.db
 
 # Backend generated/storage files
 backend/vault_storage/
+xplorism-web/backend/vault_storage/
+!xplorism-web/backend/vault_storage/.gitkeep

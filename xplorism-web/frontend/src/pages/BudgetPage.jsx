@@ -1154,13 +1154,12 @@ export default function BudgetPage() {
                         <input
                           type="file"
                           id="receipt-ocr-uploader-desktop"
-                          id="receipt-ocr-uploader"
                           onChange={handleReceiptOcr}
                           className="hidden"
                           accept="image/*"
                         />
                         <label
-                          htmlFor="receipt-ocr-uploader"
+                          htmlFor="receipt-ocr-uploader-desktop"
                           className="mx-auto px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[9px] cursor-pointer transition active:scale-95 block w-max shadow-sm"
                         >
                           Scan Receipt File

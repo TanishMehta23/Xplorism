@@ -1,0 +1,31 @@
+name: Xplorism CI & Test Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Enterprise Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: xplorism-web/backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        working-directory: xplorism-web/backend
+        run: npm ci
+
+      - name: Execute Automated Tests
+        working-directory: xplorism-web/backend
+        run: npm test
+

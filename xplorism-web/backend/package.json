@@ -7,8 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "test": "node --test"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

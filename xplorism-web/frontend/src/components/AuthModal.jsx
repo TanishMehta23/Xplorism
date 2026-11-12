@@ -121,7 +121,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
         clearInterval(retryTimer);
       }
     };
-  }, [isOpen, loginWithGoogle, clientId, mode, isNative]);
+  }, [isOpen, loginWithGoogle, clientId, mode]);
 
   // Load remembered email on open
   useEffect(() => {

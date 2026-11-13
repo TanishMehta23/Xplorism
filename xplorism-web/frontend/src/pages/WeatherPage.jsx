@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sun, Cloud, CloudRain, Snowflake, Wind, ArrowLeft, 
-  MapPin, Droplets, Thermometer, Sparkles, Search, Compass,
+  Sun, Cloud, CloudRain, Snowflake, Wind, 
+  MapPin, Droplets, Thermometer, Search, 
   Calendar, CloudLightning, CloudDrizzle, CloudFog, Globe
 } from 'lucide-react';
 import { api } from '../services/api';

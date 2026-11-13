@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, Ticket, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2 } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, User, Plane, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';

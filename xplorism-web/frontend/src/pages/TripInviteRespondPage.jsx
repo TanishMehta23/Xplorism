@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, AlertCircle, Loader, Compass, Sparkles } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Loader, Compass } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';

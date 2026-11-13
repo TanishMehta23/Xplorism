@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, Image, Heart, MapPin, Share2, Plus, Sparkles, Loader2, ArrowRight, Search, X, Edit3, Trash2
+  Users, Image, Heart, Share2, Plus, Loader2, Search, X, Edit3, Trash2
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';

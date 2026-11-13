@@ -4,8 +4,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import {
-  MessageCircle, X, Send, Trash2, Copy, Check, RotateCcw,
-  Sparkles, CornerDownLeft, Loader2, ArrowRight
+  X, Send, Trash2, Copy, Check, RotateCcw,
+  CornerDownLeft, Loader2, ArrowRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

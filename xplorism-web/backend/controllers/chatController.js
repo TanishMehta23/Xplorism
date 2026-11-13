@@ -1,5 +1,5 @@
 import { query } from '../config/db.js';
-import { callGeminiChat, sendToolResponses, sendToolResponse } from '../services/ai/geminiService.js';
+import { callGeminiChat, sendToolResponses } from '../services/ai/geminiService.js';
 import { searchKnowledge } from '../services/rag/ragService.js';
 import * as tools from '../services/tools/toolService.js';
 

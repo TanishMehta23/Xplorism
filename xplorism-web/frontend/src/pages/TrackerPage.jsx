@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plane, Globe, Compass, ArrowLeft, Search, RefreshCw,
-  MapPin, ShieldAlert, Navigation, Cloud, Radio, Activity,
+  ShieldAlert, Navigation, Cloud, Radio, Activity,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { api } from '../services/api';

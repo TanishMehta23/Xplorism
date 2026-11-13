@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Settings, Globe, DollarSign, Calendar, Thermometer,
-  Bell, Newspaper, Heart, Loader2, CheckCircle, AlertCircle
+  ArrowLeft, Settings,
+  Bell, Newspaper, Loader2, CheckCircle, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';

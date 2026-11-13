@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  MapPin, Calendar, DollarSign, Users, Compass, 
-  Sparkles, X, ChevronRight, ChevronLeft, Check, AlertCircle
+  MapPin, Calendar, Users, Compass, 
+  X, ChevronRight, ChevronLeft, Check, AlertCircle
 } from 'lucide-react';
-import { generateItinerary } from '../services/itineraryGenerator';
 import { api } from '../services/api';
 
 const TRAVEL_STYLES = [

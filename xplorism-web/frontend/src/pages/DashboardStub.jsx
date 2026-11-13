@@ -4,11 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LogOut, Plus, Calendar, Compass as TripIcon, Compass,
-  Trash2, DollarSign, Users, Sparkles, X, Clock, MapPin, Tag, Edit,
+  Plus, Calendar, Compass as TripIcon,
+  Trash2, DollarSign, Users, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
   Maximize2, Minimize2, CheckSquare, Share2, CloudSun, ChevronUp, ChevronDown,
-  UserPlus, Loader2, Plane, Map, TrendingUp, Coins, Globe, Hotel, Lock, Award,
+  UserPlus, Loader2, Plane, Map, TrendingUp, Coins, Globe, Lock, Award,
   Quote, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { api } from '../services/api';

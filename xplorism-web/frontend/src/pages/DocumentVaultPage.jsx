@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, ShieldAlert, Plus, Trash2, Download, Edit3, 
-  FolderLock, CheckCircle, HelpCircle, 
-  FileImage, Loader2, ArrowLeft, ShieldCheck, Eye,
+  FolderLock, 
+  FileImage, Loader2, ShieldCheck, Eye,
   Plane, Hotel
 } from 'lucide-react';
 import { api } from '../services/api';

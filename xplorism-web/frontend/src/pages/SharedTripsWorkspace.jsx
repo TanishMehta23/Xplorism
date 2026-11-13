@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, MapPin, Calendar, Compass, ArrowRight, Sparkles, User, HelpCircle, Trash2
+  Users, Calendar, Compass, ArrowRight, User, Trash2
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';

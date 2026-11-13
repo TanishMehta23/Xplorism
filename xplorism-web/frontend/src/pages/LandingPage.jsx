@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Compass, Zap, MapPin, CloudRain, Star, Plus, Calendar, DollarSign, Users, Navigation, ArrowRight, Locate, Wallet, FolderLock, MessageSquare, Sun, Moon, Globe, Building, Sparkles } from 'lucide-react';
+import { Compass, MapPin, Plus, DollarSign, Users, Navigation, ArrowRight, Locate, FolderLock, MessageSquare, Sun, Moon, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import Footer from '../components/Footer';
@@ -764,11 +764,17 @@ export default function LandingPage() {
               transformOrigin: 'bottom',
               transformStyle: 'preserve-3d',
             }}
-            className="w-[96%] sm:w-[90%] md:w-[85%] max-w-[800px] aspect-[16/10] bg-[#0c111d] border-[6px] sm:border-[10px] md:border-[14px] border-slate-900 rounded-t-2xl sm:rounded-t-3xl relative shadow-[0_-20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
+            className={`w-[96%] sm:w-[90%] md:w-[85%] max-w-[800px] aspect-[16/10] bg-[#0c111d] border-[6px] sm:border-[10px] md:border-[14px] rounded-t-2xl sm:rounded-t-3xl relative overflow-hidden transition-[border-color,background-color,box-shadow] duration-300 ${
+              isDark
+                ? 'border-slate-300 bg-slate-300 shadow-[0_-20px_50px_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.2)]'
+                : 'border-slate-800 bg-slate-900 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]'
+            }`}
           >
             {/* Webcam / Notch */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-4 bg-slate-900 rounded-b-md z-30 flex items-center justify-center">
-              <div className="h-1.5 w-1.5 rounded-full bg-slate-800 mr-2" />
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-28 h-4 rounded-b-md z-30 flex items-center justify-center transition-colors duration-300 ${
+              isDark ? 'bg-slate-300 text-slate-700' : 'bg-slate-900 text-slate-400'
+            }`}>
+              <div className={`h-1.5 w-1.5 rounded-full mr-2 ${isDark ? 'bg-slate-500' : 'bg-slate-800'}`} />
               <div className="h-1 w-1 rounded-full bg-green-500/80" />
             </div>
 
@@ -965,12 +971,18 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Black Hinge Connection Bar */}
-          <div className="w-[85%] max-w-[760px] h-[8px] bg-slate-955 z-10 border-b border-slate-800" />
+          {/* Hinge Connection Bar */}
+          <div className={`w-[85%] max-w-[760px] h-[8px] z-10 border-b transition-colors duration-300 ${
+            isDark ? 'bg-slate-400 border-slate-300' : 'bg-slate-950 border-slate-800'
+          }`} />
 
           {/* Laptop Base (Keyboard Tray) */}
           <div
-            className="w-[98%] md:w-[94%] max-w-[880px] h-[18px] md:h-[24px] bg-gradient-to-b from-slate-700 via-slate-800 to-slate-950 rounded-b-2xl relative shadow-[0_20px_40px_rgba(0,0,0,0.35)] border-t border-slate-500/20"
+            className={`w-[98%] md:w-[94%] max-w-[880px] h-[18px] md:h-[24px] rounded-b-2xl relative border-t transition-all duration-300 ${
+              isDark
+                ? 'bg-gradient-to-b from-slate-200 via-slate-300 to-slate-400 shadow-[0_20px_40px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.15)] border-slate-100'
+                : 'bg-gradient-to-b from-slate-700 via-slate-800 to-slate-950 shadow-[0_20px_40px_rgba(0,0,0,0.35)] border-slate-500/20'
+            }`}
             style={{
               transform: 'rotateX(15deg)',
               transformOrigin: 'top',
@@ -978,10 +990,16 @@ export default function LandingPage() {
             }}
           >
             {/* Trackpad indentation */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 md:w-32 h-[8px] md:h-[12px] bg-gradient-to-b from-slate-900 to-slate-950 rounded-b-lg border-x border-b border-slate-700/20" />
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-24 md:w-32 h-[8px] md:h-[12px] rounded-b-lg border-x border-b transition-colors duration-300 ${
+              isDark
+                ? 'bg-gradient-to-b from-slate-300 to-slate-400 border-slate-400/60'
+                : 'bg-gradient-to-b from-slate-900 to-slate-950 border-slate-700/20'
+            }`} />
 
             {/* Front Lip shadow edge */}
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-950 rounded-b-2xl" />
+            <div className={`absolute bottom-0 left-0 right-0 h-[2px] rounded-b-2xl transition-colors duration-300 ${
+              isDark ? 'bg-slate-500' : 'bg-slate-950'
+            }`} />
           </div>
 
         </div>

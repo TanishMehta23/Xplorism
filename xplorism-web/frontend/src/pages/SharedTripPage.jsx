@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Calendar, Compass as TripIcon, DollarSign, Users, Sparkles, Clock,
-  MapPin, Download, Share2, ArrowRight, ArrowLeft, Sun, Cloud,
-  CloudRain, Snowflake, Wind, UserPlus
+  Calendar, Compass as TripIcon, Clock,
+  MapPin, Download, Share2, ArrowRight, ArrowLeft, UserPlus
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';

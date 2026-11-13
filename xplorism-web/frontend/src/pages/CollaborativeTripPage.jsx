@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
 import {
-  Calendar, Compass as TripIcon, DollarSign, Users, Sparkles, Clock, 
+  Calendar, Compass as TripIcon, DollarSign, Users, Clock, 
   MapPin, ArrowLeft, Send, UserPlus, X, Trash2, Shield, LogOut, Pencil,
   MessageCircle, Info, MessageSquare
 } from 'lucide-react';

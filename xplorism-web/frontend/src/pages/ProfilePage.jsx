@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   User, Mail, Calendar, Compass, Edit2, Key, CheckCircle,
   AlertCircle, LogOut, Loader2, Heart, DollarSign, ArrowLeft, ShieldCheck,
-  ChevronDown, Trash2, Plus, Users, FileText, Globe, Activity
+  ChevronDown, Trash2, Plus, Users, Activity
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';

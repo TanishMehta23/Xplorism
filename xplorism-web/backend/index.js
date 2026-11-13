@@ -20,7 +20,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import travelRoutes from './routes/travelRoutes.js';
 import { getNearbyPlacesFromGemini, getHotelsFromGemini, getFlightDetailsFromGemini } from './services/geminiService.js';
-import { globalLimiter, authLimiter } from './middleware/rateLimiter.js';
+import { globalLimiter } from './middleware/rateLimiter.js';
 import { sqlInjectionSanitizer } from './middleware/sqlInjectionSanitizer.js';
 import { initRabbitMQ, subscribeToTopic } from './services/rabbitmqService.js';
 

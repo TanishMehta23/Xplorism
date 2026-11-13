@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  DollarSign, Calendar, Compass as TripIcon,
-  Users, Edit, ArrowRight, AlertCircle, TrendingUp, ArrowLeft
+  DollarSign, Calendar, Edit, ArrowRight
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';

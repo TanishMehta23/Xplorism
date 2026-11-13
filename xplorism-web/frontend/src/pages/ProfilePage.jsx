@@ -550,14 +550,14 @@ export default function ProfilePage() {
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
 
               {/* Full-width hero gradient banner */}
-              <div className="relative h-20 sm:h-24 bg-gradient-to-r from-rose-400/90 via-rose-500/85 to-pink-500/90 overflow-hidden">
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.7)_0%,_transparent_70%)]" />
+              <div className="relative h-20 sm:h-24 bg-gradient-to-r from-rose-500/80 via-rose-500 to-pink-600 overflow-hidden">
+                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.6)_0%,_transparent_70%)]" />
               </div>
 
               {/* Avatar overlapping banner */}
               <div className="flex flex-col items-center -mt-10 sm:-mt-12 px-4 sm:px-6 pb-4 sm:pb-6">
                 <div className="relative mb-1">
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-lg border-4 border-white dark:border-slate-800 overflow-hidden group"
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-lg border-4 border-[var(--bg-secondary)] overflow-hidden group"
                     style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                     {/* Photo or Initials */}
                     {profilePhoto && profilePhoto !== '' && profilePhoto !== 'null' && profilePhoto !== 'undefined' ? (
@@ -584,9 +584,9 @@ export default function ProfilePage() {
                       <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" disabled={photoStatus?.type === 'uploading'} />
                     </label>
                   </div>
-                  {/* Mobile Edit Badge */}
-                  <label className="absolute -bottom-0.5 -right-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md cursor-pointer border-2 border-white transition-transform hover:scale-110 active:scale-95">
-                    <Edit2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  {/* Edit Badge */}
+                  <label className="absolute -bottom-0.5 -right-0.5 w-7 h-7 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-md cursor-pointer border-2 border-[var(--bg-secondary)] transition-transform hover:scale-110 active:scale-95">
+                    <Edit2 className="h-3.5 w-3.5" />
                     <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
                   </label>
                 </div>
@@ -639,45 +639,48 @@ export default function ProfilePage() {
 
               <div className="space-y-2.5 sm:space-y-3">
                 {/* Trips */}
-                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-500/5 border border-blue-100 dark:border-blue-900/20">
+                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border"
+                  style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
                   <div className="flex items-center space-x-2.5 sm:space-x-3">
-                    <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/10 text-blue-500">
-                      <Compass className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
+                      <Compass className="h-4 w-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('trips_planned')}</h4>
-                      <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('total_itineraries')}</p>
+                      <h4 className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{t('trips_planned')}</h4>
+                      <p className="text-[10px] font-medium" style={{ color: 'var(--text-tertiary)' }}>{t('total_itineraries')}</p>
                     </div>
                   </div>
-                  <span className="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400">{stats.tripsCount}</span>
+                  <span className="text-base sm:text-lg font-black" style={{ color: 'var(--text-primary)' }}>{stats.tripsCount}</span>
                 </div>
 
                 {/* Favorites */}
-                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-rose-500/5 border border-rose-100 dark:border-rose-900/20">
+                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border"
+                  style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
                   <div className="flex items-center space-x-2.5 sm:space-x-3">
-                    <div className="p-1.5 sm:p-2 rounded-xl bg-rose-500/10 text-rose-500">
-                      <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
+                      <Heart className="h-4 w-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('favorites')}</h4>
-                      <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('saved_locations')}</p>
+                      <h4 className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{t('favorites')}</h4>
+                      <p className="text-[10px] font-medium" style={{ color: 'var(--text-tertiary)' }}>{t('saved_locations')}</p>
                     </div>
                   </div>
-                  <span className="text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400">{stats.favoritesCount}</span>
+                  <span className="text-base sm:text-lg font-black text-rose-500">{stats.favoritesCount}</span>
                 </div>
 
                 {/* Budget */}
-                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-500/5 border border-emerald-100 dark:border-emerald-900/20">
+                <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border"
+                  style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
                   <div className="flex items-center space-x-2.5 sm:space-x-3">
-                    <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
-                      <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                      <DollarSign className="h-4 w-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{t('total_estimated_budget')}</h4>
-                      <p className="text-[9.5px] sm:text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{t('total_spent')}</p>
+                      <h4 className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{t('total_estimated_budget')}</h4>
+                      <p className="text-[10px] font-medium" style={{ color: 'var(--text-tertiary)' }}>{t('total_spent')}</p>
                     </div>
                   </div>
-                  <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">
+                  <span className="text-sm sm:text-base font-black text-emerald-500">
                     ${stats.totalBudget.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
                 </div>
@@ -838,10 +841,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={updating}
-                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-full text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center space-x-2 active:scale-95 shadow-md disabled:opacity-50"
-                    style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center space-x-2 active:scale-95 shadow-md shadow-rose-500/15 disabled:opacity-50"
                   >
                     {updating ? (
                       <>
@@ -1181,9 +1181,9 @@ export default function ProfilePage() {
                             key={unit}
                             type="button"
                             onClick={() => setLocaleSettings({ ...localeSettings, tempUnit: unit })}
-                            className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold transition select-none cursor-pointer ${localeSettings.tempUnit === unit
-                                ? 'bg-blue-500 text-white shadow-sm'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition select-none cursor-pointer ${localeSettings.tempUnit === unit
+                                ? 'bg-rose-500 text-white shadow-sm'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                               }`}
                           >
                             °{unit}
@@ -1205,7 +1205,7 @@ export default function ProfilePage() {
                       <button
                         type="button"
                         onClick={() => setPreferences({ ...preferences, notifications: !preferences.notifications })}
-                        className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full transition-colors duration-200 cursor-pointer shrink-0 ${preferences.notifications ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
+                        className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full transition-colors duration-200 cursor-pointer shrink-0 ${preferences.notifications ? 'bg-rose-500' : 'bg-slate-300 dark:bg-slate-600'
                           }`}
                       >
                         <span className={`inline-block h-3.5 w-3.5 sm:h-4 sm:w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${preferences.notifications ? 'translate-x-4 sm:translate-x-6' : 'translate-x-1'
@@ -1221,10 +1221,7 @@ export default function ProfilePage() {
                 <div className="flex justify-end pt-3 sm:pt-4 mt-auto">
                   <button
                     onClick={handleSavePreferences}
-                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-full text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center space-x-2 active:scale-95 shadow-md"
-                    style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center space-x-2 active:scale-95 shadow-md shadow-rose-500/15"
                   >
                     <span>{t('save_preferences')}</span>
                   </button>
@@ -1254,10 +1251,9 @@ export default function ProfilePage() {
                 </div>
                 <button
                   onClick={() => setShowLogPastModal(true)}
-                  className="flex items-center space-x-1 sm:space-x-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer hover:bg-indigo-700 active:scale-95 shadow-md shrink-0"
-                  style={{ backgroundColor: '#4f46e5' }}
+                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer bg-rose-500 hover:bg-rose-600 active:scale-95 shadow-md shadow-rose-500/15 shrink-0"
                 >
-                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Plus className="h-3.5 w-3.5" />
                   <span>Log Trip</span>
                 </button>
               </div>
@@ -1409,10 +1405,9 @@ export default function ProfilePage() {
                   <div className="flex justify-end pt-1.5 sm:pt-2">
                     <button
                       type="submit"
-                      className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-white text-xs font-bold transition hover:bg-rose-700 active:scale-95 shadow-md cursor-pointer flex items-center justify-center space-x-1.5"
-                      style={{ backgroundColor: '#e11d48' }}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition active:scale-95 shadow-md shadow-rose-500/15 cursor-pointer flex items-center justify-center space-x-1.5"
                     >
-                      <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Plus className="h-3.5 w-3.5" />
                       <span>Add Contact</span>
                     </button>
                   </div>
@@ -1713,7 +1708,11 @@ export default function ProfilePage() {
               borderColor: toast.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'
             }}
           >
-            <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
+            {toast.type === 'error' ? (
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+            ) : (
+              <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+            )}
             <span>{toast.message}</span>
           </motion.div>
         )}

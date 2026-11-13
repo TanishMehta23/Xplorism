@@ -102,11 +102,7 @@ export default function AIChatbot() {
       setConversationsLoading(true);
       const data = await api.get('/chat/conversations');
       setConversations(data || []);
-
-      // Auto-load latest conversation if none selected
-      if (data && data.length > 0 && !activeConvoId) {
-        loadConversation(data[0].id);
-      }
+      // We do NOT auto-load past conversations on modal open so the chat starts clean with the prompt box
     } catch (err) {
       console.error('Failed to load conversations:', err);
     } finally {
@@ -272,10 +268,9 @@ export default function AIChatbot() {
     <div className="fixed bottom-6 right-6 z-[9999] font-sans">
       {/* Floating Tooltip Bubble */}
       <div
-        className={`absolute bottom-16 right-0 whitespace-nowrap text-[10px] font-black px-3.5 py-1.5 rounded-2xl shadow-xl flex items-center space-x-1.5 transition-all duration-500 origin-bottom-right border pointer-events-none select-none z-10 ${isOpen ? 'scale-0 opacity-0 translate-y-5' : 'scale-100 opacity-100 translate-y-0'
+        className={`absolute bottom-16 right-0 whitespace-nowrap text-[10px] font-black px-3.5 py-1.5 rounded-2xl shadow-xl flex items-center transition-all duration-500 origin-bottom-right border pointer-events-none select-none z-10 ${isOpen ? 'scale-0 opacity-0 translate-y-5' : 'scale-100 opacity-100 translate-y-0'
           } bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-slate-900/10 dark:shadow-black/50`}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
         <span>{t('ask_xplorism_ai')}</span>
         {/* Tooltip Arrow */}
         <div className="absolute bottom-[-5px] right-[24px] w-2.5 h-2.5 border-r border-b rotate-45 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" />
@@ -317,8 +312,7 @@ export default function AIChatbot() {
           <div className="flex items-center space-x-2.5">
             <div>
               <h3 className="font-extrabold text-sm tracking-wide">Xplorism AI</h3>
-              <span className="text-[10px] text-rose-100 flex items-center space-x-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+              <span className="text-[10px] text-rose-100 flex items-center">
                 <span>{t('online_assistant')}</span>
               </span>
             </div>
@@ -362,22 +356,25 @@ export default function AIChatbot() {
             {/* Chat Viewport */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 bg-slate-50/50 dark:bg-slate-950/50">
               {messages.length === 0 ? (
-                /* Empty / Welcome State */
+                /* Empty / Welcome State Box */
                 <div className="h-full flex flex-col justify-center items-center py-6 text-center">
-                  <h4 className="font-black text-sm text-slate-800 dark:text-slate-100">{t('chat_welcome_title')} {user?.name || 'there'}!</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mt-1 mb-6">
-                    {t('chat_welcome_subtitle')}
-                  </p>
-                  <div className="w-full max-w-[320px] space-y-2">
-                    {starterPrompts.map((p, idx) => (
-                      <button
-                        key={idx}
-                        onClick={(e) => handleSendMessage(e, p)}
-                        className="w-full p-3 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60 hover:border-rose-350 dark:hover:border-rose-500 hover:bg-rose-50/10 dark:hover:bg-rose-500/10 text-left text-xs font-bold rounded-2xl transition cursor-pointer text-slate-700 dark:text-slate-200 shadow-sm"
-                      >
-                        {p}
-                      </button>
-                    ))}
+                  <div className="w-full max-w-[340px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+                    <h4 className="font-black text-sm text-slate-800 dark:text-slate-100">{t('chat_welcome_title')} {user?.name || 'there'}!</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1.5 mb-5">
+                      {t('chat_welcome_subtitle')}
+                    </p>
+                    <div className="w-full space-y-2">
+                      {starterPrompts.map((p, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={(e) => handleSendMessage(e, p)}
+                          className="w-full p-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-50/20 dark:hover:bg-rose-500/10 text-left text-xs font-semibold rounded-xl transition cursor-pointer text-slate-700 dark:text-slate-200"
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ) : (

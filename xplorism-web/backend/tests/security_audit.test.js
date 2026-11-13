@@ -149,8 +149,9 @@ test('OWASP Security & Injection Defense Suite', async (t) => {
     const originalBuffer = Buffer.from('Sensitive Flight Ticket', 'utf8');
     const encrypted = encryptFile(originalBuffer);
 
-    // Tamper with the authentication tag
-    const tamperedTag = encrypted.authTag.substring(0, encrypted.authTag.length - 2) + '00';
+    // Tamper with the authentication tag safely ensuring it changes
+    const lastChar = encrypted.authTag.slice(-1);
+    const tamperedTag = encrypted.authTag.substring(0, encrypted.authTag.length - 1) + (lastChar === '0' ? '1' : '0');
 
     assert.throws(
       () => decryptFile(encrypted.encryptedData, encrypted.wrappedKey, encrypted.iv, tamperedTag),

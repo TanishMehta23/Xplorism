@@ -395,12 +395,12 @@ export default function TrackerPage() {
       const popupContent = `
         <div style="font-family: sans-serif; padding: 4px; color: #0f172a; min-width: 140px;">
           <h4 style="margin: 0 0 2px; font-weight: 900; font-size: 13px; color: #f43f5e; display: flex; align-items: center; gap: 4px;">
-            🏢 ${a.code}
+            ${a.code}
           </h4>
           <p style="margin: 0 0 6px; font-size: 10px; font-weight: 700; color: #475569;">${a.city}, ${a.country}</p>
           <div style="font-size: 10px; font-weight: 700; border-top: 1px solid #e2e8f0; padding-top: 4px; display: flex; flex-direction: column; gap: 2px;">
-            <span style="color: #059669;">🛫 Departures: ${departures}</span>
-            <span style="color: #2563eb;">🛬 Arrivals: ${arrivals}</span>
+            <span style="color: #059669;">Departures: ${departures}</span>
+            <span style="color: #2563eb;">Arrivals: ${arrivals}</span>
           </div>
         </div>
       `;

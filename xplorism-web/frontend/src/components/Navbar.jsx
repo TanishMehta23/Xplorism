@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, User, Plane, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2 } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, User, Plane, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2, Mail, Check, AlertCircle, CheckCircle2, CloudSun, Backpack } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -274,37 +274,49 @@ export default function Navbar({ activeTab }) {
                           notifications.map((n) => (
                             <div
                               key={n.id}
-                              className="p-3 rounded-xl border space-y-2 transition duration-200"
+                              className="p-3.5 rounded-2xl border space-y-2.5 transition-all duration-200"
                               style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}
                             >
-                              <div className="flex items-center space-x-2">
-                                <span className="text-sm">
-                                  {n.type === 'trip' ? '✈️' : n.type === 'packing' ? '🎒' : n.type === 'invitation' ? '✉️' : '🌤️'}
+                              <div className="flex items-center space-x-2.5">
+                                <span className="h-7 w-7 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                                  {n.type === 'trip' ? (
+                                    <Plane className="h-3.5 w-3.5 text-rose-500" />
+                                  ) : n.type === 'packing' ? (
+                                    <Backpack className="h-3.5 w-3.5 text-amber-500" />
+                                  ) : n.type === 'invitation' ? (
+                                    <Mail className="h-3.5 w-3.5 text-rose-500" />
+                                  ) : (
+                                    <CloudSun className="h-3.5 w-3.5 text-sky-500" />
+                                  )}
                                 </span>
-                                <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{n.title}</span>
+                                <span className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>{n.title}</span>
                               </div>
-                              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{n.message}</p>
+                              <p className="text-xs leading-relaxed font-medium" style={{ color: 'var(--text-secondary)' }}>{n.message}</p>
                               {n.type === 'invitation' ? (
-                                <div className="flex items-center space-x-2 mt-2">
+                                <div className="flex items-center space-x-2 pt-1">
                                   <button
                                     disabled={respondingInvitationTripId === n.tripId}
                                     onClick={() => handleRespondToInvitation(n.tripId, 'approved')}
-                                    className="text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1 px-2.5 rounded-lg transition cursor-pointer shadow-sm disabled:opacity-50 flex items-center space-x-1"
+                                    className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-1.5 px-3 rounded-xl transition cursor-pointer shadow-sm disabled:opacity-50 flex items-center space-x-1.5"
                                   >
                                     {respondingInvitationTripId === n.tripId ? (
                                       <>
-                                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                        <Loader2 className="h-3 w-3 animate-spin" />
                                         <span>Approving...</span>
                                       </>
                                     ) : (
-                                      <span>Approve</span>
+                                      <>
+                                        <Check className="h-3 w-3" />
+                                        <span>Approve</span>
+                                      </>
                                     )}
                                   </button>
                                   <button
                                     disabled={respondingInvitationTripId === n.tripId}
                                     onClick={() => handleRespondToInvitation(n.tripId, 'declined')}
-                                    className="text-[10px] bg-rose-500 hover:bg-rose-600 text-white font-bold py-1 px-2.5 rounded-lg transition cursor-pointer shadow-sm disabled:opacity-50 flex items-center space-x-1"
+                                    className="text-xs border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 font-semibold py-1.5 px-3 rounded-xl transition cursor-pointer disabled:opacity-50 flex items-center space-x-1.5"
                                   >
+                                    <X className="h-3 w-3" />
                                     <span>Decline</span>
                                   </button>
                                 </div>
@@ -312,15 +324,16 @@ export default function Navbar({ activeTab }) {
                                 <button
                                   disabled={emailingTripId === n.tripId}
                                   onClick={() => handleEmailReminder(n.tripId)}
-                                  className="text-[10px] text-rose-500 hover:text-rose-600 font-bold transition flex items-center space-x-1 cursor-pointer disabled:opacity-50"
+                                  className="text-xs text-rose-500 hover:text-rose-600 font-semibold transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 pt-1"
                                 >
-                                  <span>{emailingTripId === n.tripId ? 'Sending...' : '📧 Email Me Reminders'}</span>
+                                  <Mail className="h-3 w-3" />
+                                  <span>{emailingTripId === n.tripId ? 'Sending...' : 'Email Me Reminders'}</span>
                                 </button>
                               )}
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-6 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                          <div className="text-center py-6 text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>
                             No active alerts or reminders!
                           </div>
                         )}
@@ -613,7 +626,11 @@ export default function Navbar({ activeTab }) {
               boxShadow: toastMessage.type === 'error' ? '0 10px 25px -5px rgba(239, 68, 68, 0.4)' : '0 10px 25px -5px rgba(16, 185, 129, 0.4)'
             }}
           >
-            <span className="text-base">{toastMessage.type === 'error' ? '⚠️' : '✅'}</span>
+            {toastMessage.type === 'error' ? (
+              <AlertCircle className="h-4 w-4 shrink-0 text-white" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-white" />
+            )}
             <span>{toastMessage.message}</span>
             <button
               onClick={() => setToastMessage(null)}

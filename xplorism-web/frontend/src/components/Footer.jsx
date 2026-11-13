@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Send, Mail } from 'lucide-react';
+import { Send, Mail, ShieldCheck, FileText, Cookie, HelpCircle, X, Check, Lock, Database, Bell } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +19,29 @@ export default function Footer() {
   const handleOpenTravelGuides = (e) => {
     e.preventDefault();
     window.dispatchEvent(new Event('open-xplorism-ai'));
+  };
+
+  const [cookiePrefs, setCookiePrefs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('xplorism_cookie_prefs');
+      return saved ? JSON.parse(saved) : { essential: true, analytics: true, functional: true };
+    } catch {
+      return { essential: true, analytics: true, functional: true };
+    }
+  });
+  const [cookieSaved, setCookieSaved] = useState(false);
+
+  const handleSaveCookies = () => {
+    try {
+      localStorage.setItem('xplorism_cookie_prefs', JSON.stringify(cookiePrefs));
+    } catch (e) {
+      console.error(e);
+    }
+    setCookieSaved(true);
+    setTimeout(() => {
+      setCookieSaved(false);
+      setActiveModal(null);
+    }, 900);
   };
 
   const handleOpenHelp = (e) => {
@@ -177,56 +200,231 @@ export default function Footer() {
       </div>
 
       {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-          <div className={`border rounded-3xl p-6 max-w-md w-full shadow-2xl relative transition-all duration-200 ${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-800'
+        <div 
+          onClick={() => setActiveModal(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-md cursor-pointer animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className={`border rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative transition-all duration-200 cursor-default flex flex-col max-h-[88vh] overflow-hidden ${
+              isDark 
+                ? 'bg-slate-900/95 border-slate-800 text-white shadow-black/60' 
+                : 'bg-white border-slate-100 text-slate-800 shadow-slate-900/15'
             }`}>
-            <button
-              onClick={() => setActiveModal(null)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-rose-500 transition cursor-pointer text-sm font-bold border-none bg-transparent"
-            >
-              ✕
-            </button>
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="h-9 w-9 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center border border-rose-500/20">
+                  {activeModal === 'privacy' && <ShieldCheck className="h-4.5 w-4.5" />}
+                  {activeModal === 'terms' && <FileText className="h-4.5 w-4.5" />}
+                  {activeModal === 'cookies' && <Cookie className="h-4.5 w-4.5" />}
+                  {activeModal === 'help' && <HelpCircle className="h-4.5 w-4.5" />}
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight">
+                    {activeModal === 'privacy' && t('privacy_policy')}
+                    {activeModal === 'terms' && t('terms_of_service')}
+                    {activeModal === 'cookies' && t('cookie_settings')}
+                    {activeModal === 'help' && 'Help Center & Support'}
+                  </h3>
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                    {activeModal === 'privacy' && 'Data Protection & Security'}
+                    {activeModal === 'terms' && 'Platform Guidelines & Usage'}
+                    {activeModal === 'cookies' && 'Preferences & Storage'}
+                    {activeModal === 'help' && 'Assistance & Inquiries'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveModal(null)}
+                aria-label="Close modal"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer border-none bg-transparent"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
             {activeModal === 'privacy' && (
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-wider mb-3 text-rose-500">Privacy Policy</h3>
-                <div className="text-xs space-y-2.5 max-h-[300px] overflow-y-auto pr-1 leading-relaxed text-slate-500">
-                  <p>Welcome to Xplorism! We take your privacy seriously. All documents uploaded to our Document Vault are fully encrypted in memory and stored securely using AES-256-GCM encryption.</p>
-                  <p>We only collect information necessary to facilitate collaborative trip planning, including your name, email address, trip destinations, itineraries, and shared expenses.</p>
-                  <p>Your personal data is never sold or shared with unauthorized third parties. By using our services, you consent to our collection and storage of your trip metadata and encrypted files.</p>
+              <div className="flex-1 overflow-y-auto py-5 space-y-4 pr-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-start space-x-3">
+                  <Lock className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-0.5">End-to-End Encryption</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+                      Every passport scan, flight ticket, and identification document uploaded to your Document Vault is fully encrypted in memory and stored at rest using industry-standard AES-256-GCM cryptography.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 px-1">
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">1. Information We Collect</h5>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      We collect only the essential details necessary to facilitate collaborative trip planning: your name, verified email address, destination choices, schedules, itineraries, and collaborative expense logs.
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">2. How Your Data is Used</h5>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      Your itineraries and preferences are used solely to generate travel recommendations, optimize packing checklists, provide live weather forecasts, and sync real-time changes with your chosen group members.
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">3. Zero Data Monetization</h5>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      We do not sell, rent, or trade your personal data, travel itineraries, or encrypted files to any third parties or advertisers.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-white text-xs font-bold transition cursor-pointer border-none shadow-sm"
+                  >
+                    I Understand
+                  </button>
                 </div>
               </div>
             )}
+
             {activeModal === 'terms' && (
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-wider mb-3 text-rose-500">Terms of Service</h3>
-                <div className="text-xs space-y-2.5 max-h-[300px] overflow-y-auto pr-1 leading-relaxed text-slate-500">
-                  <p>By registering and using Xplorism, you agree to comply with and be bound by the following terms of service.</p>
-                  <p>You agree not to upload any malicious code, unauthorized materials, or illegal documents to the shared vaults or trip workspace scratchpads.</p>
-                  <p>Collaborative trip creation, budgeting tools, and live chat services are provided "as-is" without warranty. We do our best to maintain real-time sync via WebSocket and Kafka services, but are not liable for transient network disruptions.</p>
+              <div className="flex-1 overflow-y-auto py-5 space-y-4 pr-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-start space-x-3">
+                  <Database className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-0.5">Platform Integrity</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+                      By accessing and using Xplorism, you agree to respectful collaboration and lawful usage across all shared workspaces and community feeds.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 px-1">
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">1. User Accounts & Security</h5>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      You are responsible for maintaining the confidentiality of your session credentials and ensuring that access to your shared trips is granted only to trusted companions.
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">2. Acceptable Use</h5>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      You agree not to upload malicious code, unauthorized materials, or fraudulent documents to shared vaults or trip scratchpads, nor abuse rate limits or public community channels.
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">3. Service Availability</h5>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      Our live collaboration and AI planning engines are provided with high availability. While we strive for seamless real-time synchronization, transient disruptions in third-party maps or weather APIs may occasionally occur.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-white text-xs font-bold transition cursor-pointer border-none shadow-sm"
+                  >
+                    Agree & Close
+                  </button>
                 </div>
               </div>
             )}
+
             {activeModal === 'cookies' && (
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-wider mb-3 text-rose-500">Cookie Settings</h3>
-                <div className="text-xs space-y-2.5 max-h-[300px] overflow-y-auto pr-1 leading-relaxed text-slate-500">
-                  <p>Xplorism uses essential cookies and local storage tokens to keep you logged in and preserve your active trip workspace preferences (such as selected tabs or dark mode).</p>
-                  <p>We do not use tracking or advertising cookies. You can choose to disable cookies in your browser settings, but doing so will prevent you from logging in and accessing collaborative features.</p>
+              <div className="flex-1 overflow-y-auto py-5 space-y-4 pr-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="text-slate-500 dark:text-slate-400 px-1">
+                  Manage how cookies and local storage are utilized on Xplorism. We prioritize privacy and never track your activity across third-party websites.
+                </p>
+
+                <div className="space-y-2.5">
+                  {/* Essential Cookies */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div className="pr-3">
+                      <div className="flex items-center space-x-1.5">
+                        <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs">Essential & Session Cookies</h4>
+                        <span className="text-[9px] bg-rose-500/10 text-rose-500 px-1.5 py-0.5 rounded-md font-bold uppercase">Required</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Required for authentication tokens, session persistence, and workspace access.
+                      </p>
+                    </div>
+                    <div className="h-5 w-9 sm:h-6 sm:w-11 rounded-full bg-rose-500 opacity-80 flex items-center justify-end px-1 cursor-not-allowed">
+                      <div className="h-4 w-4 rounded-full bg-white shadow-sm" />
+                    </div>
+                  </div>
+
+                  {/* Functional Cookies */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div className="pr-3">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs">Functional Preferences</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Remembers your theme mode (Dark/Light), language choice, and active tabs.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCookiePrefs(p => ({ ...p, functional: !p.functional }))}
+                      className={`h-5 w-9 sm:h-6 sm:w-11 rounded-full transition-colors duration-200 cursor-pointer flex items-center px-1 border-none ${
+                        cookiePrefs.functional ? 'bg-rose-500 justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'
+                      }`}
+                    >
+                      <div className="h-4 w-4 rounded-full bg-white shadow-sm" />
+                    </button>
+                  </div>
+
+                  {/* Analytics Cookies */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div className="pr-3">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs">Performance & Analytics</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Anonymous telemetry to help us identify slow network queries and optimize app performance.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCookiePrefs(p => ({ ...p, analytics: !p.analytics }))}
+                      className={`h-5 w-9 sm:h-6 sm:w-11 rounded-full transition-colors duration-200 cursor-pointer flex items-center px-1 border-none ${
+                        cookiePrefs.analytics ? 'bg-rose-500 justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'
+                      }`}
+                    >
+                      <div className="h-4 w-4 rounded-full bg-white shadow-sm" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center space-x-3">
+                  <button
+                    type="button"
+                    onClick={handleSaveCookies}
+                    className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer border-none shadow-sm"
+                  >
+                    {cookieSaved ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        <span>Preferences Saved</span>
+                      </>
+                    ) : (
+                      <span>Save Preferences</span>
+                    )}
+                  </button>
                 </div>
               </div>
             )}
+
             {activeModal === 'help' && (
-              <div>
+              <div className="flex-1 overflow-y-auto py-5 pr-1">
                 {helpSubmitted ? (
                   <div className="text-center py-6 space-y-4">
                     <div className="mx-auto h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
+                      <Check className="h-6 w-6 stroke-[2.5]" />
                     </div>
                     <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Inquiry Sent</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed px-4">
-                      Your help inquiry has been sent successfully!
+                      Your inquiry has been received. Our support team will get back to you shortly!
                     </p>
                     <div className="pt-4">
                       <button
@@ -239,8 +437,7 @@ export default function Footer() {
                   </div>
                 ) : (
                   <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider mb-3 text-rose-500">Help Center / Contact Us</h3>
-                    <form onSubmit={handleHelpSubmit} className="space-y-3.5 mt-2">
+                    <form onSubmit={handleHelpSubmit} className="space-y-3 mt-1">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 mb-1">Your Email Address</label>
                         <input

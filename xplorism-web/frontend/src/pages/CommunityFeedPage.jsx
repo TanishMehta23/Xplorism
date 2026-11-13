@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, Image, Heart, Share2, Plus, Loader2, Search, X, Edit3, Trash2
+  Users, Image, Heart, Share2, Plus, Loader2, Search, X, Edit3, Trash2,
+  AlertCircle, CheckCircle2
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -772,8 +773,8 @@ export default function CommunityFeedPage() {
               className="rounded-3xl border p-6 max-w-sm w-full shadow-2xl relative text-center space-y-4"
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
             >
-              <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center text-xl">
-                ⚠️
+              <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                <AlertCircle className="h-6 w-6" />
               </div>
               <div className="space-y-1.5">
                 <h3 className="text-base font-black">Delete Post</h3>
@@ -976,7 +977,11 @@ export default function CommunityFeedPage() {
               borderColor: toast.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'
             }}
           >
-            <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
+            {toast.type === 'error' ? (
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+            )}
             <span>{toast.message}</span>
           </motion.div>
         )}

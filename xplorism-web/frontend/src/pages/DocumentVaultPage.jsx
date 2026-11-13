@@ -4,7 +4,7 @@ import {
   FileText, ShieldAlert, Plus, Trash2, Download, Edit3, 
   FolderLock, 
   FileImage, Loader2, ShieldCheck, Eye,
-  Plane, Hotel
+  Plane, Hotel, AlertCircle, CheckCircle2, FileQuestion
 } from 'lucide-react';
 import { api } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -576,12 +576,12 @@ export default function DocumentVaultPage() {
                     className="p-3.5 rounded-2xl border text-sm cursor-pointer focus:outline-none"
                     style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
                   >
-                    <option value="passport">🛂 Passport</option>
-                    <option value="visa">📄 Visa</option>
-                    <option value="ticket">✈️ Ticket</option>
-                    <option value="hotel_voucher">🏨 Hotel Voucher</option>
-                    <option value="insurance">🛡️ Insurance</option>
-                    <option value="other">📂 Other</option>
+                    <option value="passport">Passport</option>
+                    <option value="visa">Visa</option>
+                    <option value="ticket">Ticket</option>
+                    <option value="hotel_voucher">Hotel Voucher</option>
+                    <option value="insurance">Insurance</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
 
@@ -689,7 +689,7 @@ export default function DocumentVaultPage() {
                       </pre>
                     ) : (
                       <div className="text-center space-y-3">
-                        <span className="text-3xl">📂</span>
+                        <FileQuestion className="h-10 w-10 text-slate-400 mx-auto" />
                         <p className="text-xs text-[var(--text-secondary)] font-bold">No preview available for this file type.</p>
                         <button
                           onClick={() => {
@@ -721,8 +721,8 @@ export default function DocumentVaultPage() {
               className="rounded-3xl border p-6 max-w-sm w-full shadow-2xl relative text-center space-y-4"
               style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
             >
-              <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center text-xl">
-                ⚠️
+              <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                <AlertCircle className="h-6 w-6" />
               </div>
               <div className="space-y-1.5">
                 <h3 className="text-base font-black">Delete Document</h3>
@@ -769,7 +769,11 @@ export default function DocumentVaultPage() {
               borderColor: toast.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'
             }}
           >
-            <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
+            {toast.type === 'error' ? (
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+            )}
             <span>{toast.message}</span>
           </motion.div>
         )}

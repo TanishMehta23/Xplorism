@@ -5,7 +5,8 @@ import { io } from 'socket.io-client';
 import {
   Calendar, Compass as TripIcon, DollarSign, Users, Clock, 
   MapPin, ArrowLeft, Send, UserPlus, X, Trash2, Shield, LogOut, Pencil,
-  MessageCircle, Info, MessageSquare
+  MessageCircle, Info, MessageSquare, Sun, Cloud, CloudSun, CloudRain, Snowflake,
+  CloudLightning, CloudFog, Plus, Eye, Download, Save, Vote, FileText, CheckCircle2
 } from 'lucide-react';
 import { api, SOCKET_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -137,16 +138,16 @@ export default function CollaborativeTripPage() {
             const code = weatherJson.current_weather.weathercode;
             
             // Map WMO codes to pretty icons and conditions
-            let icon = '☀️';
+            let icon = 'sun';
             let cond = 'Clear Sky';
-            if (code === 0) { icon = '☀️'; cond = 'Clear Sky'; }
-            else if ([1, 2, 3].includes(code)) { icon = '⛅'; cond = 'Partly Cloudy'; }
-            else if ([45, 48].includes(code)) { icon = '🌫️'; cond = 'Foggy'; }
-            else if ([51, 53, 55, 56, 57].includes(code)) { icon = '🌧️'; cond = 'Drizzle'; }
-            else if ([61, 63, 65, 66, 67].includes(code)) { icon = '🌧️'; cond = 'Rainy'; }
-            else if ([71, 73, 75, 77].includes(code)) { icon = '❄️'; cond = 'Snowy'; }
-            else if ([80, 81, 82].includes(code)) { icon = '🌧️'; cond = 'Showers'; }
-            else if ([95, 96, 99].includes(code)) { icon = '⛈️'; cond = 'Thunderstorm'; }
+            if (code === 0) { icon = 'sun'; cond = 'Clear Sky'; }
+            else if ([1, 2, 3].includes(code)) { icon = 'cloud-sun'; cond = 'Partly Cloudy'; }
+            else if ([45, 48].includes(code)) { icon = 'fog'; cond = 'Foggy'; }
+            else if ([51, 53, 55, 56, 57].includes(code)) { icon = 'drizzle'; cond = 'Drizzle'; }
+            else if ([61, 63, 65, 66, 67].includes(code)) { icon = 'rain'; cond = 'Rainy'; }
+            else if ([71, 73, 75, 77].includes(code)) { icon = 'snow'; cond = 'Snowy'; }
+            else if ([80, 81, 82].includes(code)) { icon = 'rain'; cond = 'Showers'; }
+            else if ([95, 96, 99].includes(code)) { icon = 'thunder'; cond = 'Thunderstorm'; }
             
             setWeatherData({ temp: `${temp}°C`, icon, cond });
           }
@@ -1329,7 +1330,7 @@ export default function CollaborativeTripPage() {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return `Starts in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
     } else if (today >= start && today <= end) {
-      return 'Happening Now ✈️';
+      return 'Happening Now';
     } else {
       return 'Past Trip';
     }
@@ -1337,15 +1338,27 @@ export default function CollaborativeTripPage() {
 
   const getWeatherMock = () => {
     const dest = (trip.destination || '').toLowerCase();
-    if (dest.includes('london')) return { temp: '18°C', icon: '🌧️', cond: 'Light Rain' };
-    if (dest.includes('paris')) return { temp: '22°C', icon: '⛅', cond: 'Partly Cloudy' };
-    if (dest.includes('frankfurt')) return { temp: '21°C', icon: '⛅', cond: 'Mostly Cloudy' };
-    if (dest.includes('tokyo')) return { temp: '26°C', icon: '☀️', cond: 'Sunny' };
-    if (dest.includes('bali') || dest.includes('beach')) return { temp: '30°C', icon: '🏖️', cond: 'Tropical Sunny' };
-    return { temp: '24°C', icon: '☀️', cond: 'Clear Sky' };
+    if (dest.includes('london')) return { temp: '18°C', icon: 'rain', cond: 'Light Rain' };
+    if (dest.includes('paris')) return { temp: '22°C', icon: 'cloud-sun', cond: 'Partly Cloudy' };
+    if (dest.includes('frankfurt')) return { temp: '21°C', icon: 'cloud-sun', cond: 'Mostly Cloudy' };
+    if (dest.includes('tokyo')) return { temp: '26°C', icon: 'sun', cond: 'Sunny' };
+    if (dest.includes('bali') || dest.includes('beach')) return { temp: '30°C', icon: 'sun', cond: 'Tropical Sunny' };
+    return { temp: '24°C', icon: 'sun', cond: 'Clear Sky' };
   };
 
   const weather = getWeatherMock();
+
+  const renderWeatherIcon = (iconName) => {
+    const iconClass = "h-5 w-5 sm:h-6 sm:w-6 text-rose-500";
+    switch (iconName) {
+      case 'cloud-sun': return <CloudSun className={iconClass} />;
+      case 'rain': case 'drizzle': return <CloudRain className={iconClass} />;
+      case 'snow': return <Snowflake className={iconClass} />;
+      case 'thunder': return <CloudLightning className={iconClass} />;
+      case 'fog': return <CloudFog className={iconClass} />;
+      default: return <Sun className={iconClass} />;
+    }
+  };
 
   const getDayItineraries = () => {
     if (!trip.itineraries) return [];
@@ -1401,12 +1414,14 @@ export default function CollaborativeTripPage() {
               </div>
 
               {/* Weather Forecast Pill */}
-              <div className="bg-slate-550/5 border border-slate-100 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-2xl flex items-center space-x-2.5 shrink-0 self-start sm:self-auto shadow-sm min-w-[130px] sm:min-w-[150px]">
+              <div className="bg-slate-500/5 border border-slate-100 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-2xl flex items-center space-x-2.5 shrink-0 self-start sm:self-auto shadow-sm min-w-[130px] sm:min-w-[150px]">
                 {weatherLoading ? (
                   <div className="h-4 w-4 sm:h-5 sm:w-5 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin mx-auto" />
                 ) : weatherData ? (
                   <>
-                    <span className="text-xl sm:text-2xl">{weatherData.icon}</span>
+                    <div className="h-9 w-9 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
+                      {renderWeatherIcon(weatherData.icon)}
+                    </div>
                     <div>
                       <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Live Weather</span>
                       <span className="text-[10px] sm:text-xs font-black text-slate-800">{weatherData.temp} · {weatherData.cond}</span>
@@ -1414,7 +1429,9 @@ export default function CollaborativeTripPage() {
                   </>
                 ) : (
                   <>
-                    <span className="text-xl sm:text-2xl">{weather.icon}</span>
+                    <div className="h-9 w-9 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
+                      {renderWeatherIcon(weather.icon)}
+                    </div>
                     <div>
                       <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Forecast</span>
                       <span className="text-[10px] sm:text-xs font-black text-slate-800">{weather.temp} · {weather.cond}</span>
@@ -1525,19 +1542,19 @@ export default function CollaborativeTripPage() {
                       })}
                       <button
                         onClick={handleAddDayClick}
-                        className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-500 border border-dashed border-slate-350 hover:text-slate-800 hover:border-slate-400 transition-all duration-200 shrink-0 cursor-pointer flex items-center space-x-1"
+                        className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200 hover:text-slate-900 hover:border-slate-300 transition-all duration-200 shrink-0 cursor-pointer flex items-center space-x-1.5"
                         title="Add Day to Itinerary"
                       >
-                        <span>➕</span>
+                        <Plus className="h-3 w-3" />
                         <span>Add Day</span>
                       </button>
                       {daysCount > 1 && (
                         <button
                           onClick={handleDeleteActiveDay}
-                          className="px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-500 border border-dashed border-rose-200 hover:text-rose-700 hover:border-rose-350 transition-all duration-200 shrink-0 cursor-pointer flex items-center space-x-1"
+                          className="px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-500 border border-rose-200 hover:bg-rose-100/60 transition-all duration-200 shrink-0 cursor-pointer flex items-center space-x-1.5"
                           title={`Delete Day ${activeDayTab}`}
                         >
-                          <span>🗑️</span>
+                          <Trash2 className="h-3 w-3" />
                           <span>Delete Day {activeDayTab}</span>
                         </button>
                       )}
@@ -1622,10 +1639,10 @@ export default function CollaborativeTripPage() {
                             <div className="flex items-center space-x-1">
                               <button
                                 onClick={() => handleAddItemToPacking(catIdx)}
-                                className="px-2 py-1 rounded hover:bg-rose-500/10 text-[10px] text-rose-500 font-extrabold transition cursor-pointer flex items-center space-x-0.5"
+                                className="px-2 py-1 rounded hover:bg-rose-500/10 text-[10px] text-rose-500 font-extrabold transition cursor-pointer flex items-center space-x-1"
                                 title="Add Item"
                               >
-                                <span>➕</span>
+                                <Plus className="h-2.5 w-2.5" />
                                 <span>Add Item</span>
                               </button>
                               <button
@@ -1896,7 +1913,7 @@ export default function CollaborativeTripPage() {
                           {/* Attachment Box with File Name and Action Buttons (Horizontal layout) */}
                           <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-row items-center justify-between gap-4 mt-2">
                             <div className="flex items-center space-x-2 overflow-hidden min-w-0">
-                              <span className="text-rose-500 font-bold shrink-0">📄</span>
+                              <FileText className="h-4 w-4 text-rose-500 shrink-0" />
                               <span className="text-[10px] font-bold text-slate-700 truncate" title={doc.file_name}>
                                 {doc.file_name}
                               </span>
@@ -1907,14 +1924,14 @@ export default function CollaborativeTripPage() {
                                 onClick={() => handleViewDocument(doc.id, doc.title, doc.file_name)}
                                 className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[9px] font-black transition cursor-pointer flex items-center justify-center space-x-1"
                               >
-                                <span>👁</span>
+                                <Eye className="h-3 w-3" />
                                 <span>View</span>
                               </button>
                               <button
                                 onClick={() => handleDownloadDocument(doc.id, doc.title)}
                                 className="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-[9px] font-black transition cursor-pointer flex items-center justify-center space-x-1 shadow-sm"
                               >
-                                <span>↓</span>
+                                <Download className="h-3 w-3" />
                                 <span>Download</span>
                               </button>
                             </div>
@@ -1942,7 +1959,7 @@ export default function CollaborativeTripPage() {
                       disabled={isSavingNotes}
                       className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
                     >
-                      <span>💾</span>
+                      <Save className="h-3 w-3" />
                       <span>{isSavingNotes ? 'Saving...' : 'Save Notes'}</span>
                     </button>
                   </div>
@@ -1969,7 +1986,7 @@ export default function CollaborativeTripPage() {
                       onClick={() => setShowCreatePollModal(true)}
                       className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-rose-500/10"
                     >
-                      <span>🗳️</span>
+                      <Vote className="h-3.5 w-3.5" />
                       <span>Create Poll</span>
                     </button>
                   </div>
@@ -2617,8 +2634,9 @@ export default function CollaborativeTripPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="p-4 border border-dashed border-slate-200 rounded-xl text-center text-slate-500 text-xs">
-                      🎉 Everyone is completely settled!
+                    <div className="p-4 border border-slate-200 rounded-xl text-center text-slate-500 text-xs flex items-center justify-center space-x-1.5 font-medium">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <span>Everyone is completely settled!</span>
                     </div>
                   )}
                 </div>
@@ -2961,7 +2979,7 @@ export default function CollaborativeTripPage() {
                   onClick={() => setNewPoll(prev => ({ ...prev, options: [...prev.options, ''] }))}
                   className="text-[10px] text-rose-500 font-extrabold hover:underline transition flex items-center space-x-1"
                 >
-                  <span>➕</span>
+                  <Plus className="h-3 w-3" />
                   <span>Add Option</span>
                 </button>
               </div>

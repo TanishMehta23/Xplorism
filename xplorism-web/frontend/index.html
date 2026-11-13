@@ -14,6 +14,24 @@
 
 <body>
   <div id="root"></div>
+  <!-- Automatic Full-Page Google Translation Service -->
+  <div id="google_translate_element" style="display:none;" aria-hidden="true"></div>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      try {
+        if (window.google && window.google.translate) {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'en,es,fr,de,hi,ar,pt,it,ja,zh-CN',
+            autoDisplay: false
+          }, 'google_translate_element');
+        }
+      } catch (err) {
+        console.warn('Google Translate initialization failed:', err);
+      }
+    }
+  </script>
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 

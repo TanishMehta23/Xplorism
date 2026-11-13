@@ -671,4 +671,24 @@ svg.darkreader-keep {
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
+}
+
+/* Hide Google Translate top frame banner and attribution widget */
+.goog-te-banner-frame.skiptranslate, 
+iframe.goog-te-banner-frame {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+body {
+  top: 0px !important;
+}
+#goog-gt-tt, 
+.goog-te-balloon-frame {
+  display: none !important;
+}
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+

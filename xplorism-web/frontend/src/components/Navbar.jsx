@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, Compass, Sun, Moon, DollarSign, Ticket, User, Plane, Globe, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES } from '../context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, SOCKET_URL } from '../services/api';
 import { io } from 'socket.io-client';
@@ -359,15 +359,7 @@ export default function Navbar({ activeTab }) {
 
                   {/* Language Selector Dropdown */}
                   {(() => {
-                    const languagesList = [
-                      { code: 'en', label: 'English' },
-                      { code: 'es', label: 'Español' },
-                      { code: 'fr', label: 'Français' },
-                      { code: 'de', label: 'Deutsch' },
-                      { code: 'hi', label: 'हिन्दी' },
-                      { code: 'ar', label: 'العربية' },
-                      { code: 'pt', label: 'Português' }
-                    ];
+                    const languagesList = SUPPORTED_LANGUAGES;
                     const currentLangObj = languagesList.find(l => l.code === language) || languagesList[0];
 
                     return (

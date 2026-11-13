@@ -7,7 +7,7 @@ import AuthModal from '../components/AuthModal';
 import Footer from '../components/Footer';
 import { api } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES } from '../context/LanguageContext';
 
 const destinations = [
   {
@@ -587,20 +587,12 @@ export default function LandingPage() {
               <Globe className={`h-4 w-4 ${isDark ? 'text-white' : 'text-slate-600'}`} />
               <span className={`uppercase font-extrabold ${isDark ? 'text-white' : 'text-slate-700'}`}>{language}</span>
             </button>
-            <div className={`absolute right-0 mt-2 w-32 rounded-2xl shadow-xl border p-1.5 z-50 transition-all ${
+            <div className={`absolute right-0 mt-2 w-36 rounded-2xl shadow-xl border p-1.5 z-50 transition-all ${
               isLangOpen ? 'block' : 'hidden'
             } ${
               isDark ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-slate-100 text-slate-700'
             }`}>
-              {[
-                { code: 'en', label: 'English' },
-                { code: 'es', label: 'Español' },
-                { code: 'fr', label: 'Français' },
-                { code: 'de', label: 'Deutsch' },
-                { code: 'hi', label: 'हिन्दी' },
-                { code: 'ar', label: 'العربية' },
-                { code: 'pt', label: 'Português' }
-              ].map((lang) => (
+              {SUPPORTED_LANGUAGES.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => {

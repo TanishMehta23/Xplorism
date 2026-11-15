@@ -251,9 +251,19 @@ const getActivityImageFallback = (location, time) => {
   return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&auto=format&fit=crop&q=60';
 };
 
+// In-memory LRU cache to prevent repeat Wikipedia network requests on re-renders
+const wikiImageCache = new Map();
+
 const TripCoverImage = ({ destination, defaultImage, className }) => {
-  const [imageSrc, setImageSrc] = useState(defaultImage || '');
-  const [loading, setLoading] = useState(!defaultImage);
+  const fallback = getTripImage(destination);
+  const [imageSrc, setImageSrc] = useState(() => {
+    if (defaultImage && !defaultImage.includes('loremflickr.com') && !defaultImage.includes('akhilbharat.in')) {
+      return defaultImage;
+    }
+    const cleanKeyword = (destination || '').split(',')[0].trim().toLowerCase();
+    return wikiImageCache.get(cleanKeyword) || fallback;
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -261,13 +271,17 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
     // If we already have a direct unsplash/external URL that isn't a loremflickr or placeholder one, use it
     if (defaultImage && !defaultImage.includes('loremflickr.com') && !defaultImage.includes('akhilbharat.in')) {
       setImageSrc(defaultImage);
-      setLoading(false);
+      return;
+    }
+
+    const cleanKeyword = (destination || '').split(',')[0].trim().toLowerCase();
+    if (wikiImageCache.has(cleanKeyword)) {
+      setImageSrc(wikiImageCache.get(cleanKeyword));
       return;
     }
 
     const fetchRealImage = async () => {
       try {
-        const cleanKeyword = (destination || '').split(',')[0].trim();
         const searchQuery = encodeURIComponent(cleanKeyword);
         const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${searchQuery}&format=json&origin=*`;
         const searchRes = await fetch(searchUrl);
@@ -281,21 +295,22 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
           const pages = imageData.query.pages;
           const pageId = Object.keys(pages)[0];
           if (pages[pageId].thumbnail && pages[pageId].thumbnail.source) {
+            wikiImageCache.set(cleanKeyword, pages[pageId].thumbnail.source);
             if (active) {
               setImageSrc(pages[pageId].thumbnail.source);
-              setLoading(false);
               return;
             }
           }
         }
       } catch (err) {
-        console.error("Failed to fetch real image for destination:", destination, err);
+        console.warn("Failed to fetch real image for destination:", destination);
       }
 
-      // Fallback to our mapped Unsplash/Picsum generator
+      // Fallback
       if (active) {
-        setImageSrc(getTripImage(destination));
-        setLoading(false);
+        const fallbackUrl = getTripImage(destination);
+        wikiImageCache.set(cleanKeyword, fallbackUrl);
+        setImageSrc(fallbackUrl);
       }
     };
 
@@ -330,13 +345,19 @@ const TripCoverImage = ({ destination, defaultImage, className }) => {
 
 const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMoveUp, onMoveDown, onEdit }) => {
   const { formatCurrency } = useCurrency();
-  const [imageSrc, setImageSrc] = useState('');
-  const [loading, setLoading] = useState(true);
+  const fallback = getActivityImageFallback(item.location, item.time);
+  const [imageSrc, setImageSrc] = useState(() => {
+    const locKey = (item.location || '').toLowerCase().trim();
+    return wikiImageCache.get(locKey) || fallback;
+  });
 
   useEffect(() => {
     let active = true;
-    setImageSrc('');
-    setLoading(true);
+    const locKey = (item.location || '').toLowerCase().trim();
+    if (!locKey || wikiImageCache.has(locKey)) {
+      if (wikiImageCache.has(locKey)) setImageSrc(wikiImageCache.get(locKey));
+      return;
+    }
 
     const fetchWikiImage = async () => {
       try {
@@ -353,20 +374,21 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
           const pages = imageData.query.pages;
           const pageId = Object.keys(pages)[0];
           if (pages[pageId].thumbnail && pages[pageId].thumbnail.source) {
+            wikiImageCache.set(locKey, pages[pageId].thumbnail.source);
             if (active) {
               setImageSrc(pages[pageId].thumbnail.source);
-              setLoading(false);
               return;
             }
           }
         }
       } catch (err) {
-        console.error("Failed to fetch Wikipedia image", err);
+        // Silent fallback
       }
 
       if (active) {
-        setImageSrc(getActivityImageFallback(item.location, item.time));
-        setLoading(false);
+        const fallbackUrl = getActivityImageFallback(item.location, item.time);
+        wikiImageCache.set(locKey, fallbackUrl);
+        setImageSrc(fallbackUrl);
       }
     };
 
@@ -1833,9 +1855,12 @@ export default function DashboardStub() {
 
   useEffect(() => {
     if (user) {
-      fetchTrips();
-      fetchFavorites();
-      fetchPassportStamps();
+      // Execute all 3 initial dashboard fetches concurrently in parallel
+      Promise.allSettled([
+        fetchTrips(),
+        fetchFavorites(),
+        fetchPassportStamps()
+      ]);
     }
   }, [user]);
 

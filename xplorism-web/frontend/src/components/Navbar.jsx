@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, Compass, Sun, Moon, DollarSign, User, Plane, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2, Mail, Check, AlertCircle, CheckCircle2, CloudSun, Backpack } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES, INDIAN_LANGUAGES, INTERNATIONAL_LANGUAGES } from '../context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, SOCKET_URL } from '../services/api';
 import { io } from 'socket.io-client';
@@ -372,30 +372,25 @@ export default function Navbar({ activeTab }) {
 
                   {/* Language Selector Dropdown */}
                   {(() => {
-                    const languagesList = [
-                      { code: 'en', label: 'English' },
-                      { code: 'es', label: 'Español' },
-                      { code: 'fr', label: 'Français' },
-                      { code: 'de', label: 'Deutsch' },
-                      { code: 'hi', label: 'हिन्दी' },
-                      { code: 'ar', label: 'العربية' },
-                      { code: 'pt', label: 'Português' }
-                    ];
-                    const currentLangObj = languagesList.find(l => l.code === language) || languagesList[0];
+                    const currentLangObj = SUPPORTED_LANGUAGES.find(l => l.code === language) || SUPPORTED_LANGUAGES[0];
 
                     return (
-                      <div className="px-4 py-2 border-b relative" style={{ borderColor: 'var(--border-secondary)' }}>
+                      <div className="px-4 py-2 border-b relative notranslate" translate="no" style={{ borderColor: 'var(--border-secondary)' }}>
                         <p className="text-[9px] uppercase font-bold tracking-wider mb-1.5" style={{ color: 'var(--text-tertiary)' }}>Language</p>
 
                         <button
                           onClick={() => setIsLangOpen(!isLangOpen)}
-                          className="w-full text-xs font-bold py-1.5 px-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all duration-200 focus:outline-none"
+                          className="w-full text-xs font-bold py-1.5 px-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all duration-200 focus:outline-none notranslate"
+                          translate="no"
                           style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', borderColor: 'var(--border-primary)' }}
                         >
-                          <span className="flex items-center space-x-1.5">
-                            <span>{currentLangObj.label}</span>
+                          <span className="flex items-center space-x-1.5 truncate">
+                            <span className="notranslate" translate="no">{currentLangObj.native}</span>
+                            {currentLangObj.code !== 'en' && (
+                              <span className="text-[10px] opacity-70 notranslate" translate="no">({currentLangObj.english})</span>
+                            )}
                           </span>
-                          <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
+                          <ChevronDown className={`h-3 w-3 transition-transform duration-200 shrink-0 ${isLangOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-secondary)' }} />
                         </button>
 
                         <AnimatePresence>
@@ -404,38 +399,88 @@ export default function Navbar({ activeTab }) {
                               initial={{ opacity: 0, y: -4 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -4 }}
-                              className="absolute left-4 right-4 mt-1 rounded-xl border shadow-xl overflow-hidden z-[100]"
+                              className="absolute left-2 right-2 mt-1 rounded-xl border shadow-xl overflow-y-auto max-h-64 z-[100] notranslate divide-y divide-slate-100 dark:divide-slate-800"
+                              translate="no"
                               style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}
                             >
-                              {languagesList.map((lang) => (
-                                <button
-                                  key={lang.code}
-                                  onClick={() => {
-                                    setLanguage(lang.code);
-                                    setIsLangOpen(false);
-                                  }}
-                                  className="w-full text-left px-3 py-1.5 text-xs font-bold flex items-center justify-between transition cursor-pointer"
-                                  style={{
-                                    color: language === lang.code ? 'var(--rose-500)' : 'var(--text-secondary)',
-                                    backgroundColor: language === lang.code ? 'rgba(244,63,94,0.08)' : 'transparent'
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (language !== lang.code) {
-                                      e.currentTarget.style.backgroundColor = 'rgba(15,23,42,0.04)';
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    if (language !== lang.code) {
-                                      e.currentTarget.style.backgroundColor = 'transparent';
-                                    }
-                                  }}
-                                >
-                                  <span className="flex items-center space-x-2">
-                                    <span>{lang.label}</span>
-                                  </span>
-                                  {language === lang.code && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />}
-                                </button>
-                              ))}
+                              <div className="px-3 py-1.5 text-[9px] uppercase font-extrabold text-slate-400 bg-slate-50 dark:bg-slate-800/40 tracking-wider">
+                                Indian Regional
+                              </div>
+                              {INDIAN_LANGUAGES.map((lang) => {
+                                const isActive = language === lang.code;
+                                return (
+                                  <button
+                                    key={lang.code}
+                                    onClick={() => {
+                                      setLanguage(lang.code);
+                                      setIsLangOpen(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between transition cursor-pointer notranslate"
+                                    translate="no"
+                                    style={{
+                                      color: isActive ? 'var(--rose-500)' : 'var(--text-secondary)',
+                                      backgroundColor: isActive ? 'rgba(244,63,94,0.08)' : 'transparent'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (!isActive) {
+                                        e.currentTarget.style.backgroundColor = 'rgba(15,23,42,0.04)';
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (!isActive) {
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                      }
+                                    }}
+                                  >
+                                    <span className="flex items-center space-x-1.5 truncate">
+                                      <span className="notranslate" translate="no">{lang.native}</span>
+                                      {lang.code !== 'en' && (
+                                        <span className="text-[10px] opacity-70 notranslate" translate="no">({lang.english})</span>
+                                      )}
+                                    </span>
+                                    {isActive && <Check className="h-3.5 w-3.5 text-rose-500 shrink-0 stroke-[2.5]" />}
+                                  </button>
+                                );
+                              })}
+                              <div className="px-3 py-1.5 text-[9px] uppercase font-extrabold text-slate-400 bg-slate-50 dark:bg-slate-800/40 tracking-wider">
+                                International
+                              </div>
+                              {INTERNATIONAL_LANGUAGES.map((lang) => {
+                                const isActive = language === lang.code;
+                                return (
+                                  <button
+                                    key={lang.code}
+                                    onClick={() => {
+                                      setLanguage(lang.code);
+                                      setIsLangOpen(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between transition cursor-pointer notranslate"
+                                    translate="no"
+                                    style={{
+                                      color: isActive ? 'var(--rose-500)' : 'var(--text-secondary)',
+                                      backgroundColor: isActive ? 'rgba(244,63,94,0.08)' : 'transparent'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (!isActive) {
+                                        e.currentTarget.style.backgroundColor = 'rgba(15,23,42,0.04)';
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (!isActive) {
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                      }
+                                    }}
+                                  >
+                                    <span className="flex items-center space-x-1.5 truncate">
+                                      <span className="notranslate" translate="no">{lang.native}</span>
+                                      {lang.code !== 'en' && (
+                                        <span className="text-[10px] opacity-70 notranslate" translate="no">({lang.english})</span>
+                                      )}
+                                    </span>
+                                    {isActive && <Check className="h-3.5 w-3.5 text-rose-500 shrink-0 stroke-[2.5]" />}
+                                  </button>
+                                );
+                              })}
                             </motion.div>
                           )}
                         </AnimatePresence>

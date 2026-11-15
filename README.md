@@ -18,7 +18,7 @@
 
 **Xplorism** is a full-stack, AI-driven travel planning and exploration platform. It unifies multi-model AI itinerary generation, real-time interactive mapping, live aviation radar tracking, multi-user collaborative workspaces, an AES-256-GCM zero-knowledge document vault, and expense tracking into a unified web, desktop (Electron), and mobile (Android) application.
 
-[Live Application](https://xplorism.vercel.app) · [Backend API](https://xplorism-api.azurewebsites.net) · [Report a Bug](https://github.com/TanishMehta23/Xplorism/issues)
+[Live Application](https://xplorism.vercel.app) · [Report a Bug](https://github.com/TanishMehta23/Xplorism/issues)
 
 </div>
 

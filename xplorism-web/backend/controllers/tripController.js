@@ -16,40 +16,50 @@ export const getTrips = async (req, res) => {
 
     const trips = tripsResult.rows;
 
-    // Fetch itineraries for each trip and map them
-    const tripsWithItineraries = await Promise.all(
-      trips.map(async (trip) => {
-        const itineraryResult = await query(
-          'SELECT * FROM itinerary WHERE trip_id = $1 ORDER BY day ASC',
-          [trip.id]
-        );
-        
-        // Map database fields to camelCase for the client
-        return {
-          id: trip.id,
-          userId: trip.user_id,
-          destination: trip.destination,
-          startDate: trip.start_date,
-          endDate: trip.end_date,
-          budget: trip.budget,
-          travelers: trip.travelers,
-          travelStyle: trip.travel_style,
-          interests: trip.interests,
-          createdAt: trip.created_at,
-          packingList: trip.packing_list,
-          notes: trip.notes,
-          itineraries: itineraryResult.rows.map(item => ({
-            id: item.id,
-            tripId: item.trip_id,
-            day: item.day,
-            activity: item.activity,
-            time: item.time,
-            location: item.location,
-            estimatedCost: item.estimated_cost
-          }))
-        };
-      })
+    if (!trips.length) {
+      return res.json([]);
+    }
+
+    // Fetch all itineraries for these trips in a single query (O(1) database trip instead of N queries)
+    const tripIds = trips.map(t => t.id);
+    const itineraryResult = await query(
+      'SELECT * FROM itinerary WHERE trip_id = ANY($1::int[]) ORDER BY day ASC',
+      [tripIds]
     );
+
+    // Group itineraries by trip_id in memory
+    const itineraryMap = {};
+    for (const item of itineraryResult.rows) {
+      if (!itineraryMap[item.trip_id]) {
+        itineraryMap[item.trip_id] = [];
+      }
+      itineraryMap[item.trip_id].push({
+        id: item.id,
+        tripId: item.trip_id,
+        day: item.day,
+        activity: item.activity,
+        time: item.time,
+        location: item.location,
+        estimatedCost: item.estimated_cost
+      });
+    }
+
+    // Map trips with their respective grouped itineraries
+    const tripsWithItineraries = trips.map((trip) => ({
+      id: trip.id,
+      userId: trip.user_id,
+      destination: trip.destination,
+      startDate: trip.start_date,
+      endDate: trip.end_date,
+      budget: trip.budget,
+      travelers: trip.travelers,
+      travelStyle: trip.travel_style,
+      interests: trip.interests,
+      createdAt: trip.created_at,
+      packingList: trip.packing_list,
+      notes: trip.notes,
+      itineraries: itineraryMap[trip.id] || []
+    }));
 
     res.json(tripsWithItineraries);
   } catch (error) {

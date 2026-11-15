@@ -327,20 +327,65 @@ const baseEnglish = {
   all_rights_reserved: 'All rights reserved.'
 };
 
-export function LanguageProvider({ children }) {
-  const [language, setLanguageState] = useState(() => {
-    // Check googtrans cookie first if available
+// Supported Languages list: Indian regional languages + Global International languages
+export const INDIAN_LANGUAGES = [
+  { code: 'en', native: 'English', english: 'English' },
+  { code: 'hi', native: 'हिन्दी', english: 'Hindi' },
+  { code: 'pa', native: 'ਪੰਜਾਬੀ', english: 'Punjabi' },
+  { code: 'bn', native: 'বাংলা', english: 'Bengali' },
+  { code: 'te', native: 'తెలుగు', english: 'Telugu' },
+  { code: 'ta', native: 'தமிழ்', english: 'Tamil' },
+  { code: 'mr', native: 'मराठी', english: 'Marathi' },
+  { code: 'gu', native: 'ગુજરાતી', english: 'Gujarati' },
+  { code: 'kn', native: 'ಕನ್ನಡ', english: 'Kannada' },
+  { code: 'ml', native: 'മലയാളം', english: 'Malayalam' },
+  { code: 'or', native: 'ଓଡ଼ିଆ', english: 'Odia' },
+  { code: 'ur', native: 'اردو', english: 'Urdu' }
+];
+
+export const INTERNATIONAL_LANGUAGES = [
+  { code: 'es', native: 'Español', english: 'Spanish' },
+  { code: 'fr', native: 'Français', english: 'French' },
+  { code: 'de', native: 'Deutsch', english: 'German' },
+  { code: 'ar', native: 'العربية', english: 'Arabic' },
+  { code: 'pt', native: 'Português', english: 'Portuguese' },
+  { code: 'it', native: 'Italiano', english: 'Italian' },
+  { code: 'ru', native: 'Русский', english: 'Russian' },
+  { code: 'ja', native: '日本語', english: 'Japanese' },
+  { code: 'ko', native: '한국어', english: 'Korean' },
+  { code: 'zh-CN', native: '简体中文', english: 'Chinese (Simplified)' },
+  { code: 'tr', native: 'Türkçe', english: 'Turkish' }
+];
+
+export const SUPPORTED_LANGUAGES = [
+  ...INDIAN_LANGUAGES,
+  ...INTERNATIONAL_LANGUAGES
+];
+
+export function getActiveLanguage() {
+  try {
+    // 1. Check googtrans cookie: format is usually /en/<code> or /auto/<code>
     const match = document.cookie.match(/(?:^|;\s*)googtrans=([^;]*)/);
     if (match && match[1]) {
       const parts = decodeURIComponent(match[1]).split('/');
-      const targetLang = parts[parts.length - 1];
-      if (targetLang) {
-        return targetLang;
+      const code = parts[parts.length - 1];
+      if (code && SUPPORTED_LANGUAGES.some(l => l.code === code)) {
+        return code;
       }
     }
+    // 2. Check localStorage
     const saved = localStorage.getItem('language');
-    return saved || 'en';
-  });
+    if (saved && SUPPORTED_LANGUAGES.some(l => l.code === saved)) {
+      return saved;
+    }
+  } catch (err) {
+    console.warn('Error reading active language:', err);
+  }
+  return 'en';
+}
+
+export function LanguageProvider({ children }) {
+  const [language, setLanguageState] = useState(getActiveLanguage);
 
   // Helper to set googtrans cookie across both root path and domain
   const setGoogleTranslateCookie = (targetLang) => {
@@ -393,10 +438,25 @@ export function LanguageProvider({ children }) {
   const setLanguage = (newLang) => {
     if (!newLang) return;
     setLanguageState(newLang);
-    localStorage.setItem('language', newLang);
+    try {
+      localStorage.setItem('language', newLang);
+    } catch (e) {
+      console.warn(e);
+    }
     setGoogleTranslateCookie(newLang);
     triggerGoogleTranslateCombo(newLang);
   };
+
+  // Keep state synchronized with googtrans cookie / storage changes
+  useEffect(() => {
+    const syncActiveLang = () => {
+      const current = getActiveLanguage();
+      setLanguageState(prev => (prev !== current ? current : prev));
+    };
+
+    window.addEventListener('focus', syncActiveLang);
+    return () => window.removeEventListener('focus', syncActiveLang);
+  }, []);
 
   // Load Google Translate script and initialize hidden element cleanly on mount
   useEffect(() => {
@@ -409,6 +469,8 @@ export function LanguageProvider({ children }) {
       translateDiv.style.visibility = 'hidden';
       translateDiv.style.position = 'absolute';
       translateDiv.style.top = '-9999px';
+      translateDiv.setAttribute('aria-hidden', 'true');
+      translateDiv.classList.add('notranslate');
       document.body.appendChild(translateDiv);
     }
 
@@ -419,17 +481,17 @@ export function LanguageProvider({ children }) {
           new window.google.translate.TranslateElement(
             {
               pageLanguage: 'en',
-              includedLanguages: 'en,es,fr,de,hi,ar,pt',
+              includedLanguages: SUPPORTED_LANGUAGES.map(l => l.code).join(','),
               autoDisplay: false
             },
             'google_translate_element'
           );
 
           // Once initialized, apply current language if set
-          const currentLang = localStorage.getItem('language') || 'en';
-          if (currentLang && currentLang !== 'en') {
-            setGoogleTranslateCookie(currentLang);
-            triggerGoogleTranslateCombo(currentLang);
+          const active = getActiveLanguage();
+          if (active && active !== 'en') {
+            setGoogleTranslateCookie(active);
+            triggerGoogleTranslateCombo(active);
           }
         }
       } catch (err) {

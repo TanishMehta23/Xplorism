@@ -39,10 +39,11 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
 // Middleware
-// Apply HTTP security headers (XSS protection, Content-Security-Policy, HSTS, Clickjacking protection, etc.)
+// Apply HTTP security headers with CSP and COEP disabled for external translation scripts (Google Translate, maps, widgets)
 app.use(helmet({
-  contentSecurityPolicy: false, // Turned off by default if hosting map interpreters or third-party widgets, can be customized
-  crossOriginResourcePolicy: { policy: "cross-origin" } // Allows resource sharing for assets/uploads
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 const allowedOrigins = [

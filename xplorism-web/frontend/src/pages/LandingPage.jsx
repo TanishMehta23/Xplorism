@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Compass, MapPin, Plus, DollarSign, Users, Navigation, ArrowRight, Locate, FolderLock, MessageSquare, Sun, Moon, Globe } from 'lucide-react';
+import { Compass, MapPin, Plus, DollarSign, Users, Navigation, ArrowRight, Locate, FolderLock, MessageSquare, Sun, Moon, Globe, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import Footer from '../components/Footer';
 import { api } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES, INDIAN_LANGUAGES, INTERNATIONAL_LANGUAGES } from '../context/LanguageContext';
 
 const destinations = [
   {
@@ -577,45 +577,84 @@ export default function LandingPage() {
 
         <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
           {/* Language Selector */}
-          <div className="relative lang-selector-container">
+          <div className="relative lang-selector-container notranslate" translate="no">
             <button
               onClick={() => setIsLangOpen(!isLangOpen)}
-              className={`p-2 rounded-xl border flex items-center space-x-1.5 text-xs font-bold cursor-pointer transition ${
+              className={`p-2 rounded-xl border flex items-center space-x-1.5 text-xs font-bold cursor-pointer transition notranslate ${
                 isDark ? 'bg-slate-900/80 border-slate-800 text-white hover:bg-slate-800' : 'bg-white border-slate-200 text-slate-700 hover:text-slate-950'
               }`}
+              translate="no"
             >
               <Globe className={`h-4 w-4 ${isDark ? 'text-white' : 'text-slate-600'}`} />
-              <span className={`uppercase font-extrabold ${isDark ? 'text-white' : 'text-slate-700'}`}>{language}</span>
+              <span className="uppercase font-extrabold notranslate" translate="no">{language}</span>
             </button>
-            <div className={`absolute right-0 mt-2 w-32 rounded-2xl shadow-xl border p-1.5 z-50 transition-all ${
+            <div className={`absolute right-0 mt-2 w-52 rounded-2xl shadow-xl border p-1.5 z-50 transition-all max-h-64 overflow-y-auto notranslate divide-y divide-slate-100 dark:divide-slate-800 ${
               isLangOpen ? 'block' : 'hidden'
             } ${
               isDark ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-slate-100 text-slate-700'
-            }`}>
-              {[
-                { code: 'en', label: 'English' },
-                { code: 'es', label: 'Español' },
-                { code: 'fr', label: 'Français' },
-                { code: 'de', label: 'Deutsch' },
-                { code: 'hi', label: 'हिन्दी' },
-                { code: 'ar', label: 'العربية' },
-                { code: 'pt', label: 'Português' }
-              ].map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => {
-                    setLanguage(lang.code);
-                    setIsLangOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                    language === lang.code
-                      ? 'bg-rose-500 text-white'
-                      : isDark ? 'hover:bg-slate-800 hover:text-white text-slate-200' : 'hover:bg-slate-50 hover:text-slate-950'
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
+            }`} translate="no">
+              <div className="px-3 py-1.5 text-[9px] uppercase font-extrabold text-slate-400 bg-slate-50 dark:bg-slate-800/40 tracking-wider">
+                Indian Regional
+              </div>
+              {INDIAN_LANGUAGES.map((lang) => {
+                const isActive = language === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      setIsLangOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-between notranslate ${
+                      isActive
+                        ? 'bg-rose-500 text-white'
+                        : isDark ? 'hover:bg-slate-800 hover:text-white text-slate-200' : 'hover:bg-slate-50 hover:text-slate-950'
+                    }`}
+                    translate="no"
+                  >
+                    <span className="flex items-center space-x-1.5 truncate">
+                      <span className="notranslate" translate="no">{lang.native}</span>
+                      {lang.code !== 'en' && (
+                        <span className={`text-[10px] opacity-75 notranslate ${isActive ? 'text-white' : ''}`} translate="no">
+                          ({lang.english})
+                        </span>
+                      )}
+                    </span>
+                    {isActive && <Check className="h-3.5 w-3.5 shrink-0 stroke-[2.5]" />}
+                  </button>
+                );
+              })}
+              <div className="px-3 py-1.5 text-[9px] uppercase font-extrabold text-slate-400 bg-slate-50 dark:bg-slate-800/40 tracking-wider">
+                International
+              </div>
+              {INTERNATIONAL_LANGUAGES.map((lang) => {
+                const isActive = language === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      setIsLangOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-between notranslate ${
+                      isActive
+                        ? 'bg-rose-500 text-white'
+                        : isDark ? 'hover:bg-slate-800 hover:text-white text-slate-200' : 'hover:bg-slate-50 hover:text-slate-950'
+                    }`}
+                    translate="no"
+                  >
+                    <span className="flex items-center space-x-1.5 truncate">
+                      <span className="notranslate" translate="no">{lang.native}</span>
+                      {lang.code !== 'en' && (
+                        <span className={`text-[10px] opacity-75 notranslate ${isActive ? 'text-white' : ''}`} translate="no">
+                          ({lang.english})
+                        </span>
+                      )}
+                    </span>
+                    {isActive && <Check className="h-3.5 w-3.5 shrink-0 stroke-[2.5]" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

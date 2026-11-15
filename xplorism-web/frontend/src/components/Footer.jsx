@@ -78,13 +78,13 @@ export default function Footer() {
           }`}>
           {/* Column 1: Branding and Socials */}
           <div className="col-span-2 md:col-span-4 space-y-5">
-            <div className="flex items-center space-x-2.5 text-xl font-bold">
+            <div className="flex items-center space-x-2.5 text-xl font-bold notranslate">
               <img
                 src="/logo-removebg.png"
                 alt="Xplorism Logo"
                 className="h-10 w-10 object-contain rounded-full shadow-sm"
               />
-              <span className={`font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'
+              <span className={`font-extrabold tracking-tight notranslate ${isDark ? 'text-white' : 'text-slate-900'
                 }`}>Xplorism</span>
             </div>
             <p className={`text-xs sm:text-sm leading-relaxed max-w-sm transition-colors duration-200 ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-black'

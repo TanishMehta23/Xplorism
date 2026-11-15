@@ -562,13 +562,13 @@ export default function LandingPage() {
           : 'bg-white/70 border-slate-100/60'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-nowrap">
-          <Link to="/" className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <Link to="/" className="flex items-center space-x-2 sm:space-x-3 shrink-0 notranslate">
             <img
               src="/logo-removebg.png"
               alt="Xplorism Logo"
               className="h-10 sm:h-12 w-10 sm:w-12 object-contain rounded-full shadow-sm"
             />
-            <span className={`font-extrabold tracking-tight text-xl sm:text-2xl ${
+            <span className={`font-extrabold tracking-tight text-xl sm:text-2xl notranslate ${
               isDark ? 'text-white' : 'text-slate-900'
             }`}>
               Xplorism

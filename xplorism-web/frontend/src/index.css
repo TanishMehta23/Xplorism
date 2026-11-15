@@ -671,4 +671,56 @@ svg.darkreader-keep {
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
+}
+
+/* ==========================================================================
+   Google Translate Complete UI Suppression & Invisible Background Translation
+   ========================================================================== */
+
+/* Completely hide Google's default translation widgets, frames, and banners */
+#google_translate_element,
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+.goog-te-menu-frame,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-ORHb,
+.VIpgJd-ZVi9od-vLBgda,
+.VIpgJd-ZVi9od-xl07Ob-OEVmcd,
+.VIpgJd-y6EKec {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  z-index: -9999 !important;
+}
+
+/* Prevent Google Translate from pushing body or html down with inline style 'top: Xpx' */
+body, html {
+  top: 0px !important;
+  position: static !important;
+  margin-top: 0px !important;
+}
+
+/* Hide Google Translate hover popup tooltip (#goog-gt-tt) and highlight underlines */
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  color: inherit !important;
+}
+

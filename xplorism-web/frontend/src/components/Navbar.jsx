@@ -158,7 +158,7 @@ export default function Navbar({ activeTab }) {
 
           {/* Left Section: Logo */}
           <div
-            className="flex items-center space-x-2 sm:space-x-3 text-xl sm:text-2xl font-bold tracking-tight cursor-pointer"
+            className="flex items-center space-x-2 sm:space-x-3 text-xl sm:text-2xl font-bold tracking-tight cursor-pointer notranslate"
             onClick={() => navigate('/')}
           >
             <img
@@ -166,7 +166,7 @@ export default function Navbar({ activeTab }) {
               alt="Xplorism Logo"
               className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full shadow-sm"
             />
-            <span style={{ color: 'var(--text-primary)' }} className="font-extrabold tracking-tight">
+            <span style={{ color: 'var(--text-primary)' }} className="font-extrabold tracking-tight notranslate">
               Xplorism
             </span>
           </div>

@@ -8,7 +8,7 @@ import {
   Trash2, DollarSign, Users, X, Clock, MapPin, Tag, Edit,
   Sun, Cloud, CloudRain, Snowflake, Wind, Heart, Download, Search,
   Maximize2, Minimize2, CheckSquare, Share2, CloudSun, ChevronUp, ChevronDown,
-  UserPlus, Loader2, Plane, Map, TrendingUp, Coins, Globe, Lock, Award,
+  UserPlus, Loader2, Plane, Map as MapIcon, TrendingUp, Coins, Globe, Lock, Award,
   Quote, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { api } from '../services/api';
@@ -717,7 +717,7 @@ export default function DashboardStub() {
         description: 'Accumulate 30 or more travel days',
         requirement: '30+ total travel days',
         unlocked: travelStats.totalDays >= 30,
-        icon: Map,
+        icon: MapIcon,
         gradient: 'from-sky-500/25 to-cyan-500/25',
         border: 'border-sky-200 dark:border-sky-900/30',
         iconBg: 'bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400'

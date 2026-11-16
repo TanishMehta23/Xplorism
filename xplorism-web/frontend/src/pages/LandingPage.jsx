@@ -1368,7 +1368,7 @@ export default function LandingPage() {
         <div className="text-center mb-8 sm:mb-16">
           <h2 className={`text-xl sm:text-2xl md:text-3xl font-extrabold mb-2 sm:mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>Plan Simpler. Travel Better.</h2>
           <p className={`max-w-xl mx-auto text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Everything you need for an unforgettable journey, organized in a clean layout.
+            Coordinated schedules, real-time aviation telemetry, and collaborative budgeting in one workspace.
           </p>
         </div>
 

@@ -55,6 +55,17 @@ export default function Footer() {
     setActiveModal('help');
   };
 
+  // Keyboard shortcut: close modals on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && activeModal) {
+        setActiveModal(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeModal]);
+
   const handleHelpSubmit = async (e) => {
     e.preventDefault();
     setHelpSubmitting(true);

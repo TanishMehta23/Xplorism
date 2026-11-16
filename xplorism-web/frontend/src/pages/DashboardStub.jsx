@@ -2828,10 +2828,10 @@ export default function DashboardStub() {
 
           {/* Center Block: Display active quote */}
           <div className="flex-1 max-w-xl mx-auto text-center md:text-left px-2 sm:px-6">
-            <p className="text-xs font-bold text-slate-705 dark:text-slate-200 italic leading-relaxed transition-all duration-500">
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 italic leading-relaxed transition-opacity duration-200">
               "{travelQuotes[activeQuoteIdx].text}"
             </p>
-            <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-widest mt-1.5 sm:mt-2 block">
+            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1.5 sm:mt-2 block">
               — {travelQuotes[activeQuoteIdx].author}
             </span>
           </div>
@@ -3729,27 +3729,25 @@ export default function DashboardStub() {
                     />
                   </div>
 
-                  {/* AI Section */}
+                  {/* Activity Alternatives */}
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-rose-500 uppercase tracking-wider flex items-center">
-                        <span>AI Alternatives (Xplorism AI)</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center">
+                        <span>Nearby Alternatives</span>
                       </span>
                       <button
                         type="button"
                         onClick={fetchAISuggestions}
                         disabled={aiLoading}
-                        className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-bold transition flex items-center space-x-1 disabled:opacity-50 cursor-pointer border-none"
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-semibold transition flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer border-none"
                       >
                         {aiLoading ? (
                           <>
                             <Loader2 className="h-3 w-3 animate-spin" />
-                            <span>Thinking...</span>
+                            <span>Finding options...</span>
                           </>
                         ) : (
-                          <>
-                            <span>Ask Xplorism AI</span>
-                          </>
+                          <span>Suggest Alternatives</span>
                         )}
                       </button>
                     </div>

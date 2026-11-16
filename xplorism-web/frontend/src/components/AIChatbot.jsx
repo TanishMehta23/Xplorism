@@ -93,9 +93,22 @@ export default function AIChatbot() {
 
   useEffect(() => {
     const handleOpenChat = () => setIsOpen(true);
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (showConfirmDelete) {
+          setShowConfirmDelete(false);
+        } else if (isOpen) {
+          setIsOpen(false);
+        }
+      }
+    };
     window.addEventListener('open-xplorism-ai', handleOpenChat);
-    return () => window.removeEventListener('open-xplorism-ai', handleOpenChat);
-  }, []);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('open-xplorism-ai', handleOpenChat);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, showConfirmDelete]);
 
   const fetchConversations = async () => {
     try {

@@ -755,5 +755,33 @@ export const submitHelpRequest = async (req, res) => {
   }
 };
 
+export const subscribeNewsletter = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ message: 'A valid email address is required.' });
+    }
+    
+    // Save to newsletter_subscribers or upsert
+    await query(
+      `CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        subscribed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )`
+    );
+
+    await query(
+      `INSERT INTO newsletter_subscribers (email) VALUES ($1) ON CONFLICT (email) DO NOTHING`,
+      [email.toLowerCase().trim()]
+    );
+
+    res.json({ message: 'Subscribed successfully!' });
+  } catch (error) {
+    console.error('Newsletter subscription error:', error);
+    res.status(500).json({ message: 'Failed to subscribe to newsletter.' });
+  }
+};
+
 
 

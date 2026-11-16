@@ -28,6 +28,21 @@ export default function Navbar({ activeTab }) {
     navigate('/');
   };
 
+  // Keyboard shortcut: close dropdowns and logout modal on Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showLogoutConfirm) setShowLogoutConfirm(false);
+        if (isDropdownOpen) setIsDropdownOpen(false);
+        if (isNotificationsOpen) setIsNotificationsOpen(false);
+        if (isLangOpen) setIsLangOpen(false);
+        if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showLogoutConfirm, isDropdownOpen, isNotificationsOpen, isLangOpen, isMobileMenuOpen]);
+
   useEffect(() => {
     if (!user) return;
     const fetchNotifications = async () => {
@@ -626,8 +641,16 @@ export default function Navbar({ activeTab }) {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
-          <div className="rounded-3xl border p-6 max-w-sm w-full shadow-xl relative" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+        <div 
+          onClick={() => setShowLogoutConfirm(false)}
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 cursor-pointer" 
+          style={{ backgroundColor: 'var(--modal-overlay)' }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="rounded-3xl border p-6 max-w-sm w-full shadow-xl relative cursor-default" 
+            style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+          >
             <div className="flex items-center space-x-3 text-rose-500 mb-4">
               <LogOut className="h-5 w-5" />
               <h3 className="text-lg font-bold font-sans" style={{ color: 'var(--text-primary)' }}>Log Out</h3>

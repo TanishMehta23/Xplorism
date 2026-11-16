@@ -945,46 +945,45 @@ export default function BudgetPage() {
                 </div>
               )}
 
-              {/* AI Smart Assistant Card */}
+              {/* Budget Optimizer / Cost Recommendations */}
               {!budgetData.isPrePlanned && (
-                <div className="bg-gradient-to-br from-rose-50/80 via-white to-orange-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border border-rose-100 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm relative overflow-hidden group">
-                  <div className="absolute -top-16 -right-16 w-32 h-32 bg-rose-200/30 dark:bg-rose-900/20 rounded-full blur-2xl group-hover:scale-125 transition duration-500" />
-                  <div className="flex items-center justify-between mb-3 relative z-10">
-                    <h3 className="text-xs sm:text-sm font-extrabold flex items-center gap-2 text-slate-900 dark:text-white">
-                      Xplorism AI Smart Insights
+                <div className="bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs sm:text-sm font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                      Destination Cost Recommendations
                     </h3>
-                    <span className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/30">
-                      Smart Assistant
+                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700">
+                      Optimizer
                     </span>
                   </div>
                   {aiInsightsLoading ? (
-                    <div className="flex items-center space-x-2 text-xs py-4 text-slate-500 dark:text-slate-400 font-bold relative z-10">
-                      <div className="h-4.5 w-4.5 border-2 border-slate-200 dark:border-slate-700 border-t-rose-500 rounded-full animate-spin" />
-                      <span>Consulting Xplorism AI for destination cost-saving recommendations...</span>
+                    <div className="flex items-center space-x-2 text-xs py-3 text-slate-500 dark:text-slate-400 font-medium">
+                      <div className="h-4 w-4 border-2 border-slate-200 dark:border-slate-700 border-t-rose-500 rounded-full animate-spin" />
+                      <span>Analyzing category distributions for cost-saving suggestions...</span>
                     </div>
                   ) : aiInsights.length > 0 ? (
-                    <div className="space-y-2.5 relative z-10">
+                    <div className="space-y-2">
                       {aiInsights.map((insight, idx) => (
-                        <div key={idx} className="flex items-start space-x-2 text-xs bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-3 rounded-xl border border-rose-100 dark:border-slate-700/60 shadow-2xs">
+                        <div key={idx} className="flex items-start space-x-2.5 text-xs bg-white dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
                           <span className="text-rose-500 font-bold shrink-0 mt-0.5">•</span>
-                          <p className="font-semibold text-slate-700 dark:text-slate-200 leading-relaxed text-[11px] sm:text-xs">{insight}</p>
+                          <p className="font-medium text-slate-700 dark:text-slate-200 leading-relaxed text-[11px] sm:text-xs">{insight}</p>
                         </div>
                       ))}
                       <button
                         onClick={handleFetchInsights}
-                        className="text-[10px] font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 uppercase tracking-wider mt-2 inline-block cursor-pointer transition underline underline-offset-4"
+                        className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 mt-2 inline-block cursor-pointer transition hover:underline"
                       >
-                        Recalculate Tips
+                        Refresh Recommendations
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 relative z-10">
-                      <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-medium max-w-md">Let Xplorism AI analyze your current category expenses and recommend hyper-localized savings for this trip.</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                      <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-normal max-w-md">Analyze spending across categories and identify localized savings based on historical destination benchmarks.</p>
                       <button
                         onClick={handleFetchInsights}
-                        className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition active:scale-95 cursor-pointer shadow-sm text-center"
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-white font-semibold text-xs transition active:scale-95 cursor-pointer shadow-xs text-center border-none"
                       >
-                        Get AI Coach Tips
+                        Analyze Expenses
                       </button>
                     </div>
                   )}

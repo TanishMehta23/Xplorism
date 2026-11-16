@@ -209,7 +209,6 @@ export default function ProfilePage() {
       setPhotoStatus({ type: 'error', msg: 'Failed to read file.' });
     };
     reader.onloadend = async () => {
-      console.log('FileReader finished reading file, sending base64 to server...');
       let base64Data = reader.result;
       
       // Normalize HEIC prefix if needed so the backend can detect it
@@ -229,7 +228,6 @@ export default function ProfilePage() {
           profilePhoto: base64Data
         });
         
-        console.log('Server response received:', data);
         const returnedPhoto = data.user.profilePhoto || data.user.profile_photo;
         
         if (returnedPhoto) {

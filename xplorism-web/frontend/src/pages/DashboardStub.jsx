@@ -1265,7 +1265,12 @@ export default function DashboardStub() {
     }
 
     // Connect to Socket.io backend
-    const socket = io('http://localhost:5000');
+    const socket = io(SOCKET_URL, {
+      transports: ['polling', 'websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      timeout: 10000
+    });
     socketRef.current = socket;
 
     // Join room

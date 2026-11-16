@@ -78,18 +78,17 @@ const fetchOverpassWithFallback = async (queryPart) => {
     const data = await api.get(`/overpass?data=${encodeURIComponent(queryPart)}`);
     return data;
   } catch (err) {
-    console.warn('Backend Overpass proxy failed, trying client-side fallback...');
     const endpoints = [
       'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
       'https://overpass.openstreetmap.fr/api/interpreter',
       'https://lz4.overpass-api.de/api/interpreter',
-      'https://overpass.kumi.systems/api/interpreter',
-      'https://overpass.openstreetmap.ru/cgi/interpreter'
+      'https://overpass.private.coffee/api/interpreter'
     ];
 
     for (const endpoint of endpoints) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12-second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 6000); // 6-second timeout
 
       try {
         const url = `${endpoint}?data=${encodeURIComponent(queryPart)}`;
@@ -99,14 +98,12 @@ const fetchOverpassWithFallback = async (queryPart) => {
           const data = await res.json();
           return data;
         }
-        console.warn(`Overpass endpoint ${endpoint} returned status ${res.status}`);
       } catch (e) {
         clearTimeout(timeoutId);
-        console.warn(`Failed to fetch from Overpass endpoint ${endpoint}:`, e);
       }
     }
   }
-  throw new Error('All Overpass API endpoints failed or timed out.');
+  return null;
 };
 
 // Fallback high-speed geosearch query using Wikipedia's ultra-reliable global API
@@ -307,8 +304,10 @@ export default function LandingPage() {
               .sort((a, b) => a.priority - b.priority)
               .slice(0, 10);
           }
+          if (places.length === 0) {
+            places = await fetchWikipediaAttractions(latitude, longitude);
+          }
         } catch (err) {
-          console.warn('Overpass failed, falling back to Wikipedia Geosearch:', err);
           places = await fetchWikipediaAttractions(latitude, longitude);
         }
 
@@ -469,8 +468,10 @@ export default function LandingPage() {
             .sort((a, b) => a.priority - b.priority)
             .slice(0, 10); // Top 10 attractions
         }
+        if (places.length === 0) {
+          places = await fetchWikipediaAttractions(latitude, longitude);
+        }
       } catch (err) {
-        console.warn('Overpass failed, falling back to Wikipedia Geosearch:', err);
         places = await fetchWikipediaAttractions(latitude, longitude);
       }
 
@@ -1160,10 +1161,12 @@ export default function LandingPage() {
                               .sort((a, b) => a.priority - b.priority)
                               .slice(0, 10);
                           }
-                          return [];
+                          if (!places || places.length === 0) {
+                            return fetchWikipediaAttractions(latitude, longitude);
+                          }
+                          return places;
                         })
-                        .catch(err => {
-                          console.warn('Overpass failed, falling back to Wikipedia Geosearch:', err);
+                        .catch(() => {
                           return fetchWikipediaAttractions(latitude, longitude);
                         })
                         .then(places => {

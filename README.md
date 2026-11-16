@@ -1,6 +1,6 @@
-# Xplorism
-
 <div align="center">
+
+# Xplorism
 
 ### AI-Powered Travel Planning & Real-Time Exploration Platform
 

@@ -53,10 +53,6 @@ if (!connectionString || isLocal) {
       servername: originalHost
     }
   });
-
-  if (dohIp) {
-    console.log(`[DB] Successfully resolved database host ${originalHost} -> ${dohIp} via secure DNS`);
-  }
 }
 
 // Helper query function

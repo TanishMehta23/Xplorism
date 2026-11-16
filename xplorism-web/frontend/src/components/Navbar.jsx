@@ -60,7 +60,12 @@ export default function Navbar({ activeTab }) {
     const interval = setInterval(fetchNotifications, 45000);
 
     // Global real-time socket connection for user-specific notifications
-    const socket = io(SOCKET_URL);
+    const socket = io(SOCKET_URL, {
+      transports: ['polling', 'websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      timeout: 10000
+    });
     socket.emit('join-user-room', { userId: user.id });
 
     socket.on('new-notification', (notif) => {

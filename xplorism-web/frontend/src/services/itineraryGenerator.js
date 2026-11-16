@@ -6,19 +6,17 @@ const fetchOverpassWithFallback = async (queryPart) => {
     const data = await api.get(`/overpass?data=${encodeURIComponent(queryPart)}`);
     return data;
   } catch (err) {
-    console.warn('Backend Overpass proxy failed, trying client-side fallback...');
-    // Fallback to direct client-side fetch if backend proxy fails
     const endpoints = [
       'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
       'https://overpass.openstreetmap.fr/api/interpreter',
       'https://lz4.overpass-api.de/api/interpreter',
-      'https://overpass.kumi.systems/api/interpreter',
-      'https://overpass.openstreetmap.ru/cgi/interpreter'
+      'https://overpass.private.coffee/api/interpreter'
     ];
 
     for (const endpoint of endpoints) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12-second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       try {
         const url = `${endpoint}?data=${encodeURIComponent(queryPart)}`;
@@ -32,7 +30,7 @@ const fetchOverpassWithFallback = async (queryPart) => {
       }
     }
   }
-  throw new Error('All Overpass API endpoints failed or timed out.');
+  return null;
 };
 
 // Wikipedia Geosearch global API fallback

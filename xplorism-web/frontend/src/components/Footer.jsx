@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Send, Mail, ShieldCheck, FileText, Cookie, HelpCircle, X, Check, Lock, Database, Bell } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';

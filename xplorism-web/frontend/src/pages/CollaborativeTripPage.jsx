@@ -255,7 +255,12 @@ export default function CollaborativeTripPage() {
     if (!id || !user) return;
 
     // Connect to backend Socket.io
-    const socket = io(SOCKET_URL);
+    const socket = io(SOCKET_URL, {
+      transports: ['polling', 'websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      timeout: 10000
+    });
     socketRef.current = socket;
 
     // Join room

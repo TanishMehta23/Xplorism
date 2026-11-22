@@ -25,6 +25,15 @@ export default function AIChatbot() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
+  const [showTooltip, setShowTooltip] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTooltip(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const messagesEndRef = useRef(null);
   const panelRef = useRef(null);
@@ -278,11 +287,12 @@ export default function AIChatbot() {
   ];
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] font-sans">
-      {/* Floating Tooltip Bubble */}
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] font-sans">
+      {/* Floating Tooltip Bubble (Desktop hover or initial 5s reveal; hidden on mobile to avoid overlapping content) */}
       <div
-        className={`absolute bottom-16 right-0 whitespace-nowrap text-[10px] font-black px-3.5 py-1.5 rounded-2xl shadow-xl flex items-center transition-all duration-500 origin-bottom-right border pointer-events-none select-none z-10 ${isOpen ? 'scale-0 opacity-0 translate-y-5' : 'scale-100 opacity-100 translate-y-0'
-          } bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-slate-900/10 dark:shadow-black/50`}
+        className={`hidden sm:flex absolute bottom-16 right-0 whitespace-nowrap text-[10px] font-black px-3.5 py-1.5 rounded-2xl shadow-xl items-center transition-all duration-500 origin-bottom-right border pointer-events-none select-none z-10 ${
+          isOpen || (!showTooltip && !isHovered) ? 'scale-0 opacity-0 translate-y-3 pointer-events-none' : 'scale-100 opacity-100 translate-y-0'
+        } bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-slate-900/10 dark:shadow-black/50`}
       >
         <span>{t('ask_xplorism_ai')}</span>
         {/* Tooltip Arrow */}
@@ -292,8 +302,10 @@ export default function AIChatbot() {
       {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(true)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         aria-label="Open AI Assistant"
-        className={`absolute bottom-0 right-0 h-14 w-14 rounded-full bg-gradient-to-tr from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 hover:scale-110 active:scale-95 text-white shadow-[0_8px_32px_rgba(244,63,94,0.4)] hover:shadow-[0_12px_40px_rgba(244,63,94,0.55)] flex items-center justify-center transition-all duration-300 cursor-pointer border border-white/10 group z-10 p-0 overflow-hidden ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
+        className={`absolute bottom-0 right-0 h-13 w-13 sm:h-14 sm:w-14 rounded-full bg-gradient-to-tr from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 hover:scale-110 active:scale-95 text-white shadow-[0_8px_32px_rgba(244,63,94,0.4)] hover:shadow-[0_12px_40px_rgba(244,63,94,0.55)] flex items-center justify-center transition-all duration-300 cursor-pointer border border-white/10 group z-10 p-0 overflow-hidden ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
           }`}
       >
         <svg
@@ -315,34 +327,35 @@ export default function AIChatbot() {
       {/* Main Chat Panel */}
       <div
         ref={panelRef}
-        className={`fixed sm:absolute bottom-0 right-0 left-0 sm:left-auto sm:right-0 w-full sm:w-[450px] h-[85vh] sm:h-[600px] max-h-[92vh] sm:max-h-[85vh] rounded-t-3xl sm:rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden border transition-all duration-300 origin-bottom sm:origin-bottom-right ${isOpen
+        className={`fixed bottom-3 right-3 left-3 sm:left-auto sm:right-0 sm:bottom-0 sm:absolute w-auto sm:w-[400px] max-w-sm sm:max-w-none mx-auto sm:mx-0 h-[52vh] sm:h-[560px] max-h-[480px] sm:max-h-[85vh] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden border transition-all duration-300 origin-bottom sm:origin-bottom-right ${isOpen
           ? 'scale-100 opacity-100 pointer-events-auto translate-y-0'
           : 'scale-90 sm:scale-75 opacity-0 pointer-events-none translate-y-10'
-          } bg-white/95 dark:bg-slate-900/95 border-slate-200/80 dark:border-slate-800 backdrop-blur-xl`}
+          } bg-white/95 dark:bg-slate-900/95 border-slate-200/80 dark:border-slate-800 backdrop-blur-xl z-[9999]`}
       >
         {/* Header */}
-        <div className="bg-rose-500 p-4 text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-2.5">
+        <div className="bg-rose-500 px-3.5 py-2.5 sm:px-4 sm:py-3 text-white flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-2">
             <div>
-              <h3 className="font-extrabold text-sm tracking-wide">Xplorism AI</h3>
-              <span className="text-[10px] text-rose-100 flex items-center">
+              <h3 className="font-extrabold text-xs sm:text-sm tracking-wide">{t('ask_xplorism_ai')}</h3>
+              <span className="text-[9px] sm:text-[10px] text-rose-100 flex items-center">
                 <span>{t('online_assistant')}</span>
               </span>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <button
               onClick={startNewChat}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-white transition cursor-pointer border-none bg-transparent"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-white transition cursor-pointer border-none bg-transparent flex items-center justify-center"
               title="New Chat"
             >
-              <RotateCcw className="h-4 w-4" />
+              <RotateCcw className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-white transition cursor-pointer border-none bg-transparent"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-white transition cursor-pointer border-none bg-transparent flex items-center justify-center"
+              aria-label="Close Concierge"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4.5 w-4.5" />
             </button>
           </div>
         </div>
@@ -350,15 +363,15 @@ export default function AIChatbot() {
         {/* Body Section */}
         {!isAuthenticated ? (
           /* Guest login request state */
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/50 dark:bg-slate-900/50">
-            <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm mb-1.5">{t('ask_xplorism_ai')}!</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mb-6">
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-slate-50/50 dark:bg-slate-900/50">
+            <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-xs sm:text-sm mb-1.5">{t('ask_xplorism_ai')}</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 max-w-[260px] leading-relaxed mb-4">
               {t('chat_guest_desc')}
             </p>
             <Link
               to="/login"
               onClick={() => setIsOpen(false)}
-              className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition flex items-center space-x-2 shadow-md shadow-rose-500/20"
+              className="px-5 py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition flex items-center space-x-2 shadow-md shadow-rose-500/20"
             >
               <span>{t('login_to_chat')}</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -367,22 +380,22 @@ export default function AIChatbot() {
         ) : (
           <>
             {/* Chat Viewport */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 bg-slate-50/50 dark:bg-slate-950/50">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0 bg-slate-50/50 dark:bg-slate-950/50">
               {messages.length === 0 ? (
                 /* Empty / Welcome State Box */
-                <div className="h-full flex flex-col justify-center items-center py-6 text-center">
-                  <div className="w-full max-w-[340px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
-                    <h4 className="font-black text-sm text-slate-800 dark:text-slate-100">{t('chat_welcome_title')} {user?.name || 'there'}!</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1.5 mb-5">
+                <div className="h-full flex flex-col justify-center items-center py-2 text-center">
+                  <div className="w-full max-w-[320px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-sm">
+                    <h4 className="font-black text-xs sm:text-sm text-slate-800 dark:text-slate-100">{t('chat_welcome_title')} {user?.name || 'there'}!</h4>
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1 mb-3">
                       {t('chat_welcome_subtitle')}
                     </p>
-                    <div className="w-full space-y-2">
+                    <div className="w-full grid grid-cols-1 gap-1.5 text-left">
                       {starterPrompts.map((p, idx) => (
                         <button
                           key={idx}
                           type="button"
                           onClick={(e) => handleSendMessage(e, p)}
-                          className="w-full p-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-50/20 dark:hover:bg-rose-500/10 text-left text-xs font-semibold rounded-xl transition cursor-pointer text-slate-700 dark:text-slate-200"
+                          className="w-full p-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-50/20 dark:hover:bg-rose-500/10 text-left text-xs font-semibold rounded-xl transition cursor-pointer text-slate-700 dark:text-slate-200 truncate"
                         >
                           {p}
                         </button>
@@ -447,7 +460,7 @@ export default function AIChatbot() {
             </div>
 
             {/* Chat Input Footer */}
-            <div className="p-3 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
+            <div className="p-2.5 sm:p-3 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
               <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
                 <div className="relative flex-1">
                   <textarea
@@ -457,9 +470,9 @@ export default function AIChatbot() {
                     placeholder={t('chat_placeholder')}
                     disabled={loading}
                     rows={1}
-                    className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-150 dark:border-slate-700 rounded-2xl text-xs text-slate-850 dark:text-slate-100 placeholder-slate-450 dark:placeholder-slate-400 focus:outline-none focus:border-rose-500/40 resize-none max-h-[100px] font-sans leading-normal"
+                    className="w-full pl-3 pr-7 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-150 dark:border-slate-700 rounded-xl text-xs text-slate-850 dark:text-slate-100 placeholder-slate-450 dark:placeholder-slate-400 focus:outline-none focus:border-rose-500/40 resize-none max-h-[80px] font-sans leading-normal"
                   />
-                  <div className="absolute right-2.5 bottom-2.5 text-[9px] text-slate-350 dark:text-slate-500 font-black uppercase tracking-wider flex items-center space-x-0.5 pointer-events-none select-none">
+                  <div className="absolute right-2 bottom-2.5 text-[9px] text-slate-350 dark:text-slate-500 font-black uppercase tracking-wider flex items-center space-x-0.5 pointer-events-none select-none">
                     <CornerDownLeft className="h-2.5 w-2.5" />
                     <span className="hidden sm:inline">Enter</span>
                   </div>
@@ -467,9 +480,9 @@ export default function AIChatbot() {
                 <button
                   type="submit"
                   disabled={loading || !input.trim()}
-                  className="p-2.5 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white rounded-2xl transition cursor-pointer shadow-md shadow-rose-500/10 border-none"
+                  className="p-2 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white rounded-xl transition cursor-pointer shadow-md shadow-rose-500/10 border-none h-9 w-9 flex items-center justify-center shrink-0"
                 >
-                  <Send className="h-4.5 w-4.5" />
+                  <Send className="h-4 w-4" />
                 </button>
               </form>
               {messages.length > 0 && (

@@ -19,6 +19,7 @@ import SharedTripsWorkspace from './pages/SharedTripsWorkspace';
 import CollaborativeTripPage from './pages/CollaborativeTripPage';
 import TripInviteRespondPage from './pages/TripInviteRespondPage';
 import AIChatbot from './components/AIChatbot';
+import CommandBar from './components/CommandBar';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 
 // Protected Route component
@@ -240,6 +241,7 @@ export default function App() {
             <Router>
               <ScrollToTop />
               <AppRoutes />
+              <CommandBar />
               <AIChatbot />
             </Router>
           </CurrencyProvider>

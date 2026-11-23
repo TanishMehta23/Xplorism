@@ -9,11 +9,9 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { useLanguage } from '../context/LanguageContext';
 
 export default function TravelPreferencesPage() {
   const { user } = useAuth();
-  const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Form State

@@ -654,7 +654,7 @@ export default function SharedTripPage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
-                  <TripIcon className="h-10 w-10 text-slate-400 mb-4 animate-bounce" />
+                  <TripIcon className="h-10 w-10 text-slate-400 mb-4" />
                   <p className="text-sm font-semibold">No activities planned for Day {activeDayTab}</p>
                 </div>
               )}

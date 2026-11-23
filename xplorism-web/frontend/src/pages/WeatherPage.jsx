@@ -577,7 +577,7 @@ export default function WeatherPage() {
                       }}
                       className="w-full text-left px-5 py-3.5 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition text-rose-500 text-xs flex items-center space-x-2 font-semibold"
                     >
-                      <MapPin className="h-4 w-4 text-rose-500 shrink-0 animate-bounce-slow" />
+                      <MapPin className="h-4 w-4 text-rose-500 shrink-0" />
                       <span>Use current location</span>
                     </button>
                   )}
@@ -622,7 +622,7 @@ export default function WeatherPage() {
             <div className={`border rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm flex flex-col md:flex-row items-center md:justify-between gap-6 sm:gap-8 relative overflow-hidden backdrop-blur-md ${getCardStyles()}`}>
               <div className="space-y-3 sm:space-y-4 text-center md:text-left z-10 w-full md:w-auto">
                 <div className="flex items-center justify-center md:justify-start space-x-1.5 sm:space-x-2 text-rose-500">
-                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 animate-bounce-slow" />
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                   <h2 className={`text-base sm:text-lg font-bold tracking-tight ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>{selectedCity}</h2>
                 </div>
                 <div className="space-y-1">

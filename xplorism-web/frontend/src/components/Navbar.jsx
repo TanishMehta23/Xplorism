@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Compass, Sun, Moon, DollarSign, User, Plane, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2, Mail, Check, AlertCircle, CheckCircle2, CloudSun, Backpack } from 'lucide-react';
+import { LogOut, Compass, Sun, Moon, DollarSign, User, Plane, ChevronDown, FolderLock, Users, Bell, Menu, X, Loader2, Mail, Check, AlertCircle, CheckCircle2, CloudSun, Backpack, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage, SUPPORTED_LANGUAGES, INDIAN_LANGUAGES, INTERNATIONAL_LANGUAGES } from '../context/LanguageContext';
@@ -44,7 +44,7 @@ export default function Navbar({ activeTab }) {
   }, [showLogoutConfirm, isDropdownOpen, isNotificationsOpen, isLangOpen, isMobileMenuOpen]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
     const fetchNotifications = async () => {
       try {
         const data = await api.get('/notifications');
@@ -61,7 +61,7 @@ export default function Navbar({ activeTab }) {
 
     // Global real-time socket connection for user-specific notifications
     const socket = io(SOCKET_URL, {
-      transports: ['polling', 'websocket'],
+      transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,
       timeout: 10000
@@ -80,7 +80,7 @@ export default function Navbar({ activeTab }) {
       clearInterval(interval);
       socket.disconnect();
     };
-  }, [user]);
+  }, [user?.id]);
 
   const handleNotificationsClick = () => {
     setIsNotificationsOpen(!isNotificationsOpen);
@@ -245,6 +245,17 @@ export default function Navbar({ activeTab }) {
                 <span className="nav-link">{t('community')}</span>
               </button>
             </div>
+
+            {/* Quick Command Palette Pill */}
+            <button
+              onClick={() => window.dispatchEvent(new Event('open-command-bar'))}
+              className="hidden xl:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/60 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 text-slate-500 dark:text-slate-400 text-xs font-semibold transition cursor-pointer active:scale-95 shadow-xs mr-2"
+              title="Open Command Palette (Cmd+K or Ctrl+K)"
+            >
+              <Search className="h-3.5 w-3.5 text-rose-500" />
+              <span className="text-[11px] font-medium">Quick find...</span>
+              <kbd className="text-[9px] px-1 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono shadow-xs">⌘K</kbd>
+            </button>
 
             {/* Theme Toggle Button */}
             <button
@@ -556,88 +567,91 @@ export default function Navbar({ activeTab }) {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mobile-menu-drawer md:hidden w-full overflow-hidden border-t px-6 py-4 space-y-3"
+              className="mobile-menu-drawer md:hidden w-full overflow-hidden border-t px-4 py-3 space-y-2.5"
               style={{
                 backgroundColor: 'var(--nav-bg)',
                 borderColor: 'var(--nav-border)'
               }}
             >
-              <div className="flex flex-col space-y-2.5">
+              {/* Compact 2-Column Menu Grid */}
+              <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }}
-                  className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'trips' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
-                  style={{ color: activeTab === 'trips' ? '' : 'var(--text-secondary)' }}
+                  className={`py-2 px-2.5 rounded-xl text-left text-xs font-bold flex items-center space-x-2 transition cursor-pointer ${activeTab === 'trips' ? 'bg-rose-500/10 text-rose-500' : ''}`}
+                  style={{
+                    backgroundColor: activeTab === 'trips' ? 'rgba(244,63,94,0.1)' : 'var(--bg-tertiary)',
+                    color: activeTab === 'trips' ? '#f43f5e' : 'var(--text-secondary)'
+                  }}
                 >
-                  <Compass className="h-4 w-4" />
-                  <span>{t('trips')}</span>
+                  <Compass className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t('trips')}</span>
                 </button>
                 <button
                   onClick={() => { navigate('/shared-trips'); setIsMobileMenuOpen(false); }}
-                  className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'shared-trips' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
-                  style={{ color: activeTab === 'shared-trips' ? '' : 'var(--text-secondary)' }}
+                  className={`py-2 px-2.5 rounded-xl text-left text-xs font-bold flex items-center space-x-2 transition cursor-pointer ${activeTab === 'shared-trips' ? 'bg-rose-500/10 text-rose-500' : ''}`}
+                  style={{
+                    backgroundColor: activeTab === 'shared-trips' ? 'rgba(244,63,94,0.1)' : 'var(--bg-tertiary)',
+                    color: activeTab === 'shared-trips' ? '#f43f5e' : 'var(--text-secondary)'
+                  }}
                 >
-                  <Users className="h-4 w-4" />
-                  <span>{t('shared_trips')}</span>
+                  <Users className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t('shared_trips')}</span>
                 </button>
                 <button
                   onClick={() => { navigate('/weather'); setIsMobileMenuOpen(false); }}
-                  className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'weather' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
-                  style={{ color: activeTab === 'weather' ? '' : 'var(--text-secondary)' }}
+                  className={`py-2 px-2.5 rounded-xl text-left text-xs font-bold flex items-center space-x-2 transition cursor-pointer ${activeTab === 'weather' ? 'bg-rose-500/10 text-rose-500' : ''}`}
+                  style={{
+                    backgroundColor: activeTab === 'weather' ? 'rgba(244,63,94,0.1)' : 'var(--bg-tertiary)',
+                    color: activeTab === 'weather' ? '#f43f5e' : 'var(--text-secondary)'
+                  }}
                 >
-                  <Sun className="h-4 w-4" />
-                  <span>{t('weather')}</span>
+                  <Sun className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t('weather')}</span>
                 </button>
                 <button
                   onClick={() => { navigate('/tracker'); setIsMobileMenuOpen(false); }}
-                  className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'tracker' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
-                  style={{ color: activeTab === 'tracker' ? '' : 'var(--text-secondary)' }}
+                  className={`py-2 px-2.5 rounded-xl text-left text-xs font-bold flex items-center space-x-2 transition cursor-pointer ${activeTab === 'tracker' ? 'bg-rose-500/10 text-rose-500' : ''}`}
+                  style={{
+                    backgroundColor: activeTab === 'tracker' ? 'rgba(244,63,94,0.1)' : 'var(--bg-tertiary)',
+                    color: activeTab === 'tracker' ? '#f43f5e' : 'var(--text-secondary)'
+                  }}
                 >
-                  <Plane className="h-4 w-4" />
-                  <span>{t('tracker')}</span>
+                  <Plane className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t('tracker')}</span>
                 </button>
                 <button
                   onClick={() => { navigate('/budgets'); setIsMobileMenuOpen(false); }}
-                  className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'budgets' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
-                  style={{ color: activeTab === 'budgets' ? '' : 'var(--text-secondary)' }}
+                  className={`py-2 px-2.5 rounded-xl text-left text-xs font-bold flex items-center space-x-2 transition cursor-pointer ${activeTab === 'budgets' ? 'bg-rose-500/10 text-rose-500' : ''}`}
+                  style={{
+                    backgroundColor: activeTab === 'budgets' ? 'rgba(244,63,94,0.1)' : 'var(--bg-tertiary)',
+                    color: activeTab === 'budgets' ? '#f43f5e' : 'var(--text-secondary)'
+                  }}
                 >
-                  <DollarSign className="h-4 w-4" />
-                  <span>{t('budgets')}</span>
+                  <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t('budgets')}</span>
                 </button>
                 <button
                   onClick={() => { navigate('/vault'); setIsMobileMenuOpen(false); }}
-                  className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'vault' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
-                  style={{ color: activeTab === 'vault' ? '' : 'var(--text-secondary)' }}
+                  className={`py-2 px-2.5 rounded-xl text-left text-xs font-bold flex items-center space-x-2 transition cursor-pointer ${activeTab === 'vault' ? 'bg-rose-500/10 text-rose-500' : ''}`}
+                  style={{
+                    backgroundColor: activeTab === 'vault' ? 'rgba(244,63,94,0.1)' : 'var(--bg-tertiary)',
+                    color: activeTab === 'vault' ? '#f43f5e' : 'var(--text-secondary)'
+                  }}
                 >
-                  <FolderLock className="h-4 w-4" />
-                  <span>{t('vault')}</span>
+                  <FolderLock className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t('vault')}</span>
                 </button>
                 <button
                   onClick={() => { navigate('/community'); setIsMobileMenuOpen(false); }}
-                  className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'community' ? 'bg-rose-500/10 text-rose-500' : 'text-slate-400'}`}
-                  style={{ color: activeTab === 'community' ? '' : 'var(--text-secondary)' }}
+                  className={`py-2 px-2.5 rounded-xl text-left text-xs font-bold flex items-center space-x-2 transition cursor-pointer col-span-2 sm:col-span-1 ${activeTab === 'community' ? 'bg-rose-500/10 text-rose-500' : ''}`}
+                  style={{
+                    backgroundColor: activeTab === 'community' ? 'rgba(244,63,94,0.1)' : 'var(--bg-tertiary)',
+                    color: activeTab === 'community' ? '#f43f5e' : 'var(--text-secondary)'
+                  }}
                 >
-                  <Users className="h-4 w-4" />
-                  <span>{t('community')}</span>
+                  <Users className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t('community')}</span>
                 </button>
-
-                {/* Mobile Profile & Logout links */}
-                <div className="pt-2 mt-2 border-t flex flex-col space-y-1.5" style={{ borderColor: 'var(--border-secondary)' }}>
-                  <button
-                    onClick={() => { navigate('/profile'); setIsMobileMenuOpen(false); }}
-                    className={`py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 transition ${activeTab === 'profile' ? 'bg-blue-500/10 text-blue-500' : 'text-slate-400'}`}
-                    style={{ color: activeTab === 'profile' ? '' : 'var(--text-secondary)' }}
-                  >
-                    <User className="h-4 w-4" />
-                    <span>{t('profile')}</span>
-                  </button>
-                  <button
-                    onClick={() => { setIsMobileMenuOpen(false); setShowLogoutConfirm(true); }}
-                    className="py-2 px-3 rounded-xl text-left text-sm font-bold flex items-center space-x-2.5 text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>{t('logout')}</span>
-                  </button>
-                </div>
               </div>
             </motion.div>
           )}

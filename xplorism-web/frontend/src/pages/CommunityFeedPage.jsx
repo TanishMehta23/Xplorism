@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Image, Heart, Share2, Plus, Loader2, Search, X, Edit3, Trash2,
@@ -87,7 +86,6 @@ const FALLBACK_POSTS = [
 ];
 
 export default function CommunityFeedPage() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
 

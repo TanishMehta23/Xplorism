@@ -350,6 +350,7 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
     const locKey = (item.location || '').toLowerCase().trim();
     return wikiImageCache.get(locKey) || fallback;
   });
+  const [imageLoading, setImageLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -360,6 +361,7 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
     }
 
     const fetchWikiImage = async () => {
+      setImageLoading(true);
       try {
         const searchQuery = encodeURIComponent(item.location);
         const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${searchQuery}&format=json&origin=*`;
@@ -383,12 +385,15 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
         }
       } catch (err) {
         // Silent fallback
+      } finally {
+        if (active) setImageLoading(false);
       }
 
       if (active) {
         const fallbackUrl = getActivityImageFallback(item.location, item.time);
         wikiImageCache.set(locKey, fallbackUrl);
         setImageSrc(fallbackUrl);
+        setImageLoading(false);
       }
     };
 
@@ -411,7 +416,7 @@ const ActivityCard = ({ item, tripCurrency, isFavorited, onToggleFavorite, onMov
         {/* Left image block */}
         <div className="relative w-full h-44 sm:w-36 sm:h-28 rounded-2xl overflow-hidden shrink-0 shadow-sm border group/img bg-slate-100 dark:bg-slate-800"
           style={{ borderColor: 'var(--border-primary)' }}>
-          {loading || !imageSrc ? (
+          {imageLoading || !imageSrc ? (
             <div className="w-full h-full animate-pulse flex items-center justify-center bg-[var(--bg-tertiary)]">
               <div className="h-4 w-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
             </div>
@@ -513,7 +518,7 @@ export default function DashboardStub() {
   const [dashboardView, setDashboardView] = useState('grid');
   const [mobileViewMode, setMobileViewMode] = useState('list');
   const [isWizardOpen, setIsWizardOpen] = useState(false);
-  const [currencyCode, setCurrencyCode] = useState(() => localStorage.getItem('xplorism_currency') || 'INR');
+  const [currencyCode] = useState(() => localStorage.getItem('xplorism_currency') || 'INR');
   const [wizardInitialData, setWizardInitialData] = useState(null);
   const [isLeafletLoaded, setIsLeafletLoaded] = useState(false);
   const [mapCoords, setMapCoords] = useState(null);
@@ -555,14 +560,10 @@ export default function DashboardStub() {
   // Budget Tracking State
   const [budgetData, setBudgetData] = useState(null);
   const [budgetLoading, setBudgetLoading] = useState(false);
-  const [expenseForm, setExpenseForm] = useState({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '' });
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [editingExpense, setEditingExpense] = useState(null);
   const [isModalMaximized, setIsModalMaximized] = useState(false);
 
   // Favorites State
   const [favorites, setFavorites] = useState([]);
-  const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [passportStamps, setPassportStamps] = useState([]);
 
   const displayStamps = useMemo(() => {
@@ -1060,16 +1061,40 @@ export default function DashboardStub() {
     };
   }, []);
 
+  // Power-User Keyboard Shortcuts: Esc to close open modals
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showWeatherPopup) {
+          setShowWeatherPopup(false);
+          return;
+        }
+        if (showInviteModal) {
+          setShowInviteModal(false);
+          return;
+        }
+        if (showEditTripModal) {
+          setShowEditTripModal(false);
+          return;
+        }
+        if (selectedTrip) {
+          setSelectedTrip(null);
+          setIsModalMaximized(false);
+          return;
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedTrip, showWeatherPopup, showInviteModal, showEditTripModal]);
+
   // Favorites functions
   const fetchFavorites = async () => {
-    setFavoritesLoading(true);
     try {
       const data = await api.get('/favorites');
       setFavorites(data);
     } catch (err) {
       console.error('Failed to fetch favorites:', err);
-    } finally {
-      setFavoritesLoading(false);
     }
   };
 
@@ -1345,8 +1370,6 @@ export default function DashboardStub() {
     if (typeof tripId === 'string' && tripId.startsWith('pre-')) {
       const diff = Math.abs(new Date(selectedTrip.endDate) - new Date(selectedTrip.startDate));
       const days = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
-      const parts = selectedTrip.travelStyle.split('|');
-      const style = parts[0];
       const weather = getWeatherForDestination(selectedTrip.destination, selectedTrip.startDate);
 
       const defaultPacking = [
@@ -1461,7 +1484,6 @@ export default function DashboardStub() {
   const fetchBudget = async (tripId) => {
     if (!tripId) return;
     setBudgetLoading(true);
-    setShowExpenseForm(false);
 
     if (typeof tripId === 'string' && tripId.startsWith('pre-')) {
       const totalBudget = parseFloat(selectedTrip.budget) || 0;
@@ -1565,86 +1587,6 @@ export default function DashboardStub() {
     }
   };
 
-  const handleAddExpense = async (tripId) => {
-    if (!expenseForm.actualAmount || !expenseForm.date) {
-      showToast('Please fill in amount and date.', 'error');
-      return;
-    }
-    try {
-      await api.post(`/trips/${tripId}/expenses`, {
-        category: expenseForm.category,
-        itemName: expenseForm.itemName || 'Unnamed Expense',
-        plannedAmount: parseFloat(expenseForm.plannedAmount || 0),
-        actualAmount: parseFloat(expenseForm.actualAmount),
-        date: expenseForm.date,
-        notes: expenseForm.notes || '',
-        currency: currencyCode,
-      });
-      showToast('Expense added successfully!', 'success');
-      setExpenseForm({ category: 'Food', itemName: '', plannedAmount: '', actualAmount: '', date: '', notes: '' });
-      setShowExpenseForm(false);
-      fetchBudget(tripId);
-      if (socketRef.current) {
-        socketRef.current.emit('budget-changed', { tripId, action: 'create' });
-      }
-    } catch (err) {
-      console.error('Failed to add expense:', err);
-      showToast('Failed to add expense.', 'error');
-    }
-  };
-
-  const handleUpdateExpense = async (tripId, expenseId) => {
-    if (!editingExpense) return;
-    try {
-      await api.put(`/trips/${tripId}/expenses/${expenseId}`, {
-        category: editingExpense.category,
-        itemName: editingExpense.itemName,
-        plannedAmount: parseFloat(editingExpense.plannedAmount || 0),
-        actualAmount: parseFloat(editingExpense.actualAmount),
-        date: editingExpense.date,
-        notes: editingExpense.notes || '',
-      });
-      showToast('Expense updated successfully!', 'success');
-      setEditingExpense(null);
-      setShowExpenseForm(false);
-      fetchBudget(tripId);
-      if (socketRef.current) {
-        socketRef.current.emit('budget-changed', { tripId, action: 'update' });
-      }
-    } catch (err) {
-      console.error('Failed to update expense:', err);
-      showToast('Failed to update expense.', 'error');
-    }
-  };
-
-  const handleDeleteExpense = async (tripId, expenseId) => {
-    if (!window.confirm('Delete this expense?')) return;
-    try {
-      await api.delete(`/trips/${tripId}/expenses/${expenseId}`);
-      showToast('Expense deleted.', 'success');
-      fetchBudget(tripId);
-      if (socketRef.current) {
-        socketRef.current.emit('budget-changed', { tripId, action: 'delete' });
-      }
-    } catch (err) {
-      console.error('Failed to delete expense:', err);
-      showToast('Failed to delete expense.', 'error');
-    }
-  };
-
-  const startEditExpense = (expense) => {
-    setEditingExpense({
-      id: expense.id,
-      category: expense.category || 'Food',
-      itemName: expense.itemName || '',
-      plannedAmount: expense.plannedAmount?.toString() || '',
-      actualAmount: expense.actualAmount?.toString() || '',
-      date: expense.date || '',
-      notes: expense.notes || '',
-    });
-    setShowExpenseForm(true);
-  };
-
   // Fetch budget when selected trip changes and budget tab is active
   useEffect(() => {
     if (selectedTrip && activeDayTab === 'budget') {
@@ -1653,12 +1595,6 @@ export default function DashboardStub() {
   }, [selectedTrip, activeDayTab]);
 
   const activeCurrency = CURRENCIES[currencyCode] || CURRENCIES.INR;
-
-  const handleCurrencyChange = (e) => {
-    const val = e.target.value;
-    setCurrencyCode(val);
-    localStorage.setItem('xplorism_currency', val);
-  };
 
   const fetchTrips = async () => {
     setLoading(true);
@@ -1730,22 +1666,35 @@ export default function DashboardStub() {
   useEffect(() => {
     if (!mapCoords || !window.L || !selectedTrip || !isLeafletLoaded) return;
 
-    if (window.mapInstance) {
-      window.mapInstance.remove();
+    let isCancelled = false;
+    let map = null;
+
+    try {
+      if (window.mapInstance) {
+        window.mapInstance.remove();
+        window.mapInstance = null;
+      }
+
+      const container = document.getElementById('map-container');
+      if (!container) return;
+
+      if (container._leaflet_id) {
+        container._leaflet_id = null;
+      }
+
+      const zoom = activeDayTab === 'nearby' ? 9 : 12;
+      map = window.L.map('map-container', { zoomControl: false }).setView(mapCoords, zoom);
+      window.mapInstance = map;
+
+      window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
+        attribution: '© Google Maps'
+      }).addTo(map);
+
+      window.L.control.zoom({ position: 'bottomright' }).addTo(map);
+    } catch (mapErr) {
+      console.warn("Leaflet container initialization handled:", mapErr);
+      return;
     }
-
-    const container = document.getElementById('map-container');
-    if (!container) return;
-
-    const zoom = activeDayTab === 'nearby' ? 9 : 12;
-    const map = window.L.map('map-container', { zoomControl: false }).setView(mapCoords, zoom);
-    window.mapInstance = map;
-
-    window.L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
-      attribution: '© Google Maps'
-    }).addTo(map);
-
-    window.L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     const defaultIcon = window.L.icon({
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -1754,8 +1703,6 @@ export default function DashboardStub() {
       iconAnchor: [12, 41],
       popupAnchor: [1, -34]
     });
-
-    let isCancelled = false;
 
     const plotMarkers = async () => {
       if (activeDayTab === 'nearby') {
@@ -1844,8 +1791,16 @@ export default function DashboardStub() {
     return () => {
       isCancelled = true;
       if (window.mapInstance) {
-        window.mapInstance.remove();
+        try {
+          window.mapInstance.remove();
+        } catch (e) {
+          // ignore
+        }
         window.mapInstance = null;
+      }
+      const container = document.getElementById('map-container');
+      if (container && container._leaflet_id) {
+        container._leaflet_id = null;
       }
     };
   }, [mapCoords, selectedTrip, activeDayTab, isLeafletLoaded]);
@@ -1869,11 +1824,6 @@ export default function DashboardStub() {
     }
   }, [user]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   const handleDeleteTrip = (trip, e) => {
     e.stopPropagation();
     setTripToDelete(trip);
@@ -1885,6 +1835,7 @@ export default function DashboardStub() {
   };
 
   const exportTripToPDF = async (trip) => {
+    setIsExporting(true);
     try {
       const parts = (trip.travelStyle || '').split('|');
       const style = parts[0] || 'Adventure';
@@ -2118,6 +2069,8 @@ export default function DashboardStub() {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -2250,40 +2203,6 @@ export default function DashboardStub() {
     if (!trip || !trip.itineraries) return [];
     const days = [...new Set(trip.itineraries.map(item => item.day))];
     return days.sort((a, b) => a - b);
-  };
-
-  const calculateExpectedBudgetDivision = (itineraries) => {
-    if (!itineraries || itineraries.length === 0) return [];
-    const categoryMap = {};
-    const autoCategorize = (item) => {
-      const name = ((item.activity || '') + ' ' + (item.location || '')).toLowerCase();
-      if (name.includes('food') || name.includes('restaurant') || name.includes('dinner') || name.includes('lunch') || name.includes('breakfast') || name.includes('cafe') || name.includes('market') || name.includes('tasting') || name.includes('meal')) {
-        return 'Food';
-      }
-      if (name.includes('museum') || name.includes('gallery') || name.includes('tour') || name.includes('guide') || name.includes('ticket') || name.includes('entrance') || name.includes('admission')) {
-        return 'Activities';
-      }
-      if (name.includes('hotel') || name.includes('hostel') || name.includes('resort') || name.includes('stay') || name.includes('lodging') || name.includes('accommodation')) {
-        return 'Lodging';
-      }
-      if (name.includes('flight') || name.includes('train') || name.includes('bus') || name.includes('taxi') || name.includes('uber') || name.includes('ferry') || name.includes('transport') || name.includes('cab') || name.includes('rental') || name.includes('gas') || name.includes('fuel')) {
-        return 'Transport';
-      }
-      if (name.includes('shop') || name.includes('souvenir') || name.includes('gift') || name.includes('boutique') || name.includes('mall') || name.includes('bazaar')) {
-        return 'Shopping';
-      }
-      return 'Misc';
-    };
-
-    itineraries.forEach(item => {
-      const cat = autoCategorize(item);
-      const cost = parseFloat(item.estimatedCost || item.estimated_cost || 0);
-      if (cost > 0) {
-        categoryMap[cat] = (categoryMap[cat] || 0) + cost;
-      }
-    });
-
-    return Object.entries(categoryMap).map(([category, amount]) => ({ category, amount }));
   };
 
   const renderMapView = () => {
@@ -2457,15 +2376,10 @@ export default function DashboardStub() {
                           {(() => {
                             const w = getWeatherForDestination(trip.destination, trip.startDate);
                             const Icon = w.condition === 'Sunny' ? Sun : w.condition === 'Cloudy' ? Cloud : w.condition === 'Rainy' ? CloudRain : w.condition === 'Snowy' ? Snowflake : Wind;
-                            let animClass = "";
-                            if (w.condition === 'Sunny') animClass = "animate-spin-slow text-amber-500";
-                            else if (w.condition === 'Cloudy') animClass = "animate-pulse text-sky-400";
-                            else if (w.condition === 'Rainy') animClass = "animate-bounce text-blue-500";
-                            else if (w.condition === 'Snowy') animClass = "animate-bounce text-sky-200";
-                            else animClass = "animate-pulse text-teal-400";
+                            const iconColor = w.condition === 'Sunny' ? 'text-amber-500' : w.condition === 'Rainy' ? 'text-sky-500' : 'text-slate-400';
                             return (
-                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-slate-700 border border-slate-100/50 backdrop-blur-sm shadow-sm flex items-center space-x-1">
-                                <Icon className={`h-3 w-3 ${animClass}`} />
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-200 border border-slate-200/50 dark:border-slate-800 backdrop-blur-sm shadow-xs flex items-center space-x-1">
+                                <Icon className={`h-3 w-3 ${iconColor}`} />
                                 <span>{w.temp}°C</span>
                               </span>
                             );
@@ -2517,25 +2431,47 @@ export default function DashboardStub() {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 space-y-4">
-            <div className="h-10 w-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-            <p className="text-slate-555 text-sm">{t('loading_saved')}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-pulse">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-slate-100 dark:bg-slate-800/60 rounded-2xl sm:rounded-[32px] border border-slate-200/60 dark:border-slate-800 h-72 sm:h-80 flex flex-col justify-between p-5 overflow-hidden">
+                <div className="space-y-3">
+                  <div className="h-32 sm:h-40 bg-slate-200/80 dark:bg-slate-700/60 rounded-xl" />
+                  <div className="h-5 bg-slate-200/80 dark:bg-slate-700/60 rounded-md w-2/3" />
+                  <div className="h-3 bg-slate-200/60 dark:bg-slate-700/40 rounded w-1/3" />
+                </div>
+                <div className="pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex justify-between">
+                  <div className="h-4 bg-slate-200/80 dark:bg-slate-700/60 rounded w-16" />
+                  <div className="h-4 bg-slate-200/80 dark:bg-slate-700/60 rounded w-20" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : trips.length === 0 ? (
-          <div className="bg-white p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed border-slate-200 shadow-sm">
-            <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-505 mb-6 border border-slate-100">
-              <TripIcon className="h-8 w-8 text-rose-400" />
+          <div className="bg-white dark:bg-slate-900 p-12 sm:p-16 rounded-3xl text-center flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="h-14 w-14 rounded-2xl bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-rose-500 mb-5 border border-rose-100 dark:border-rose-900/40 shadow-xs">
+              <TripIcon className="h-7 w-7" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">{t('no_trips')}</h2>
-            <p className="text-slate-555 max-w-sm text-sm mb-6 leading-relaxed">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">{t('no_trips')}</h2>
+            <p className="text-slate-500 dark:text-slate-400 max-w-md text-xs sm:text-sm mb-6 leading-relaxed">
               {t('get_started')}
             </p>
-            <button
-              onClick={() => setIsWizardOpen(true)}
-              className="px-6 py-3 rounded-full bg-slate-950 hover:bg-slate-800 text-white text-sm font-semibold transition cursor-pointer shadow-sm"
-            >
-              {t('start_planning')}
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={() => setIsWizardOpen(true)}
+                className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm active:scale-95"
+              >
+                {t('start_planning')}
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedTrip(PRE_PLANNED_TRIPS[0]);
+                  setActiveDayTab(1);
+                }}
+                className="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition cursor-pointer active:scale-95 shadow-2xs"
+              >
+                Explore Tokyo Sample Itinerary →
+              </button>
+            </div>
           </div>
         ) : dashboardView === 'map' ? (
           renderMapView()
@@ -2574,7 +2510,7 @@ export default function DashboardStub() {
                           {style}
                         </span>
                         <span className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl bg-white/95 text-slate-700 backdrop-blur-md text-[8px] sm:text-[9px] font-black flex items-center space-x-1 sm:space-x-1.5 border border-slate-100/50 shadow-lg">
-                          <WeatherIcon className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${weather.condition === 'Sunny' ? 'text-amber-500 animate-spin-slow' : weather.condition === 'Rainy' ? 'text-sky-500' : 'text-slate-555'}`} />
+                          <WeatherIcon className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${weather.condition === 'Sunny' ? 'text-amber-500' : weather.condition === 'Rainy' ? 'text-sky-500' : 'text-slate-400'}`} />
                           <span>{weather.temp}°C</span>
                         </span>
                       </div>
@@ -2705,7 +2641,7 @@ export default function DashboardStub() {
 
           {displayStamps.length === 0 ? (
             <div className="text-center py-10 sm:py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center">
-              <Globe className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 dark:text-slate-750 mb-3 animate-bounce" />
+              <Globe className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 dark:text-slate-700 mb-3" />
               <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{t('passport_empty_title')}</p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">{t('passport_empty_desc')}</p>
             </div>
@@ -3144,48 +3080,48 @@ export default function DashboardStub() {
                   </div>
                 </div>
 
-                <div className="px-6 py-4 border-b flex items-center space-x-2 overflow-x-auto whitespace-nowrap scrollbar-none"
+                <div className="px-3.5 sm:px-6 py-3 sm:py-4 border-b flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto whitespace-nowrap scrollbar-none"
                   style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-secondary)' }}>
                   {getDaysArray(selectedTrip).map((day) => (
                     <button
                       key={day}
                       onClick={() => setActiveDayTab(day)}
-                      className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer active:scale-95 ${activeDayTab === day ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-tertiary)] hover:bg-[var(--border-primary)] border border-[var(--border-primary)] shadow-sm'}`}
+                      className={`min-h-[42px] px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer active:scale-95 shrink-0 ${activeDayTab === day ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-tertiary)] hover:bg-[var(--border-primary)] border border-[var(--border-primary)] shadow-sm'}`}
                     >
                       Day {day}
                     </button>
                   ))}
                   <button
                     onClick={() => setActiveDayTab('nearby')}
-                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 md:ml-auto active:scale-95 ${activeDayTab === 'nearby' ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20' : 'text-sky-500 hover:text-sky-600 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
+                    className={`min-h-[42px] px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 md:ml-auto active:scale-95 shrink-0 ${activeDayTab === 'nearby' ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20' : 'text-sky-500 hover:text-sky-600 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
                   >
                     <TripIcon className="h-4 w-4" />
                     <span>Nearby Places</span>
                   </button>
                   <button
                     onClick={() => setActiveDayTab('budget')}
-                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'budget' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'text-emerald-500 hover:text-emerald-600 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
+                    className={`min-h-[42px] px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 ${activeDayTab === 'budget' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'text-emerald-500 hover:text-emerald-600 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
                   >
                     <DollarSign className="h-4 w-4" />
                     <span>Budget</span>
                   </button>
                   <button
                     onClick={() => setActiveDayTab('packing')}
-                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'packing' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'text-amber-500 hover:text-amber-600 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
+                    className={`min-h-[42px] px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 ${activeDayTab === 'packing' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'text-amber-500 hover:text-amber-600 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
                   >
                     <CheckSquare className="h-4 w-4" />
                     <span>Packing List</span>
                   </button>
                   <button
                     onClick={() => setActiveDayTab('favorites')}
-                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'favorites' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20' : 'text-rose-500 hover:text-rose-650 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
+                    className={`min-h-[42px] px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 ${activeDayTab === 'favorites' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20' : 'text-rose-500 hover:text-rose-650 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
                   >
                     <Heart className="h-4 w-4" />
                     <span>Favorites</span>
                   </button>
                   <button
                     onClick={() => setActiveDayTab('events')}
-                    className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 ${activeDayTab === 'events' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-indigo-500 hover:text-indigo-650 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
+                    className={`min-h-[42px] px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 ${activeDayTab === 'events' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-indigo-500 hover:text-indigo-650 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-sm'}`}
                   >
                     <Calendar className="h-4 w-4" />
                     <span>Local Events</span>
@@ -3217,7 +3153,7 @@ export default function DashboardStub() {
                             <p className="col-span-2 text-slate-400 text-xs text-center py-8">No nearby places found.</p>
                           ) : (
                             nearbyPlaces.map((place, idx) => {
-                              const isFav = favorites.some(fav => fav.name.toLowerCase().trim() === place.name.toLowerCase().trim());
+                              const isFav = Array.isArray(favorites) && favorites.some(fav => fav?.name && place?.name && fav.name.toLowerCase().trim() === place.name.toLowerCase().trim());
                               return (
                                 <div key={idx} className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between relative group">
                                   <div>
@@ -3518,13 +3454,13 @@ export default function DashboardStub() {
                           </div>
                         ) : localEvents.length === 0 ? (
                           <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-8 text-center">
-                            <Calendar className="h-8 w-8 text-indigo-300 mx-auto mb-3 animate-bounce" />
+                            <Calendar className="h-8 w-8 text-indigo-300 mx-auto mb-3" />
                             <p className="text-sm text-slate-505">No events found for these dates</p>
                           </div>
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {localEvents.map((event, idx) => {
-                              const isFav = favorites.some(fav => fav.name.toLowerCase().trim() === event.title.toLowerCase().trim());
+                              const isFav = Array.isArray(favorites) && favorites.some(fav => fav?.name && event?.title && fav.name.toLowerCase().trim() === event.title.toLowerCase().trim());
                               return (
                                 <div key={idx} className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between relative group">
                                   <div>
@@ -3575,9 +3511,11 @@ export default function DashboardStub() {
                           {(() => {
                             const activeDayList = getDayItineraries(selectedTrip);
                             return activeDayList.map((item, idx) => {
-                              const isFav = favorites.some(fav =>
-                                fav.name.toLowerCase().trim() === (item.location || '').toLowerCase().trim() ||
-                                fav.name.toLowerCase().trim() === (item.activity || '').toLowerCase().trim()
+                              const isFav = Array.isArray(favorites) && favorites.some(fav =>
+                                fav?.name && (
+                                  fav.name.toLowerCase().trim() === (item.location || '').toLowerCase().trim() ||
+                                  fav.name.toLowerCase().trim() === (item.activity || '').toLowerCase().trim()
+                                )
                               );
                               return (
                                 <ActivityCard
@@ -3631,7 +3569,7 @@ export default function DashboardStub() {
                 )}
 
                 {/* Mobile View Toggle */}
-                <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-55 flex items-center bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-lg border border-slate-800 dark:border-slate-800/80 rounded-full shadow-2xl p-1.5 w-[280px]">
+                <div className="md:hidden fixed bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-55 flex items-center bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-lg border border-slate-800 dark:border-slate-800/80 rounded-full shadow-2xl p-1.5 w-[280px]">
                   <button
                     type="button"
                     onClick={() => setMobileViewMode('list')}

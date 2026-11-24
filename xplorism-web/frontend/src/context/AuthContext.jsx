@@ -69,71 +69,55 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    try {
-      const data = await api.post('/auth/login', { email, password });
-      if (data && data.requiresOtp) {
-        return data; // returns { requiresOtp: true, email }
-      }
-      if (!data || !data.token || !data.user) {
-        throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
-      }
-      
-      localStorage.setItem('token', data.token);
-      saveUserToStorage(data.user);
-      setUser(data.user);
-      return data;
-    } catch (error) {
-      throw error;
+    const data = await api.post('/auth/login', { email, password });
+    if (data && data.requiresOtp) {
+      return data; // returns { requiresOtp: true, email }
     }
+    if (!data || !data.token || !data.user) {
+      throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
+    }
+    
+    localStorage.setItem('token', data.token);
+    saveUserToStorage(data.user);
+    setUser(data.user);
+    return data;
   };
 
   const register = async (name, email, password) => {
-    try {
-      const data = await api.post('/auth/register', { name, email, password });
-      if (data && data.requiresOtp) {
-        return data; // returns { requiresOtp: true, email }
-      }
-      if (!data || !data.token || !data.user) {
-        throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
-      }
-      
-      localStorage.setItem('token', data.token);
-      saveUserToStorage(data.user);
-      setUser(data.user);
-      return data;
-    } catch (error) {
-      throw error;
+    const data = await api.post('/auth/register', { name, email, password });
+    if (data && data.requiresOtp) {
+      return data; // returns { requiresOtp: true, email }
     }
+    if (!data || !data.token || !data.user) {
+      throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
+    }
+    
+    localStorage.setItem('token', data.token);
+    saveUserToStorage(data.user);
+    setUser(data.user);
+    return data;
   };
 
   const verifyOtp = async (email, otp) => {
-    try {
-      const data = await api.post('/auth/verify-otp', { email, otp });
-      if (data && data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        saveUserToStorage(data.user);
-        setUser(data.user);
-      }
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const loginWithGoogle = async (credential) => {
-    try {
-      const data = await api.post('/auth/google', { credential });
-      if (!data || !data.token || !data.user) {
-        throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
-      }
-      
+    const data = await api.post('/auth/verify-otp', { email, otp });
+    if (data && data.token && data.user) {
       localStorage.setItem('token', data.token);
       saveUserToStorage(data.user);
       setUser(data.user);
-      return data.user;
-    } catch (error) {
-      throw error;
     }
+    return data;
+  };
+
+  const loginWithGoogle = async (credential) => {
+    const data = await api.post('/auth/google', { credential });
+    if (!data || !data.token || !data.user) {
+      throw new Error('Invalid response from server. Check if VITE_API_URL is configured.');
+    }
+    
+    localStorage.setItem('token', data.token);
+    saveUserToStorage(data.user);
+    setUser(data.user);
+    return data.user;
   };
 
   const logout = () => {

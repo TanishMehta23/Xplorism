@@ -167,10 +167,8 @@ export default function BudgetsListPage() {
               const tripCurrencyCode = parts[1] || 'USD';
               const tripCurrency = CURRENCIES[tripCurrencyCode] || CURRENCIES.USD;
               
-              const totalPlanned = trip.budgetData?.totalPlanned || 0;
               const totalActual = trip.budgetData?.totalActual || 0;
               const utilizationPercent = trip.budgetData?.utilizationPercent || 0;
-              const remaining = trip.budgetData?.remaining ?? (trip.budget - totalActual);
 
               return (
                 <div

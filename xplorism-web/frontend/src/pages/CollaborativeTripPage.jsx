@@ -1467,12 +1467,12 @@ export default function CollaborativeTripPage() {
           </div>
 
           {/* Tabbed Collaborative Workspace Panel */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl flex flex-col h-[85vh] overflow-hidden order-3 lg:order-2">
+          <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col min-h-[550px] lg:h-[85vh] overflow-hidden order-3 lg:order-2">
             {/* Top Workspace Tab switcher */}
-            <div className="flex border-b border-slate-100 mb-6 space-x-5 overflow-x-auto no-scrollbar shrink-0">
+            <div className="flex border-b border-slate-100 mb-4 sm:mb-6 space-x-3 sm:space-x-5 overflow-x-auto no-scrollbar shrink-0 -mx-2 px-2 sm:mx-0 sm:px-0">
               <button
                 onClick={() => setActiveMainTab('itinerary')}
-                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer ${
+                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer min-h-[44px] flex items-center ${
                   activeMainTab === 'itinerary' ? 'border-rose-500 text-rose-500' : 'border-transparent text-slate-500 hover:text-slate-850'
                 }`}
               >
@@ -1480,7 +1480,7 @@ export default function CollaborativeTripPage() {
               </button>
               <button
                 onClick={() => setActiveMainTab('packing')}
-                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer ${
+                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer min-h-[44px] flex items-center ${
                   activeMainTab === 'packing' ? 'border-rose-500 text-rose-500' : 'border-transparent text-slate-500 hover:text-slate-850'
                 }`}
               >
@@ -1488,7 +1488,7 @@ export default function CollaborativeTripPage() {
               </button>
               <button
                 onClick={() => setActiveMainTab('expenses')}
-                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer ${
+                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer min-h-[44px] flex items-center ${
                   activeMainTab === 'expenses' ? 'border-rose-500 text-rose-500' : 'border-transparent text-slate-500 hover:text-slate-850'
                 }`}
               >
@@ -1496,7 +1496,7 @@ export default function CollaborativeTripPage() {
               </button>
               <button
                 onClick={() => setActiveMainTab('docs')}
-                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer ${
+                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer min-h-[44px] flex items-center ${
                   activeMainTab === 'docs' ? 'border-rose-500 text-rose-500' : 'border-transparent text-slate-500 hover:text-slate-850'
                 }`}
               >
@@ -1504,7 +1504,7 @@ export default function CollaborativeTripPage() {
               </button>
               <button
                 onClick={() => setActiveMainTab('notes')}
-                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer ${
+                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer min-h-[44px] flex items-center ${
                   activeMainTab === 'notes' ? 'border-rose-500 text-rose-500' : 'border-transparent text-slate-500 hover:text-slate-850'
                 }`}
               >
@@ -1512,7 +1512,7 @@ export default function CollaborativeTripPage() {
               </button>
               <button
                 onClick={() => setActiveMainTab('polls')}
-                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer ${
+                className={`pb-3 text-xs sm:text-sm font-black border-b-2 transition shrink-0 cursor-pointer min-h-[44px] flex items-center ${
                   activeMainTab === 'polls' ? 'border-rose-500 text-rose-500' : 'border-transparent text-slate-500 hover:text-slate-850'
                 }`}
               >
